@@ -1,0 +1,15 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./non-behave-tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,    
+    "python.formatting.provider": "black",
+    "behave-vsc.runParallel": true,
+    "behave-vsc.runAllAsOne": true,
+    "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too"  
+}
