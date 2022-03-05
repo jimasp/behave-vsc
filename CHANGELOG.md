@@ -13,7 +13,7 @@ N/A
 - behave 1.2.6
 - Python 3.9.7
 - Linux/Windows
-- Visual Studio code 1.64.x
+- Visual Studio Code 1.64.x
 
 ### Added/Changed/Removed
 

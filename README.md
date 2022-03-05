@@ -10,7 +10,6 @@
   - Python 3.9.7
   - Linux/Windows
 
-
 ---
 ## Project Requirements
 - A single vscode workspace folder
