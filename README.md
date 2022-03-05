@@ -43,7 +43,7 @@ paths=behave-tests/features
 - In run mode, std/err output can be found in the Behave VSC output window, including an equivalent behave command to run the test manually. (In debug mode, errors are shown in the console.)
 
 
-![Behave VSC demo gif](images/behave-vsc.gif)
+![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
 ---
 ## Extension Settings

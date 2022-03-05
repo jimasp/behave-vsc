@@ -27,7 +27,7 @@
 	"version": "0.0.1",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
-		"color": "#C80000",
+		"color": "2B2B2B",
 		"theme": "dark"
 	},
 	"publisher": "jimasp",
