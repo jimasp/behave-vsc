@@ -121,22 +121,3 @@ This enables `ms-python.python` to do the heavy lifting of setting up the debug 
 
 If you would like to submit a pull request, please see the [contributing](CONTRIBUTING.md) doc.
 
----
-
-## Footnote
-
-Running separate commands is of course inherently slow **unless**:
-  1. You are running all the tests at once and the `runAllAsOne` setting is enabled.
-(You can also use the `fastSkipList` setting if you have a lot of skipped tests.)
-  2. Your tests are setup in a way that you are able to enable the `runParallel` setting, i.e. your tests are truly independent of each other and do not rely on a shared 
-data/setup/context.
-
-The reason separate commands are run is because otherwise things can quickly become unpredictable in building up a behave command line that would 
-run several tests at once. As just one of many potential examples, if you were to have multiple feature files with the same scenario name but you only selected to run that 
-scenario from one of those features, a naive implementation would result in the command:   
-  ```
-`python -m behave -i "(features/scenario1_and_scenario2.feature|/features/scenario_1.feature)" -n "scenario_1" -n "scenario_2"`.  
-  ```
-That command would of course run the scenario of the same name in both features, which is not what was expected.
-(Additionally, attempts to support this would add complexity/bug potential to the code in several areas, and there are already 2 options above for 
-better performance when running multiple tests.)
