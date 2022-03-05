@@ -14,5 +14,4 @@ package-lock.json
 package.json
 vsix/**
 example-project-workspace/**
-.python-version
-
+images/behave-vsc.gif
