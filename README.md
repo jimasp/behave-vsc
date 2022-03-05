@@ -69,7 +69,7 @@ It will be faster if you select a subset/group of tests to run.
   - Default: empty string
   - A csv of skip strings that start with `@`, e.g. `@skip, @skipped` that will stop behave being called for features/scenarios marked with those tags. 
   - This is just so you can speed up your test run if you have a large amount of skipped tests. 
-  - This setting has NO effect when you are running all tests and runAllAsOne is enabled, so it is most useful when running a subset/group of tests.
+  - This setting has no effect when you are running all tests and runAllAsOne is enabled.
 
 ---
 ## Known Issues
