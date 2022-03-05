@@ -1,6 +1,6 @@
 # Changelog
 
-[Pre-release]
+## [Pre-release]
 
 ## [0.0.1] - 2021-03-05
 
