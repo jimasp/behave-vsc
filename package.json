@@ -55,6 +55,7 @@
 	],
 	"main": "./dist/extension.js",
 	"scripts": {
+		"prevscode:prepublish": "npm run test",
 		"vscode:prepublish": "npm run package",
 		"compile": "webpack",
 		"watch": "webpack --watch",
