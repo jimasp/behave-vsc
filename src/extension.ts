@@ -7,6 +7,7 @@ import { getContentFromFilesystem, Scenario, testData, TestFile } from './testTr
 import { runBehaveAll } from './runOrDebug';
 import { getGroupedFeatureSubPath } from './helpers';
 import { getFeatureNameFromFile } from './featureParser';
+import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 
 
 function logRunHandlerDiagOutput() {
@@ -24,6 +25,7 @@ function logActivate(context:vscode.ExtensionContext) {
   config.logger.logInfo(`activated (version ${version})`);
 }
 
+const steps:Steps = new Map<string, StepDetail>();
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
@@ -34,6 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
   context.subscriptions.push(ctrl);
   context.subscriptions.push(startWatchingWorkspace(ctrl));
+  context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
   const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
@@ -180,7 +183,7 @@ export async function activate(context: vscode.ExtensionContext) {
   };
 
   const refreshHandler = async() => {
-     await findInitialFiles(ctrl, true);
+     await findInitialFeatureFiles(ctrl, true);
   };
   // @ts-ignore: Property 'refreshHander' does not exist on type 'TestController'
   ctrl.refreshHandler = refreshHandler;
@@ -235,7 +238,7 @@ export async function activate(context: vscode.ExtensionContext) {
   //   vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => updateNodeForDocument(e.document))
   // );
 
-  return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findInitialFiles}; // support extensiontest.ts
+  return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findInitialFeatureFiles}; // support extensiontest.ts
 
 } // end activate()
 
@@ -288,7 +291,7 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 
 
-async function findInitialFiles(controller: vscode.TestController, reparse?:boolean) {
+async function findInitialFeatureFiles(controller: vscode.TestController, reparse?:boolean) {
   controller.items.forEach(item => controller.items.delete(item.id));
   const featureFiles1 = await vscode.workspace.findFiles("**/features/*.feature");      
   const featureFiles2 = await vscode.workspace.findFiles("**/features/**/*.feature");
@@ -302,18 +305,43 @@ async function findInitialFiles(controller: vscode.TestController, reparse?:bool
   }
 }
 
+async function findInitialStepsFiles() {
+  steps.clear();
+  const stepFiles1 = await vscode.workspace.findFiles("**/features/steps/*.py");      
+  const stepFiles2 = await vscode.workspace.findFiles("**/features/steps/**/*.py");
+  const stepFiles = stepFiles1.concat(stepFiles2);
+
+  for (const stepFile of stepFiles) {
+    updateSteps(stepFile);
+  }
+}
+
 function startWatchingWorkspace(controller: vscode.TestController) {
 
     // not just .feature files, also support folder changes, could change to just .feature files when refreshhandler() works
     const watcher = vscode.workspace.createFileSystemWatcher('**/features/**');  
 
     watcher.onDidCreate(uri => {
+      
+      if(uri.path.indexOf("/steps/") !== -1) {
+        updateSteps(uri);
+        return;
+      }
+
       if(uri.path.toLowerCase().endsWith(".feature"))
         getOrCreateFile(controller, uri);      
       else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFiles(controller);
+        findInitialFeatureFiles(controller);
+
     });
+
     watcher.onDidChange(uri => {
+      
+      if(uri.path.indexOf("/steps/") !== -1) {
+        updateSteps(uri);
+        return;
+      }      
+
       if(uri.path.toLowerCase().endsWith(".feature")) {      
         const created = getOrCreateFile(controller, uri);
         if (created) {
@@ -321,17 +349,99 @@ function startWatchingWorkspace(controller: vscode.TestController) {
         }
       }
       else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFiles(controller);
+        findInitialFeatureFiles(controller);
+
     });
+
+
     watcher.onDidDelete(uri =>  {
+      
+      if(uri.path.indexOf("/steps/") !== -1) {
+        updateSteps(uri);
+        return;
+      }
+
       if(uri.path.toLowerCase().endsWith(".feature"))
         getOrCreateFile(controller, uri);      
       else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFiles(controller);
+        findInitialFeatureFiles(controller);
+
     });
 
-    findInitialFiles(controller, true);    
+    findInitialFeatureFiles(controller, true);    
+    findInitialStepsFiles();
 
     return watcher;
 
 }
+
+
+function updateSteps(uri:vscode.Uri) {
+  if(uri.path.toLowerCase().endsWith(".py")) {
+    const content = getContentFromFilesystem(uri);
+    parseStepsFile(uri, content, steps);
+  }
+  else if(uri.path.toLowerCase().endsWith("/"))
+    findInitialStepsFiles();
+}
+
+
+function gotoStepHandler(uri: vscode.Uri) {
+
+  function getStepMatch(stepText:string): StepDetail|null {
+
+    let stepMatch:StepDetail|null = null;
+
+    for(const[key, value] of steps) {
+      const rx = new RegExp(key);
+      const match = rx.exec(stepText);
+      if(match && match.length !== 0)  {
+        stepMatch = value;
+        break;
+      }
+    }
+  
+    return stepMatch;
+  }
+
+  try {  
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    
+    const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
+    const stepRe = /^(\s*)(Given|When|Then|And)(.+)(\s*)$/i;
+    const matches = stepRe.exec(line);
+    if(!matches || !matches[3])
+      return;
+
+    const stepText = matches[3].trim();
+    const stepMatch = getStepMatch(stepText);
+
+    if(!stepMatch) {
+      vscode.window.showInformationMessage("Step not found (is it implemented?)")
+      return;
+    }
+
+    vscode.workspace.openTextDocument(stepMatch.uri).then(doc => {
+      vscode.window.showTextDocument(doc, {preview:false}).then(editor => {
+        console.log(editor?.document);      
+        if(!editor)
+          return;
+
+        editor.selection =  new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
+        editor.revealRange(stepMatch.range);
+      });
+    });   
+    
+  }
+  catch(e:unknown) {
+    config.logger.logError((e as Error).stack!);
+  }
+
+  
+  
+}
+
+

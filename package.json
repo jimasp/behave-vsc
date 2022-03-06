@@ -21,6 +21,17 @@
 					"description": "Optional csv list of fast skip tags, example: '@skip, @skip-me-too'.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip."
 				}					
 			}
+		},
+		"commands": [{
+				"command": "behave-vsc.gotoStep",
+				"title": "Go to step"
+		}],
+		"menus": {
+			"editor/context": [{
+				"when": "editorTextFocus && resourceExtname =~ /\\.feature$/",
+				"command": "behave-vsc.gotoStep",
+				"group": "navigation"
+			}]
 		}
 	},
 	"description": "Run/debug behave tests from Sidebar or Feature file",

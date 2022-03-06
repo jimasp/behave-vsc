@@ -5,9 +5,9 @@ import { getContentFromFilesystem } from './testTree';
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
 const featureReLine = new RegExp(featureReStr);
-const featureReFile = new RegExp(featureReStr, "m");
-const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/;
-const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/;
+const featureReFile = new RegExp(featureReStr, "im");
+const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
+const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 
 
 export const getFeatureNameFromFile = (uri:vscode.Uri): string =>  {
