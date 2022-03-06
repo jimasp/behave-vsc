@@ -90,8 +90,8 @@ workspace `.vscode/settings.json`, then do you have any of the extension setting
 - Have you tried manually running the outputted behave command from the behave-vsc output window?
 - Try disabling other extensions
 - Have you got the latest version of the extension?
-- Does your project environment match the environment tested for this release? Older releases are kept in the vsix folder in 
-[github](https://github.com/jimasp/behave-vsc/vsix). The details of each release are in the (TODO:release doc)
+- Does your project environment match the environment tested for this release? Older releases are available in 
+[github](https://github.com/jimasp/behave-vsc/releases).
 - See [Contributing](#contributing) below for extension debugging instructions. (Does the issue occur with the example project workspaces, or just 
 in your own project?) 
 
