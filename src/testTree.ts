@@ -18,7 +18,7 @@ export const getContentFromFilesystem = (uri: vscode.Uri) => {
     return fs.readFileSync(uri.fsPath, "utf-8")
   } 
   catch (e) {
-    config.logger.logError(`Error reading test file ${uri.fsPath}, ${e}.`);
+    config.logger.logError(`Error reading content from file ${uri.fsPath}, ${e}.`);
     return '';
   }
 };

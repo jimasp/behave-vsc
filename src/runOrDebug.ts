@@ -23,10 +23,9 @@ export async function runBehaveAll(run:vscode.TestRun, queue:QueueItem[], cancel
   try {
     await runAll(run, queue, shared_args, cancellation);
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  catch(e:any) {
-    config.logger.logError(e.stack ? e.stack : e as string); 
-  }    
+  catch(e:unknown) {
+    config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+  }
 }
 
 
@@ -58,10 +57,9 @@ export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:Que
         await runScenario(run, queueItem, args, cancellation);   
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    catch(e:any) {
-      config.logger.logError(e.stack ? e.stack : e as string); 
-    }    
+    catch(e:unknown) {
+      config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+    }
 
     
     function formatScenarioName(string:string, isOutline:boolean) {
