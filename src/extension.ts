@@ -426,10 +426,10 @@ function gotoStepHandler(uri: vscode.Uri) {
 
     vscode.workspace.openTextDocument(stepMatch.uri).then(doc => {
       vscode.window.showTextDocument(doc, {preview:false}).then(editor => {
-        console.log(editor?.document);      
-        if(!editor)
+        if(!editor) {
+          config.logger.logError("Could not open editor for file:" + uri.fsPath)
           return;
-
+        }
         editor.selection =  new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
         editor.revealRange(stepMatch.range);
       });
@@ -437,9 +437,8 @@ function gotoStepHandler(uri: vscode.Uri) {
     
   }
   catch(e:unknown) {
-    config.logger.logError((e as Error).stack!);
+    config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
   }
-
   
   
 }

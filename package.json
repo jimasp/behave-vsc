@@ -34,8 +34,8 @@
 			}]
 		}
 	},
-	"description": "Run/debug behave tests from Sidebar or Feature file",
-	"version": "0.0.1",
+	"description": "Debug/Run Behave tests from Sidebar or Feature file",
+	"version": "0.0.2",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",

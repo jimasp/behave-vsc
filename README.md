@@ -1,14 +1,14 @@
 # Behave VSC 
 
-## Pre-release v0.0.1
+## Pre-release v0.0.2
 - A simple test runner (and debugger) for running python Behave tests in vscode
 - Built with the new Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
 
 ## Tested with
-  - behave 1.2.6
-  - Python 3.9.7
-  - Linux/Windows
+- behave 1.2.6
+- Python 3.9.7
+- Linux/Windows
 
 ---
 ## Project Requirements
@@ -38,7 +38,8 @@ paths=behave-tests/features
 ---
 ## Features
 
-- Run/debug behave tests from the test workbench, or from inside a Feature file.
+- Run or Debug behave tests from the test workbench, or from inside a Feature file.
+- Go to step definition from feature file. (Not shown in below gif, just right-click inside feature file on a line containing a step and click "Go to step").
 - Run customisation via [Extension settings](#extension-settings).
 - In run mode, std/err output can be found in the Behave VSC output window, including an equivalent behave command to run the test manually. (In debug mode, errors are shown in the console.)
 
@@ -82,13 +83,13 @@ It will be faster if you select a subset/group of tests to run.
 ---
 ## Troubleshooting
 - Does your setup match the [Requirements](#requirements) section above?
-- Check if the problem is in [Known Issues](#known-issues) above
+- Check if the problem is in [Known Issues](#known-issues) above.
+- Have you tried manually running the outputted behave command from the Behave VSC output window?
 - Do you have runParallel turned on? Try turning it off.
 - Do you have the latest version of the extension?
 - Do you have the correct [Extension Settings](#extension-settings) for your project? (Also if you have removed extension settings from your 
 workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
-- Have you tried manually running the outputted behave command from the behave-vsc output window?
-- Try disabling other extensions
+- Try disabling other extensions.
 - Have you got the latest version of the extension?
 - Does your project environment match the environment tested for this release? Older releases are available in 
 [github](https://github.com/jimasp/behave-vsc/releases).
