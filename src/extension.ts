@@ -411,7 +411,7 @@ function gotoStepHandler(uri: vscode.Uri) {
     }
     
     const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
-    const stepRe = /^(\s*)(Given|When|Then|And)(.+)(\s*)$/i;
+    const stepRe = /^(\s*)(Given|When|Then|And)(.+)$/i;
     const matches = stepRe.exec(line);
     if(!matches || !matches[3])
       return;

@@ -68,18 +68,9 @@ class Configuration implements ExtensionConfiguration {
         return this.workspaceFolder.uri.fsPath;  
     }
 
-    public async getPythonExec():Promise<string> {
-        return (async() => {
-            // ~1ms
-            return await getPythonExec(this.logger, this.workspaceFolder.uri);
-        })();
+    public getPythonExec = async():Promise<string> => {
+        return await getPythonExecutable(this.logger, this.workspaceFolder.uri);
     }    
-
-    // public getWorkspaceFolderPathFromPath(path:string) {
-    //     const uri = vscode.Uri.file(path);
-    //     const wsf = vscode.workspace.getWorkspaceFolder(uri);
-    //     return wsf?.uri.fsPath;
-    // }    
 }
 
 class Logger {
@@ -126,7 +117,7 @@ class UserSettings {
     }
 }
 
-const getPythonExec = async(logger:Logger, scope:vscode.Uri) => {
+const getPythonExecutable = async(logger:Logger, scope:vscode.Uri) => {
 
     const MSPY = "ms-python.python" 
     const pyext = vscode.extensions.getExtension(MSPY);
