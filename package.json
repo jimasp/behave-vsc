@@ -24,7 +24,7 @@
 		},
 		"commands": [{
 				"command": "behave-vsc.gotoStep",
-				"title": "Go to step"
+				"title": "Go to step (experimental)"
 		}],
 		"menus": {
 			"editor/context": [{
