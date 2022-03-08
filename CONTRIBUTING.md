@@ -50,9 +50,8 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 3. (`Ctrl+Shift+B`) to build and kick off a watch.
 4. (Optional) set breakpoints in your code, e.g. start with `src/extension.ts activate` function.
 5. (`Ctrl+Shift+D`) + click the "Run Extension" target (if "Run Extension" is the current selection, you can just hit (`F5`) from anywhere).
-6. To debug using a different host project, comment out the `"${workspaceFolder}/example-project"` in `.vscode/launch.json` `args` in 
-this extension project and point it at your project path. Make sure to change it back when you are done.
-7. Note - if you have uncaught exceptions enabled, and you are running/debugging a behave test in the host vscode environment, you may 
+6. To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting `"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
+7. Note - if you have "uncaught exceptions" enabled in the extension project, and you are running/debugging a behave test in the host vscode environment, you may 
 need to hit play in the extension vscode environment to continue.
 
 ---
