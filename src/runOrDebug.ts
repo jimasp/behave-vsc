@@ -4,7 +4,7 @@ import { runAll, runScenario } from './runScenario';
 import { debugScenario } from './debugScenario';
 import { QueueItem } from './extension';
 import { updateTest } from './outputParser';
-import { getFeatureSubPath } from './helpers';
+import path = require('path');
 
 
 
@@ -35,14 +35,15 @@ export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:Que
  
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
-    const behaveFriendlyFeatureFilePath = getFeatureSubPath(scenario.featureFilePath);
+    const relativeFeatureFilePath = vscode.workspace.asRelativePath(scenario.featureFilePath);
+
     const pythonExec = await config.getPythonExec();
     const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
-    const args = [ "-i", behaveFriendlyFeatureFilePath, "-n", escapedScenarioName].concat(shared_args);
-    const friendlyCmd = `${pythonExec} -m behave -i "${behaveFriendlyFeatureFilePath}" -n "${escapedScenarioName}"`;
+    const args = [ "-i", relativeFeatureFilePath, "-n", escapedScenarioName].concat(shared_args);
+    const friendlyCmd = `${pythonExec} -m behave -i "${relativeFeatureFilePath}" -n "${escapedScenarioName}"`;
 
     if (scenario.fastSkip) {
-      config.logger.logInfo(`Fast skipping '${behaveFriendlyFeatureFilePath}' '${scenarioName}'\n`);
+      config.logger.logInfo(`Fast skipping '${relativeFeatureFilePath}' '${scenarioName}'\n`);
       return updateTest(run, {status: "skipped", duration:0}, queueItem);
     }
 

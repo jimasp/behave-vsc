@@ -10,14 +10,13 @@ const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 
 
-export const getFeatureNameFromFile = (uri:vscode.Uri): string =>  {
+export const getFeatureNameFromFile = (uri:vscode.Uri): string|null =>  {
     const content = getContentFromFilesystem(uri);
     const featureName = featureReFile.exec(content);
-    if(featureName === null) {
-        const em = "no feature found in file" + uri.fsPath;
-        config.logger.logError(em);
-        throw em;
-    }
+
+    if(featureName === null)
+        return null;
+
     return featureName[3];
 }
 

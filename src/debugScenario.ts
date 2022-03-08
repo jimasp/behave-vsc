@@ -29,6 +29,7 @@ export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, esc
     request: 'launch',
     module: "behave",
     args: args,
+    env: config.userSettings.envVars
   };
 
   await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig);

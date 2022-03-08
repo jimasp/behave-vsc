@@ -3,13 +3,18 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=unused-argument
 import time
+import os
 from behave import given, when, then  # pylint: disable=no-name-in-module
 
 
 @given("we have behave installed")
 @given("we have (behave) installed")
 def step_inst(context):
-    pass
+    some_var = os.environ.get("some_var")
+    some_var2 = os.environ.get("some_var2")
+    assert some_var == "some value"
+    assert some_var2 == "quo'ted"
+
 
 @when("we implement a {successful_or_failing} test")
 @when("\"we\" implement a [{successful_or_failing}] test")

@@ -79,7 +79,7 @@ from anywhere), or
 ---
 ## Generating the extension installer manually (.vsix file)
 1. `npm install -g vsce` (installs latest version)
-2. `vsce package -o vsix`
+2. `vsce package -o ../mypackagefolder`
 
 ---
 ## Troubleshooting

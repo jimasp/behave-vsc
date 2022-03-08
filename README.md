@@ -1,6 +1,6 @@
 # Behave VSC 
 
-## Pre-release v0.0.3
+## Pre-release v0.0.4
 - A simple test runner (and debugger) for running python Behave tests in vscode
 - Built with the new Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
@@ -58,7 +58,7 @@ run, then change it to enabled if your project test suite supports running multi
 multiple behave instances, so in the case of running all tests, it may be no faster due to the overhead of starting multiple processes. 
 It will be faster if you select a subset/group of tests to run.  
   - This setting has NO effect when you are running all tests and runAllAsOne is enabled. 
-  
+
 - `behave-vsc.runAllAsOne` 
    - Default: true
   - Enables/disables running all tests together, i.e. one-shot `python -m behave` when you run all tests. 
@@ -68,9 +68,16 @@ It will be faster if you select a subset/group of tests to run.
 
 - `behave-vsc.fastSkipList`
   - Default: empty string
-  - A csv of skip strings that start with `@`, e.g. `@skip, @skipped` that will stop behave being called for features/scenarios marked with those tags. 
+  - A csv of skip strings that start with `@`.
+  - Example: `@skip, @skipped` that will stop behave being called for features/scenarios marked with those tags. 
   - This is just so you can speed up your test run if you have a large amount of skipped tests. 
   - This setting has no effect when you are running all tests and runAllAsOne is enabled.
+
+- `behave-vsc.envVarList`
+  - Default: empty string
+  - A single-quoted csv list of environment variables to use when calling a behave command.
+  - Example `'var1':'val1','var2':'val2'"`
+  - You can escape single quotes like this: `'var3':'a value with a \\' quote'`
 
 ---
 ## Known Issues

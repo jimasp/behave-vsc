@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import config from "./configuration";
 import { getContentFromFilesystem, Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
-import { getGroupedFeatureSubPath } from './helpers';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 
@@ -254,9 +253,14 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) : {
     return { file: existing, data:  testData.get(existing) as TestFile };
   }
 
-  // support e.g. /group1.features/ parentGroup node
+  const featureName = getFeatureNameFromFile(uri);
+  if(featureName === null)
+    return undefined;
+
+  // support e.g. /group1.features/ parentGroup folder node
   let parentGroup:vscode.TestItem|undefined = undefined;
-  const sfp = getGroupedFeatureSubPath(uri.path);
+  const featuresFolderIndex = uri.path.lastIndexOf("/features/") + "/features/".length;
+  const sfp = uri.path.substring(featuresFolderIndex); 
   if(sfp.indexOf("/") !== -1) {
     const groupName = sfp.split("/")[0];
     parentGroup = controller.items.get(groupName);
@@ -266,7 +270,6 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) : {
     }
   }
 
-  const featureName = getFeatureNameFromFile(uri);
   const file = controller.createTestItem(uri.toString(), featureName, uri);
   controller.items.add(file);
 
@@ -400,6 +403,19 @@ function gotoStepHandler(uri: vscode.Uri) {
         break;
       }
     }
+
+    if(stepMatch)
+      return stepMatch;
+
+    // fallback - reverse the lookup
+    for(const[key, value] of steps) {
+      const rx = new RegExp("^\\^" + stepText + ".*");
+      const match = rx.exec(key);
+      if(match && match.length !== 0)  {
+        stepMatch = value;
+        break;
+      }
+    }
   
     return stepMatch;
   }
@@ -410,8 +426,11 @@ function gotoStepHandler(uri: vscode.Uri) {
       return;
     }
     
-    const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
-    const stepRe = /^(\s*)(Given|When|Then|And)(.+)$/i;
+    let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
+    if(line.endsWith(":")) // table
+      line = line.slice(0,-1);
+
+    const stepRe = /^(\s*)(given|when|then|but|and)(.+)$/i;
     const matches = stepRe.exec(line);
     if(!matches || !matches[3])
       return;
@@ -420,7 +439,7 @@ function gotoStepHandler(uri: vscode.Uri) {
     const stepMatch = getStepMatch(stepText);
 
     if(!stepMatch) {
-      vscode.window.showInformationMessage("Step not found (is it implemented?)")
+      vscode.window.showInformationMessage(`Step '${stepText}' not found`)
       return;
     }
 
