@@ -55,6 +55,11 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 need to hit play in the extension vscode environment to continue.
 
 ---
+## General notes
+- You can relaunch the extension from the debug toolbar in the extension vscode environment after changing extension code.
+- Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
+
+---
 ## Running extension integration tests
 Either:
 1. (`Ctrl+Shift+D`) + click the "Extension Tests" target (if "Extension Tests" is the current selection, you can just hit (`F5`) 
@@ -62,18 +67,14 @@ from anywhere), or
 2. Close vscode and excecute `npm run test` from a command line.
 
 ---
-## General notes
-- You can relaunch the extension from the debug toolbar in the extension vscode environment after changing extension code.
-- Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
-
----
-## Run extension self-test unit tests (TODO... add some beyond the simple example in src/test)
+## Debugging integration tests
 - Open the debug viewlet (`Ctrl+Shift+D`) and from the launch configuration dropdown pick `Extension Tests`.
 - Press `F5` to run the tests in a new window with your extension loaded.
+- Optionally add a breakpoint in e.g. `activate`
 - See the output of the test result in the debug console.
-- Make changes to `src/test/suite/extension.test.ts` or create new test files inside the `test/suite` folder.
+- Make changes to `src/test`.
   - The provided test runner will only consider files matching the name pattern `**.test.ts`.
-  - You can create folders inside the `test` folder to structure your tests any way you want.
+  - You can create folders inside the `test` folder to structure your tests.
 
 ---
 ## Generating the extension installer manually (.vsix file)
