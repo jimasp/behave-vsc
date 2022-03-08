@@ -103,7 +103,7 @@ own project to the extension .vscode/launch.json to debug the extension against 
 - Is your bug/use case covered by an existing test? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors (errors must be fixed, warnings should be fixed unless they would result in changes to `extension.ts`.)
 - Automated tests (verify behave results):
-	- Run `npm run test` (currently these only verify test results, they do not test any UI interactions)
+	- Close vscode and run `npm run test` (currently these only verify test results, they do not test any UI interactions)
 - Depending on what you changed, you might need to run some Manual tests, e.g.:
 	1. run example-project-workspace-1
 	2. edit a group1 feature file, change the name of the feature and save it, then: 
