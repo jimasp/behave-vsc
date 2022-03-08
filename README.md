@@ -39,9 +39,11 @@ paths=behave-tests/features
 ## Features
 
 - Run or Debug behave tests from the test workbench, or from inside a Feature file.
-- Go to step definition from feature file. (Not shown in below gif, just right-click inside feature file on a line containing a step and click "Go to step").
+- Go to step definition from a feature file (experimental). (This is not shown in below gif, just right-click inside a feature file on a line 
+containing a step and click "Go to step").
 - Run customisation via [Extension settings](#extension-settings).
-- In run mode, std/err output can be found in the Behave VSC output window, including an equivalent behave command to run the test manually. (In debug mode, errors are shown in the console.)
+- In run mode, std/err output can be found in the Behave VSC output window, including an equivalent behave command to run the test manually. 
+(In debug mode, errors are shown in the console.)
 
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
@@ -53,18 +55,21 @@ paths=behave-tests/features
   - Default: false
   - Enables/disables running tests in parallel. (Experimental). 
   - It is advised to leave this disabled for your initial test 
-run, then change it to enabled if your project test suite supports running multiple tests at the same time, i.e. unless your tests are fully 
-**isolated**, then you should not enable this setting. Note that behave itself does not support parallel testing - enabling this setting will create 
-multiple behave instances, so in the case of running all tests, it may be no faster due to the overhead of starting multiple processes. 
+run, then change it to enabled if your project test suite supports running multiple tests at the same time, i.e. unless your tests are 
+fully **isolated**, then you should not enable this setting. Note that behave itself does not support parallel testing - enabling this setting 
+will create multiple behave instances, so in the case of running all tests, it may be no faster due to the overhead of starting multiple processes. 
 It will be faster if you select a subset/group of tests to run.  
-  - This setting has NO effect when you are running all tests and runAllAsOne is enabled. 
+  - This setting has no effect when you are running all tests and runAllAsOne is enabled. 
+  - Note that running behave as separate instances can cause different test results from a one-shot run under some circumstances versus running them 
+  individually, e.g. if you set `context.failed` in your tests.  
 
 - `behave-vsc.runAllAsOne` 
    - Default: true
   - Enables/disables running all tests together, i.e. one-shot `python -m behave` when you run all tests. 
-  - Keep this enabled unless you prefer to use runParallel when running all tests so you can see the test results as they come in. 
+  - Keep this enabled unless (a) you can enable runParallel, or (b) you prefer slower test runs where you can see the test results update as they 
+  come in. 
   - Note that running behave as one-shot can cause different test results under some circumstances versus running them individually, e.g. if you 
-  set `context.failed` in your tests.)   
+  set `context.failed` in your tests.
 
 - `behave-vsc.fastSkipList`
   - Default: empty string
@@ -77,12 +82,16 @@ It will be faster if you select a subset/group of tests to run.
   - Default: empty string
   - A single-quoted csv list of environment variables to use when calling a behave command.
   - Example `'var1':'val1','var2':'val2'"`
-  - You can escape single quotes like this: `'var3':'a value with a \\' quote'`
+  - You can escape single quotes like this: `'var3':'a value containing a \' quote'` (the escape should be double-slashed `\\'` in the 
+  settings.json file itself).
 
 ---
 ## Known Issues
-- Refresh button duplicated (MS have a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 - Does not support multiple workspace folders. (No plans to support this.)
+- The "Go to Step" feature doesn't always work and never will. This is because there are a lot of ways to specify 
+step matching and parameters in behave (parse,  cfparse, re). 
+- Refresh button duplicated if more than one test extension is active e.g. pytest tests, (MS have 
+a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 - Parallel tests add up durations, making it look like parallel test runs take longer than they actually do.
 - Check if the issue has been reported in github [issues](https://github.com/jimasp/behave-vsc/issues)?
 
