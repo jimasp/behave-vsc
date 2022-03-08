@@ -40,7 +40,7 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 	- `code --install-extension ms-python.python`
 	- `code --install-extension dbaeumer.vscode-eslint`
 	- `code --install-extension amodio.tsl-problem-matcher`
-7. Check it all works before doing any development:  
+7. Check it all works before opening visual studio code:  
 	- `npm run test`
 
 ---
