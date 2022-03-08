@@ -6,10 +6,11 @@ const EXTENSION_NAME = "behave-vsc";
 const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 
+
 export interface ExtensionConfiguration {
-    readonly extensionName: "behave-vsc";
-    readonly extensionFullName: "jimasp.behave-vsc";
-    readonly extensionFriendlyName: "Behave VSC";
+    readonly extensionName: string;
+    readonly extensionFullName: string;
+    readonly extensionFriendlyName: string;
     readonly debugOutputFilePath: string;
     readonly logger: Logger;
     readonly userSettings: UserSettings;
@@ -107,13 +108,24 @@ class UserSettings {
     public runParallel:boolean;
     public runAllAsOne:boolean;
     public fastSkipList:string[];
+    public envVars: {[name: string]: string} = {};
     constructor(wsConfig:vscode.WorkspaceConfiguration) {
         const runParallelCfg:boolean|undefined = wsConfig.get("runParallel");
         const runAllAsOneCfg:boolean|undefined = wsConfig.get("runAllAsOne");
         const fastSkipListCfg:string|undefined = wsConfig.get("fastSkipList");
+        const envVarListCfg:string|undefined = wsConfig.get("envVarList");
         this.runParallel = runParallelCfg !== undefined ? runParallelCfg : false;
         this.runAllAsOne = runAllAsOneCfg !== undefined ? runAllAsOneCfg : true;
         this.fastSkipList = fastSkipListCfg !== undefined ? fastSkipListCfg.split(',').map(s=> !s.startsWith("@") ? "" : s.trim()) : [""];
+        if(envVarListCfg !== undefined) {
+            envVarListCfg.split("',").map(s=> { 
+                s = s.replace(/\\'/, "^#^");
+                const e = s.split("':");
+                const name = e[0].replace(/'/g,"").replace("^#^","'");
+                const value = e[1].replace(/'/g,"").replace("^#^", "'");
+                this.envVars[name] = value;
+            });
+        }
     }
 }
 

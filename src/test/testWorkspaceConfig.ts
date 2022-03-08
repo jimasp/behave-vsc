@@ -12,8 +12,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration
 			case "runAllAsOne":
 				return <T><unknown>(this.runAllAsOne);
 			case "fastSkipList":
-				return <T><unknown>(this.fastSkipList)
-		
+				return <T><unknown>(this.fastSkipList);
+			case "envVarList":
+					return <T><unknown>("'some_var':'some value','some_var2':'quo\\'ted'");
+							
 			default:
 				break;
 		}

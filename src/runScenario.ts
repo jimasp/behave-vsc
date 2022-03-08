@@ -21,12 +21,13 @@ async function spawnBehave(args:string[], workingDirectory:string, cancellation:
 
   const local_args = [...args];
   local_args.unshift("-m", "behave");
-  const fld = { cwd: workingDirectory };  
-  let behaveOutput = "";  
 
+  const options = { cwd: workingDirectory, env: config.userSettings.envVars}; 
+  let behaveOutput = "";  
+  
   // spawn() is old-skool async via callbacks
   const pythonExec = await config.getPythonExec();
-  const cp = spawn(pythonExec, local_args, fld); 
+  const cp = spawn(pythonExec, local_args, options); 
 
   cancellation.onCancellationRequested(() => {
     // (note - vscode will have ended the run, so we cannot update the test status)

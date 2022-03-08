@@ -4,6 +4,7 @@ import { runAll, runScenario } from './runScenario';
 import { debugScenario } from './debugScenario';
 import { QueueItem } from './extension';
 import { updateTest } from './outputParser';
+import path = require('path');
 
 
 
@@ -34,8 +35,8 @@ export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:Que
  
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
-    const featuresFolderIndex = scenario.featureFilePath.lastIndexOf("/features/") + 1;
-    const behaveFriendlyFeatureFilePath = "./" + scenario.featureFilePath.substring(featuresFolderIndex);
+    const featuresFolderIndex = scenario.featureFilePath.lastIndexOf("/features/");
+    const behaveFriendlyFeatureFilePath = scenario.featureFilePath.substring(featuresFolderIndex);   
 
     const pythonExec = await config.getPythonExec();
     const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);

@@ -11,5 +11,6 @@
     "python.formatting.provider": "black",
     "behave-vsc.runParallel": true,
     "behave-vsc.runAllAsOne": false,
-    "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too"  
+    "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
+    // remember to update TestWorkspaceConfig if you change this file
 }

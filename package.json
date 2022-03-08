@@ -19,7 +19,12 @@
 					"type": "string",
 					"default": "",
 					"description": "Optional csv list of fast skip tags, example: '@skip, @skip-me-too'.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip."
-				}					
+				},
+				"behave-vsc.envVarList": {
+					"type": "string",
+					"default": "",
+					"description": "Optional single-quoted csv list of environment variables to use when calling a behave command, example 'var1':'val1','var2':'val2'"
+				}
 			}
 		},
 		"commands": [{

@@ -250,7 +250,7 @@ export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
 			scenario_featureFilePath:'.../example-project-workspace-1/behave-tests/features/group2.features/duplicate.feature',
       scenario_getLabel:'run a test',
       scenario_isOutline:false,
-      scenario_result:'passed',
+      scenario_result:'Traceback (most recent call last):\n  File... assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName:'run a test',
       test_children:undefined,
       test_description:undefined,
