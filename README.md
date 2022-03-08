@@ -53,13 +53,13 @@ containing a step and click "Go to step").
 
 - `behave-vsc.runParallel`
   - Default: false
+  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
   - Enables/disables running tests in parallel. (Experimental). 
   - It is advised to leave this disabled for your initial test 
 run, then change it to enabled if your project test suite supports running multiple tests at the same time, i.e. unless your tests are 
 fully **isolated**, then you should not enable this setting. Note that behave itself does not support parallel testing - enabling this setting 
 will create multiple behave instances, so in the case of running all tests, it may be no faster due to the overhead of starting multiple processes. 
 It will be faster if you select a subset/group of tests to run.  
-  - This setting has no effect when you are running all tests and runAllAsOne is enabled. 
   - Note that running behave as separate instances can cause different test results from a one-shot run under some circumstances versus running them 
   individually, e.g. if you set `context.failed` in your tests.  
 
@@ -73,11 +73,11 @@ It will be faster if you select a subset/group of tests to run.
 
 - `behave-vsc.fastSkipList`
   - Default: empty string
+  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
   - A csv of skip strings that start with `@`.
   - Example: `@skip, @skipped` that will stop behave being called for features/scenarios marked with those tags. 
   - This is just so you can speed up your test run if you have a large amount of skipped tests. 
-  - This setting has no effect when you are running all tests and runAllAsOne is enabled.
-
+  
 - `behave-vsc.envVarList`
   - Default: empty string
   - A single-quoted csv list of environment variables to use when calling a behave command.
