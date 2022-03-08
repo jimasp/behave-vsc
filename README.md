@@ -93,7 +93,7 @@ step matching and parameters in behave (parse,  cfparse, re).
 - Refresh button duplicated if more than one test extension is active e.g. pytest tests, (MS have 
 a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 - Parallel tests add up durations, making it look like parallel test runs take longer than they actually do.
-- Check if the issue has been reported in github [issues](https://github.com/jimasp/behave-vsc/issues)?
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
 
 
 ---
