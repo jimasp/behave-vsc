@@ -4,8 +4,6 @@ import { runAll, runScenario } from './runScenario';
 import { debugScenario } from './debugScenario';
 import { QueueItem } from './extension';
 import { updateTest } from './outputParser';
-import path = require('path');
-
 
 
 const shared_args = [

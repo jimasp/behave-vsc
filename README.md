@@ -98,6 +98,7 @@ a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 
 ---
 ## Troubleshooting
+- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" turned off?
 - Does your setup match the [Requirements](#requirements) section above?
 - Check if the problem is in [Known Issues](#known-issues) above.
 - Have you tried manually running the outputted behave command from the Behave VSC output window?
