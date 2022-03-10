@@ -117,7 +117,7 @@ class UserSettings {
         this.runParallel = runParallelCfg !== undefined ? runParallelCfg : false;
         this.runAllAsOne = runAllAsOneCfg !== undefined ? runAllAsOneCfg : true;
         this.fastSkipList = fastSkipListCfg !== undefined ? fastSkipListCfg.split(',').map(s=> !s.startsWith("@") ? "" : s.trim()) : [""];
-        if(envVarListCfg !== undefined) {
+        if(envVarListCfg !== undefined && envVarListCfg.indexOf(":") !== -1) {
             envVarListCfg.split("',").map(s=> { 
                 s = s.replace(/\\'/, "^#^");
                 const e = s.split("':");
