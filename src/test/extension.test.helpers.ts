@@ -75,7 +75,7 @@ export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: v
 	getExpectedResults: (testConfig:vscode.WorkspaceConfiguration) => TestResult[]) => {
 
 	actRet = await activateExtension();
-	actRet.config.__setExtensionTestsConfig(testConfig);
+	actRet.config.reloadUserSettings(testConfig);
 	const expectedResults = getExpectedResults(testConfig);
 
 	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);	

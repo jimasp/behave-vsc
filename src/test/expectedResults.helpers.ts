@@ -39,7 +39,8 @@ export class TestResult implements ITestResult {
 }
 
 export function applyFastSkip(testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
-  const fastSkipEnabled = testConfig.get("fastSkipList") !== undefined && testConfig.get("runAllAsOne") === false;
+  
+  const fastSkipEnabled = testConfig.get("runAllAsOne") === false && testConfig.get("fastSkipList") !== undefined;
 
   // these could be "passed" or "Traceback..." etc. as appropriate to the test, 
   // but if fastskip is enabled, they should always be "skipped"
