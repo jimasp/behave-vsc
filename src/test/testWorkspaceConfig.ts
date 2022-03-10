@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration 
 {
-	constructor(private runParallel:boolean, private runAllAsOne:boolean, private fastSkipList: string) {}
+	constructor(private runParallel:boolean, private runAllAsOne:boolean, private fastSkipList: string, 
+		private envVarList:string) {}
 
 	get<T>(section: string): T | undefined {
 		
@@ -14,7 +15,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration
 			case "fastSkipList":
 				return <T><unknown>(this.fastSkipList);
 			case "envVarList":
-					return <T><unknown>("'some_var':'some value','some_var2':'quo\\'ted'");
+					return <T><unknown>(this.envVarList);
 							
 			default:
 				break;

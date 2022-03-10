@@ -181,13 +181,16 @@ export async function activate(context: vscode.ExtensionContext) {
     return queue;
   };
 
+   
   const refreshHandler = async() => {
-     await findInitialFeatureFiles(ctrl, true);
+    await findInitialFeatureFiles(ctrl, true);
   };
   // @ts-ignore: Property 'refreshHander' does not exist on type 'TestController'
   ctrl.refreshHandler = refreshHandler;
-    vscode.workspace.onDidChangeConfiguration(async(e) => {
+  
+  vscode.workspace.onDidChangeConfiguration(async(e) => {
     if(e.affectsConfiguration(config.extensionName)) {
+      config.reloadUserSettings();
       await refreshHandler();
     }
   });

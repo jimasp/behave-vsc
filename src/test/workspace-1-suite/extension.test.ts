@@ -5,26 +5,27 @@ import { runAllTestsAndAssertTheResults} from '../extension.test.helpers';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getExpectedResults } from './expectedResults';
 
+const envVarList = "'some_var':'some value','some_var2':'quo\\'ted'";
 
 suite('Example-project-workspace-1 Test Suite', () => {	
 
 	test('runHandler should return expected results with config { runParallel:false, runAllAsOne:true, fastSkip: "@fast-skip-me, @fast-skip-me-too" }', 
 		async() => {
-			const testConfig = new TestWorkspaceConfig(false, true, "@fast-skip-me, @fast-skip-me-too" );
+			const testConfig = new TestWorkspaceConfig(false, true, "@fast-skip-me, @fast-skip-me-too", envVarList);
 			await runAllTestsAndAssertTheResults(false, testConfig, getExpectedResults);
 		}
 	).timeout(120000);	
 
 	test('runHandler should return expected results with config { runParallel:false, runAllAsOne:false, fastSkip: "@fast-skip-me, @fast-skip-me-too" }', 
 		async() => {		
-			const testConfig = new TestWorkspaceConfig(false, false, "@fast-skip-me, @fast-skip-me-too" );
+			const testConfig = new TestWorkspaceConfig(false, false, "@fast-skip-me, @fast-skip-me-too", envVarList);
 			await runAllTestsAndAssertTheResults(false, testConfig, getExpectedResults);
 		}
 	).timeout(120000);		
 
 	test('runHandler should return expected results with config { runParallel:true, runAllAsOne:false, fastSkip: "@fast-skip-me, @fast-skip-me-too" }', 
 		async() => {
-			const testConfig = new TestWorkspaceConfig(true, false, "@fast-skip-me, @fast-skip-me-too" );
+			const testConfig = new TestWorkspaceConfig(true, false, "@fast-skip-me, @fast-skip-me-too", envVarList);
 			await runAllTestsAndAssertTheResults(false, testConfig, getExpectedResults);
 		}
 	).timeout(120000);	
@@ -32,7 +33,7 @@ suite('Example-project-workspace-1 Test Suite', () => {
 	test('runHandler (debug) should return expected results with config { fastSkip: "@fast-skip-me, @fast-skip-me-too" }', 
 		async() => {		
 			// NOTE - if this fails, try removing all breakpoints in both environments
-			const testConfig = new TestWorkspaceConfig(false, false, "@fast-skip-me, @fast-skip-me-too" );
+			const testConfig = new TestWorkspaceConfig(false, false, "@fast-skip-me, @fast-skip-me-too", envVarList);
 			await runAllTestsAndAssertTheResults(true, testConfig, getExpectedResults);
 		}
 	).timeout(240000);		
