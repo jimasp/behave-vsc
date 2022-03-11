@@ -122,7 +122,7 @@ class UserSettings {
         this.runAllAsOne = runAllAsOneCfg !== undefined ? runAllAsOneCfg : true;
         
         if(fastSkipListCfg !== undefined && fastSkipListCfg !== "") {
-            if(fastSkipListCfg !== "" && (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.indexOf(",") === -1 || fastSkipListCfg.length < 5)) {
+            if(fastSkipListCfg !== "" && (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2)) {
                 logger.logError("Invalid FastSkipList setting ignored.");
             }
             else {
@@ -131,7 +131,8 @@ class UserSettings {
         }
 
         if(envVarListCfg !== undefined && envVarListCfg !== "") {
-            if(envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("',") === -1 || envVarListCfg.length < 7) {
+            if(envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7) 
+            {
                 logger.logError("Invalid EnvVarList setting ignored.");
             }            
             else {

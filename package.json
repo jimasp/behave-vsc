@@ -5,26 +5,26 @@
 		"configuration": {
 			"title": "behave-vsc",
 			"properties": {
-				"behave-vsc.runParallel": {
-					"type": "boolean",
-					"default": false,
-					"description": "Run behave tests in fast async mode.\nLeave this off for your initial run, then enable if your test setup supports it (fully isolated).\n- This setting has no effect when you run all tests at once and **runAllAsOne** is enabled. "
-				},
-				"behave-vsc.runAllAsOne": {
-					"type": "boolean",
-					"default": true,
-					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to leave this on, unless you can enable Run Parallel."
+				"behave-vsc.envVarList": {
+					"type": "string",
+					"default": "",
+					"description": "Optional single-quoted csv list of environment variables to use when calling a behave command\nExample 'var1':'val1','var2':'val2'"
 				},				
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional csv list of fast skip tags, example: '@skip, @skip-me-too'.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip.\nThis setting has no effect when you run all tests at once and **runAllAsOne** is enabled. "
+					"description": "Optional unquoted csv list of fast skip tags, example: @skip, @skip-me-too.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip.\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
 				},
-				"behave-vsc.envVarList": {
-					"type": "string",
-					"default": "",
-					"description": "Optional single-quoted csv list of environment variables to use when calling a behave command, example 'var1':'val1','var2':'val2'"
-				}
+				"behave-vsc.runAllAsOne": {
+					"type": "boolean",
+					"default": true,
+					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to leave this on, unless you can enable 'Run Parallel'."
+				},						
+				"behave-vsc.runParallel": {
+					"type": "boolean",
+					"default": false,
+					"description": "Run behave tests in fast async mode.\nLeave this off for your initial run, then enable if your test setup supports it (i.e. your tests are fully isolated).\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
+				}				
 			}
 		},
 		"commands": [{
@@ -40,7 +40,7 @@
 		}
 	},
 	"description": "Debug/Run Behave tests from Sidebar or Feature file",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
@@ -48,7 +48,7 @@
 	},
 	"publisher": "jimasp",
 	"private": true,
-	"license": "SEE LICENSE IN LICENSE.txt",
+	"license": "See LICENSE.txt",
 	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
 	"bugs": {
 		"url": "https://github.com/jimasp/behave-vsc/issues"

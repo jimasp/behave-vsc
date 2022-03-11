@@ -1,6 +1,6 @@
 # Behave VSC 
 
-## Pre-release v0.0.5
+## Pre-release v0.0.6
 - A simple test runner (and debugger) for running python Behave tests in vscode
 - Built with the new Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
@@ -18,7 +18,7 @@
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/) 
 - A (lowercase) "features" folder somewhere in the project
-- A behave-conformant directory structure, e.g. you could have a root `features` folder that contains a `steps` folder:
+- A behave-conformant directory structure, e.g. you could have a project root `features` folder that contains a `steps` folder:
 ```  
   . features/  
   .       +-- steps/  
@@ -98,7 +98,8 @@ a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 
 ---
 ## Troubleshooting
-- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" turned off?
+- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" 
+turned off?
 - Does your setup match the [Requirements](#requirements) section above?
 - Check if the problem is in [Known Issues](#known-issues) above.
 - Have you tried manually running the outputted behave command from the Behave VSC output window?
