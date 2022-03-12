@@ -1,15 +1,18 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { TextDecoder } from 'util';
 import config from "./configuration";
 import { parseOutputAndUpdateTestResult } from './outputParser';
 import { QueueItem } from './extension';
 
+let debugStopClicked = false;
+export const resetDebugStop = () => debugStopClicked = false;
+export const debugStopped = () => debugStopClicked;
 
-export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
-  args: string[], cancellation: vscode.CancellationToken): Promise<void> {
-        
+
+export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, args: string[],
+  cancellation: vscode.CancellationToken): Promise<void> {
+
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const outFile = path.join(`${config.debugOutputFilePath}`, `${featureSlug}.${scenarioSlug}.result`);
@@ -32,33 +35,51 @@ export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, esc
     env: config.userSettings.envVars
   };
 
-  await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig);
 
+  if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
+    return; 
+
+  // debug stop - VERY hacky way to determine if debug stopped by user click
+  // (onDidTerminateDebugSession doesn't provide reason for the stop)
+  vscode.debug.registerDebugAdapterTrackerFactory('*', {
+    createDebugAdapterTracker() {
+      return {
+        onDidSendMessage: m => {
+          if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
+            debugStopClicked = true;
+          }
+         }
+      };
+    }
+  });    
+  
+  // test run stop 
   cancellation.onCancellationRequested(() => {
     config.logger.logInfo("-- TEST RUN CANCELLED --\n");
-    // (note - vscode will have ended the run, so we cannot update the test status)
     return vscode.debug.stopDebugging();      
-  });  
+  });
+
   
-  let onDidTerminateDebugSessionFired = false;
+  let onDidTerminateDebugSessionAlreadyFired = false;
 
   return await new Promise((resolve, reject) => {
+      // debug stopped or completed    
+    vscode.debug.onDidTerminateDebugSession(() => {
 
-    vscode.debug.onDidTerminateDebugSession(async() => {
-      // event seems to get raised multiple times?
-      if (onDidTerminateDebugSessionFired) 
-        return; 
-      onDidTerminateDebugSessionFired = true;
+        if (onDidTerminateDebugSessionAlreadyFired) 
+          return; 
+        onDidTerminateDebugSessionAlreadyFired = true;
 
-      if (!fs.existsSync(outFile))
-        reject("error: see debug console");
+        if(debugStopClicked)
+          return resolve();
 
-      const outFileUri = vscode.Uri.file(outFile);        
-      const raw = await vscode.workspace.fs.readFile(outFileUri);
-      const behaveOutput = new TextDecoder('utf-8').decode(raw);
+        if (!fs.existsSync(outFile))
+          return reject("Error: see behave output in debug console");
+      
+        const behaveOutput = fs.readFileSync(outFile, "utf8");
+        parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, true);
 
-      parseOutputAndUpdateTestResult(run, queueItem, behaveOutput);
-      resolve();
+        resolve();
     });
 
   });

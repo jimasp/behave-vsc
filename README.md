@@ -51,6 +51,28 @@ containing a step and click "Go to step").
 ---
 ## Extension Settings
 
+- `behave-vsc.envVarList`
+  - Default: empty string
+  - A single-quoted csv list of environment variables to use when calling a behave command.
+  - Example `'var1':'val1','var2':'val2'"`
+  - You can escape single quotes like this: `'var3':'a value containing a \' quote'` (the escape should be double-slashed `\\'` in the 
+  settings.json file itself).
+
+- `behave-vsc.fastSkipList`
+  - Default: empty string
+  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
+  - A csv of skip tags that each start with `@` that will stop behave being called for features/scenarios marked with those tags. 
+  - Example: `@skip, @skipped` 
+  - This is just so you can speed up your test run if you have a large amount of skipped tests. 
+
+- `behave-vsc.runAllAsOne` 
+  - Default: true
+  - Enables/disables running all tests together, i.e. one-shot `python -m behave` when you run all tests. 
+  - Keep this enabled unless (a) you can enable runParallel, or (b) you prefer slower test runs where you can see the test results update as they 
+  come in. 
+  - Note that running behave as one-shot can cause different test results under some circumstances versus running them individually, e.g. if you 
+  set `context.failed` in your tests.
+
 - `behave-vsc.runParallel`
   - Default: false
   - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
@@ -62,28 +84,7 @@ will create multiple behave instances, so in the case of running all tests, it m
 It will be faster if you select a subset/group of tests to run.  
   - Note that running behave as separate instances can cause different test results from a one-shot run under some circumstances versus running them 
   individually, e.g. if you set `context.failed` in your tests.  
-
-- `behave-vsc.runAllAsOne` 
-   - Default: true
-  - Enables/disables running all tests together, i.e. one-shot `python -m behave` when you run all tests. 
-  - Keep this enabled unless (a) you can enable runParallel, or (b) you prefer slower test runs where you can see the test results update as they 
-  come in. 
-  - Note that running behave as one-shot can cause different test results under some circumstances versus running them individually, e.g. if you 
-  set `context.failed` in your tests.
-
-- `behave-vsc.fastSkipList`
-  - Default: empty string
-  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
-  - A csv of skip strings that start with `@`.
-  - Example: `@skip, @skipped` that will stop behave being called for features/scenarios marked with those tags. 
-  - This is just so you can speed up your test run if you have a large amount of skipped tests. 
-  
-- `behave-vsc.envVarList`
-  - Default: empty string
-  - A single-quoted csv list of environment variables to use when calling a behave command.
-  - Example `'var1':'val1','var2':'val2'"`
-  - You can escape single quotes like this: `'var3':'a value containing a \' quote'` (the escape should be double-slashed `\\'` in the 
-  settings.json file itself).
+ 
 
 ---
 ## Known Issues

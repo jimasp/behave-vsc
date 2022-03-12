@@ -5,19 +5,25 @@ import { parseOutputAndUpdateAllTestResults, parseOutputAndUpdateTestResult } fr
 import { QueueItem } from './extension';
 
 
-export async function runAll(run:vscode.TestRun, queue:QueueItem[], args: string[], cancellation: vscode.CancellationToken) : Promise<void> {
-  const behaveOutput = await spawnBehave(args, config.workspaceFolderPath, cancellation);
-  parseOutputAndUpdateAllTestResults(run, queue, behaveOutput);
+export async function runAll(pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args: string[], friendlyCmd:string, 
+  cancellation: vscode.CancellationToken) : Promise<void> {
+
+  const behaveOutput = await spawnBehave(pythonExec, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
+  parseOutputAndUpdateAllTestResults(run, queue, behaveOutput, false);
 }
 
 
-export async function runScenario(run:vscode.TestRun, queueItem:QueueItem, args: string[], cancellation: vscode.CancellationToken) : Promise<void> {
-  const behaveOutput = await spawnBehave(args, config.workspaceFolderPath, cancellation);
-  parseOutputAndUpdateTestResult(run, queueItem, behaveOutput);
+export async function runScenario(pythonExec:string, run:vscode.TestRun, queueItem:QueueItem, args: string[], 
+  cancellation: vscode.CancellationToken, friendlyCmd:string) : Promise<void> {
+    const behaveOutput = await spawnBehave(pythonExec, args, config.workspaceFolderPath, friendlyCmd, cancellation);
+    parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, false);
 }
 
 
-async function spawnBehave(args:string[], workingDirectory:string, cancellation: vscode.CancellationToken) : Promise<string> {
+async function spawnBehave(pythonExec:string, args:string[], workingDirectory:string, friendlyCmd:string, 
+  cancellation: vscode.CancellationToken) : Promise<string> {
+
+  config.logger.logInfo(`${friendlyCmd}\n`);
 
   const local_args = [...args];
   local_args.unshift("-m", "behave");
@@ -26,8 +32,8 @@ async function spawnBehave(args:string[], workingDirectory:string, cancellation:
   let behaveOutput = "";  
   
   // spawn() is old-skool async via callbacks
-  const pythonExec = await config.getPythonExec();
   const cp = spawn(pythonExec, local_args, options); 
+  cp.stdout.setEncoding('utf8');
 
   cancellation.onCancellationRequested(() => {
     // (note - vscode will have ended the run, so we cannot update the test status)

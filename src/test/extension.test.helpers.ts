@@ -131,7 +131,7 @@ export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: v
 			test_label: result.test.label,
 			scenario_isOutline: result.scenario.isOutline,
 			scenario_getLabel: result.scenario.getLabel(),
-			scenario_featureFilePath: standardisePath(result.scenario.featureFilePath),
+			scenario_featureFilePath: standardisePath(result.scenario.featureFileRelativePath), // IS THIS REQUIRED NOW?
 			scenario_featureName: result.scenario.featureName,
 			scenario_scenarioName: result.scenario.scenarioName,
 			scenario_fastSkip: result.scenario.fastSkip,
