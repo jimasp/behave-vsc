@@ -99,38 +99,34 @@ a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
 
 ---
 ## Troubleshooting
-- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" 
-turned off?
 - Does your setup match the [Requirements](#requirements) section above?
+- Does your project environment match the environment tested for this release? (Older releases are available in 
+[github](https://github.com/jimasp/behave-vsc/releases) or from the uninstall dropdown in visual studio code.)
 - Check if the problem is in [Known Issues](#known-issues) above.
 - Have you tried manually running the outputted behave command from the Behave VSC output window?
+- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have 
+"Raised Exceptions" etc. turned off?
 - Do you have runParallel turned on? Try turning it off.
-- Do you have the latest version of the extension?
 - Do you have the correct [Extension Settings](#extension-settings) for your project? (Also if you have removed extension settings from your 
 workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
-- Try disabling other extensions.
-- Have you got the latest version of the extension?
-- Does your project environment match the environment tested for this release? Older releases are available in 
-[github](https://github.com/jimasp/behave-vsc/releases).
-- See [Contributing](#contributing) below for extension debugging instructions. (Does the issue occur with the example project workspaces, or just 
-in your own project?) 
+- Try temporarily disabling other extensions.
+- See [Contributing](#contributing) below for extension debugging instructions with your own project. (Does the issue occur with the example 
+project workspaces, or just in your own project?) 
 
 ---  
 ## How it works
 
 ### How test runs work:
 
-- The extension builds up a separate command for each test and runs it. For example:
-  ```
-  python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "my scenario"
-  ```
+- The extension builds up a separate command for each test and runs it. For example: 
+`python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "my scenario"`
 
 - Standard and Error output is shown in the behave-vsc output window, including an equivalent behave command to run the test manually.
 
 
 ### How debug works:
 
-- It builds up a debug launch config and runs that.    
+- It dynamically builds a debug launch config and runs that.    
 This enables `ms-python.python` to do the heavy lifting of setting up the debug port etc.
 
 - Error output (only) is shown in the debug console window.
