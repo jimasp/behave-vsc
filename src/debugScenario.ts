@@ -11,11 +11,14 @@ export const debugStopped = () => debugStopClicked;
 
 
 export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, args: string[],
-  cancellation: vscode.CancellationToken): Promise<void> {
+  cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
 
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const outFile = path.join(`${config.debugOutputFilePath}`, `${featureSlug}.${scenarioSlug}.result`);
+
+  // don't show to user in debug - just for extension debug/test
+  console.log(friendlyCmd);
 
   // delete any existing file with the same name (e.g. prior run or duplicate slug)
   if (fs.existsSync(outFile)) {

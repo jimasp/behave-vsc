@@ -231,7 +231,7 @@ function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResul
   }
 
   if(step.result.status === "undefined") {
-    return {status: `Step: '${step.keyword} ${step.name}' has not been implemented.`, duration: duration};
+    return {status: `Step '${step.keyword} ${step.name}' has not been implemented.`, duration: duration};
   }
 
   if(step.result.status === "failed") {

@@ -48,7 +48,7 @@ export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:Que
     try {    
       if(debug) {   
         // (cancellation token won't get set on a debug stop, so we don't bother to pass it)
-        await debugScenario(run, queueItem, escapedScenarioName, args, cancellation); 
+        await debugScenario(run, queueItem, escapedScenarioName, args, cancellation, friendlyCmd); 
       }
       else {
         await runScenario(pythonExec, run, queueItem, args, cancellation, friendlyCmd);

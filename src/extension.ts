@@ -14,8 +14,10 @@ function logRunDiagOutput(debugRun:boolean) {
   config.logger.clear();
   const configText =  `user configuration: ${JSON.stringify(config.userSettings, null, 2)}\n`;
   if(debugRun) {
-    // don't show to user on a debug run, just log in extension/test run debug
-    console.info(configText);
+    // don't show these to user on a debug run, just log in extension/test run debug
+    console.log(configText);
+    console.log("equivalent commands:\n");
+    console.log(`cd "${config.workspaceFolderPath}"`);
     return;
   }
   vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
@@ -123,7 +125,6 @@ export async function activate(context: vscode.ExtensionContext) {
           updateRun(qi.test, coveredLines, run);
         } 
         else {
-          console.log("debugStopped is false")
 
           run.started(qi.test);
 
@@ -159,8 +160,6 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       run.appendOutput(`Completed ${test.id}\r\n`);
-
-      console.log(completed);
 
       completed++;
       if (completed === queue.length) {

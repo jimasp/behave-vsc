@@ -90,7 +90,7 @@ export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
 			scenario_featureFilePath:'.../example-project-workspace-1/behave-tests/features/group1.features/basic.feature',
       scenario_getLabel:'run a test with a missing steps',
       scenario_isOutline:false,
-      scenario_result:"step 'When we have a missing step' has not been implemented.",
+      scenario_result:"Step 'When we have a missing step' has not been implemented.",
       scenario_scenarioName:'run a test with a missing steps',
       test_children:undefined,
       test_description:undefined,
