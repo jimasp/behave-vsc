@@ -103,6 +103,7 @@ class Logger {
         this.outputChannel.appendLine(text);
         this.outputChannel.appendLine(ocHighlight);
         this.outputChannel.show(true);
+        vscode.debug.activeDebugConsole.appendLine(text);
         if(this.run)
             this.run?.appendOutput(text);        
     };   

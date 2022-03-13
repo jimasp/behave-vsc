@@ -7,12 +7,22 @@ import { getContentFromFilesystem, Scenario, testData, TestFile } from './testTr
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
+import { debugStopped, resetDebugStop } from './debugScenario';
 
 
-function logRunHandlerDiagOutput() {
+function logRunDiagOutput(debugRun:boolean) {
   config.logger.clear();
-  config.logger.logInfo(`user configuration: ${JSON.stringify(config.userSettings, null, 2)}\n`);
-  config.logger.logInfo("equivalent commands:");
+  const configText =  `user configuration: ${JSON.stringify(config.userSettings, null, 2)}\n`;
+  if(debugRun) {
+    // don't show these to user on a debug run, just log in extension/test run debug
+    console.log(configText);
+    console.log("equivalent commands:\n");
+    console.log(`cd "${config.workspaceFolderPath}"`);
+    return;
+  }
+  vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
+  config.logger.logInfo(configText);
+  config.logger.logInfo("equivalent commands:\n");
   config.logger.logInfo(`cd "${config.workspaceFolderPath}"`);
 }
 
@@ -39,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
-    logRunHandlerDiagOutput();
+    logRunDiagOutput(debug);
     const queue: QueueItem[] = [];
     const run = ctrl.createTestRun(request, config.extensionFullName, false); 
     config.logger.run = run;
@@ -92,10 +102,11 @@ export async function activate(context: vscode.ExtensionContext) {
         throw err;
       }
 
-      if(!debug && config.userSettings.runAllAsOne &&
-        (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0) ) {
+      const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
-        await runBehaveAll(run, queue, cancellation);
+      if(!debug && allTestsIncluded && config.userSettings.runAllAsOne) {
+        
+        await runBehaveAll(context, run, queue, cancellation);
 
         for (const qi of queue) {
           updateRun(qi.test, coveredLines, run);
@@ -104,25 +115,26 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const asyncPromises:Promise<void>[] = [];
 
+      const asyncPromises:Promise<void>[] = [];
+      resetDebugStop();
 
       for (const qi of queue) {
         run.appendOutput(`Running ${qi.test.id}\r\n`);
-        if (cancellation.isCancellationRequested) {
-          run.skipped(qi.test);
-        } else {
+        if(debugStopped() || cancellation.isCancellationRequested) {
+          updateRun(qi.test, coveredLines, run);
+        } 
+        else {
 
           run.started(qi.test);
 
           if(!config.userSettings.runParallel || debug) {
-            // run/debug one by one, or runAllAsOne
-            await qi.scenario.runOrDebug(debug, run, qi, cancellation);
-            updateRun(qi.test, coveredLines, run);
+            await qi.scenario.runOrDebug(context, debug, run, qi, cancellation);
+            updateRun(qi.test, coveredLines, run);              
           }
           else {
             // async run (parallel)
-            const promise = qi.scenario.runOrDebug(false, run, qi, cancellation).then(() => {
+            const promise = qi.scenario.runOrDebug(context, false, run, qi, cancellation).then(() => {
               updateRun(qi.test, coveredLines, run)
             });
             asyncPromises.push(promise);
@@ -131,7 +143,6 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       await Promise.all(asyncPromises);
-
     };
 
 

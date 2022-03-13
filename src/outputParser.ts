@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import config from "./configuration";
 import { QueueItem } from "./extension";
 
-
 export interface ParseResult {
   status:string; 
   duration:number;
@@ -36,16 +35,18 @@ interface JsonStep {
   }
 }
 
-export function parseOutputAndUpdateAllTestResults(run:vscode.TestRun, queue:QueueItem[], behaveOutput: string) {
-  parseOutputAndUpdateTestResults(run, queue, behaveOutput);
+export const parseOutputAndUpdateAllTestResults = (run:vscode.TestRun, queue:QueueItem[], behaveOutput: string, debug:boolean) => {
+  parseOutputAndUpdateTestResults(run, queue, behaveOutput, debug);
 }
 
-export function parseOutputAndUpdateTestResult(run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string) {
-  parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput);
+export const parseOutputAndUpdateTestResult = (run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string, debug:boolean) => {
+  parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, debug);
 }
 
+export const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
 
-function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string) 
+
+function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
   : void {
 
     const extractFeatureFilePathFromJsonScenarioLocation = (scenarioLocation:string) : string => {
@@ -73,8 +74,8 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
       const jFeatureFilePath = extractFeatureFilePathFromJsonScenarioLocation(jScenario.location);
 
       const matches = queue.filter((qi) => {
-        const qisFeatureFilePath = qi.scenario.featureFilePath;
-        if (qisFeatureFilePath && qisFeatureFilePath.indexOf(jFeatureFilePath) !== -1) {
+        const qisFeatureFilePath = qi.scenario.featureFileRelativePath;
+        if (qisFeatureFilePath && qisFeatureFilePath.startsWith(jFeatureFilePath)) { 
           if (qi.scenario.scenarioName === jScenario.name ||
             qi.scenario.scenarioName === jScenario.name.substring(0, jScenario.name.lastIndexOf(" -- @"))) { // -- @  = outline scenario
             return true;
@@ -128,6 +129,7 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
 
     // processing
 
+
     if (behaveOutput === "") {
       throw `Error, no behave output.\n`;
     }    
@@ -143,16 +145,20 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
     for(let i=0; i<jFeatures.length; i++) {
 
       const jFeature = jFeatures[i];
-
       if(!jFeature.elements) {
-          continue;
+        const status = `Parent feature status was '${jFeature.status}' but no scenario results found.\n${moreInfo(debug)}`;
+        const childScenarioQueueItems = contextualQueue.filter(qi => jFeature.location.startsWith(qi.scenario.featureFileRelativePath));
+        childScenarioQueueItems.forEach(childScenarioQueueItem => {
+          updateTest(run, {status: status, duration:0}, childScenarioQueueItem);
+        });
+        continue;
       }
 
       const failedScenarioNames:string[] = [];
       const skippedScenarioNames:string[] = [];
 
       jFeature.elements.forEach((jScenario:JsonScenario) => {
-        const result = parseScenarioResult(jScenario);
+        const result = parseScenarioResult(jScenario, debug);
         // contextualQueue: either the whole queue or single queueItem (see exported functions that call parseOutputAndUpdateTestResults)
         const queueItem = contextualQueue.length === 1 ? contextualQueue[0] : getQueueItemFromJsonScenario(contextualQueue, jScenario);
         updateTestResult(run, queueItem, failedScenarioNames, skippedScenarioNames, result);
@@ -184,7 +190,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
 
 
 
-function parseScenarioResult(jScenario:JsonScenario) : ParseResult {
+function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResult {
 
   // console.log(jScenario);
 
@@ -201,28 +207,36 @@ function parseScenarioResult(jScenario:JsonScenario) : ParseResult {
   }
 
   if(status !== "failed") {
-    config.logger.logError("unmatched status result:" + status);
-    throw "extension error, see output window '" + config.extensionFriendlyName + "'.";
+    config.logger.logError("Unrecognised scenario status result:" + status);
+    throw `Extension error, ${moreInfo(debug)}'`;
   }
 
   // status === "failed"
 
 
-  // get the step result
+  // get the first failing step result
   let step:JsonStep|undefined;
   for (let i = 0; i < jScenario.steps.length; i++) {     
     step = jScenario.steps[i];
+    if(!step.result) {
+      return {status:`Scenario failed without a step status.\n${moreInfo(debug)}`, duration:duration};
+    }
     if(step.result.status !== "passed") {
       break;
     }
   }
 
   if(step === undefined) {
-    throw "step is undefined";
+    throw "Step is undefined"; // should never happen
   }
 
+  // (if the scenario failed, but all steps passed, the it could be e.g. an after_scenario hook error)
+  if(step.result.status === "passed") {
+    return {status:`All steps passed, but scenario failed.\n${moreInfo(debug)}`, duration:duration};
+  }    
+
   if(step.result.status === "undefined") {
-    return {status: `step '${step.keyword} ${step.name}' has not been implemented.`, duration: duration};
+    return {status: `Step '${step.keyword} ${step.name}' has not been implemented.`, duration: duration};
   }
 
   if(step.result.status === "failed") {
@@ -237,20 +251,23 @@ function parseScenarioResult(jScenario:JsonScenario) : ParseResult {
 function loadJsonFeatures(behaveOutput: string) : JsonFeature[] {
   let jsonObj: JsonFeature[];
 
-  // remove "SKIP" lines from end of output before parsing
-  // (note that we DO want "--show-skipped" so we can parse the skipped scenario json output, 
-  // because this save us having to add code to find the scenario test items that belong 
-  // to a skipped feature when we parse the output)
-  const end = behaveOutput.lastIndexOf("]") + 1;
-  if(end > 0) {
-    behaveOutput = behaveOutput.substring(0, end);
-  }  
+  
+  let cleanedOutput = "";
+  behaveOutput = behaveOutput.replaceAll("}]}", "}]}\n"); // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
+  const lines = behaveOutput.split("\n");
+
+  // remove non-json lines (SKIP and HOOK-ERROR)
+  for(const i in lines) {
+    const line = lines[i];
+    if(line.startsWith("[") || line.startsWith("]") || line.startsWith("{") || line.startsWith(","))
+      cleanedOutput += line;
+  }
 
   try {
-    jsonObj = JSON.parse(behaveOutput);
+    jsonObj = JSON.parse(cleanedOutput);
   }
   catch {
-    // if output is not parseable json, then most likely something 
+    // if cleaned output is not parseable json, then most likely something 
     // went wrong calling behave, e.g. a behave configuration error, or an invalid feature file
     throw `Unparseable output:\n${behaveOutput}\n`;
   }

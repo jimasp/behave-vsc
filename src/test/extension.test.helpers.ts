@@ -26,6 +26,7 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		) {
 
 			if(expectedResult.test_id === actualResult.test_id) {
+				console.log(actualResult);
 				// eslint-disable-next-line no-debugger
 				debugger; // UHOH
 			}
@@ -36,6 +37,7 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		// now match shortened expected result string:
 
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
+			console.log(actualResult);
 			// eslint-disable-next-line no-debugger
 			debugger; // UHOH			
 			
@@ -45,9 +47,11 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		return true;
 	});
 
-	if(match.length !== 1)
+	if(match.length !== 1) {
+		console.log(actualResult);
 		// eslint-disable-next-line no-debugger
 		debugger; // UHOH 
+	}
 
 	return match;
 }
@@ -72,11 +76,11 @@ const activateExtension = async():Promise<ActivateReturnType> => {
 }
 
 export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: vscode.WorkspaceConfiguration, 
-	getExpectedResults: (testConfig:vscode.WorkspaceConfiguration) => TestResult[]) => {
+	getExpectedResults: (debug:boolean, testConfig:vscode.WorkspaceConfiguration) => TestResult[]) => {
 
 	actRet = await activateExtension();
 	actRet.config.reloadUserSettings(testConfig);
-	const expectedResults = getExpectedResults(testConfig);
+	const expectedResults = getExpectedResults(debug, testConfig);
 
 	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);	
 	const cancelToken = new vscode.CancellationTokenSource().token;
@@ -131,15 +135,14 @@ export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: v
 			test_label: result.test.label,
 			scenario_isOutline: result.scenario.isOutline,
 			scenario_getLabel: result.scenario.getLabel(),
-			scenario_featureFilePath: standardisePath(result.scenario.featureFilePath),
+			scenario_featureFilePath: standardisePath(result.scenario.featureFileRelativePath),
 			scenario_featureName: result.scenario.featureName,
 			scenario_scenarioName: result.scenario.scenarioName,
 			scenario_fastSkip: result.scenario.fastSkip,
 			scenario_result: standardiseResult(result.scenario.result)
 		});
 		
-		console.log(scenResult); // use to generate a new TestResult for expectedResults
-
+		
 		assert(JSON.stringify(result.test.range).indexOf("line") !== -1);		
 		
 		const match = findMatch(expectedResults, scenResult);

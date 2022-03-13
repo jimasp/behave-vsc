@@ -60,7 +60,7 @@ export class TestFile {
       const parent = ancestors[ancestors.length - 1];
       if(item.uri === undefined)
         throw "testitem uri is undefined"
-      const data = new Scenario(item.uri.path, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
+      const data = new Scenario(vscode.workspace.asRelativePath(item.uri), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       const id = `${item.uri}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
@@ -83,7 +83,7 @@ export class Feature {
 export class Scenario {
   public result: string|undefined;
   constructor(
-    public readonly featureFilePath: string,
+    public readonly featureFileRelativePath: string,
     public readonly featureName: string,
     public scenarioName: string,
     public generation: number,
@@ -96,8 +96,8 @@ export class Scenario {
   }
 
 
-  async runOrDebug(debug:boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
-    await runOrDebugBehaveScenario(run, queueItem, debug, cancellation);
+  async runOrDebug(context:vscode.ExtensionContext, debug:boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
+    await runOrDebugBehaveScenario(context, run, queueItem, debug, cancellation);
   }
 
 }

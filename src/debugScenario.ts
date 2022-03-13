@@ -1,18 +1,39 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { TextDecoder } from 'util';
 import config from "./configuration";
 import { parseOutputAndUpdateTestResult } from './outputParser';
 import { QueueItem } from './extension';
 
+let debugStopClicked = false;
+export const resetDebugStop = () => debugStopClicked = false;
+export const debugStopped = () => debugStopClicked;
 
-export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
-  args: string[], cancellation: vscode.CancellationToken): Promise<void> {
-        
+// debug stop - VERY hacky way to determine if debug stopped by user click
+// (onDidTerminateDebugSession doesn't provide reason for the stop)
+// TODO - raise issue with MS (also this should be a context.subscription.push for dispose)
+vscode.debug.registerDebugAdapterTrackerFactory('*', {
+  createDebugAdapterTracker() {
+    return {
+      onDidSendMessage: m => {
+        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
+          debugStopClicked = true;
+        }
+      }
+    };
+  }
+});
+
+
+export async function debugScenario(context:vscode.ExtensionContext, run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
+  args: string[], cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
+
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const outFile = path.join(`${config.debugOutputFilePath}`, `${featureSlug}.${scenarioSlug}.result`);
+
+  // don't show to user in debug - just for extension debug/test
+  console.log(friendlyCmd);
 
   // delete any existing file with the same name (e.g. prior run or duplicate slug)
   if (fs.existsSync(outFile)) {
@@ -32,34 +53,41 @@ export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, esc
     env: config.userSettings.envVars
   };
 
-  await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig);
 
-  cancellation.onCancellationRequested(() => {
-    config.logger.logInfo("-- TEST RUN CANCELLED --\n");
-    // (note - vscode will have ended the run, so we cannot update the test status)
-    return vscode.debug.stopDebugging();      
-  });  
+  if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
+    return; 
+
   
-  let onDidTerminateDebugSessionFired = false;
+  // test run stop 
+  context.subscriptions.push(cancellation.onCancellationRequested(() => {
+    config.logger.logInfo("-- TEST RUN CANCELLED --\n");
+    return vscode.debug.stopDebugging();      
+  }));
+
+  
+
+  
+  let onDidTerminateDebugSessionAlreadyFired = false;
 
   return await new Promise((resolve, reject) => {
+      // debug stopped or completed    
+      context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
 
-    vscode.debug.onDidTerminateDebugSession(async() => {
-      // event seems to get raised multiple times?
-      if (onDidTerminateDebugSessionFired) 
-        return; 
-      onDidTerminateDebugSessionFired = true;
+        if (onDidTerminateDebugSessionAlreadyFired) 
+          return; 
+        onDidTerminateDebugSessionAlreadyFired = true;
 
-      if (!fs.existsSync(outFile))
-        reject("error: see debug console");
+        if(debugStopClicked)
+          return resolve();
 
-      const outFileUri = vscode.Uri.file(outFile);        
-      const raw = await vscode.workspace.fs.readFile(outFileUri);
-      const behaveOutput = new TextDecoder('utf-8').decode(raw);
+        if (!fs.existsSync(outFile))
+          return reject("Error: see behave output in debug console");
+      
+        const behaveOutput = fs.readFileSync(outFile, "utf8");
+        parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, true);
 
-      parseOutputAndUpdateTestResult(run, queueItem, behaveOutput);
-      resolve();
-    });
+        resolve();
+    }));
 
   });
 

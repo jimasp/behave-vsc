@@ -5,3 +5,13 @@
 def before_scenario(context, scenario): #pylint: disable=unused-argument
     if "normal_skip" in scenario.effective_tags:
         scenario.skip("Marked with @normal_skip")
+        return
+    if "raise_before_hook_error" in scenario.effective_tags:
+        raise Exception("error in before_scenario hook")
+
+def after_scenario(context, scenario): #pylint: disable=unused-argument
+    if "normal_skip" in scenario.effective_tags:
+        scenario.skip("Marked with @normal_skip")
+        return
+    if "raise_after_hook_error" in scenario.effective_tags:
+        raise Exception("error in after_scenario hook")

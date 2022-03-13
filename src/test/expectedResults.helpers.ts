@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { moreInfo } from '../outputParser';
 
 interface ITestResult {
   test_id:string|undefined;
@@ -38,18 +39,36 @@ export class TestResult implements ITestResult {
   }
 }
 
-export function applyFastSkip(testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
+
+export function applyDebugTextReplacements(debug:boolean, expectedResults: TestResult[]) {
+  
+  if(!debug)
+    return expectedResults;
+
+  const runMoreInfo = moreInfo(false);        
+  const debugMoreInfo = moreInfo(true);    
+  expectedResults.forEach(expectedResult => {
+    const idx = expectedResult.scenario_result?.indexOf(runMoreInfo);
+    if(idx !== -1)
+      expectedResult.scenario_result= expectedResult.scenario_result?.substring(0, idx) + debugMoreInfo;
+  });
+
+  return expectedResults;
+}
+
+export function applyFastSkipTextReplacements(testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
   
   const fastSkipEnabled = testConfig.get("runAllAsOne") === false && testConfig.get("fastSkipList") !== undefined;
 
+  if (!fastSkipEnabled)
+    return expectedResults;
+
   // these could be "passed" or "Traceback..." etc. as appropriate to the test, 
   // but if fastskip is enabled, they should always be "skipped"
-  if (fastSkipEnabled) {
-    expectedResults.forEach(expectedResult => {
-      if (expectedResult.scenario_fastSkip)
+  expectedResults.forEach(expectedResult => {
+    if (expectedResult.scenario_fastSkip)
         expectedResult.scenario_result = "skipped";
-    });
-  }
+  });
 
   return expectedResults;
 }

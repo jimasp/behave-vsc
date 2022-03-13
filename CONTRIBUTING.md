@@ -22,13 +22,14 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 	- `code --uninstall-extension jimasp.behave-vsc` 
 3. Install node (via nvm) if you need to. See official nvm [doc](https://github.com/nvm-sh/nvm#install--update-script), but example commands are:
 	- Linux: 
-		- `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash` (latest versio command can be found [here](https://github.com/nvm-sh/nvm#install--update-script))
+		- `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash` (command for latest version can be 
+		found [here](https://github.com/nvm-sh/nvm#install--update-script))
 		- `source ~/.bashrc && source ~/.bash_profile && source ~/.profile`
 		- `nvm install --lts`
 		- `nvm use --lts`		
 	- Windows: 
 		- Use the installer from https://github.com/coreybutler/nvm-windows/releases
-		- Open a fresh _new_ admin cmd prompt
+		- Open a fresh **new** admin cmd prompt
 		- `nvm install latest`
 		- `nvm use latest`
 4. Install required node packages
@@ -42,43 +43,45 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 	- `code --install-extension amodio.tsl-problem-matcher`
 7. Check it all works before opening visual studio code:  
 	- `npm run test`
+8. (If at any point you perform a `git clean`, you will need to run `npm install` again.)
 
 ---
-### Running/Debugging the extension
+### Debugging the extension
 1. Set up your environment as above.
 2. Open vscode
-3. (`Ctrl+Shift+B`) to build and kick off a watch.
+3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional, but check the output if it's your first ever debug).
 4. (Optional) set breakpoints in your code, e.g. start with `src/extension.ts activate` function.
-5. (`Ctrl+Shift+D`) + click the "Run Extension" target (if "Run Extension" is the current selection, you can just hit (`F5`) from anywhere).
-6. To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting `"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
-7. Note - if you have "uncaught exceptions" enabled in the extension project, and you are running/debugging a behave test in the host vscode environment, you may 
-need to hit play in the extension vscode environment to continue.
-
----
-## General notes
-- You can relaunch the extension from the debug toolbar in the extension vscode environment after changing extension code.
-- Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
+5. (`Ctrl+Shift+D`) + click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
+6. To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
+`"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
+7. Tips:
+ 	- If you have "uncaught exceptions" enabled in the (original not host) vscode environment, and you are running/debugging a behave test in the 
+	 host vscode environment, you may need to hit play in the extension vscode environment to continue.
+ 	- You can relaunch the extension from the debug toolbar in the (original not host) vscode environment after changing extension code. 
+	 Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
 
 ---
 ## Running extension integration tests
-Either:
-1. (`Ctrl+Shift+D`) + click the "Extension Tests" target (if "Extension Tests" is the current selection, you can just hit (`F5`) 
-from anywhere), or
-2. Close vscode and excecute `npm run test` from a command line.
+Either:  
+- a. (`Ctrl+Shift+D`) and click the "Run Extension Test Suite" target (if "Extension Tests" is the current selection, you can just hit (`F5`) from anywhere)  
+OR  
+- b. Close vscode and excecute `npm run test` from a command line.
 
 ---
-## Debugging integration tests
-- Open the debug viewlet (`Ctrl+Shift+D`) and from the launch configuration dropdown pick `Extension Tests`.
-- Press `F5` to run the tests in a new window with your extension loaded.
-- Optionally add a breakpoint in e.g. `activate`
-- See the output of the test result in the debug console.
-- Make changes to `src/test`.
+## Debugging/adding integration tests
+1. Optional - hit (`Ctrl+Shift+B`) to build and kick off a watch.
+2. Open the debug viewlet (`Ctrl+Shift+D`) and from the launch configuration dropdown pick `Run Extension Test Suite`.
+3. Optionally add a breakpoint in e.g. `runAllTestsAndAssertTheResults`.
+4. Hit play or press `F5` to run the tests in a new window with your extension loaded.
+5. See the output of the test result in the debug console (in your original vscode window, not the host window).
+If you want to add a test, they should go somewhere in `src/test`.
   - The provided test runner will only consider files matching the name pattern `**.test.ts`.
   - You can create folders inside the `test` folder to structure your tests.
 
 ---
 ## Generating the extension installer manually (.vsix file)
-1. `npm install -g vsce` (installs latest version)
+If you have a custom fork and you want to distribute it to your team, you will want to create your own .vsix file:
+1. `npm install -g vsce` (installs latest version of packaging tool)
 2. `vsce package -o ../mypackagefolder`
 
 ---
@@ -99,33 +102,40 @@ own project to the extension .vscode/launch.json to debug the extension against 
 
 ---
 ## Before requesting a PR merge
-- Raise an issue describing the problem that the PR is resolves and link it in the issue
+- Raise an issue describing the problem that the PR is resolving and link it in the issue
 - Quickly review your code vs the project's [Design principles](#design-principles)
 - Is your bug/use case covered by an existing test? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors (errors must be fixed, warnings should be fixed unless they would result in changes to `extension.ts`.)
 - Automated tests (verify behave results):
 	- Close vscode and run `npm run test` (currently these only verify test results, they do not test any UI interactions)
-- Depending on what you changed, you might need to run some Manual tests, e.g.:
+- After running automated tests, if you made a change that affects anything other than test results then you'll want to run some manual tests of 
+the affected areas. For example, if you changed feature file parsing or file watchers you'd want to run these tests as a minimum:
 	1. run example-project-workspace-1
 	2. edit a group1 feature file, change the name of the feature and save it, then: 
-		- check the test UI tree shows the rename
+		- check the test UI tree shows the renamed feature
 		- check you can run the renamed feature from inside the feature file
 	3. edit a group2 outline feature file, change the name of a scenario and save it, then: 
-		- check the test UI tree shows the rename
+		- check the test UI tree shows the renamed scenario
 		- check you can run the changed scenario from inside the feature file
 		- check you can debug the renamed scenario from inside the feature file
-	4. open a diff comparison on the feature file you changed
+	4. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	5. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
 
 ---
 ## Design principles
-- Try not to add any npm packages - lightweight, less security/licensing concerns.
-- No reliance on other extensions except `ms-python.python`.
-- Only small changes to `extension.ts` after release 1.0.0. (Reason - the code was originally based on an [MS sample repo](https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample) - so, if vscode event hooks change, or features get added we might just be able to grab the fix/feature via future commits to that file in the MS repo.)
-- Cross-platform, i.e. OS-independent drive/path separators, line-endings, encoding, etc.
 - KISS:
-	- Easiest method for run/debug possible (i.e. leverage launch.json do not create/attach a debug server yourself, and let MS python extension/behave do the work where possible).
+	- Easiest method for run/debug possible (i.e. leverage launch.json do not create/attach a debug server yourself, and let MS python 
+	extension/behave do the work wherever possible).
 	- "It just works" - avoid anything that might break on someone else's box, for example don't rely on bash or file paths (Windows v Linux).
 	- YAGNI - simple, minimal code to get the job done, and don't add features people don't need that could break stuff.
+- Code concerns:
+	- Cross-platform, i.e. OS-independent drive/path separators (`C:\...` vs `/home/...`), line-endings (use `\n`), encoding (use `utf8`), etc. Also
+	consider relative paths and path matching. (where possible vscode/node  converts `\`to `/` itself for consistency.)
+	- Leverage `vscode` methods and node functions (e.g. `fs` lib) to handle the above concerns, don't code it yourself.
+	- No reliance on other extensions except `ms-python.python`.	
+	- Try not to add any npm packages - lightweight, less security/licensing/audit concerns.
+	- Where possible, try to limit changes to `extension.ts` to new implementation rather than changing the existing implementation. 
+(Reason - the code was originally based on an [MS sample repo](https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample) - 
+so, if vscode event hooks change, or features get added we might just be able to grab the fix/feature via future commits to that file in the MS repo.)
 
