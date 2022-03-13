@@ -9,9 +9,24 @@ let debugStopClicked = false;
 export const resetDebugStop = () => debugStopClicked = false;
 export const debugStopped = () => debugStopClicked;
 
+// debug stop - VERY hacky way to determine if debug stopped by user click
+// (onDidTerminateDebugSession doesn't provide reason for the stop)
+// TODO - raise issue with MS (also this should be a context.subscription.push for dispose)
+vscode.debug.registerDebugAdapterTrackerFactory('*', {
+  createDebugAdapterTracker() {
+    return {
+      onDidSendMessage: m => {
+        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
+          debugStopClicked = true;
+        }
+      }
+    };
+  }
+});
 
-export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, args: string[],
-  cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
+
+export async function debugScenario(context:vscode.ExtensionContext, run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
+  args: string[], cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
 
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -42,32 +57,23 @@ export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, esc
   if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
     return; 
 
-  // debug stop - VERY hacky way to determine if debug stopped by user click
-  // (onDidTerminateDebugSession doesn't provide reason for the stop)
-  vscode.debug.registerDebugAdapterTrackerFactory('*', {
-    createDebugAdapterTracker() {
-      return {
-        onDidSendMessage: m => {
-          if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
-            debugStopClicked = true;
-          }
-         }
-      };
-    }
-  });    
+  await vscode.commands.executeCommand("workbench.view.testing.focus");	    
+
   
   // test run stop 
-  cancellation.onCancellationRequested(() => {
+  context.subscriptions.push(cancellation.onCancellationRequested(() => {
     config.logger.logInfo("-- TEST RUN CANCELLED --\n");
     return vscode.debug.stopDebugging();      
-  });
+  }));
+
+  
 
   
   let onDidTerminateDebugSessionAlreadyFired = false;
 
   return await new Promise((resolve, reject) => {
       // debug stopped or completed    
-    vscode.debug.onDidTerminateDebugSession(() => {
+      context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
 
         if (onDidTerminateDebugSessionAlreadyFired) 
           return; 
@@ -83,7 +89,7 @@ export async function debugScenario(run:vscode.TestRun, queueItem:QueueItem, esc
         parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, true);
 
         resolve();
-    });
+    }));
 
   });
 

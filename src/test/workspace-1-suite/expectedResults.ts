@@ -1,7 +1,7 @@
 import { WorkspaceConfiguration } from "vscode"; 
-import { TestResult, applyFastSkip } from "../expectedResults.helpers";
+import { TestResult, applyFastSkipTextReplacements, applyDebugTextReplacements } from "../expectedResults.helpers";
 
-export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
+export const getExpectedResults = (debug:boolean, testConfig:WorkspaceConfiguration): TestResult[] => {
 
 	const expectedResults:TestResult[] = [
 		new TestResult ({
@@ -502,5 +502,6 @@ export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
     }),
 	];
 
-	return applyFastSkip(testConfig, expectedResults);
+  applyDebugTextReplacements(debug, expectedResults);
+	return applyFastSkipTextReplacements(testConfig, expectedResults);
 }

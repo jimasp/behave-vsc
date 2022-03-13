@@ -35,15 +35,15 @@ interface JsonStep {
   }
 }
 
-export function parseOutputAndUpdateAllTestResults(run:vscode.TestRun, queue:QueueItem[], behaveOutput: string, debug:boolean) {
+export const parseOutputAndUpdateAllTestResults = (run:vscode.TestRun, queue:QueueItem[], behaveOutput: string, debug:boolean) => {
   parseOutputAndUpdateTestResults(run, queue, behaveOutput, debug);
 }
 
-export function parseOutputAndUpdateTestResult(run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string, debug:boolean) {
+export const parseOutputAndUpdateTestResult = (run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string, debug:boolean) => {
   parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, debug);
 }
 
-const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console" : `${config.extensionFriendlyName} output window`);
+export const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
 
 
 function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
@@ -146,7 +146,7 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
 
       const jFeature = jFeatures[i];
       if(!jFeature.elements) {
-        const status = `Parent feature status was '${jFeature.status}' but no scenario results found.\n${moreInfo(debug)}.`;
+        const status = `Parent feature status was '${jFeature.status}' but no scenario results found.\n${moreInfo(debug)}`;
         const childScenarioQueueItems = contextualQueue.filter(qi => jFeature.location.startsWith(qi.scenario.featureFileRelativePath));
         childScenarioQueueItems.forEach(childScenarioQueueItem => {
           updateTest(run, {status: status, duration:0}, childScenarioQueueItem);
@@ -207,19 +207,19 @@ function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResul
   }
 
   if(status !== "failed") {
-    config.logger.logError("Unrecognised status result:" + status);
-    throw `Extension error, ${moreInfo(debug)}'.`;
+    config.logger.logError("Unrecognised scenario status result:" + status);
+    throw `Extension error, ${moreInfo(debug)}'`;
   }
 
   // status === "failed"
 
 
-  // get the step result
+  // get the first failing step result
   let step:JsonStep|undefined;
   for (let i = 0; i < jScenario.steps.length; i++) {     
     step = jScenario.steps[i];
     if(!step.result) {
-      return {status:`Scenario failed without a step status.\n${moreInfo(debug)}.`, duration:duration};
+      return {status:`Scenario failed without a step status.\n${moreInfo(debug)}`, duration:duration};
     }
     if(step.result.status !== "passed") {
       break;
@@ -227,8 +227,13 @@ function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResul
   }
 
   if(step === undefined) {
-    throw "Step is undefined";
+    throw "Step is undefined"; // should never happen
   }
+
+  // (if the scenario failed, but all steps passed, the it could be e.g. an after_scenario hook error)
+  if(step.result.status === "passed") {
+    return {status:`All steps passed, but scenario failed.\n${moreInfo(debug)}`, duration:duration};
+  }    
 
   if(step.result.status === "undefined") {
     return {status: `Step '${step.keyword} ${step.name}' has not been implemented.`, duration: duration};

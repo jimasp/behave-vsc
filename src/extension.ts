@@ -106,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
       if(!debug && allTestsIncluded && config.userSettings.runAllAsOne) {
         
-        await runBehaveAll(run, queue, cancellation);
+        await runBehaveAll(context, run, queue, cancellation);
 
         for (const qi of queue) {
           updateRun(qi.test, coveredLines, run);
@@ -129,12 +129,12 @@ export async function activate(context: vscode.ExtensionContext) {
           run.started(qi.test);
 
           if(!config.userSettings.runParallel || debug) {
-            await qi.scenario.runOrDebug(debug, run, qi, cancellation);
+            await qi.scenario.runOrDebug(context, debug, run, qi, cancellation);
             updateRun(qi.test, coveredLines, run);              
           }
           else {
             // async run (parallel)
-            const promise = qi.scenario.runOrDebug(false, run, qi, cancellation).then(() => {
+            const promise = qi.scenario.runOrDebug(context, false, run, qi, cancellation).then(() => {
               updateRun(qi.test, coveredLines, run)
             });
             asyncPromises.push(promise);
@@ -143,7 +143,6 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       await Promise.all(asyncPromises);
-
     };
 
 

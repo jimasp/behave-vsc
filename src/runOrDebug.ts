@@ -12,14 +12,15 @@ const shared_args = [
 ];
 
 
-export async function runBehaveAll(run:vscode.TestRun, queue:QueueItem[], cancellation: vscode.CancellationToken) : Promise<void> {
+export async function runBehaveAll(context:vscode.ExtensionContext, run:vscode.TestRun, queue:QueueItem[], 
+  cancellation: vscode.CancellationToken) : Promise<void> {
   
   const pythonExec = await config.getPythonExec();
   const friendlyCmd = `${pythonExec} -m behave`;
   config.logger.show();  
   
   try {
-    await runAll(pythonExec, run, queue, shared_args, friendlyCmd, cancellation);
+    await runAll(context, pythonExec, run, queue, shared_args, friendlyCmd, cancellation);
   }
   catch(e:unknown) {
     config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
@@ -28,7 +29,7 @@ export async function runBehaveAll(run:vscode.TestRun, queue:QueueItem[], cancel
 
 
 
-export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:QueueItem, 
+export async function runOrDebugBehaveScenario(context:vscode.ExtensionContext, run:vscode.TestRun, queueItem:QueueItem, 
   debug: boolean, cancellation: vscode.CancellationToken) : Promise<void> {
  
     const scenario = queueItem.scenario;
@@ -48,10 +49,10 @@ export async function runOrDebugBehaveScenario(run:vscode.TestRun, queueItem:Que
     try {    
       if(debug) {   
         // (cancellation token won't get set on a debug stop, so we don't bother to pass it)
-        await debugScenario(run, queueItem, escapedScenarioName, args, cancellation, friendlyCmd); 
+        await debugScenario(context, run, queueItem, escapedScenarioName, args, cancellation, friendlyCmd); 
       }
       else {
-        await runScenario(pythonExec, run, queueItem, args, cancellation, friendlyCmd);
+        await runScenario(context, pythonExec, run, queueItem, args, cancellation, friendlyCmd);
       }
     }
     catch(e:unknown) {

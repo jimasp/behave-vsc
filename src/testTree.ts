@@ -96,8 +96,8 @@ export class Scenario {
   }
 
 
-  async runOrDebug(debug:boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
-    await runOrDebugBehaveScenario(run, queueItem, debug, cancellation);
+  async runOrDebug(context:vscode.ExtensionContext, debug:boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
+    await runOrDebugBehaveScenario(context, run, queueItem, debug, cancellation);
   }
 
 }

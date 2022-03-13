@@ -1,8 +1,8 @@
 import { WorkspaceConfiguration } from "vscode"; 
-import { TestResult, applyFastSkip as applyFastSkip } from "../expectedResults.helpers";
+import { TestResult, applyFastSkipTextReplacements as applyFastSkipTextReplacements, applyDebugTextReplacements } from "../expectedResults.helpers";
 
 
-export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
+export const getExpectedResults = (debug:boolean, testConfig:WorkspaceConfiguration): TestResult[] => {
 
 	const expectedResults:TestResult[] = [
 		new TestResult ({
@@ -514,9 +514,147 @@ export const getExpectedResults = (testConfig:WorkspaceConfiguration) => {
       test_uri:'.../example-project-workspace-2/features/grouped/textblock.feature'
     }),     
 
+		new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'create a before hook-error',
+      scenario_isOutline:false,
+      scenario_result:'Scenario failed without a step status.\nSee behave output in Behave VSC output window.',
+      scenario_scenarioName:'create a before hook-error',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/create a before hook-error',
+      test_label:'create a before hook-error',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'skip in middle',
+      scenario_isOutline:false,
+      scenario_result:'skipped',
+      scenario_scenarioName:'skip in middle',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/skip in middle',
+      test_label:'skip in middle',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),    
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'skip before hook-error',
+      scenario_isOutline:false,
+      scenario_result:'skipped',
+      scenario_scenarioName:'skip before hook-error',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/skip before hook-error',
+      test_label:'skip before hook-error',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'before_hook_error again',
+      scenario_isOutline:false,
+      scenario_result:'Scenario failed without a step status.\nSee behave output in Behave VSC output window.',
+      scenario_scenarioName:'before_hook_error again',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/before_hook_error again',
+      test_label:'before_hook_error again',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'create a after hook-error',
+      scenario_isOutline:false,
+      scenario_result:'All steps passed, but scenario failed.\nSee behave output in Behave VSC output window.',
+      scenario_scenarioName:'create a after hook-error',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/create a after hook-error',
+      test_label:'create a after hook-error',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'another skip',
+      scenario_isOutline:false,
+      scenario_result:'skipped',
+      scenario_scenarioName:'another skip',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/another skip',
+      test_label:'another skip',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),    
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'skip after hook-error',
+      scenario_isOutline:false,
+      scenario_result:'skipped',
+      scenario_scenarioName:'skip after hook-error',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/skip after hook-error',
+      test_label:'skip after hook-error',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),    
+    
+    new TestResult ({
+      scenario_fastSkip:false,
+      scenario_featureFilePath:'...features/feature_with_hook_error.feature',
+      scenario_featureName:'With a hook-error',
+      scenario_getLabel:'after_hook_error again',
+      scenario_isOutline:false,
+      scenario_result:'All steps passed, but scenario failed.\nSee behave output in Behave VSC output window.',
+      scenario_scenarioName:'after_hook_error again',
+      test_children:undefined,
+      test_description:undefined,
+      test_error:undefined,
+      test_id:'.../example-project-workspace-2/features/feature_with_hook_error.feature/after_hook_error again',
+      test_label:'after_hook_error again',
+      test_parent:'.../example-project-workspace-2/features/feature_with_hook_error.feature',
+      test_uri:'.../example-project-workspace-2/features/feature_with_hook_error.feature'
+    }),
+
+
 	];
 
-	return applyFastSkip(testConfig, expectedResults);
+  applyDebugTextReplacements(debug, expectedResults);  
+	return applyFastSkipTextReplacements(testConfig, expectedResults);
 }
 
 

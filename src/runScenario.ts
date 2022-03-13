@@ -5,22 +5,22 @@ import { parseOutputAndUpdateAllTestResults, parseOutputAndUpdateTestResult } fr
 import { QueueItem } from './extension';
 
 
-export async function runAll(pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args: string[], friendlyCmd:string, 
-  cancellation: vscode.CancellationToken) : Promise<void> {
+export async function runAll(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args: string[], 
+  friendlyCmd:string, cancellation: vscode.CancellationToken) : Promise<void> {
 
-  const behaveOutput = await spawnBehave(pythonExec, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
+  const behaveOutput = await spawnBehave(context, pythonExec, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
   parseOutputAndUpdateAllTestResults(run, queue, behaveOutput, false);
 }
 
 
-export async function runScenario(pythonExec:string, run:vscode.TestRun, queueItem:QueueItem, args: string[], 
+export async function runScenario(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queueItem:QueueItem, args: string[], 
   cancellation: vscode.CancellationToken, friendlyCmd:string) : Promise<void> {
-    const behaveOutput = await spawnBehave(pythonExec, args, config.workspaceFolderPath, friendlyCmd, cancellation);
+    const behaveOutput = await spawnBehave(context, pythonExec, args, config.workspaceFolderPath, friendlyCmd, cancellation);
     parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, false);
 }
 
 
-async function spawnBehave(pythonExec:string, args:string[], workingDirectory:string, friendlyCmd:string, 
+async function spawnBehave(context:vscode.ExtensionContext, pythonExec:string, args:string[], workingDirectory:string, friendlyCmd:string, 
   cancellation: vscode.CancellationToken) : Promise<string> {
 
   config.logger.logInfo(`${friendlyCmd}\n`);
@@ -35,11 +35,11 @@ async function spawnBehave(pythonExec:string, args:string[], workingDirectory:st
   const cp = spawn(pythonExec, local_args, options); 
   cp.stdout.setEncoding('utf8');
 
-  cancellation.onCancellationRequested(() => {
+  context.subscriptions.push(cancellation.onCancellationRequested(() => {
     // (note - vscode will have ended the run, so we cannot update the test status)
     config.logger.logInfo("-- TEST RUN CANCELLED --\n");    
     cp.kill()
-  });
+  }));
   
   for await (const chunk of cp.stdout) {
     behaveOutput += `${chunk}`; 

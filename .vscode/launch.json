@@ -6,7 +6,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Run Extension - Workspace 1",
+			"name": "Debug Extension - Workspace 1",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -24,7 +24,7 @@
 			"justMyCode": false,
 		},
 		{
-			"name": "Run Extension - Workspace 2",
+			"name": "Debug Extension - Workspace 2",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -42,7 +42,7 @@
 			"justMyCode": false,
 		},
 		{
-			"name": "Extension Tests - Workspace 1",
+			"name": "Run Extension Test Suite - Workspace 1",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -57,7 +57,7 @@
 			"preLaunchTask": "tasks: watch-tests"
 		},
 		{
-			"name": "Extension Tests - Workspace 2",
+			"name": "Run Extension Test Suite - Workspace 2",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
