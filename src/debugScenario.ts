@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import config from "./configuration";
-import { parseOutputAndUpdateTestResult } from './outputParser';
+import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
 let debugStopClicked = false;
@@ -84,7 +84,7 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
           return reject("Error: see behave output in debug console");
       
         const behaveOutput = fs.readFileSync(outFile, "utf8");
-        parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, true);
+        parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
 
         resolve();
     }));

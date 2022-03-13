@@ -1,27 +1,25 @@
 import * as vscode from 'vscode';
 import { spawn } from 'child_process';
 import config from "./configuration";
-import { parseOutputAndUpdateAllTestResults, parseOutputAndUpdateTestResult } from './outputParser';
+import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
 
 export async function runAll(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args: string[], 
   friendlyCmd:string, cancellation: vscode.CancellationToken) : Promise<void> {
 
-  const behaveOutput = await spawnBehave(context, pythonExec, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
-  parseOutputAndUpdateAllTestResults(run, queue, behaveOutput, false);
+  await runBehave(context, pythonExec, run, queue, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
 }
 
 
 export async function runScenario(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queueItem:QueueItem, args: string[], 
   cancellation: vscode.CancellationToken, friendlyCmd:string) : Promise<void> {
-    const behaveOutput = await spawnBehave(context, pythonExec, args, config.workspaceFolderPath, friendlyCmd, cancellation);
-    parseOutputAndUpdateTestResult(run, queueItem, behaveOutput, false);
+    await runBehave(context, pythonExec, run, [queueItem], args, config.workspaceFolderPath, friendlyCmd, cancellation);
 }
 
 
-async function spawnBehave(context:vscode.ExtensionContext, pythonExec:string, args:string[], workingDirectory:string, friendlyCmd:string, 
-  cancellation: vscode.CancellationToken) : Promise<string> {
+async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args:string[], 
+  workingDirectory:string, friendlyCmd:string, cancellation: vscode.CancellationToken) : Promise<void> {
 
   config.logger.logInfo(`${friendlyCmd}\n`);
 
@@ -29,7 +27,6 @@ async function spawnBehave(context:vscode.ExtensionContext, pythonExec:string, a
   local_args.unshift("-m", "behave");
 
   const options = { cwd: workingDirectory, env: config.userSettings.envVars}; 
-  let behaveOutput = "";  
   
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options); 
@@ -41,14 +38,40 @@ async function spawnBehave(context:vscode.ExtensionContext, pythonExec:string, a
     cp.kill()
   }));
   
+  let loopStr = "";
+
   for await (const chunk of cp.stdout) {
-    behaveOutput += `${chunk}`; 
-    config.logger.logInfo(`${chunk}`);
+    const sChunk = `${chunk}`; 
+    config.logger.logInfo(sChunk);
+    loopStr += sChunk;  
+
+    let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{") 
+      ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
+      : loopStr.replace(/((\s|\S)*?)\{/, "{");
+
+    if(tmpStr.endsWith("\n"))
+      tmpStr = tmpStr.substring(0, tmpStr.length-1);
+
+    if(!tmpStr.startsWith("["))
+      tmpStr = "[" + tmpStr;
+
+    if(!tmpStr.endsWith("]"))
+      tmpStr = tmpStr + "]";
+
+    try {
+      JSON.parse(tmpStr);
+    }
+    catch {
+      continue; // until parseable
+    }
+
+    parseOutputAndUpdateTestResults(run, queue, tmpStr, false);
+    loopStr = "";    
   }
+  
 
   for await (const chunk of cp.stderr) {
     const sChunk:string = chunk.toString();
-    behaveOutput += sChunk; 
     if(sChunk.startsWith("SKIP ") && sChunk.indexOf("Marked with @") !== -1)
       config.logger.logInfo(sChunk); 
     else
@@ -56,12 +79,8 @@ async function spawnBehave(context:vscode.ExtensionContext, pythonExec:string, a
   }    
 
   return await new Promise((resolve) => {
-
     cp.on('close', () => {
-      if (cp.killed) 
-        return resolve("skipped");
-
-      return resolve(behaveOutput);
+      return resolve();
     });
 
   });

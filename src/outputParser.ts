@@ -35,18 +35,10 @@ interface JsonStep {
   }
 }
 
-export const parseOutputAndUpdateAllTestResults = (run:vscode.TestRun, queue:QueueItem[], behaveOutput: string, debug:boolean) => {
-  parseOutputAndUpdateTestResults(run, queue, behaveOutput, debug);
-}
-
-export const parseOutputAndUpdateTestResult = (run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string, debug:boolean) => {
-  parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, debug);
-}
-
 export const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
 
 
-function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
+export function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
   : void {
 
     const extractFeatureFilePathFromJsonScenarioLocation = (scenarioLocation:string) : string => {
@@ -133,12 +125,6 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
     if (behaveOutput === "") {
       throw `Error, no behave output.\n`;
     }    
-
-    // either user hit top-level skip, or spawn was killed 
-    if(behaveOutput === "skipped") {
-      // run terminated, cannot update results
-      return;
-    }
 
     const jFeatures: JsonFeature[] = loadJsonFeatures(behaveOutput);
 
