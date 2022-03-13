@@ -146,7 +146,7 @@ export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: v
 		assert(JSON.stringify(result.test.range).indexOf("line") !== -1);		
 		
 		const match = findMatch(expectedResults, scenResult);
-		//assert.strictEqual(match.length, 1);
+		assert.strictEqual(match.length, 1);
 	});
 
 	

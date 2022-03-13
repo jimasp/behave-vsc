@@ -57,8 +57,6 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
   if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
     return; 
 
-  await vscode.commands.executeCommand("workbench.view.testing.focus");	    
-
   
   // test run stop 
   context.subscriptions.push(cancellation.onCancellationRequested(() => {
