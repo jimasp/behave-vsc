@@ -26,7 +26,7 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
   const local_args = [...args];
   local_args.unshift("-m", "behave");
 
-  const options = { cwd: workingDirectory, env: config.userSettings.envVars}; 
+  const options = { cwd: workingDirectory, env: config.userSettings.envVarList}; 
   
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options); 
@@ -43,9 +43,9 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
   // parseJsonFeatures is expecting a full behave output string, which when 
   // behave has completed executing, looks something like this: 
   // [\n{...}\n,\n{...}\n,\n {...},\nHOOK-ERROR blah,\n{...},\n{...}\n\n]
-  // whereas chunks could be ANY partial buffered output of
+  // BUT when we are using "RunAllAsOne", then chunks could be ANY partial output of
   // the above format, for example: "\n,HOOK-ERROR blah,\n{..."  or  "...}]\n"
-  // so our loop will adjust the format as the output comes in
+  // so our loop will adjust the format as the output comes in and see if it can parse it to a result
   for await (const chunk of cp.stdout) {
     const sChunk = `${chunk}`; 
     config.logger.logInfo(sChunk);
@@ -55,9 +55,11 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
        ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
        : loopStr.replace(/((\s|\S)*?)\{/, "{"); 
 
-    tmpStr = tmpStr.replaceAll("\r\n", "\n")
     if(tmpStr.endsWith("\n"))
-      tmpStr = tmpStr.slice(0, -1);    
+      tmpStr = tmpStr.slice(0, -1);
+
+    if(tmpStr.endsWith("\r\n")) // windows line-endings      
+      tmpStr = tmpStr.slice(0, -1);
 
     if(!tmpStr.startsWith("["))
       tmpStr = "[" + tmpStr;
@@ -70,7 +72,10 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
       jFeatures = parseJsonFeatures(tmpStr);
     }
     catch {
-      // this should be infrequent, or this code probably needs a tweak
+      // if the above code is correct, then we should *rarely* hit continue, 
+      // i.e. ONLY if/when behave gives us output that splits a feature result, 
+      // for example when we only have the output: ..."status":"pa  when we need:  ..."status":"passed"}]}
+      // (or also when the last behave output is \n] on it's own)
       continue; 
     }
 
@@ -87,11 +92,6 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
       config.logger.logError(sChunk)
   }    
 
-  return await new Promise((resolve) => {
-    cp.on('close', () => {
-      return resolve();
-    });
-
-  });
+  return await new Promise((resolve) => cp.on('close', () => resolve()));
 }
 

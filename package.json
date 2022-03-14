@@ -8,7 +8,7 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional single-quoted csv list of environment variables to use when calling a behave command\nExample 'var1':'val1','var2':'val2'"
+					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample 'var1':'val1','var2':'val2'"
 				},				
 				"behave-vsc.fastSkipList": {
 					"type": "string",

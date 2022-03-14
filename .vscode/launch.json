@@ -6,6 +6,24 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "M2C",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceFolder}/../mesh-to-cloud",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"justMyCode": false,
+		},		
+		{
 			"name": "Debug Extension - Workspace 1",
 			"type": "extensionHost",
 			"request": "launch",

@@ -240,11 +240,11 @@ export function parseJsonFeatures(behaveOutput: string) : JsonFeature[] {
     throw `Error, no behave output.\n`;
   }  
   
-  // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
-  let fixOutput = behaveOutput.replaceAll("}]}", "}]}\n"); 
-
   // handle windows line endings
-  fixOutput = fixOutput.replaceAll("\r\n", "\n")
+  let fixOutput = behaveOutput.replaceAll("\r\n", "\n")
+
+  // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
+  fixOutput = fixOutput.replaceAll("}]}", "}]}\n"); 
 
   // remove non-json lines (HOOK-ERROR / SKIP)
   const lines = fixOutput.split("\n");  

@@ -8,33 +8,12 @@ import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { debugStopped, resetDebugStop } from './debugScenario';
+import { logActivate, logRunDiagOutput } from './extensionHelpers';
+import { gotoStepHandler } from './gotoStepHandler';
 
-
-function logRunDiagOutput(debugRun:boolean) {
-  config.logger.clear();
-  const configText =  `user configuration: ${JSON.stringify(config.userSettings, null, 2)}\n`;
-  if(debugRun) {
-    // don't show these to user on a debug run, just log in extension/test run debug
-    console.log(configText);
-    console.log("equivalent commands:\n");
-    console.log(`cd "${config.workspaceFolderPath}"`);
-    return;
-  }
-  vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
-  config.logger.logInfo(configText);
-  config.logger.logInfo("equivalent commands:\n");
-  config.logger.logInfo(`cd "${config.workspaceFolderPath}"`);
-}
-
-function logActivate(context:vscode.ExtensionContext) {
-  let version:string = context.extension.packageJSON.version;
-  if(version.startsWith("0")) {
-    version += " pre-release";
-  }
-  config.logger.logInfo(`activated (version ${version})`);
-}
 
 const steps:Steps = new Map<string, StepDetail>();
+export const getSteps = () => steps;
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
@@ -401,79 +380,3 @@ function updateSteps(uri:vscode.Uri) {
   else if(uri.path.toLowerCase().endsWith("/"))
     findInitialStepsFiles();
 }
-
-
-function gotoStepHandler(uri: vscode.Uri) {
-
-  function getStepMatch(stepText:string): StepDetail|null {
-
-    let stepMatch:StepDetail|null = null;
-
-    for(const[key, value] of steps) {
-      const rx = new RegExp(key);
-      const match = rx.exec(stepText);
-      if(match && match.length !== 0)  {
-        stepMatch = value;
-        break;
-      }
-    }
-
-    if(stepMatch)
-      return stepMatch;
-
-    // fallback - reverse the lookup
-    for(const[key, value] of steps) {
-      const rx = new RegExp("^\\^" + stepText + ".*");
-      const match = rx.exec(key);
-      if(match && match.length !== 0)  {
-        stepMatch = value;
-        break;
-      }
-    }
-  
-    return stepMatch;
-  }
-
-  try {  
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    
-    let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
-    if(line.endsWith(":")) // table
-      line = line.slice(0,-1);
-
-    const stepRe = /^(\s*)(given|when|then|but|and)(.+)$/i;
-    const matches = stepRe.exec(line);
-    if(!matches || !matches[3])
-      return;
-
-    const stepText = matches[3].trim();
-    const stepMatch = getStepMatch(stepText);
-
-    if(!stepMatch) {
-      vscode.window.showInformationMessage(`Step '${stepText}' not found`)
-      return;
-    }
-
-    vscode.workspace.openTextDocument(stepMatch.uri).then(doc => {
-      vscode.window.showTextDocument(doc, {preview:false}).then(editor => {
-        if(!editor) {
-          config.logger.logError("Could not open editor for file:" + uri.fsPath)
-          return;
-        }
-        editor.selection =  new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
-        editor.revealRange(stepMatch.range);
-      });
-    });   
-    
-  }
-  catch(e:unknown) {
-    config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
-  }
-  
-  
-}
-
-

@@ -50,7 +50,7 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
     request: 'launch',
     module: "behave",
     args: args,
-    env: config.userSettings.envVars
+    env: config.userSettings.envVarList
   };
 
 
