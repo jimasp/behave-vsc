@@ -1,14 +1,15 @@
 # Behave VSC 
 
 ## Pre-release v0.0.8
-- A simple test runner (and debugger) for running python Behave tests in vscode
+- A simple test runner (and debugger) for running python behave tests in vscode
 - Built with the new Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
 
-## Tested with
+### Tested with
 - behave 1.2.6
 - Python 3.9.7
-- Linux/Windows
+- Visual Studio Code 1.65.2
+- Ubuntu (Pop!_OS 21.10) / Windows 10
 
 ---
 ## Project Requirements
@@ -53,7 +54,7 @@ containing a step and click "Go to step").
 
 - `behave-vsc.envVarList`
   - Default: empty string
-  - A single-quoted csv list of environment variables to use when calling a behave command.
+  - A _single_-quoted csv list of environment variables to use when calling a behave command.
   - Example `'var1':'val1','var2':'val2'"`
   - You can escape single quotes like this: `'var3':'a value containing a \' quote'` (the escape should be double-slashed `\\'` in the 
   settings.json file itself).
@@ -86,45 +87,12 @@ It will be faster if you select a subset/group of tests to run.
   individually, e.g. if you set `context.failed` in your tests.  
  
 
----
-## Known Issues
-- Does not support multiple workspace folders. (No plans to support this.)
-- The "Go to Step" feature doesn't always work and never will. This is because there are a lot of ways to specify step matching and parameters 
-in behave (parse,  cfparse, re). 
-- Refresh button duplicated if more than one test extension is active e.g. pytest tests, (MS have 
-a [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
-- Parallel tests add up durations, making it look like parallel test runs take longer than they actually do.
-- Running debug against multiple test targets at once starts a fresh debug session for each scenario. This can cause some UI side effects like 
-having to click stop multiple times or session overlaps. No plans to fix this, because it works "well enough" as-is, and supporting different behave 
-commands for debug based on selection (like run does) would add lots of bug potential/test cases for a feature that is rarely used. 
-(Violating one of this extension's design principles - "don't add features people don't need".)
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
-- Also see [Troubleshooting](#troubleshooting) below.
-
----
-## Troubleshooting
-- Does your setup match the [Requirements](#requirements) section above?
-- Does your project environment match the environment tested for this release? (Older releases are available in 
-[github](https://github.com/jimasp/behave-vsc/releases) or from the uninstall dropdown in visual studio code.)
-- If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation. 
-- Have you tried manually running the outputted behave command from the Behave VSC output window?
-- Check if the problem is in [Known Issues](#known-issues).
-- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have 
-"Raised Exceptions" etc. turned off?
-- Do you have runParallel turned on? Try turning it off.
-- Do you have the correct [Extension Settings](#extension-settings) for your project? (Also if you have removed extension settings from your 
-workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
-- Try temporarily disabling other extensions.
-- See [Contributing](#contributing) below for extension debugging instructions with your own project. (Does the issue occur with the example 
-project workspaces, or just in your own project?) 
-
-
 ---  
 ## How it works
 
 ### How test runs work:
 
-- The extension builds up a separate command for each test and runs it. For example: 
+- The extension builds up a separate command for each test and runs it. For example:  
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "my scenario"`
 
 - Standard and Error output is shown in the Behave VSC output window, including an equivalent behave command to run the test manually.
@@ -136,6 +104,41 @@ project workspaces, or just in your own project?)
 This enables `ms-python.python` to do the heavy lifting of setting up the debug port etc.
 
 - Error output (only) is shown in the debug console window.
+
+---
+## Known Issues
+
+- Does not support multiple workspace folders.
+- The "Go to Step" feature doesn't always work. (This is because there are a lot of ways to specify step matching and parameters 
+in behave - parse;  re; cfparse. and you would have to recreate these matching algorithms exactly.) 
+- Parallel test runs add up durations, making it look like they took longer than they actually did.
+- Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like 
+having to click debug stop button multiple times. (If for some reason you regularly debug multiple behave test targets at once, you may wish to map 
+a keyboard shortcut for debug stop.)
+- Refresh button duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer 
+it, but MS have a potential [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
+ See [Troubleshooting](#troubleshooting) below.
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
+
+
+
+---
+## Troubleshooting
+- Does your setup match the [Requirements](#requirements) section above?
+- Does your project environment match the [Tested with](#tested-with) environment tested for this release? (Older releases are available in 
+[github](https://github.com/jimasp/behave-vsc/releases) (with information on which software versions they were tested with) or from the uninstall dropdown in visual studio code.)
+- If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation. 
+- Have you tried manually running the outputted behave command from the Behave VSC output window?
+- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have 
+"Raised Exceptions" etc. turned off?
+- Do you have the correct [Extension Settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. (Also if 
+you have removed extension settings from your 
+workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
+- Try temporarily disabling other extensions.
+- Check if the problem is in [Known Issues](#known-issues) / github [issues](https://github.com/jimasp/behave-vsc/issues).
+- The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is 
+not accounted for. See [Contributing](#contributing) below for instructions on debugging the extension debugging with your own project. (Does the 
+same issue occur with the example project workspaces, or just in your own project?) 
 
 
 ---

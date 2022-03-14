@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { logUserSettings } from './extensionHelpers';
 
 const EXTENSION_NAME = "behave-vsc";  
 const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
@@ -51,6 +52,10 @@ class Configuration implements ExtensionConfiguration {
             Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
         else
             Configuration._userSettings =  new UserSettings(testConfig, this.logger);
+        
+        this.logger.clear();
+        this.logger.logInfo("Settings change detected.")
+        logUserSettings();            
     }
 
     public get userSettings() {         
@@ -110,17 +115,19 @@ class Logger {
 } 
 
 class UserSettings {
-    public runParallel:boolean;
-    public runAllAsOne:boolean;
-    public fastSkipList:string[] = [];
-    public envVars: {[name: string]: string} = {};
+    public envVarList:{[name: string]: string} = {};
+    public fastSkipList:string[] = [];    
+    public runAllAsOne:boolean;    
+    public runParallel:boolean;    
     constructor(wsConfig:vscode.WorkspaceConfiguration, logger:Logger) {
-        const runParallelCfg:boolean|undefined = wsConfig.get("runParallel");
-        const runAllAsOneCfg:boolean|undefined = wsConfig.get("runAllAsOne");
+        
+        const envVarListCfg:string|undefined = wsConfig.get("envVarList");        
         const fastSkipListCfg:string|undefined = wsConfig.get("fastSkipList");
-        const envVarListCfg:string|undefined = wsConfig.get("envVarList");
-        this.runParallel = runParallelCfg !== undefined ? runParallelCfg : false;
+        const runAllAsOneCfg:boolean|undefined = wsConfig.get("runAllAsOne");        
+        const runParallelCfg:boolean|undefined = wsConfig.get("runParallel");        
+
         this.runAllAsOne = runAllAsOneCfg !== undefined ? runAllAsOneCfg : true;
+        this.runParallel = runParallelCfg !== undefined ? runParallelCfg : false;
         
         if(fastSkipListCfg !== undefined && fastSkipListCfg !== "") {
             if(fastSkipListCfg !== "" && (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2)) {
@@ -142,7 +149,7 @@ class UserSettings {
                     const e = s.split("':");
                     const name = e[0].replace(/'/g,"").replace("^#^","'");
                     const value = e[1].replace(/'/g,"").replace("^#^", "'");
-                    this.envVars[name] = value;
+                    this.envVarList[name] = value;
                 });
             }
         }

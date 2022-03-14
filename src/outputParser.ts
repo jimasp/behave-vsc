@@ -7,7 +7,7 @@ export interface ParseResult {
   duration:number;
 }
 
-interface JsonFeature {
+export interface JsonFeature {
   elements:JsonScenario[];
   keyword:string;
   location:string;
@@ -35,18 +35,15 @@ interface JsonStep {
   }
 }
 
-export const parseOutputAndUpdateAllTestResults = (run:vscode.TestRun, queue:QueueItem[], behaveOutput: string, debug:boolean) => {
-  parseOutputAndUpdateTestResults(run, queue, behaveOutput, debug);
-}
-
-export const parseOutputAndUpdateTestResult = (run:vscode.TestRun, queueItem:QueueItem, behaveOutput: string, debug:boolean) => {
-  parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, debug);
-}
-
 export const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
 
+export function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) {
+  const jFeatures: JsonFeature[] = parseJsonFeatures(behaveOutput);
+  updateTestResults(run, contextualQueue, jFeatures, debug);
+}
 
-function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
+
+export function updateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], jFeatures:JsonFeature[], debug:boolean) 
   : void {
 
     const extractFeatureFilePathFromJsonScenarioLocation = (scenarioLocation:string) : string => {
@@ -129,18 +126,6 @@ function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:Que
 
     // processing
 
-
-    if (behaveOutput === "") {
-      throw `Error, no behave output.\n`;
-    }    
-
-    // either user hit top-level skip, or spawn was killed 
-    if(behaveOutput === "skipped") {
-      // run terminated, cannot update results
-      return;
-    }
-
-    const jFeatures: JsonFeature[] = loadJsonFeatures(behaveOutput);
 
     for(let i=0; i<jFeatures.length; i++) {
 
@@ -248,15 +233,22 @@ function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResul
 }
 
 
-function loadJsonFeatures(behaveOutput: string) : JsonFeature[] {
+export function parseJsonFeatures(behaveOutput: string) : JsonFeature[] {
   let jsonObj: JsonFeature[];
 
+  if (behaveOutput === "") {
+    throw `Error, no behave output.\n`;
+  }  
   
-  let cleanedOutput = "";
-  behaveOutput = behaveOutput.replaceAll("}]}", "}]}\n"); // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
-  const lines = behaveOutput.split("\n");
+  // handle windows line endings
+  let fixOutput = behaveOutput.replaceAll("\r\n", "\n")
 
-  // remove non-json lines (SKIP and HOOK-ERROR)
+  // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
+  fixOutput = fixOutput.replaceAll("}]}", "}]}\n"); 
+
+  // remove non-json lines (HOOK-ERROR / SKIP)
+  const lines = fixOutput.split("\n");  
+  let cleanedOutput = "";
   for(const i in lines) {
     const line = lines[i];
     if(line.startsWith("[") || line.startsWith("]") || line.startsWith("{") || line.startsWith(","))
