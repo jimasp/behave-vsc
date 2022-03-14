@@ -1,6 +1,6 @@
 # Behave VSC 
 
-## Pre-release v0.0.8
+## Pre-release v0.0.9
 - A simple test runner (and debugger) for running python behave tests in vscode
 - Built with the new Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
