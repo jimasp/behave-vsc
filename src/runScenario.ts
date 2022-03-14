@@ -55,10 +55,9 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
        ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
        : loopStr.replace(/((\s|\S)*?)\{/, "{"); 
 
-    if(tmpStr.endsWith("\n"))
-      tmpStr = tmpStr.slice(0, -1);
-
-    if(tmpStr.endsWith("\r\n")) // windows line-endings      
+    if(tmpStr.endsWith("\r\n"))
+      tmpStr = tmpStr.slice(0, -2);
+    else if(tmpStr.endsWith("\n"))
       tmpStr = tmpStr.slice(0, -1);
 
     if(!tmpStr.startsWith("["))
