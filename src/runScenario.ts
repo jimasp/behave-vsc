@@ -42,9 +42,9 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
 
   // parseJsonFeatures is expecting a full behave output string, which when 
   // behave has completed executing, looks something like this: 
-  // [\n{...}\n,\nSKIP blah blah,\n{...}\n,\n {...},\nHOOK-ERROR blah blah,\n{...},\n{...}\n\n]
-  // whereas chunks could be any partial buffered output of
-  // the above format, for example: "\n, {..."  or  "...}]\n"
+  // [\n{...}\n,\n{...}\n,\n {...},\nHOOK-ERROR blah,\n{...},\n{...}\n\n]
+  // whereas chunks could be ANY partial buffered output of
+  // the above format, for example: "\n,HOOK-ERROR blah,\n{..."  or  "...}]\n"
   // so our loop will adjust the format as the output comes in
   for await (const chunk of cp.stdout) {
     const sChunk = `${chunk}`; 
