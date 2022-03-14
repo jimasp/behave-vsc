@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { spawn } from 'child_process';
 import config from "./configuration";
-import { parseOutputAndUpdateTestResults } from './outputParser';
+import { JsonFeature, parseJsonFeatures, updateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
 
@@ -30,7 +30,6 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
   
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options); 
-  cp.stdout.setEncoding('utf8');
 
   context.subscriptions.push(cancellation.onCancellationRequested(() => {
     // (note - vscode will have ended the run, so we cannot update the test status)
@@ -40,33 +39,42 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
   
   let loopStr = "";
 
+
+  // parseJsonFeatures is expecting a full behave output string, which when 
+  // behave has completed executing, looks something like this: 
+  // [\n{...}\n,\nSKIP blah blah,\n{...}\n,\n {...},\nHOOK-ERROR blah blah,\n{...},\n{...}\n\n]
+  // whereas chunks could be any partial buffered output of
+  // the above format, for example: "\n, {..."  or  "...}]\n"
+  // so our loop will adjust the format as the output comes in
   for await (const chunk of cp.stdout) {
     const sChunk = `${chunk}`; 
     config.logger.logInfo(sChunk);
     loopStr += sChunk;  
 
     let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{") 
-      ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
-      : loopStr.replace(/((\s|\S)*?)\{/, "{");
-
-    if(tmpStr.endsWith("\n"))
-      tmpStr = tmpStr.substring(0, tmpStr.length-1);
+       ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
+       : loopStr.replace(/((\s|\S)*?)\{/, "{");
 
     if(!tmpStr.startsWith("["))
       tmpStr = "[" + tmpStr;
 
+    if(tmpStr.endsWith("\n"))
+      tmpStr = tmpStr.slice(0, -1);
+
     if(!tmpStr.endsWith("]"))
       tmpStr = tmpStr + "]";
 
+    let jFeatures:JsonFeature[];
     try {
-      JSON.parse(tmpStr);
+      jFeatures = parseJsonFeatures(tmpStr);
     }
     catch {
-      continue; // until parseable
+      // this should be infrequent, (say 1/10 loops or less) or this code probably needs a tweak
+      continue; 
     }
 
-    parseOutputAndUpdateTestResults(run, queue, tmpStr, false);
-    loopStr = "";    
+    updateTestResults(run, queue, jFeatures, false);
+    loopStr = "";
   }
   
 

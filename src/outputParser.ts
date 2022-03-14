@@ -7,7 +7,7 @@ export interface ParseResult {
   duration:number;
 }
 
-interface JsonFeature {
+export interface JsonFeature {
   elements:JsonScenario[];
   keyword:string;
   location:string;
@@ -37,8 +37,13 @@ interface JsonStep {
 
 export const moreInfo = (debug:boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
 
+export function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) {
+  const jFeatures: JsonFeature[] = parseJsonFeatures(behaveOutput);
+  updateTestResults(run, contextualQueue, jFeatures, debug);
+}
 
-export function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], behaveOutput: string, debug:boolean) 
+
+export function updateTestResults(run:vscode.TestRun, contextualQueue:QueueItem[], jFeatures:JsonFeature[], debug:boolean) 
   : void {
 
     const extractFeatureFilePathFromJsonScenarioLocation = (scenarioLocation:string) : string => {
@@ -121,12 +126,6 @@ export function parseOutputAndUpdateTestResults(run:vscode.TestRun, contextualQu
 
     // processing
 
-
-    if (behaveOutput === "") {
-      throw `Error, no behave output.\n`;
-    }    
-
-    const jFeatures: JsonFeature[] = loadJsonFeatures(behaveOutput);
 
     for(let i=0; i<jFeatures.length; i++) {
 
@@ -234,9 +233,12 @@ function parseScenarioResult(jScenario:JsonScenario, debug:boolean) : ParseResul
 }
 
 
-function loadJsonFeatures(behaveOutput: string) : JsonFeature[] {
+export function parseJsonFeatures(behaveOutput: string) : JsonFeature[] {
   let jsonObj: JsonFeature[];
 
+  if (behaveOutput === "") {
+    throw `Error, no behave output.\n`;
+  }  
   
   let cleanedOutput = "";
   behaveOutput = behaveOutput.replaceAll("}]}", "}]}\n"); // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
