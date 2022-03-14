@@ -50,16 +50,17 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
     const sChunk = `${chunk}`; 
     config.logger.logInfo(sChunk);
     loopStr += sChunk;  
-
+    
     let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{") 
        ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
-       : loopStr.replace(/((\s|\S)*?)\{/, "{");
+       : loopStr.replace(/((\s|\S)*?)\{/, "{"); 
+
+    tmpStr = tmpStr.replaceAll("\r\n", "\n")
+    if(tmpStr.endsWith("\n"))
+      tmpStr = tmpStr.slice(0, -1);    
 
     if(!tmpStr.startsWith("["))
       tmpStr = "[" + tmpStr;
-
-    if(tmpStr.endsWith("\n"))
-      tmpStr = tmpStr.slice(0, -1);
 
     if(!tmpStr.endsWith("]"))
       tmpStr = tmpStr + "]";
@@ -69,7 +70,7 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
       jFeatures = parseJsonFeatures(tmpStr);
     }
     catch {
-      // this should be infrequent, (say 1/10 loops or less) or this code probably needs a tweak
+      // this should be infrequent, or this code probably needs a tweak
       continue; 
     }
 
