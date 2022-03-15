@@ -15,12 +15,16 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 
 ---
 ### Development environment setup for extension development:
-1. Notes:
-	- Perform ALL these steps ***OUTSIDE*** of visual studio code
-	- It is assumed that you have already installed python 3.9.x and the `ms-python.python` extension
-2. Uninstall the packaged extension (optional, but recommended):
+- **Perform ALL these steps _OUTSIDE_ of visual studio code**
+- It is assumed that you have already installed python 3.9.x and the `ms-python.python` extension
+1. Close visual studio code
+2. Download the source code
+	- e.g. `git clone https://github.com/jimasp/behave-vsc.git`
+3. Change to the cloned directory, 
+	- e.g. `cd /mysourcedir/behave-vsc`
+4. Uninstall the packaged extension (optional, but recommended):
 	- `code --uninstall-extension jimasp.behave-vsc` 
-3. Install node (via nvm) if you need to. See official nvm [doc](https://github.com/nvm-sh/nvm#install--update-script), but example commands are:
+5. Install node (via nvm) if you need to. See official nvm [doc](https://github.com/nvm-sh/nvm#install--update-script), but example commands are:
 	- Linux: 
 		- `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash` (command for latest version can be 
 		found [here](https://github.com/nvm-sh/nvm#install--update-script))
@@ -32,33 +36,35 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 		- Open a fresh **new** admin cmd prompt
 		- `nvm install latest`
 		- `nvm use latest`
-4. Install required node packages
+6. Install required node packages
 	- `cd <extension_project_folder>`
 	- `npm install`
-5. Install required python packages:  
+7. Install required python packages:  
  	- `pip install -r requirements.txt`
-6. Install required extensions for developing the extension:  
+8. Install required extensions for developing the extension:  
 	- `code --install-extension ms-python.python`
 	- `code --install-extension dbaeumer.vscode-eslint`
 	- `code --install-extension amodio.tsl-problem-matcher`
-7. Check it all works before opening visual studio code:  
+9. Check it all works before opening visual studio code:  
 	- `npm run test`
-8. (If at any point you perform a `git clean`, you will need to run `npm install` again.)
+10. (If at any point you perform a `git clean`, you will need to run `npm install` again.)
 
 ---
 ### Debugging the extension
 1. Set up your environment as above.
-2. Open vscode
-3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional, but check the output if it's your first ever debug).
-4. (Optional) set breakpoints in your code, e.g. start with `src/extension.ts activate` function.
+2. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
+3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway in the next step, _but_ you should do it if it's your first ever debug).
+4. (Optional) set breakpoints in the extension code, e.g. start with `src/extension.ts activate` function.
 5. (`Ctrl+Shift+D`) + click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
-6. To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
-`"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
-7. Tips:
+6. Tips:
  	- If you have "uncaught exceptions" enabled in the (original not host) vscode environment, and you are running/debugging a behave test in the 
 	 host vscode environment, you may need to hit play in the extension vscode environment to continue.
  	- You can relaunch the extension from the debug toolbar in the (original not host) vscode environment after changing extension code. 
 	 Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
+
+## Debugging with your own host project
+- To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
+`"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
 
 ---
 ## Running extension integration tests
@@ -78,6 +84,7 @@ If you want to add a test, they should go somewhere in `src/test`.
   - The provided test runner will only consider files matching the name pattern `**.test.ts`.
   - You can create folders inside the `test` folder to structure your tests.
 
+
 ---
 ## Generating the extension installer manually (.vsix file)
 If you have a custom fork and you want to distribute it to your team, you will want to create your own .vsix file:
@@ -96,8 +103,7 @@ of debugging, e.g. if there is a webpack/import issue.
 - If the "Extension Tests" debug test fails, it could be a timeout, removing all breakpoints from both enviroments.
 Specific problem:
 - Is the problem actually in another extension - which code are you in? Try disabling other extensions.
-- Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? You can add your 
-own project to the extension .vscode/launch.json to debug the extension against it.
+- Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
 ---

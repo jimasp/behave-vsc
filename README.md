@@ -121,14 +121,11 @@ it, but MS have a potential [fix](https://github.com/microsoft/vscode/issues/139
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
 
 
-
 ---
 ## Troubleshooting
-- Does your setup match the [Requirements](#requirements) section above?
-- Does your project environment match the [Tested with](#tested-with) environment tested for this release? (Older releases are available in 
-[github](https://github.com/jimasp/behave-vsc/releases) (with information on which software versions they were tested with) or from the uninstall dropdown in visual studio code.)
+- Does your project match the [Project Requirements](#project-requirements) section above?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation. 
-- Have you tried manually running the outputted behave command from the Behave VSC output window?
+- Have you tried _manually_ running the outputted behave command from the Behave VSC output window?
 - If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have 
 "Raised Exceptions" etc. turned off?
 - Do you have the correct [Extension Settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. (Also if 
@@ -136,8 +133,10 @@ you have removed extension settings from your
 workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
 - Try temporarily disabling other extensions.
 - Check if the problem is in [Known Issues](#known-issues) / github [issues](https://github.com/jimasp/behave-vsc/issues).
+- Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in visual studio code, or in 
+[github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is 
-not accounted for. See [Contributing](#contributing) below for instructions on debugging the extension debugging with your own project. (Does the 
+not accounted for. See [Contributing](#contributing) below for instructions on debugging the extension with your own project. (Does the 
 same issue occur with the example project workspaces, or just in your own project?) 
 
 
