@@ -13,20 +13,27 @@ export const debugStopped = () => debugStopClicked;
 // (onDidTerminateDebugSession doesn't provide reason for the stop)
 // TODO - raise issue with MS (also this should be a context.subscription.push for dispose)
 vscode.debug.registerDebugAdapterTrackerFactory('*', {
+
   createDebugAdapterTracker() {
     return {
       onDidSendMessage: m => {
-        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number exit code
-          debugStopClicked = true;
+        try {
+          if (m.event === "exited" && m.body?.exitCode === 247) {  // magic number exit code
+            debugStopClicked = true;
+          }
         }
+        catch (e: unknown) {
+          config.logger.logError(e);
+        }
+
       }
     };
   }
 });
 
 
-export async function debugScenario(context:vscode.ExtensionContext, run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
-  args: string[], cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
+export async function debugScenario(context: vscode.ExtensionContext, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
+  args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -37,7 +44,7 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
 
   // delete any existing file with the same name (e.g. prior run or duplicate slug)
   if (fs.existsSync(outFile)) {
-    fs.unlinkSync(outFile); 
+    fs.unlinkSync(outFile);
   }
 
   args.push("-o", outFile);
@@ -54,39 +61,49 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
   };
 
 
-  if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
-    return; 
+  if (!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
+    return;
 
-  
+
   // test run stop 
   context.subscriptions.push(cancellation.onCancellationRequested(() => {
     config.logger.logInfo("-- TEST RUN CANCELLED --\n");
-    return vscode.debug.stopDebugging();      
+    return vscode.debug.stopDebugging();
   }));
 
-  
 
-  
+
+
   let onDidTerminateDebugSessionAlreadyFired = false;
 
   return await new Promise((resolve, reject) => {
-      // debug stopped or completed    
-      context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
+    // debug stopped or completed    
+    context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
 
-        if (onDidTerminateDebugSessionAlreadyFired) 
-          return; 
+      try {
+
+        if (onDidTerminateDebugSessionAlreadyFired)
+          return;
         onDidTerminateDebugSessionAlreadyFired = true;
 
-        if(debugStopClicked)
+        if (debugStopClicked)
           return resolve();
 
         if (!fs.existsSync(outFile))
           return reject("Error: see behave output in debug console");
-      
+
         const behaveOutput = fs.readFileSync(outFile, "utf8");
         parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
 
         resolve();
+
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+        return reject("Error: see behave output in Behave VSC output window");
+      }
+
+
     }));
 
   });

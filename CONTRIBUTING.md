@@ -53,15 +53,16 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 ### Debugging the extension with the example projects
 1. Set up your development environment as above.
 2. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
-3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway in the next step, _but_ you should do it if it's your 
-first ever debug).
-4. (Optional) set breakpoints in the extension code, e.g. start with `src/extension.ts activate` function.
-5. (`Ctrl+Shift+D`) + click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
-6. Tips:
- 	- If you have "uncaught exceptions" enabled in the (original not host) vscode environment, and you are running/debugging a behave test in the 
-	 host vscode environment, you may need to hit play in the extension vscode environment to continue.
+3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway , but you should do it if it's your first ever debug).
+4. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
+5. (`Ctrl+Shift+D`) to open the Run and Debug panel.
+6. Disable "caught exceptions" if you have it enabled.
+7. Click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
+7. Tips:
  	- You can relaunch the extension from the debug toolbar in the (original not host) vscode environment after changing extension code. 
 	 Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
+ 	- If for some reason you need to have "uncaught exceptions" enabled in the (extension, not host) vscode environment, note that you may need to hit play 
+	 multiple times in the extension vscode environment to continue. 
 
 ## Debugging with your own host project
 - To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
@@ -70,7 +71,8 @@ first ever debug).
 ---
 ## Running extension integration tests
 Either:  
-- a. (`Ctrl+Shift+D`) and click the "Run Extension Test Suite" target (if "Extension Tests" is the current selection, you can just hit (`F5`) from anywhere)  
+- a. (`Ctrl+Shift+D`) and click the "Run Extension Test Suite" target (if "Extension Tests" is the current selection, you can just hit (`F5`) 
+from anywhere)  
 OR  
 - b. Close vscode and excecute `npm run test` from a command line.
 

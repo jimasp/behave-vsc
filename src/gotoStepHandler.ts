@@ -73,7 +73,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
     
   }
   catch(e:unknown) {
-    config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+    config.logger.logError(e);
   }
 
 }

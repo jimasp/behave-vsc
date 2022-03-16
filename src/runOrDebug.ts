@@ -22,7 +22,7 @@ export async function runBehaveAll(context:vscode.ExtensionContext, run:vscode.T
     await runAll(context, pythonExec, run, queue, shared_args, friendlyCmd, cancellation);
   }
   catch(e:unknown) {
-    config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+    config.logger.logError(e);
   }
 }
 
@@ -55,7 +55,7 @@ export async function runOrDebugBehaveScenario(context:vscode.ExtensionContext, 
       }
     }
     catch(e:unknown) {
-      config.logger.logError(e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+      config.logger.logError(e);
     }
 
     

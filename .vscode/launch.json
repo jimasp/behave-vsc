@@ -21,7 +21,7 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": false,
+			"justMyCode": true,
 		},
 		{
 			"name": "Debug Extension - Workspace 2",
@@ -39,7 +39,7 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": false,
+			"justMyCode": true,
 		},
 		{
 			"name": "Run Extension Test Suite - Workspace 1",
@@ -54,7 +54,7 @@
 				"${workspaceFolder}/out/**/*.js",
 				"${workspaceFolder}/dist/**/*.js"
 			],
-			"preLaunchTask": "tasks: watch-tests"
+			"preLaunchTask": "tasks: watch-tests",		
 		},
 		{
 			"name": "Run Extension Test Suite - Workspace 2",
