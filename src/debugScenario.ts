@@ -16,7 +16,7 @@ vscode.debug.registerDebugAdapterTrackerFactory('*', {
   createDebugAdapterTracker() {
     return {
       onDidSendMessage: m => {
-        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
+        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number exit code
           debugStopClicked = true;
         }
       }

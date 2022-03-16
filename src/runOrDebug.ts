@@ -17,7 +17,6 @@ export async function runBehaveAll(context:vscode.ExtensionContext, run:vscode.T
   
   const pythonExec = await config.getPythonExec();
   const friendlyCmd = `${pythonExec} -m behave`;
-  config.logger.show();  
   
   try {
     await runAll(context, pythonExec, run, queue, shared_args, friendlyCmd, cancellation);
@@ -40,7 +39,7 @@ export async function runOrDebugBehaveScenario(context:vscode.ExtensionContext, 
     const args = [ "-i", scenario.featureFileRelativePath, "-n", escapedScenarioName].concat(shared_args);
     const friendlyCmd = `${pythonExec} -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
 
-    if (scenario.fastSkip) {
+    if (!debug && scenario.fastSkip) {
       config.logger.logInfo(`Fast skipping '${scenario.featureFileRelativePath}' '${scenarioName}'\n`);
       updateTest(run, {status: "skipped", duration:0}, queueItem);
       return;

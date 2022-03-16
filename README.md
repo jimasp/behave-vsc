@@ -1,15 +1,27 @@
 # Behave VSC 
 
 ## Pre-release v0.0.9
-- A simple test runner (and debugger) for running python behave tests in vscode
-- Built with the new Visual Studio Code Test API  
+- A simple test runner (and debugger) for python behave tests in vscode
+- Built with the native Visual Studio Code Test API  
 - See [Known Issues](#known-issues) and [Troubleshooting](#troubleshooting) below if you have any problems
 
 ### Tested with
-- behave 1.2.6
+- behave 1.2.6, 
 - Python 3.9.7
 - Visual Studio Code 1.65.2
 - Ubuntu (Pop!_OS 21.10) / Windows 10
+
+---
+## Features
+
+- Debug or Run behave tests from the test workbench, or from inside a feature file.
+- Go to step definition from a feature file. (Not shown in the below gif. Right-click inside a feature file on a line 
+containing a step and click "Go to step").
+- Run customisation via [Extension settings](#extension-settings).
+
+
+![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
+
 
 ---
 ## Project Requirements
@@ -35,19 +47,6 @@ folder and add a `paths` setting:
 [behave]
 paths=behave-tests/features 
 ```
-
----
-## Features
-
-- Run or Debug behave tests from the test workbench, or from inside a Feature file.
-- Go to step definition from a feature file (experimental). (This is not shown in below gif, just right-click inside a feature file on a line 
-containing a step and click "Go to step").
-- Run customisation via [Extension settings](#extension-settings).
-- In run mode, std/err output can be found in the Behave VSC output window, including an equivalent behave command to run the test manually. 
-(In debug mode, errors are shown in the console.)
-
-
-![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
 ---
 ## Extension Settings
@@ -117,7 +116,7 @@ having to click debug stop button multiple times. (If for some reason you regula
 a keyboard shortcut for debug stop.)
 - Refresh button duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer 
 it, but MS have a potential [fix](https://github.com/microsoft/vscode/issues/139737) in the works).
- See [Troubleshooting](#troubleshooting) below.
+- See [Troubleshooting](#troubleshooting) below.
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
 
 
@@ -126,19 +125,23 @@ it, but MS have a potential [fix](https://github.com/microsoft/vscode/issues/139
 - Does your project match the [Project Requirements](#project-requirements) section above?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation. 
 - Have you tried _manually_ running the outputted behave command from the Behave VSC output window?
-- If you are not seeing exceptions while debugging, do you have the appropriate breakpoint settings in vs code, e.g. do you have 
-"Raised Exceptions" etc. turned off?
 - Do you have the correct [Extension Settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. (Also if 
 you have removed extension settings from your 
-workspace `.vscode/settings.json`, then do you have any of the extension settings in your user settings?)
+workspace `.vscode/settings.json`, then do you still have any of the extension settings in your 
+[user settings json](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations)?)
 - Try temporarily disabling other extensions.
 - Check if the problem is in [Known Issues](#known-issues) / github [issues](https://github.com/jimasp/behave-vsc/issues).
-- Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in visual studio code, or in 
+- Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall 
+dropdown in visual studio code, or in 
 [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is 
 not accounted for. See [Contributing](#contributing) below for instructions on debugging the extension with your own project. (Does the 
 same issue occur with the example project workspaces, or just in your own project?) 
-
+### Q&A
+- Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have 
+"Raised Exceptions" etc. turned off?
+- How do I clear test results? This isn't that obvious in vs code atm. You have to click the ellipsis "..." at the top of the test window and pick 
+"Clear all results".
 
 ---
 ## Contributing

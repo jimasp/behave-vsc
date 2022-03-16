@@ -39,8 +39,8 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 6. Install required node packages
 	- `cd <extension_project_folder>`
 	- `npm install`
-7. Install required python packages:  
- 	- `pip install -r requirements.txt`
+7. Optional - install behave 1.2.6 if required:  
+	- `python -m pip install behave==1.2.6` 
 8. Install required extensions for developing the extension:  
 	- `code --install-extension ms-python.python`
 	- `code --install-extension dbaeumer.vscode-eslint`
@@ -50,10 +50,11 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 10. (If at any point you perform a `git clean`, you will need to run `npm install` again.)
 
 ---
-### Debugging the extension
-1. Set up your environment as above.
+### Debugging the extension with the example projects
+1. Set up your development environment as above.
 2. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
-3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway in the next step, _but_ you should do it if it's your first ever debug).
+3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway in the next step, _but_ you should do it if it's your 
+first ever debug).
 4. (Optional) set breakpoints in the extension code, e.g. start with `src/extension.ts activate` function.
 5. (`Ctrl+Shift+D`) + click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
 6. Tips:
