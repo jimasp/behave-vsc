@@ -9,27 +9,6 @@ let debugStopClicked = false;
 export const resetDebugStop = () => debugStopClicked = false;
 export const debugStopped = () => debugStopClicked;
 
-// debug stop - VERY hacky way to determine if debug stopped by user click
-// (onDidTerminateDebugSession doesn't provide reason for the stop)
-// TODO - raise issue with MS (also this should be a context.subscription.push for dispose)
-vscode.debug.registerDebugAdapterTrackerFactory('*', {
-
-  createDebugAdapterTracker() {
-    return {
-      onDidSendMessage: m => {
-        try {
-          if (m.event === "exited" && m.body?.exitCode === 247) {  // magic number exit code
-            debugStopClicked = true;
-          }
-        }
-        catch (e: unknown) {
-          config.logger.logError(e);
-        }
-
-      }
-    };
-  }
-});
 
 
 export async function debugScenario(context: vscode.ExtensionContext, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
@@ -61,34 +40,56 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
   };
 
 
+  // handle test run stop 
+  const cancellationEvent = cancellation.onCancellationRequested(() => {
+    try {
+      config.logger.logInfo("-- TEST RUN CANCELLED --\n");
+      vscode.debug.stopDebugging();
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+    finally {
+      cancellationEvent.dispose();
+    }
+  });
+
+  // handle debug stop click - hacky way to determine if debug stopped by user click
+  // (onDidTerminateDebugSession doesn't provide reason for the stop)
+  const debugEvent = vscode.debug.onDidReceiveDebugSessionCustomEvent((m) => {
+    try {
+      // 247 = magic number exit code (probably specific to ms python debugger)
+      if (m.event === "exited" && m.body?.exitCode === 247) {
+        debugStopClicked = true;
+        console.log("debug stop clicked");
+      }
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+    finally {
+      debugEvent.dispose();
+    }
+  });
+
+
+
   if (!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
     return;
 
 
-  // test run stop 
-  context.subscriptions.push(cancellation.onCancellationRequested(() => {
-    config.logger.logInfo("-- TEST RUN CANCELLED --\n");
-    return vscode.debug.stopDebugging();
-  }));
-
-
-
-
-  let onDidTerminateDebugSessionAlreadyFired = false;
-
   return await new Promise((resolve, reject) => {
     // debug stopped or completed    
-    context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
+    const terminateEvent = vscode.debug.onDidTerminateDebugSession(() => {
 
       try {
+        console.log("debug stopped");
 
-        if (onDidTerminateDebugSessionAlreadyFired)
-          return;
-        onDidTerminateDebugSessionAlreadyFired = true;
-
+        // user clicked stop, so there will be no output, just return
         if (debugStopClicked)
           return resolve();
 
+        // user didn't click stop, so if no output file, something went wrong with behave
         if (!fs.existsSync(outFile))
           return reject("Error: see behave output in debug console");
 
@@ -96,16 +97,16 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
         parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
 
         resolve();
-
       }
       catch (e: unknown) {
-        config.logger.logError(e);
-        return reject("Error: see behave output in Behave VSC output window");
+        // (will get logged in parent try/catch)
+        return reject(e);
+      }
+      finally {
+        terminateEvent.dispose();
       }
 
-
-    }));
-
+    });
   });
 
 }

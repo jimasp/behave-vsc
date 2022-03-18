@@ -15,8 +15,8 @@
 ## Features
 
 - Debug or Run behave tests from the test workbench, or from inside a feature file.
-- Go to step definition from a feature file. (Not shown in the below gif. Right-click inside a feature file on a line 
-containing a step and click "Go to step").
+- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line 
+containing a step and click "Go to step"). You can also map a keybinding for this command if you wish e.g. F12.
 - Run customisation via [Extension settings](#extension-settings).
 
 

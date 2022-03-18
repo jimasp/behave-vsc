@@ -4,9 +4,13 @@
 
 ---
 ### General
-- Before starting any development, please fully read through the [README](README.md) as well as this document. It may solve/answer your issue.
-- If you are going to be developing/debugging this extension, uninstall the packaged extension from vscode. (Generally, you can develop the extension 
-without doing this, but it is not recommended as there could be side-effects.)
+- ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach 
+Release v1.0.0 due to code volatility.*** You should also hold of forking before v1.0.0, or make sure to merge down updates.
+- Before starting any development, please make sure to fully read through the [README](README.md) as well as this document. It may save you some pain
+and/or solve your issue.
+- If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension 
+enabled while debugging the extension can cause side-effects via background execution.
+without doing this, but it is not recommended as it can cause side-effects because the installed extension will also be active/reacting.)
 - If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
 - If you do wish to contribute, please make sure to read "Design principles" and "Before pushing a PR"
 - This code is under the MIT licence. You are free to fork it and do your own thing as long as the LICENSE.txt is included, but please do 
@@ -61,8 +65,8 @@ contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-v
 7. Tips:
  	- You can relaunch the extension from the debug toolbar in the (original not host) vscode environment after changing extension code. 
 	 Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
- 	- If for some reason you need to have "uncaught exceptions" enabled in the (extension, not host) vscode environment, note that you may need to hit play 
-	 multiple times in the extension vscode environment to continue. 
+ 	- If for some reason you need to have "uncaught exceptions" enabled in the (extension, not host) vscode environment, note that you may need to 
+	 hit play multiple times in the extension vscode environment to continue if it hits external code.
 
 ## Debugging with your own host project
 - To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
@@ -116,10 +120,11 @@ Specific problem:
 - Is your bug/use case covered by an existing test? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors (errors must be fixed, warnings should be fixed unless they would result in changes to `extension.ts`.)
 - Automated tests (verify behave results):
-	- Close vscode and run `npm run test` (currently these only verify test results, they do not test any UI interactions)
-- After running automated tests, if you made a change that affects anything other than test results then you'll want to run some manual tests of 
-the affected areas. For example, if you changed feature file parsing or file watchers you'd want to run these tests as a minimum:
-	1. run example-project-workspace-1
+	- Close vscode and run `npm run test` (currently these only verify test results, they do not test anything else)
+- After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
+some manual tests of the affected areas. For example, if you changed feature file/step file parsing or file watchers you'd want to run these 
+tests as a minimum:
+	1. debug workspace 1
 	2. edit a group1 feature file, change the name of the feature and save it, then: 
 		- check the test UI tree shows the renamed feature
 		- check you can run the renamed feature from inside the feature file
@@ -130,21 +135,26 @@ the affected areas. For example, if you changed feature file parsing or file wat
 	4. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	5. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
+	6. rename a feature file, in the test panel, check the feature is not duplicated, check feature tests run from the panel
+	7. rename a feature group folder (e.g. 'group1.features'), check the folder is not duplicated, check feature tests run from panel
+	8. go to a steps file, click "go to step" and check it works
+	9. rename the same steps file, check you can still use "go to step" for a step in that file
 
 ---
 ## Design principles
-- KISS:
-	- Easiest method for run/debug possible (i.e. leverage launch.json do not create/attach a debug server yourself, and let MS python 
-	extension/behave do the work wherever possible).
-	- "It just works" - avoid anything that might break on someone else's box, for example don't rely on bash or file paths (Windows v Linux).
-	- YAGNI - simple, minimal code to get the job done, and don't add features people don't need that could break stuff.
+- Don't reinvent the wheel - leverage `vscode` methods and node functions to handle things wherever possible (especially paths). Also, we leverage 
+launch.json, we do not create/attach a debug server ourselves, rather we let MS python extension do the work). 
+- KISS - "It just works" - simple, minimal code to get the job done, avoid anything that might break on someone else's box, for example don't rely on 
+bash or file paths (Windows v Linux).
+- YAGNI - don't be tempted to add extension capabilities the majority of people don't need. More code means more stuff that can break. Edge-case 
+capabilities should be supported in forked repos.
 - Code concerns:
 	- Cross-platform, i.e. OS-independent drive/path separators (`C:\...` vs `/home/...`), line-endings (use `\n`), encoding (use `utf8`), etc. Also
 	consider relative paths and path matching. (where possible vscode/node  converts `\`to `/` itself for consistency.)
-	- Leverage `vscode` methods and node functions (e.g. `fs` lib) to handle the above concerns, don't code it yourself.
 	- No reliance on other extensions except `ms-python.python`.	
 	- Try not to add any npm packages - lightweight, less security/licensing/audit concerns.
 	- Where possible, try to limit changes to `extension.ts` to new implementation rather than changing the existing implementation. 
-(Reason - the code was originally based on an [MS sample repo](https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample) - 
-so, if vscode event hooks change, or features get added we might just be able to grab the fix/feature via future commits to that file in the MS repo.)
+(Reason - the code was originally based on an [MS sample repo](https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample). 
+So, if vscode event hooks change, or features get added we might just be able to grab the fix/feature via future commits to `extension.ts` in the 
+MS repo.)
 

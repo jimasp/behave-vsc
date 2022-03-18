@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import config from "./configuration";
 import { parseFeatureFile } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
-import * as fs from 'fs';
+import { getContentFromFilesystem } from './helpers';
 
 
 let generationCounter = 0;
@@ -13,28 +12,18 @@ type BehaveTestData = TestFile | Feature | Scenario;
 export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 
 
-export const getContentFromFilesystem = (uri: vscode.Uri) => {
-  try {
-    return fs.readFileSync(uri.fsPath, "utf-8")
-  } 
-  catch (e:unknown) {
-    config.logger.logError(e, `Error reading content from file ${uri.fsPath}`);
-    return '';
-  }
-};
-
 
 export class TestFile {
   public didResolve = false;
 
-  public async updateFromDisk(controller: vscode.TestController,item: vscode.TestItem) {
+  public async updateFromDisk(controller: vscode.TestController, item: vscode.TestItem) {
     try {
-      if(!item.uri)
+      if (!item.uri)
         throw "missing test item uri"
-      const content = getContentFromFilesystem(item.uri);
+      const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
       this.updateFromContents(controller, content, item);
-    } catch (e:unknown) {
+    } catch (e: unknown) {
       item.error = (e as Error).stack;
     }
   }
@@ -44,21 +33,21 @@ export class TestFile {
     const thisGeneration = generationCounter++;
     this.didResolve = true;
 
-    const ancestors:{item: vscode.TestItem, children: vscode.TestItem[]}[] = [];
-    ancestors.push({item, children: []});           
+    const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
+    ancestors.push({ item, children: [] });
 
     const ascend = (depth: number) => {
-      while (ancestors.length > depth) {       
-        const finished = ancestors.pop();       
-        if(finished === undefined)
-          throw "finished is undefined"        
-        finished.item.children.replace(finished.children);      
+      while (ancestors.length > depth) {
+        const finished = ancestors.pop();
+        if (finished === undefined)
+          throw "finished is undefined"
+        finished.item.children.replace(finished.children);
       }
     };
 
-    const onScenarioLine = (range: vscode.Range, featureName:string, scenarioName:string, isOutline: boolean, fastSkip:boolean) => {
+    const onScenarioLine = (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => {
       const parent = ancestors[ancestors.length - 1];
-      if(item.uri === undefined)
+      if (item.uri === undefined)
         throw "testitem uri is undefined"
       const data = new Scenario(vscode.workspace.asRelativePath(item.uri), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       const id = `${item.uri}/${data.getLabel()}`;
@@ -77,26 +66,26 @@ export class TestFile {
 }
 
 export class Feature {
-  constructor(public generation: number) {}
+  constructor(public generation: number) { }
 }
 
 export class Scenario {
-  public result: string|undefined;
+  public result: string | undefined;
   constructor(
     public readonly featureFileRelativePath: string,
     public readonly featureName: string,
     public scenarioName: string,
     public generation: number,
     public readonly isOutline: boolean,
-    public readonly fastSkip: boolean,   
-  ) {}
+    public readonly fastSkip: boolean,
+  ) { }
 
   getLabel() {
     return `${this.scenarioName}`;
   }
 
 
-  async runOrDebug(context:vscode.ExtensionContext, debug:boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
+  async runOrDebug(context: vscode.ExtensionContext, debug: boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
     await runOrDebugBehaveScenario(context, run, queueItem, debug, cancellation);
   }
 

@@ -3,12 +3,12 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import config from "./configuration";
-import { getContentFromFilesystem, Scenario, testData, TestFile } from './testTree';
+import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { debugStopped, resetDebugStop } from './debugScenario';
-import { logActivate, logRunDiagOutput } from './extensionHelpers';
+import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
@@ -24,6 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
     logActivate(context);
 
     const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
+    // func in push() will execute immediately, as well as registering it for disposal on extension deactivate
     context.subscriptions.push(ctrl);
     context.subscriptions.push(startWatchingWorkspace(ctrl));
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
@@ -61,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
             if (test.uri && !coveredLines.has(test.uri.toString())) {
               try {
-                const lines = (getContentFromFilesystem(test.uri)).split('\n');
+                const lines = (await getContentFromFilesystem(test.uri)).split('\n');
                 coveredLines.set(
                   test.uri.toString(),
                   lines.map((lineText, lineNo) =>
@@ -182,29 +183,6 @@ export async function activate(context: vscode.ExtensionContext) {
     };
 
 
-    const refreshHandler = async () => {
-      try {
-        await findInitialFeatureFiles(ctrl, true);
-      }
-      catch (e: unknown) {
-        config.logger.logError(e);
-      }
-    };
-    // @ts-ignore: Property 'refreshHander' does not exist on type 'TestController'
-    ctrl.refreshHandler = refreshHandler;
-
-    vscode.workspace.onDidChangeConfiguration(async (e) => {
-      try {
-        if (e.affectsConfiguration(config.extensionName)) {
-          config.reloadUserSettings();
-          await refreshHandler();
-        }
-      }
-      catch (e: unknown) {
-        config.logger.logError(e);
-      }
-    });
-
 
     ctrl.createRunProfile('Run Tests',
       vscode.TestRunProfileKind.Run,
@@ -236,19 +214,41 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     };
 
+    ctrl.refreshHandler = () => {
+      try {
+        buildTree(ctrl, true);
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+    };
 
-    const updateNodeForDocument = (e: vscode.TextDocument) => {
-      const created = getOrCreateFile(ctrl, e.uri);
-      if (created)
-        created.data.updateFromContents(ctrl, e.getText(), created.file);
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
+      try {
+        if (e.affectsConfiguration(config.extensionName)) {
+          config.reloadUserSettings();
+          //buildTree(ctrl, false);
+        }
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+    }));
+
+
+    const updateNodeForDocument = async (e: vscode.TextDocument) => {
+      const item = await getOrCreateTestItemFromFeatureFile(ctrl, e.uri);
+      if (item)
+        item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
     }
 
     // for any open documents on startup
     for (const document of vscode.workspace.textDocuments) {
-      updateNodeForDocument(document);
+      await updateNodeForDocument(document);
     }
 
-    return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findInitialFeatureFiles }; // support extensiontest.ts
+    return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findFeatureFiles }; // support extensiontest.ts
 
   }
   catch (e: unknown) {
@@ -265,7 +265,15 @@ export async function activate(context: vscode.ExtensionContext) {
 } // end activate()
 
 
-function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri): { file: vscode.TestItem, data: TestFile } | undefined {
+function buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+  findFeatureFiles(ctrl, reparseFeatures);
+  findStepsFiles();
+}
+
+
+async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
+  : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
+
 
   if (uri.scheme !== "file" || !uri.path.endsWith('.feature')) {
     return undefined;
@@ -273,10 +281,10 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri): { 
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
-    return { file: existing, data: testData.get(existing) as TestFile };
+    return { testItem: existing, testFile: testData.get(existing) as TestFile };
   }
 
-  const featureName = getFeatureNameFromFile(uri);
+  const featureName = await getFeatureNameFromFile(uri);
   if (featureName === null)
     return undefined;
 
@@ -293,20 +301,20 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri): { 
     }
   }
 
-  const file = controller.createTestItem(uri.toString(), featureName, uri);
-  controller.items.add(file);
+  const testItem = controller.createTestItem(uri.toString(), featureName, uri);
+  controller.items.add(testItem);
 
   if (parentGroup !== undefined) {
-    parentGroup.children.add(file);
+    parentGroup.children.add(testItem);
     controller.items.add(parentGroup);
   }
 
-  const data = new TestFile();
-  testData.set(file, data);
+  const testFile = new TestFile();
+  testData.set(testItem, testFile);
 
-  file.canResolveChildren = true;
+  testItem.canResolveChildren = true;
 
-  return { file, data };
+  return { testItem: testItem, testFile: testFile };
 }
 
 function gatherTestItems(collection: vscode.TestItemCollection) {
@@ -317,118 +325,114 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 
 
-async function findInitialFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
+async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
   controller.items.forEach(item => controller.items.delete(item.id));
   const featureFiles1 = await vscode.workspace.findFiles("**/features/*.feature");
   const featureFiles2 = await vscode.workspace.findFiles("**/features/**/*.feature");
   const featureFiles = featureFiles1.concat(featureFiles2);
 
-  for (const featureFile of featureFiles) {
-    const created = getOrCreateFile(controller, featureFile);
-    if (created && reparse) {
-      await created.data.updateFromDisk(controller, created.file);
-    }
+  for (const uri of featureFiles) {
+    await updateTestItemFromFeatureFile(controller, uri, reparse);
   }
 }
 
-async function findInitialStepsFiles() {
+async function findStepsFiles() {
   steps.clear();
-  const stepFiles1 = await vscode.workspace.findFiles("**/features/steps/*.py");
-  const stepFiles2 = await vscode.workspace.findFiles("**/features/steps/**/*.py");
+  const stepFiles1 = await vscode.workspace.findFiles("**/features/**/steps/*.py");
+  const stepFiles2 = await vscode.workspace.findFiles("**/features/**/steps/**/*.py");
   const stepFiles = stepFiles1.concat(stepFiles2);
 
   for (const stepFile of stepFiles) {
-    updateSteps(stepFile);
+    await updateStepsFromStepsFile(stepFile);
   }
 }
 
-function startWatchingWorkspace(controller: vscode.TestController) {
+async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
-  // ** = not just .feature files, also support folder changes
-  const watcher = vscode.workspace.createFileSystemWatcher('**/features/**');
+  if (uri.scheme !== "file")
+    return;
 
+  const path = uri.path.toLowerCase();
+
+  if (path.indexOf("/steps/") && path.toLowerCase().endsWith(".py")) {
+    await parseStepsFile(uri, steps);
+    return;
+  }
+
+  throw "not a steps path";
+}
+
+async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
+
+  if (uri.scheme !== "file")
+    return;
+
+  if (uri.path.toLowerCase().endsWith(".feature")) {
+    const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
+    if (item && reparse) {
+      await item.testFile.updateFromDisk(controller, item.testItem);
+    }
+    return;
+  }
+
+  throw "not a feature path"
+}
+
+function startWatchingWorkspace(ctrl: vscode.TestController) {
+
+  // just .feature files, also support **folder** changes
+  const pattern = new vscode.RelativePattern(config.workspaceFolder, "**/features/**");
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+  const updater = (uri: vscode.Uri) => {
+
+    if (uri.scheme !== "file")
+      return;
+
+    const path = uri.path.toLowerCase();
+
+    try {
+      if (path.indexOf("/steps/") !== -1) {
+        updateStepsFromStepsFile(uri);
+      }
+      else {
+        updateTestItemFromFeatureFile(ctrl, uri, true);
+      }
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+  }
+
+
+  // fires on file/folder creation (inc. git branch switch)
   watcher.onDidCreate(uri => {
-
-    try {
-
-      if (uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }
-
-      if (uri.path.toLowerCase().endsWith(".feature"))
-        getOrCreateFile(controller, uri);
-      else if (uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
-
-    }
-    catch (e: unknown) {
-      config.logger.logError(e);
-    }
-
+    updater(uri);
   });
 
+  // fires if file/folder is renamed or open on startup, (inc. git branch switch)
   watcher.onDidChange(uri => {
+    updater(uri);
+  });
+
+  // could be rename/delete (inc. git branch switch)
+  watcher.onDidDelete((uri) => {
+
+    if (uri.scheme !== "file")
+      return;
 
     try {
-
-      if (uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }
-
-      if (uri.path.toLowerCase().endsWith(".feature")) {
-        const created = getOrCreateFile(controller, uri);
-        if (created) {
-          created.data.updateFromDisk(controller, created.file);
-        }
-      }
-      else if (uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
-
+      buildTree(ctrl, true);
     }
     catch (e: unknown) {
       config.logger.logError(e);
     }
-
   });
 
 
-  watcher.onDidDelete(uri => {
-    try {
-
-      if (uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }
-
-      if (uri.path.toLowerCase().endsWith(".feature"))
-        getOrCreateFile(controller, uri);
-      else if (uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
-
-    }
-    catch (e: unknown) {
-      config.logger.logError(e);
-    }
-
-  });
-
-  findInitialFeatureFiles(controller, true);
-  findInitialStepsFiles();
+  buildTree(ctrl, true);
 
   return watcher;
-
-
-
 }
 
 
-function updateSteps(uri: vscode.Uri) {
-  if (uri.path.toLowerCase().endsWith(".py")) {
-    const content = getContentFromFilesystem(uri);
-    parseStepsFile(uri, content, steps);
-  }
-  else if (uri.path.toLowerCase().endsWith("/"))
-    findInitialStepsFiles();
-}
