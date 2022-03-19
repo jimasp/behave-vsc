@@ -54,7 +54,7 @@
 				"${workspaceFolder}/out/**/*.js",
 				"${workspaceFolder}/dist/**/*.js"
 			],
-			"preLaunchTask": "tasks: watch-tests",		
+			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
 			"name": "Run Extension Test Suite - Workspace 2",
@@ -69,7 +69,7 @@
 				"${workspaceFolder}/out/**/*.js",
 				"${workspaceFolder}/dist/**/*.js"
 			],
-			"preLaunchTask": "tasks: watch-tests"
-		}		
+			"preLaunchTask": "tasks: watch-tests",
+		}
 	]
 }

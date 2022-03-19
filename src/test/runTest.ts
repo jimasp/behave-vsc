@@ -7,6 +7,8 @@ import {
 } from '@vscode/test-electron';
 
 
+// this code runs for `npm run test`
+// it does not run when debugging from the vscode ide
 async function main() {
   try {
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');

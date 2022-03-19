@@ -20,27 +20,29 @@ export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
 class TreeBuilder {
 
-  private static _treeBuilding = true;
+  async readyForRun(timeout: number) {
+    const interval = 100;
 
-  isBuilding(timeOut: number): boolean {
-    const delay = 20;
-    if (TreeBuilder._treeBuilding) {
-      console.log("still building");
-      const remaining = timeOut - delay;
-      let ret = true;
-      setTimeout(() => { ret = this.isBuilding(remaining) }, 100);
-      console.log("ret=" + ret);
-      return ret;
+    const check = (resolve: (value: boolean) => void) => {
+      if (this._featuresLoaded) {
+        resolve(true);
+      }
+      else {
+        timeout -= interval;
+        if (timeout < interval)
+          resolve(false);
+        setTimeout(() => check(resolve), interval);
+      }
     }
-    else {
-      return false;
-    }
+
+    return new Promise<boolean>(check);
   }
 
+  private _featuresLoaded = false;
   buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
-    TreeBuilder._treeBuilding = true;
+    this._featuresLoaded = false;
     findFeatureFiles(ctrl, reparseFeatures).then(() => {
-      TreeBuilder._treeBuilding = false;
+      this._featuresLoaded = true;
     });
     findStepsFiles();
   }
@@ -63,10 +65,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
-      //if (treeBuilder.isBuilding(500)) {
-      // vscode.window.showWarningMessage("cannot run tests while test items are updating");
-      //  return; // never allow results that don't match the tests on the file system
-      // }
+      const ready = await treeBuilder.readyForRun(1000);
+      if (!ready) {
+        // never allow results that don't match the tests on the file system
+        // (this should only happen on very large project)
+        vscode.window.showWarningMessage("cannot run tests while test items are still updating, please try again");
+        return;
+      }
 
       try {
 
@@ -413,7 +418,7 @@ async function updateTestItemFromFeatureFile(controller: vscode.TestController, 
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
 
-  // just .feature files, also support **folder** changes
+  // not just *.feature and /steps/* files, but also support **folder** changes inside the features folder
   const pattern = new vscode.RelativePattern(config.workspaceFolder, "**/features/**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
@@ -443,12 +448,12 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     updater(uri);
   });
 
-  // fires if file/folder is renamed or open on startup, (inc. git branch switch)
+  // fires on file/folder rename (inc. git branch switch) AND when file is open in editor on startup 
   watcher.onDidChange(uri => {
     updater(uri);
   });
 
-  // could be rename/delete (inc. git branch switch)
+  // fires on file/folder delete AND rename (inc. git branch switch)
   watcher.onDidDelete((uri) => {
 
     if (uri.scheme !== "file")
