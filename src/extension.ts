@@ -17,6 +17,38 @@ export const getSteps = () => steps;
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
+
+class TreeBuilder {
+
+  private static _treeBuilding = true;
+
+  isBuilding(timeOut: number): boolean {
+    const delay = 20;
+    if (TreeBuilder._treeBuilding) {
+      console.log("still building");
+      const remaining = timeOut - delay;
+      let ret = true;
+      setTimeout(() => { ret = this.isBuilding(remaining) }, 100);
+      console.log("ret=" + ret);
+      return ret;
+    }
+    else {
+      return false;
+    }
+  }
+
+  buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+    TreeBuilder._treeBuilding = true;
+    findFeatureFiles(ctrl, reparseFeatures).then(() => {
+      TreeBuilder._treeBuilding = false;
+    });
+    findStepsFiles();
+  }
+
+}
+
+const treeBuilder = new TreeBuilder();
+
 export async function activate(context: vscode.ExtensionContext) {
 
   try {
@@ -31,17 +63,23 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
+      //if (treeBuilder.isBuilding(500)) {
+      // vscode.window.showWarningMessage("cannot run tests while test items are updating");
+      //  return; // never allow results that don't match the tests on the file system
+      // }
+
       try {
 
         logRunDiagOutput(debug);
         const queue: QueueItem[] = [];
         const run = ctrl.createTestRun(request, config.extensionFullName, false);
         config.logger.run = run;
+
         // map of file uris to statements on each line:
         // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
         const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
 
-        const discoverTests = async (tests: Iterable<vscode.TestItem>) => {
+        const queueSelectedTestItems = async (tests: Iterable<vscode.TestItem>) => {
           for (const test of tests) {
             if (request.exclude?.includes(test)) {
               continue;
@@ -52,12 +90,13 @@ export async function activate(context: vscode.ExtensionContext) {
             if (data instanceof Scenario) {
               run.enqueued(test);
               queue.push({ test, scenario: data });
-            } else {
+            }
+            else {
               if (data instanceof TestFile && !data.didResolve) {
                 await data.updateFromDisk(ctrl, test);
               }
 
-              await discoverTests(gatherTestItems(test.children));
+              await queueSelectedTestItems(gatherTestItems(test.children));
             }
 
             if (test.uri && !coveredLines.has(test.uri.toString())) {
@@ -170,7 +209,7 @@ export async function activate(context: vscode.ExtensionContext) {
           },
         };
 
-        await discoverTests(request.include ?? gatherTestItems(ctrl.items));
+        await queueSelectedTestItems(request.include ?? gatherTestItems(ctrl.items));
         await runTestQueue(request);
 
         return queue;
@@ -216,7 +255,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     ctrl.refreshHandler = () => {
       try {
-        buildTree(ctrl, true);
+        treeBuilder.buildTree(ctrl, true);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -228,7 +267,7 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         if (e.affectsConfiguration(config.extensionName)) {
           config.reloadUserSettings();
-          //buildTree(ctrl, false);
+          treeBuilder.buildTree(ctrl, false);
         }
       }
       catch (e: unknown) {
@@ -265,11 +304,6 @@ export async function activate(context: vscode.ExtensionContext) {
 } // end activate()
 
 
-function buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
-  findFeatureFiles(ctrl, reparseFeatures);
-  findStepsFiles();
-}
-
 
 async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
@@ -288,7 +322,7 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
   if (featureName === null)
     return undefined;
 
-  // support e.g. /group1.features/ parentGroup folder node
+  // support e.g. /group1_features/ parentGroup folder node
   let parentGroup: vscode.TestItem | undefined = undefined;
   const featuresFolderIndex = uri.path.lastIndexOf("/features/") + "/features/".length;
   const sfp = uri.path.substring(featuresFolderIndex);
@@ -354,12 +388,11 @@ async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
   const path = uri.path.toLowerCase();
 
-  if (path.indexOf("/steps/") && path.toLowerCase().endsWith(".py")) {
-    await parseStepsFile(uri, steps);
-    return;
-  }
+  if (!path.indexOf("/steps/") && path.toLowerCase().endsWith(".py"))
+    throw `${uri.path} ignored -not a steps path`;
 
-  throw "not a steps path";
+  await parseStepsFile(uri, steps);
+  return;
 }
 
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
@@ -367,15 +400,15 @@ async function updateTestItemFromFeatureFile(controller: vscode.TestController, 
   if (uri.scheme !== "file")
     return;
 
-  if (uri.path.toLowerCase().endsWith(".feature")) {
-    const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
-    if (item && reparse) {
-      await item.testFile.updateFromDisk(controller, item.testItem);
-    }
-    return;
-  }
+  if (!uri.path.toLowerCase().endsWith(".feature"))
+    throw `${uri.path} ignored - not a feature file`;
 
-  throw "not a feature path"
+  const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
+  if (item && reparse) {
+    await item.testFile.updateFromDisk(controller, item.testItem);
+  }
+  return;
+
 }
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
@@ -422,7 +455,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
       return;
 
     try {
-      buildTree(ctrl, true);
+      treeBuilder.buildTree(ctrl, true);
     }
     catch (e: unknown) {
       config.logger.logError(e);
@@ -430,7 +463,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
   });
 
 
-  buildTree(ctrl, true);
+  treeBuilder.buildTree(ctrl, true);
 
   return watcher;
 }
