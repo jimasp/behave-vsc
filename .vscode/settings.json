@@ -18,5 +18,5 @@
         150
     ],
     "editor.formatOnSave": true,
-    "editor.foldingMaximumRegions": 20000
+    "editor.foldingMaximumRegions": 20000,
 }

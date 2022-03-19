@@ -2,12 +2,12 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./non-behave-tests",
+        "./non_behave_tests",
         "-p",
         "test_*.py"
     ],
     "python.testing.unittestEnabled": true,
-    "python.testing.pytestEnabled": false,    
+    "python.testing.pytestEnabled": false,
     "python.formatting.provider": "black",
     "behave-vsc.runParallel": false,
     "behave-vsc.runAllAsOne": true,

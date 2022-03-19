@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from behave import given, when, then # pylint: disable=no-name-in-module
+from behave import * 
 
 class UserDept:
     user = ""
@@ -30,3 +30,6 @@ def find_count(context, count, dept):
 @then('we will find 1 person in "{dept}"')
 def find_one(context, dept):
     assert sum(1 for ud in context.userDepts if ud.dept == dept) == 1
+
+
+

@@ -1,7 +1,8 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from behave import given, when, then # pylint: disable=no-name-in-module
+from behave import *
+
 
 class UserDept:
     user = ""
@@ -18,9 +19,11 @@ def spec_users(context):
     for row in context.table:
         context.userDepts.append(UserDept(row["user"], row["dept"]))
 
+
 @when("we do nothing")
 def do_nothing(context):
     pass
+
 
 @then('we will find {count} people in "{dept}"')
 def find_count(context, count, dept):
