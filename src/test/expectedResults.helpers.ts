@@ -56,9 +56,9 @@ export function applyDebugTextReplacements(debug: boolean, expectedResults: Test
   return expectedResults;
 }
 
-export function applyFastSkipTextReplacements(testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
+export function applyFastSkipTextReplacements(debug: boolean, testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
 
-  const fastSkipEnabled = testConfig.get("runAllAsOne") === false && testConfig.get("fastSkipList") !== undefined;
+  const fastSkipEnabled = !debug && testConfig.get("runAllAsOne") === false && testConfig.get("fastSkipList") !== undefined;
 
   if (!fastSkipEnabled)
     return expectedResults;

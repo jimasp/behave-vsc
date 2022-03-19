@@ -78,7 +78,7 @@ paths=behave_tests/features
 
 - `behave-vsc.fastSkipList`
   - Default: empty string
-  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
+  - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled, or when debugging. 
   - A csv of skip tags that each start with `@` that will stop behave being called for features/scenarios marked with those tags. 
   - Example: `@skip, @skipped` 
   - This is just so you can speed up your test run if you have a large amount of skipped tests. 
@@ -86,23 +86,23 @@ paths=behave_tests/features
 - `behave-vsc.runAllAsOne` 
   - Default: true
   - Enables/disables running all tests together, i.e. one-shot `python -m behave` when you run all tests. 
-  - Keep this enabled unless (a) you can enable runParallel, or (b) you prefer slower test runs where you can see the test results update as they 
-  come in. 
-  - Note that running behave as one-shot can cause different test results under some circumstances versus running them individually, e.g. if you 
-  set `context.failed` in your tests.
+  - Recommended to keep this enabled unless either/both (a) you can enable `behave-vsc.runParallel` or (b) you are using `behave-vsc.fastSkipList` 
+  with a lot of tests. 
+  - Note that running running a selection of tests vs one-shot can cause different test results under some circumstances, i.e. highlight issues with 
+  test isolation.
 
 - `behave-vsc.runParallel`
   - Default: false
   - This setting has no effect when you run all tests at once and `behave-vsc.runAllAsOne` is enabled. 
-  - Enables/disables running tests in parallel. (Experimental). 
-  - It is advised to leave this disabled for your initial test 
-run, then change it to enabled if your project test suite supports running multiple tests at the same time, i.e. unless your tests are 
-fully **isolated**, then you should not enable this setting. Note that behave itself does not support parallel testing - enabling this setting 
-will create multiple behave instances, so in the case of running all tests, it may be no faster due to the overhead of starting multiple processes. 
-It will be faster if you select a subset/group of tests to run.  
-  - Note that running behave as separate instances can cause different test results from a one-shot run under some circumstances versus running them 
-  individually, e.g. if you set `context.failed` in your tests.  
- 
+  - Enables/disables running tests in parallel. 
+  - It is advised to leave this disabled for your initial test run, then change it to enabled if your project test suite supports running multiple 
+  tests at the same time, i.e. unless your tests are fully **isolated**, then you should not enable this setting. Note that behave itself does not 
+  support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be 
+  faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because 
+  they can execute at the same time, but fast tests might be slower due to the overhead.
+  - Note that running behave as separate instances can cause different test results from sequentially run single tests or a one-shot run without 
+  fully isolated tests.
+ - This is an experimental setting, i.e. may be withdrawn. 
 
 ---  
 ## How it works

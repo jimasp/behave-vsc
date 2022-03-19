@@ -654,7 +654,7 @@ export const getExpectedResults = (debug: boolean, testConfig: WorkspaceConfigur
   ];
 
   applyDebugTextReplacements(debug, expectedResults);
-  return applyFastSkipTextReplacements(testConfig, expectedResults);
+  return applyFastSkipTextReplacements(debug, testConfig, expectedResults);
 }
 
 

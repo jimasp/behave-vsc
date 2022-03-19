@@ -13,17 +13,17 @@
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional unquoted csv list of fast skip tags, example: @skip, @skip-me-too.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip.\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
+					"description": "Optional unquoted csv list of fast skip tags, example: @skip, @skip-me-too.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip.\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled, or when debugging. "
 				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,
-					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to leave this on, unless you can enable 'Run Parallel'."
+					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable 'runParallel` or (b) you are using `fastSkipList` with a lot of tests."
 				},
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Run behave tests in fast async mode.\nLeave this off for your initial run, then enable if your test setup supports it (i.e. your tests are fully isolated).\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
+					"description": "(Experimental). Run behave tests in fast async mode.\nLeave this off for your initial run, then enable if your test setup supports it (i.e. your tests are fully isolated).\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled."
 				}
 			}
 		},

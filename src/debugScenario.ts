@@ -83,7 +83,6 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
     const terminateEvent = vscode.debug.onDidTerminateDebugSession(() => {
 
       try {
-        console.log("debug stopped");
 
         // user clicked stop, so there will be no output, just return
         if (debugStopClicked)
