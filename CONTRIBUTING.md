@@ -127,7 +127,7 @@ changes to the exmample project workspaces will require you to update the test c
 - After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
 some manual tests of the affected areas. For example, if you changed feature file/step file parsing or file watchers you'd want to run these 
 tests as a minimum:
-	1. debug workspace 1
+	1. start debug on workspace 1, then
 	2. edit a group1 feature file, change the name of the feature and save it, then: 
 		- check the test UI tree shows the renamed feature
 		- check you can run the renamed feature from inside the feature file
