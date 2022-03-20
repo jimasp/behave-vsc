@@ -141,7 +141,7 @@ tests as a minimum:
 	(the normal feature file that is open, not the diff view)
 	6. rename a feature file, in the test panel, check the feature is not duplicated, check feature tests run from the panel
 	7. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from panel
-	8. go to a steps file, click "go to step" and check it works
+	8. go to a feature file, click "go to step" and check at least some of them work
 	9. rename the same steps file, then check you can still use "go to step" for a step in that file
 
 ---
