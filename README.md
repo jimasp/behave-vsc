@@ -37,7 +37,7 @@ containing a step and click "Go to step"). You can also map a keybinding for thi
 
 ### Required project directory structure
 - A single "features" folder somewhere inside your workspace folder. If your features folder has another name, then see `featuresPath` 
-in [Extension settings][#extension-settings].
+in [Extension settings](#extension-settings).
 - `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
 - A behave-conformant directory structure, for example, a project root `features` folder that contains a `steps` folder and some grouped features 
 folders:
@@ -75,7 +75,7 @@ paths=behave_tests/features
 ## Extension settings
 
 - This extension has various settings to customise your test run via `settings.json`.  
-- For more info, see the extension settings in vscode (click the cog next to Behave VSC in the extension panel).
+- For more information, see the extension settings in vscode (click the cog next to Behave VSC in the extension panel).
 
 ---  
 ## How it works
