@@ -130,6 +130,7 @@ tests as a minimum:
 	1. start debug on workspace 1, then
 	2. edit a group1 feature file, change the name of the feature and save it, then: 
 		- check the test UI tree shows the renamed feature
+		- check you can run the changed scenario from UI tree
 		- check you can run the renamed feature from inside the feature file
 	3. edit a group2 outline feature file, change the name of a scenario and save it, then: 
 		- check the test UI tree shows the renamed scenario
