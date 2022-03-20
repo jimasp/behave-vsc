@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import { ExtensionConfiguration } from '../configuration';
 import { moreInfo } from '../outputParser';
 
 interface ITestResult {
@@ -40,13 +40,33 @@ export class TestResult implements ITestResult {
 }
 
 
-export function applyDebugTextReplacements(debug: boolean, expectedResults: TestResult[]) {
+export function applyTestConfiguration(debug: boolean, config: ExtensionConfiguration, expectedResults: TestResult[]) {
+  const runMoreInfo = moreInfo(false);
+  const debugMoreInfo = moreInfo(true);
+
+  expectedResults = applyFeaturesPath(expectedResults, config);
+  expectedResults = applyDebugTextReplacements(expectedResults, debug, runMoreInfo, debugMoreInfo);
+  expectedResults = applyFastSkipTextReplacements(expectedResults, debug, config);
+
+  return expectedResults;
+}
+
+
+function applyFeaturesPath(expectedResults: TestResult[], config: ExtensionConfiguration) {
+  expectedResults.forEach((expectedResult, index, returnResults) => {
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", config.userSettings.featuresPath);
+    returnResults[index] = JSON.parse(json);
+  });
+
+  return expectedResults;
+}
+
+
+function applyDebugTextReplacements(expectedResults: TestResult[], debug: boolean, runMoreInfo: string, debugMoreInfo: string) {
 
   if (!debug)
     return expectedResults;
 
-  const runMoreInfo = moreInfo(false);
-  const debugMoreInfo = moreInfo(true);
   expectedResults.forEach(expectedResult => {
     const idx = expectedResult.scenario_result?.indexOf(runMoreInfo);
     if (idx !== -1)
@@ -56,9 +76,9 @@ export function applyDebugTextReplacements(debug: boolean, expectedResults: Test
   return expectedResults;
 }
 
-export function applyFastSkipTextReplacements(debug: boolean, testConfig: vscode.WorkspaceConfiguration, expectedResults: TestResult[]) {
+function applyFastSkipTextReplacements(expectedResults: TestResult[], debug: boolean, config: ExtensionConfiguration) {
 
-  const fastSkipEnabled = !debug && testConfig.get("runAllAsOne") === false && testConfig.get("fastSkipList") !== undefined;
+  const fastSkipEnabled = config.userSettings.fastSkipList && !debug && !config.userSettings.runAllAsOne;
 
   if (!fastSkipEnabled)
     return expectedResults;

@@ -141,22 +141,20 @@ tests as a minimum:
 	6. rename a feature file, in the test panel, check the feature is not duplicated, check feature tests run from the panel
 	7. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from panel
 	8. go to a steps file, click "go to step" and check it works
-	9. rename the same steps file, check you can still use "go to step" for a step in that file
+	9. rename the same steps file, then check you can still use "go to step" for a step in that file
 
 ---
 ## Design principles
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary node functions, to handle things wherever possible. 
 - KISS - "It just works" - simple, minimal code to get the job done. Avoid anything that might break on someone else's box - for example don't rely on 
 bash/cmd, installed programs etc.
-- YAGNI - don't be tempted to add extension capabilities the majority of people don't need. More code means more stuff that can break. Edge-case 
-capabilities for an in-house project with an unusual custom setup should be supported in forked repos. (If it's a common concern, then please do 
-submit a feature request issue or PR.) 
-- Always consider performance.
+- YAGNI - don't be tempted to add extension capabilities the majority of people don't need. More code means more stuff that can break and/or lead to 
+slower performance. Edge-case capabilities for an in-house project with an unusual custom setup should be supported in forked repos. (If it's a common 
+concern, then please do submit a feature request issue or PR.) 
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the 
 behave command manually. Also any such changes are more likely to break in future versions of behave.
-- Code concerns:
-	- Cross-platform, i.e. OS-independent drive/path separators (`C:\...` vs `/home/...`), line-endings (use `\n`), encoding (use `utf8`), etc. Also
+- Always consider performance.
+- Cross-platform, i.e. OS-independent drive/path separators (`C:\...` vs `/home/...`), line-endings (use `\n`), encoding (use `utf8`), etc. Also
 	consider relative paths and path matching. (where possible vscode/node  converts `\`to `/` itself for consistency.)
-	- No reliance on other extensions except `ms-python.python`.	
-	- Try not to add any npm packages - lightweight, less security/licensing/audit concerns.
-
+- No reliance on other extensions except `ms-python.python`.	
+- Try not to add extra npm packages - lightweight, less versioning/security/licensing/audit concerns. 

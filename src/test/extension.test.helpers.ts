@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import config, { ExtensionConfiguration } from "../configuration";
+import { ExtensionConfiguration } from "../configuration";
 import { QueueItem } from '../extension';
 import { TestResult } from "./expectedResults.helpers";
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -56,12 +57,13 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 	return match;
 }
 
+
+
+
 let actRet: ActivateReturnType;
 type ActivateReturnType = {
 	runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[]>,
-	config: ExtensionConfiguration,
-	ctrl: vscode.TestController,
-	findInitialFiles: (controller: vscode.TestController) => Promise<void>,
+	config: ExtensionConfiguration
 };
 
 
@@ -70,25 +72,24 @@ const activateExtension = async (): Promise<ActivateReturnType> => {
 	if (actRet !== undefined)
 		return actRet;
 
-	const ext = vscode.extensions.getExtension(config.extensionFullName);
+	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
 	actRet = await ext?.activate() as ActivateReturnType;
 	return actRet;
 }
 
-export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: vscode.WorkspaceConfiguration,
-	getExpectedResults: (debug: boolean, testConfig: vscode.WorkspaceConfiguration) => TestResult[]) => {
+export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
+	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
 
 	actRet = await activateExtension();
 	actRet.config.reloadUserSettings(testConfig);
-	const expectedResults = getExpectedResults(debug, testConfig);
+	const expectedResults = getExpectedResults(debug, actRet.config);
 
 	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
 	const cancelToken = new vscode.CancellationTokenSource().token;
-	await actRet.findInitialFiles(actRet.ctrl);
 	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
 
-	if (results.length === 0)
-		throw "no results found";
+	if (!results || results.length === 0)
+		throw Error("no results returned from runHandler");
 
 
 	const standardisePath = (path: string | undefined): string | undefined => {

@@ -32,7 +32,7 @@ export function logRunDiagOutput(debugRun: boolean) {
 
 
 export function logUserSettings(consoleOnly = false) {
-  const configText = `\nUser settings:\n${JSON.stringify(config.userSettings, null, 2)}\n`;
+  const configText = `\nSettings:\n${JSON.stringify(config.userSettings, null, 2)}\n`;
   if (!consoleOnly)
     config.logger.logInfo(configText);
   else

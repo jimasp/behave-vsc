@@ -39,12 +39,16 @@ class TreeBuilder {
   }
 
   private _featuresLoaded = false;
-  buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+  // this should only be awaited on user request, i.e. when called by the refreshHandler
+  async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+    const start = Date.now();
+
     this._featuresLoaded = false;
-    findFeatureFiles(ctrl, reparseFeatures).then(() => {
-      this._featuresLoaded = true;
-    });
+    await findFeatureFiles(ctrl, reparseFeatures);
+    this._featuresLoaded = true;
     findStepsFiles();
+
+    console.log(`buildTree took ${Date.now() - start}ms (will be slower during contention, like vscode startup)`);
   }
 
 }
@@ -65,11 +69,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
+      // the test tree is built as a background process which is called from a few places
+      // (and it will be slow on vscode startup due to contention), so we 
+      // don't want to await it except on user request (refresh click),
+      // but at the same time, we also don't to allow test runs when the tests items are out of date vs the file system
       const ready = await treeBuilder.readyForRun(1000);
       if (!ready) {
-        // never allow results that don't match the tests on the file system
-        // (this should only happen on very large project)
-        vscode.window.showWarningMessage("cannot run tests while test items are still updating, please try again");
+        const msg = "cannot run tests while test items are still updating, please try again";
+        console.log(msg);
+        vscode.window.showWarningMessage(msg);
         return;
       }
 
@@ -258,9 +266,9 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     };
 
-    ctrl.refreshHandler = () => {
+    ctrl.refreshHandler = async () => {
       try {
-        treeBuilder.buildTree(ctrl, true);
+        await treeBuilder.buildTree(ctrl, true);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -292,7 +300,7 @@ export async function activate(context: vscode.ExtensionContext) {
       await updateNodeForDocument(document);
     }
 
-    return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findFeatureFiles }; // support extensiontest.ts
+    return { runHandler: runHandler, config: config }; // support extensiontest.ts
 
   }
   catch (e: unknown) {
@@ -328,8 +336,9 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
     return undefined;
 
   // support e.g. /group1_features/ parentGroup folder node
-  let parentGroup: vscode.TestItem | undefined = undefined;
-  const featuresFolderIndex = uri.path.lastIndexOf("/features/") + "/features/".length;
+  let parentGroup: vscode.TestItem | undefined = undefined
+  const featIdxPath = "/" + config.userSettings.featuresPath + "/";
+  const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
   const sfp = uri.path.substring(featuresFolderIndex);
   if (sfp.indexOf("/") !== -1) {
     const groupName = sfp.split("/")[0];
@@ -366,8 +375,8 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
   controller.items.forEach(item => controller.items.delete(item.id));
-  const featureFiles1 = await vscode.workspace.findFiles("**/features/*.feature");
-  const featureFiles2 = await vscode.workspace.findFiles("**/features/**/*.feature");
+  const featureFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/*.feature`);
+  const featureFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/*.feature`);
   const featureFiles = featureFiles1.concat(featureFiles2);
 
   for (const uri of featureFiles) {
@@ -377,8 +386,8 @@ async function findFeatureFiles(controller: vscode.TestController, reparse?: boo
 
 async function findStepsFiles() {
   steps.clear();
-  const stepFiles1 = await vscode.workspace.findFiles("**/features/**/steps/*.py");
-  const stepFiles2 = await vscode.workspace.findFiles("**/features/**/steps/**/*.py");
+  const stepFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/*.py`);
+  const stepFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
   const stepFiles = stepFiles1.concat(stepFiles2);
 
   for (const stepFile of stepFiles) {
@@ -418,8 +427,8 @@ async function updateTestItemFromFeatureFile(controller: vscode.TestController, 
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
 
-  // not just *.feature and /steps/* files, but also support **folder** changes inside the features folder
-  const pattern = new vscode.RelativePattern(config.workspaceFolder, "**/features/**");
+  // not just *.feature and /steps/* files, but also support folder changes inside the features folder
+  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = (uri: vscode.Uri) => {

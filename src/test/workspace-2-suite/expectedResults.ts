@@ -1,8 +1,8 @@
-import { WorkspaceConfiguration } from "vscode";
-import { TestResult, applyFastSkipTextReplacements as applyFastSkipTextReplacements, applyDebugTextReplacements } from "../expectedResults.helpers";
+import { ExtensionConfiguration } from "../../configuration";
+import { TestResult, applyTestConfiguration } from "../expectedResults.helpers";
 
 
-export const getExpectedResults = (debug: boolean, testConfig: WorkspaceConfiguration): TestResult[] => {
+export const getExpectedResults = (debug: boolean, config: ExtensionConfiguration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -650,11 +650,26 @@ export const getExpectedResults = (debug: boolean, testConfig: WorkspaceConfigur
       test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
     }),
 
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'features/nested/nested/nested/nested_dupe.feature',
+      scenario_featureName: 'Duplicate',
+      scenario_getLabel: 'run a test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature/run a test',
+      test_label: 'run a test',
+      test_parent: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature',
+      test_uri: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature'
+    })
 
   ];
 
-  applyDebugTextReplacements(debug, expectedResults);
-  return applyFastSkipTextReplacements(debug, testConfig, expectedResults);
+  return applyTestConfiguration(debug, config, expectedResults);
 }
 
 

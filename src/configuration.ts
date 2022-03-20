@@ -9,6 +9,13 @@ const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 const MSPY_EXT = "ms-python.python";
 
 
+const getWorkspaceFolder = () => {
+  const wsf = vscode.workspace.workspaceFolders;
+  if (wsf && wsf?.length > 0)
+    return wsf[0];
+  throw "could not resolve workspace folder";
+}
+
 export interface ExtensionConfiguration {
   readonly extensionName: string;
   readonly extensionFullName: string;
@@ -30,12 +37,12 @@ class Configuration implements ExtensionConfiguration {
   public readonly debugOutputFilePath = path.join(os.tmpdir(), EXTENSION_NAME);
   public readonly logger: Logger = new Logger();
   private static _userSettings: UserSettings | undefined = undefined;
-  //private _extensionTestsConfig?: vscode.WorkspaceConfiguration;    
 
   private static _configuration?: Configuration;
 
   private constructor() {
     Configuration._configuration = this;
+    console.log("Configuration singleton constructed");
   }
 
   static get configuration() {
@@ -66,10 +73,7 @@ class Configuration implements ExtensionConfiguration {
 
   // WE ONLY SUPPORT A SINGLE WORKSPACE FOLDER ATM
   public get workspaceFolder(): vscode.WorkspaceFolder {
-    const wsf = vscode.workspace.workspaceFolders;
-    if (wsf && wsf?.length > 0)
-      return wsf[0];
-    throw "no workspace folder found";
+    return getWorkspaceFolder();
   }
 
   public get workspaceFolderPath(): string {
@@ -82,6 +86,7 @@ class Configuration implements ExtensionConfiguration {
     return await getPythonExecutable(this.logger, this.workspaceFolder.uri);
   }
 }
+
 
 class Logger {
 
@@ -122,40 +127,57 @@ class Logger {
   }
 }
 
+
 class UserSettings {
   public envVarList: { [name: string]: string } = {};
   public fastSkipList: string[] = [];
   public runAllAsOne: boolean;
   public runParallel: boolean;
+  public featuresPath = "features";
   constructor(wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
+    const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
 
-    this.runAllAsOne = runAllAsOneCfg !== undefined ? runAllAsOneCfg : true;
-    this.runParallel = runParallelCfg !== undefined ? runParallelCfg : false;
+    this.runAllAsOne = runAllAsOneCfg ? runAllAsOneCfg : true;
+    this.runParallel = runParallelCfg ? runParallelCfg : false;
 
-    if (fastSkipListCfg !== undefined && fastSkipListCfg !== "") {
-      if (fastSkipListCfg !== "" && (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2)) {
-        logger.logError("Invalid FastSkipList setting ignored.");
+    if (featuresPathCfg) {
+      const path = featuresPathCfg.trim();
+      const uri = vscode.Uri.joinPath(getWorkspaceFolder().uri, path);
+      const wsf = vscode.workspace.getWorkspaceFolder(uri);
+      if (wsf) {
+        this.featuresPath = vscode.workspace.asRelativePath(path);
       }
       else {
-        this.fastSkipList = fastSkipListCfg !== undefined ? fastSkipListCfg.split(',').map(s => !s.startsWith("@") ? "" : s.trim()) : [""];
+        logger.logError(`Invalid featuresPath '${featuresPathCfg}' setting ignored.\nMust be a relative path within the workspace.\n` +
+          "Defaulting to 'features' path instead.");
       }
     }
 
-    if (envVarListCfg !== undefined && envVarListCfg !== "") {
+    if (fastSkipListCfg) {
+      if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2) {
+        logger.logError("Invalid FastSkipList setting ignored.");
+      }
+      else {
+        this.fastSkipList = fastSkipListCfg.trim().split(',').filter(s => { if (s.startsWith("@")) return s; });
+      }
+    }
+
+    if (envVarListCfg) {
       if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7) {
         logger.logError("Invalid EnvVarList setting ignored.");
       }
       else {
-        envVarListCfg.split("',").map(s => {
-          s = s.replace(/\\'/, "^#^");
+        const escaped = "#^@";
+        envVarListCfg.trim().split("',").map(s => {
+          s = s.replace(/\\'/, escaped);
           const e = s.split("':");
-          const name = e[0].replace(/'/g, "").replace("^#^", "'");
-          const value = e[1].replace(/'/g, "").replace("^#^", "'");
+          const name = e[0].replace(/'/g, "").replace(escaped, "'");
+          const value = e[1].replace(/'/g, "").replace(escaped, "'");
           this.envVarList[name] = value;
         });
       }
@@ -186,7 +208,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
   }
 
   const pythonExec = await pyext?.exports.settings.getExecutionDetails(scope).execCommand[0];
-  if (!pythonExec || pythonExec == "") {
+  if (!pythonExec) {
     const msg = EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT;
     vscode.window.showErrorMessage(msg);
     logger.logError(msg);
