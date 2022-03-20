@@ -21,7 +21,7 @@ you have any problems
 - Debug or Run behave tests from the test workbench, or from inside a feature file.
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line 
 containing a step and click "Go to step"). You can also map a keybinding for this command if you wish e.g. F12.
-- Run customisation via [Extension settings](#extension-settings).
+- Run customisation via extension [settings](#extension-settings).
 
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
@@ -37,7 +37,7 @@ containing a step and click "Go to step"). You can also map a keybinding for thi
 
 ### Required project directory structure
 - A single "features" folder somewhere inside your workspace folder. If your features folder has another name, then see `featuresPath` 
-in [Extension settings](#extension-settings).
+in extension [settings](#extension-settings).
 - `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
 - A behave-conformant directory structure, for example, a project root `features` folder that contains a `steps` folder and some grouped features 
 folders:
@@ -112,7 +112,7 @@ dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Othe
 - Does your project match the [Project Requirements](#project-requirements) section above?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - If you have set the `featuresPath` in extension settings, make sure it matches your behave configuration file.
-- Do you have the correct [Extension Settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. (Also if 
+- Do you have the correct extension [settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. (Also if 
 you have removed extension settings from your 
 workspace `.vscode/settings.json`, then do you still have any of the extension settings in your 
 [user settings json](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations)?)
