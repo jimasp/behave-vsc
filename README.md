@@ -105,27 +105,6 @@ The _actual_ behave command that is run has extra parameters for json format, et
 consistent and parseable.
 
 ---
-## Known issues and limitations
-
-- Does not support multiple vscode workspace folders ("multi-root workspaces").
-- "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters 
-in behave - parse;  re; cfparse, and we would have to recreate these matching algorithms exactly. 
-- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features foler (e.g. if you 
-import steps in python from an external steps library folder it won't find them). 
-- Parallel test runs add up durations, making it look like they took longer than they actually did.
-- Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like 
-having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map 
-a keyboard shortcut for debug stop, the default is Shift+F5.) 
-- Test panel refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may 
-actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update
-their code (this extension has applied the fix).
-- In order to ensure that the output is parseable and consistent, the internally executed behave command adds extra parameters to override any 
-configured settings that may affect behave output.
-- See [Troubleshooting](#troubleshooting) below.
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
-
-
----
 ## Troubleshooting
 If you used a previous version, but you have issues with the latest version, then please rollback to previous version via the vscode uninstall 
 dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
@@ -150,6 +129,27 @@ same issue occur with the example project workspaces, or just in your own projec
 "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis "..." at the top of the test panel and then click 
 "Clear all results".
+
+---
+## Known issues and limitations
+
+- Does not support multiple vscode workspace folders ("multi-root workspaces").
+- "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters 
+in behave - parse;  re; cfparse, and we would have to recreate these matching algorithms exactly. 
+- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features foler (e.g. if you 
+import steps in python from an external steps library folder it won't find them). 
+- Parallel test runs add up durations, making it look like they took longer than they actually did.
+- Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like 
+having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map 
+a keyboard shortcut for debug stop, the default is Shift+F5.) 
+- Test panel refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may 
+actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update
+their code (this extension has applied the fix).
+- In order to ensure that the output is parseable and consistent, the internally executed behave command adds extra parameters to override any 
+configured settings that may affect behave output.
+- See [Troubleshooting](#troubleshooting) below.
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
+
 
 ---
 ## Contributing
