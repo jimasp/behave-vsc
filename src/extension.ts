@@ -48,7 +48,8 @@ class TreeBuilder {
     this._featuresLoaded = true;
     findStepsFiles();
 
-    console.log(`buildTree took ${Date.now() - start}ms (will be slower during contention, like vscode startup)`);
+    console.log(`buildTree took ${Date.now() - start}ms ` +
+      `(slower during contention, like vscode startup, click test refresh button for more representative time)`);
   }
 
 }
