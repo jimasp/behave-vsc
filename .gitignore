@@ -3,4 +3,5 @@ dist
 node_modules
 __pycache__
 .vscode-test
-
+**/.venv/**
+**/venv/**

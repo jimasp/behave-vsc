@@ -9,24 +9,10 @@ let debugStopClicked = false;
 export const resetDebugStop = () => debugStopClicked = false;
 export const debugStopped = () => debugStopClicked;
 
-// debug stop - VERY hacky way to determine if debug stopped by user click
-// (onDidTerminateDebugSession doesn't provide reason for the stop)
-// TODO - raise issue with MS (also this should be a context.subscription.push for dispose)
-vscode.debug.registerDebugAdapterTrackerFactory('*', {
-  createDebugAdapterTracker() {
-    return {
-      onDidSendMessage: m => {
-        if(m.event === "exited" && m.body?.exitCode === 247) {  // magic number error code
-          debugStopClicked = true;
-        }
-      }
-    };
-  }
-});
 
 
-export async function debugScenario(context:vscode.ExtensionContext, run:vscode.TestRun, queueItem:QueueItem, escapedScenarioName: string, 
-  args: string[], cancellation: vscode.CancellationToken, friendlyCmd:string): Promise<void> {
+export async function debugScenario(context: vscode.ExtensionContext, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
+  args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -37,7 +23,7 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
 
   // delete any existing file with the same name (e.g. prior run or duplicate slug)
   if (fs.existsSync(outFile)) {
-    fs.unlinkSync(outFile); 
+    fs.unlinkSync(outFile);
   }
 
   args.push("-o", outFile);
@@ -54,41 +40,72 @@ export async function debugScenario(context:vscode.ExtensionContext, run:vscode.
   };
 
 
-  if(!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
-    return; 
+  // handle test run stop 
+  const cancellationEvent = cancellation.onCancellationRequested(() => {
+    try {
+      config.logger.logInfo("-- TEST RUN CANCELLED --\n");
+      vscode.debug.stopDebugging();
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+    finally {
+      cancellationEvent.dispose();
+    }
+  });
 
-  
-  // test run stop 
-  context.subscriptions.push(cancellation.onCancellationRequested(() => {
-    config.logger.logInfo("-- TEST RUN CANCELLED --\n");
-    return vscode.debug.stopDebugging();      
-  }));
+  // handle debug stop click - hacky way to determine if debug stopped by user click
+  // (onDidTerminateDebugSession doesn't provide reason for the stop)
+  const debugEvent = vscode.debug.onDidReceiveDebugSessionCustomEvent((m) => {
+    try {
+      // 247 = magic number exit code (probably specific to ms python debugger)
+      if (m.event === "exited" && m.body?.exitCode === 247) {
+        debugStopClicked = true;
+        console.log("debug stop clicked");
+      }
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+    finally {
+      debugEvent.dispose();
+    }
+  });
 
-  
 
-  
-  let onDidTerminateDebugSessionAlreadyFired = false;
+
+  if (!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
+    return;
+
 
   return await new Promise((resolve, reject) => {
-      // debug stopped or completed    
-      context.subscriptions.push(vscode.debug.onDidTerminateDebugSession(() => {
+    // debug stopped or completed    
+    const terminateEvent = vscode.debug.onDidTerminateDebugSession(() => {
 
-        if (onDidTerminateDebugSessionAlreadyFired) 
-          return; 
-        onDidTerminateDebugSessionAlreadyFired = true;
+      try {
 
-        if(debugStopClicked)
+        // user clicked stop, so there will be no output, just return
+        if (debugStopClicked)
           return resolve();
 
+        // user didn't click stop, so if no output file, something went wrong with behave
         if (!fs.existsSync(outFile))
           return reject("Error: see behave output in debug console");
-      
+
         const behaveOutput = fs.readFileSync(outFile, "utf8");
         parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
 
         resolve();
-    }));
+      }
+      catch (e: unknown) {
+        // (will get logged in parent try/catch)
+        return reject(e);
+      }
+      finally {
+        terminateEvent.dispose();
+      }
 
+    });
   });
 
 }

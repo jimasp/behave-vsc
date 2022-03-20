@@ -11,10 +11,12 @@
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off",
     "[typescript]": {
-        "editor.tabSize": 2
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
     },
     "editor.rulers": [
         150
     ],
-    "editor.foldingMaximumRegions": 20000
+    "editor.formatOnSave": true,
+    "editor.foldingMaximumRegions": 20000,
 }

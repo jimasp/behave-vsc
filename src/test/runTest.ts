@@ -2,58 +2,62 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import {
   downloadAndUnzipVSCode,
-  runTests  
-  //resolveCliPathFromVSCodeExecutablePath,
+  resolveCliArgsFromVSCodeExecutablePath,
+  runTests
 } from '@vscode/test-electron';
 
 
+// this code runs for `npm run test`
+// it does not run when debugging from the vscode ide
 async function main() {
   try {
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
 
-    console.log("checking for latest stable vscode...");
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
-    
-
-    console.log("running pip...");
-    const result = cp.spawnSync("pip", ["install", "-r", path.resolve(extensionDevelopmentPath + "/requirements.txt")], {
-      encoding: 'utf-8',
-      stdio: 'inherit',
-    });
-    if(result.error)
-      throw result.error;
-
-    
-    // ? spawing vscode this way this seems to make vscode ignore the working folder argument
-    //const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    // console.log("starting vscode...");
-    // cp.spawnSync(cliPath,["example-project-workspace-1", "--install-extension", "ms-python.python", "--force"] {
+    // console.log("running pip...");
+    // const result = cp.spawnSync("pip", ["install", "-r", path.resolve(extensionDevelopmentPath + "/requirements.txt")], {
     //   encoding: 'utf-8',
     //   stdio: 'inherit',
     // });
     // if(result.error)
-    //   throw result.error;
+    //   throw result.error;    
 
-    console.log("starting test run...")
+    console.log("checking for latest stable vscode...");
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
 
-    let launchArgs = ["example-project-workspace-1", "--install-extension", "ms-python.python", "--force"]    
+
+    console.log("installing ms-python.python extension into stable version...");
+    const [cliPath, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
+    const result = cp.spawnSync(cliPath, [...args, "--install-extension", "ms-python.python"], {
+      encoding: 'utf-8',
+      stdio: 'inherit',
+    });
+    if (result.error)
+      throw result.error;
+
+
+    console.log("starting test run...");
+
+
+    let launchArgs = ["example-project-workspace-1"]
     let extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
     await runTests({
-      vscodeExecutablePath, // Use the previously returned `code` executable
+      vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs
     });
 
-    launchArgs = ["example-project-workspace-2", "--install-extension", "ms-python.python", "--force"]        
+    launchArgs = ["example-project-workspace-2"]
     extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
     await runTests({
-      vscodeExecutablePath, // Use the previously returned `code` executable
+      vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs
-    });    
-    
+    });
+
+    console.log("test run complete");
+
   } catch (err) {
     console.error('Failed to run tests');
     process.exit(1);

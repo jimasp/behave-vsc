@@ -3,239 +3,325 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import config from "./configuration";
-import { getContentFromFilesystem, Scenario, testData, TestFile } from './testTree';
+import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { debugStopped, resetDebugStop } from './debugScenario';
-import { logActivate, logRunDiagOutput } from './extensionHelpers';
+import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
-const steps:Steps = new Map<string, StepDetail>();
+const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
+
+class TreeBuilder {
+
+  async readyForRun(timeout: number) {
+    const interval = 100;
+
+    const check = (resolve: (value: boolean) => void) => {
+      if (this._featuresLoaded) {
+        resolve(true);
+      }
+      else {
+        timeout -= interval;
+        if (timeout < interval)
+          resolve(false);
+        setTimeout(() => check(resolve), interval);
+      }
+    }
+
+    return new Promise<boolean>(check);
+  }
+
+  private _featuresLoaded = false;
+  // this should only be awaited on user request, i.e. when called by the refreshHandler
+  async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+    const start = Date.now();
+
+    this._featuresLoaded = false;
+    await findFeatureFiles(ctrl, reparseFeatures);
+    this._featuresLoaded = true;
+    findStepsFiles();
+
+    console.log(`buildTree took ${Date.now() - start}ms ` +
+      `(slower during contention, like vscode startup, click test refresh button for more representative time)`);
+  }
+
+}
+
+const treeBuilder = new TreeBuilder();
+
 export async function activate(context: vscode.ExtensionContext) {
 
-  logActivate(context);
+  try {
 
-  const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
-  context.subscriptions.push(ctrl);
-  context.subscriptions.push(startWatchingWorkspace(ctrl));
-  context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
+    logActivate(context);
 
-  const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+    const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
+    // func in push() will execute immediately, as well as registering it for disposal on extension deactivate
+    context.subscriptions.push(ctrl);
+    context.subscriptions.push(startWatchingWorkspace(ctrl));
+    context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
-    logRunDiagOutput(debug);
-    const queue: QueueItem[] = [];
-    const run = ctrl.createTestRun(request, config.extensionFullName, false); 
-    config.logger.run = run;
-    // map of file uris to statements on each line:
-    // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-    const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
+    const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
-    const discoverTests = async (tests: Iterable<vscode.TestItem>) => {
-      for (const test of tests) {
-        if (request.exclude?.includes(test)) {
-          continue;
-        }
-
-        const data = testData.get(test);
-
-        if (data instanceof Scenario) {
-          run.enqueued(test);
-          queue.push({ test, scenario: data });
-        } else {
-          if (data instanceof TestFile && !data.didResolve) {
-            await data.updateFromDisk(ctrl, test);
-          }
-
-          await discoverTests(gatherTestItems(test.children));
-        }
-
-        if (test.uri && !coveredLines.has(test.uri.toString())) {
-          try {
-            const lines = (getContentFromFilesystem(test.uri)).split('\n');
-            coveredLines.set(
-              test.uri.toString(),
-              lines.map((lineText, lineNo) =>
-                // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-                lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
-              )
-            );
-          } catch {
-            // ignored
-          }
-        }
-      }
-    };
-
-
-    const runTestQueue = async(request: vscode.TestRunRequest) => {
-
-      if(queue.length === 0) {
-        const err = "empty queue - nothing to do";
-        config.logger.logError(err);
-        throw err;
-      }
-
-      const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
-
-      if(!debug && allTestsIncluded && config.userSettings.runAllAsOne) {
-        
-        await runBehaveAll(context, run, queue, cancellation);
-
-        for (const qi of queue) {
-          updateRun(qi.test, coveredLines, run);
-        }
-
+      // the test tree is built as a background process which is called from a few places
+      // (and it will be slow on vscode startup due to contention), so we 
+      // don't want to await it except on user request (refresh click),
+      // but at the same time, we also don't to allow test runs when the tests items are out of date vs the file system
+      const ready = await treeBuilder.readyForRun(1000);
+      if (!ready) {
+        const msg = "cannot run tests while test items are still updating, please try again";
+        console.log(msg);
+        vscode.window.showWarningMessage(msg);
         return;
       }
 
+      try {
 
-      const asyncPromises:Promise<void>[] = [];
-      resetDebugStop();
+        logRunDiagOutput(debug);
+        const queue: QueueItem[] = [];
+        const run = ctrl.createTestRun(request, config.extensionFullName, false);
+        config.logger.run = run;
 
-      for (const qi of queue) {
-        run.appendOutput(`Running ${qi.test.id}\r\n`);
-        if(debugStopped() || cancellation.isCancellationRequested) {
-          updateRun(qi.test, coveredLines, run);
-        } 
-        else {
+        // map of file uris to statements on each line:
+        // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+        const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
 
-          run.started(qi.test);
+        const queueSelectedTestItems = async (tests: Iterable<vscode.TestItem>) => {
+          for (const test of tests) {
+            if (request.exclude?.includes(test)) {
+              continue;
+            }
 
-          if(!config.userSettings.runParallel || debug) {
-            await qi.scenario.runOrDebug(context, debug, run, qi, cancellation);
-            updateRun(qi.test, coveredLines, run);              
+            const data = testData.get(test);
+
+            if (data instanceof Scenario) {
+              run.enqueued(test);
+              queue.push({ test, scenario: data });
+            }
+            else {
+              if (data instanceof TestFile && !data.didResolve) {
+                await data.updateFromDisk(ctrl, test);
+              }
+
+              await queueSelectedTestItems(gatherTestItems(test.children));
+            }
+
+            if (test.uri && !coveredLines.has(test.uri.toString())) {
+              try {
+                const lines = (await getContentFromFilesystem(test.uri)).split('\n');
+                coveredLines.set(
+                  test.uri.toString(),
+                  lines.map((lineText, lineNo) =>
+                    // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+                    lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
+                  )
+                );
+              } catch {
+                // ignored
+              }
+            }
           }
-          else {
-            // async run (parallel)
-            const promise = qi.scenario.runOrDebug(context, false, run, qi, cancellation).then(() => {
-              updateRun(qi.test, coveredLines, run)
-            });
-            asyncPromises.push(promise);
+        };
+
+
+        const runTestQueue = async (request: vscode.TestRunRequest) => {
+
+          if (queue.length === 0) {
+            const err = "empty queue - nothing to do";
+            config.logger.logError(err);
+            throw err;
           }
-        }
-      }
 
-      await Promise.all(asyncPromises);
-    };
+          const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+
+          if (!debug && allTestsIncluded && config.userSettings.runAllAsOne) {
+
+            await runBehaveAll(context, run, queue, cancellation);
+
+            for (const qi of queue) {
+              updateRun(qi.test, coveredLines, run);
+            }
+
+            return;
+          }
 
 
-    let completed = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateRun = (test: vscode.TestItem, coveredLines: Map<string, any[]>, run: vscode.TestRun) => {
-      if (!test || !test.range || !test.uri)
-        throw "invalid test item";
+          const asyncPromises: Promise<void>[] = [];
+          resetDebugStop();
 
-      const lineNo = test.range.start.line;      
-      const fileCoverage = coveredLines.get(test.uri.toString());
-      if (fileCoverage) {
-        fileCoverage[lineNo].executionCount++;
-      }
+          for (const qi of queue) {
+            run.appendOutput(`Running ${qi.test.id}\r\n`);
+            if (debugStopped() || cancellation.isCancellationRequested) {
+              updateRun(qi.test, coveredLines, run);
+            }
+            else {
 
-      run.appendOutput(`Completed ${test.id}\r\n`);
+              run.started(qi.test);
 
-      completed++;
-      if (completed === queue.length) {
-        run.end();
-      }
-    };
+              if (!config.userSettings.runParallel || debug) {
+                await qi.scenario.runOrDebug(context, debug, run, qi, cancellation);
+                updateRun(qi.test, coveredLines, run);
+              }
+              else {
+                // async run (parallel)
+                const promise = qi.scenario.runOrDebug(context, false, run, qi, cancellation).then(() => {
+                  updateRun(qi.test, coveredLines, run)
+                });
+                asyncPromises.push(promise);
+              }
+            }
+          }
 
-    // @ts-ignore: Property 'coverageProvider' does not exist on type 'TestRun'
-    run.coverageProvider = {
-      provideFileCoverage() {
-        // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-        const coverage: vscode.FileCoverage[] = [];
-        for (const [uri, statements] of coveredLines) {
-          coverage.push(
+          await Promise.all(asyncPromises);
+        };
+
+
+        let completed = 0;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateRun = (test: vscode.TestItem, coveredLines: Map<string, any[]>, run: vscode.TestRun) => {
+          if (!test || !test.range || !test.uri)
+            throw "invalid test item";
+
+          const lineNo = test.range.start.line;
+          const fileCoverage = coveredLines.get(test.uri.toString());
+          if (fileCoverage) {
+            fileCoverage[lineNo].executionCount++;
+          }
+
+          run.appendOutput(`Completed ${test.id}\r\n`);
+
+          completed++;
+          if (completed === queue.length) {
+            run.end();
+          }
+        };
+
+        // @ts-ignore: Property 'coverageProvider' does not exist on type 'TestRun'
+        run.coverageProvider = {
+          provideFileCoverage() {
             // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-            vscode.FileCoverage.fromDetails(
-              vscode.Uri.parse(uri),
-              // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-              statements.filter((s): s is vscode.StatementCoverage => !!s)
-            )
-          );
-        }
+            const coverage: vscode.FileCoverage[] = [];
+            for (const [uri, statements] of coveredLines) {
+              coverage.push(
+                // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
+                vscode.FileCoverage.fromDetails(
+                  vscode.Uri.parse(uri),
+                  // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+                  statements.filter((s): s is vscode.StatementCoverage => !!s)
+                )
+              );
+            }
 
-        return coverage;
-      },
+            return coverage;
+          },
+        };
+
+        await queueSelectedTestItems(request.include ?? gatherTestItems(ctrl.items));
+        await runTestQueue(request);
+
+        return queue;
+
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+
     };
 
-    await discoverTests(request.include ?? gatherTestItems(ctrl.items));
-    await runTestQueue(request);
 
-    return queue;
-  };
 
-   
-  const refreshHandler = async() => {
-    await findInitialFeatureFiles(ctrl, true);
-  };
-  // @ts-ignore: Property 'refreshHander' does not exist on type 'TestController'
-  ctrl.refreshHandler = refreshHandler;
-  
-  vscode.workspace.onDidChangeConfiguration(async(e) => {
-    if(e.affectsConfiguration(config.extensionName)) {
-      config.reloadUserSettings();
-      await refreshHandler();
+    ctrl.createRunProfile('Run Tests',
+      vscode.TestRunProfileKind.Run,
+      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        runHandler(false, request, token);
+      }
+      , true);
+
+    ctrl.createRunProfile('Debug Tests',
+      vscode.TestRunProfileKind.Debug,
+      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        runHandler(true, request, token);
+      }
+      , true);
+
+
+    ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
+      try {
+        if (!item)
+          return;
+
+        const data = testData.get(item);
+        if (data instanceof TestFile) {
+          await data.updateFromDisk(ctrl, item);
+        }
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+    };
+
+    ctrl.refreshHandler = async () => {
+      try {
+        await treeBuilder.buildTree(ctrl, true);
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+    };
+
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
+      try {
+        if (e.affectsConfiguration(config.extensionName)) {
+          config.reloadUserSettings();
+          treeBuilder.buildTree(ctrl, false);
+        }
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
+    }));
+
+
+    const updateNodeForDocument = async (e: vscode.TextDocument) => {
+      const item = await getOrCreateTestItemFromFeatureFile(ctrl, e.uri);
+      if (item)
+        item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
     }
-  });
 
-
-  ctrl.createRunProfile('Run Tests',
-    vscode.TestRunProfileKind.Run,
-    (request:vscode.TestRunRequest, token:vscode.CancellationToken) => {
-      runHandler(false, request, token);
+    // for any open documents on startup
+    for (const document of vscode.workspace.textDocuments) {
+      await updateNodeForDocument(document);
     }
-  , true);
 
-  ctrl.createRunProfile('Debug Tests',
-    vscode.TestRunProfileKind.Debug,
-    (request:vscode.TestRunRequest, token:vscode.CancellationToken) => {
-      runHandler(true, request, token);
+    return { runHandler: runHandler, config: config }; // support extensiontest.ts
+
+  }
+  catch (e: unknown) {
+    if (config)
+      config.logger.logError(e);
+    else {
+      // this should never happen
+      const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+      vscode.window.showErrorMessage(text);
     }
-  , true);
-
-
-  ctrl.resolveHandler = async (item: vscode.TestItem|undefined)  => {
-    if (!item)
-      return;
-
-    const data = testData.get(item);
-    if (data instanceof TestFile) {
-      await data.updateFromDisk(ctrl, item);      
-    }
-  };
-
-
-  function updateNodeForDocument(e: vscode.TextDocument) {
-    const created = getOrCreateFile(ctrl, e.uri);
-    if(created)
-      created.data.updateFromContents(ctrl, e.getText(), created.file);
   }
 
-
-  // for any open documents on startup
-  for (const document of vscode.workspace.textDocuments) {
-    updateNodeForDocument(document);
-  }
-
-  // removed as it causes side effects on the tree, and also gives misleading updates to the tree before they are actually in effect   
-  // context.subscriptions.push(
-  //   vscode.workspace.onDidOpenTextDocument(updateNodeForDocument),
-  //   vscode.workspace.onDidChangeTextDocument((e: vscode.TextDocumentChangeEvent) => updateNodeForDocument(e.document))
-  // );
-
-  return { runHandler: runHandler, config: config, ctrl: ctrl, findInitialFiles: findInitialFeatureFiles}; // support extensiontest.ts
 
 } // end activate()
 
 
-function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) : {file:vscode.TestItem, data:TestFile} |undefined {
+
+async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
+  : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
+
 
   if (uri.scheme !== "file" || !uri.path.endsWith('.feature')) {
     return undefined;
@@ -243,40 +329,41 @@ function getOrCreateFile(controller: vscode.TestController, uri: vscode.Uri) : {
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
-    return { file: existing, data:  testData.get(existing) as TestFile };
+    return { testItem: existing, testFile: testData.get(existing) as TestFile };
   }
 
-  const featureName = getFeatureNameFromFile(uri);
-  if(featureName === null)
+  const featureName = await getFeatureNameFromFile(uri);
+  if (featureName === null)
     return undefined;
 
-  // support e.g. /group1.features/ parentGroup folder node
-  let parentGroup:vscode.TestItem|undefined = undefined;
-  const featuresFolderIndex = uri.path.lastIndexOf("/features/") + "/features/".length;
-  const sfp = uri.path.substring(featuresFolderIndex); 
-  if(sfp.indexOf("/") !== -1) {
+  // support e.g. /group1_features/ parentGroup folder node
+  let parentGroup: vscode.TestItem | undefined = undefined
+  const featIdxPath = "/" + config.userSettings.featuresPath + "/";
+  const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
+  const sfp = uri.path.substring(featuresFolderIndex);
+  if (sfp.indexOf("/") !== -1) {
     const groupName = sfp.split("/")[0];
     parentGroup = controller.items.get(groupName);
-    if(!parentGroup) {
+    if (!parentGroup) {
       parentGroup = controller.createTestItem(groupName, groupName, undefined);
       parentGroup.canResolveChildren = true;
     }
   }
 
-  const file = controller.createTestItem(uri.toString(), featureName, uri);
-  controller.items.add(file);
+  const testItem = controller.createTestItem(uri.toString(), featureName, uri);
+  controller.items.add(testItem);
 
-  if(parentGroup !== undefined) {
-    parentGroup.children.add(file);
+  if (parentGroup !== undefined) {
+    parentGroup.children.add(testItem);
     controller.items.add(parentGroup);
   }
 
-  const data = new TestFile();
-  testData.set(file, data);
+  const testFile = new TestFile();
+  testData.set(testItem, testFile);
 
-  file.canResolveChildren = true;
+  testItem.canResolveChildren = true;
 
-  return { file, data };
+  return { testItem: testItem, testFile: testFile };
 }
 
 function gatherTestItems(collection: vscode.TestItemCollection) {
@@ -287,96 +374,113 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 
 
-async function findInitialFeatureFiles(controller: vscode.TestController, reparse?:boolean) {
+async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
   controller.items.forEach(item => controller.items.delete(item.id));
-  const featureFiles1 = await vscode.workspace.findFiles("**/features/*.feature");      
-  const featureFiles2 = await vscode.workspace.findFiles("**/features/**/*.feature");
+  const featureFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/*.feature`);
+  const featureFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/*.feature`);
   const featureFiles = featureFiles1.concat(featureFiles2);
 
-  for (const featureFile of featureFiles) {
-    const created = getOrCreateFile(controller, featureFile);
-    if(created && reparse){
-        await created.data.updateFromDisk(controller, created.file);
-    }
+  for (const uri of featureFiles) {
+    await updateTestItemFromFeatureFile(controller, uri, reparse);
   }
 }
 
-async function findInitialStepsFiles() {
+async function findStepsFiles() {
   steps.clear();
-  const stepFiles1 = await vscode.workspace.findFiles("**/features/steps/*.py");      
-  const stepFiles2 = await vscode.workspace.findFiles("**/features/steps/**/*.py");
+  const stepFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/*.py`);
+  const stepFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
   const stepFiles = stepFiles1.concat(stepFiles2);
 
   for (const stepFile of stepFiles) {
-    updateSteps(stepFile);
+    await updateStepsFromStepsFile(stepFile);
   }
 }
 
-function startWatchingWorkspace(controller: vscode.TestController) {
+async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
-    // not just .feature files, also support folder changes, could change to just .feature files when refreshhandler() works
-    const watcher = vscode.workspace.createFileSystemWatcher('**/features/**');  
+  if (uri.scheme !== "file")
+    return;
 
-    watcher.onDidCreate(uri => {
-      
-      if(uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }
+  const path = uri.path.toLowerCase();
 
-      if(uri.path.toLowerCase().endsWith(".feature"))
-        getOrCreateFile(controller, uri);      
-      else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
+  if (!path.indexOf("/steps/") && path.toLowerCase().endsWith(".py"))
+    throw `${uri.path} ignored -not a steps path`;
 
-    });
-
-    watcher.onDidChange(uri => {
-      
-      if(uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }      
-
-      if(uri.path.toLowerCase().endsWith(".feature")) {      
-        const created = getOrCreateFile(controller, uri);
-        if (created) {
-          created.data.updateFromDisk(controller, created.file);
-        }
-      }
-      else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
-
-    });
-
-
-    watcher.onDidDelete(uri =>  {
-      
-      if(uri.path.indexOf("/steps/") !== -1) {
-        updateSteps(uri);
-        return;
-      }
-
-      if(uri.path.toLowerCase().endsWith(".feature"))
-        getOrCreateFile(controller, uri);      
-      else if(uri.path.toLowerCase().endsWith("/"))
-        findInitialFeatureFiles(controller);
-
-    });
-
-    findInitialFeatureFiles(controller, true);    
-    findInitialStepsFiles();
-
-    return watcher;
-
+  await parseStepsFile(uri, steps);
+  return;
 }
 
+async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
 
-function updateSteps(uri:vscode.Uri) {
-  if(uri.path.toLowerCase().endsWith(".py")) {
-    const content = getContentFromFilesystem(uri);
-    parseStepsFile(uri, content, steps);
+  if (uri.scheme !== "file")
+    return;
+
+  if (!uri.path.toLowerCase().endsWith(".feature"))
+    throw `${uri.path} ignored - not a feature file`;
+
+  const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
+  if (item && reparse) {
+    await item.testFile.updateFromDisk(controller, item.testItem);
   }
-  else if(uri.path.toLowerCase().endsWith("/"))
-    findInitialStepsFiles();
+  return;
+
 }
+
+function startWatchingWorkspace(ctrl: vscode.TestController) {
+
+  // not just *.feature and /steps/* files, but also support folder changes inside the features folder
+  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+  const updater = (uri: vscode.Uri) => {
+
+    if (uri.scheme !== "file")
+      return;
+
+    const path = uri.path.toLowerCase();
+
+    try {
+      if (path.indexOf("/steps/") !== -1) {
+        updateStepsFromStepsFile(uri);
+      }
+      else {
+        updateTestItemFromFeatureFile(ctrl, uri, true);
+      }
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+  }
+
+
+  // fires on file/folder creation (inc. git branch switch)
+  watcher.onDidCreate(uri => {
+    updater(uri);
+  });
+
+  // fires on file/folder rename (inc. git branch switch) AND when file is open in editor on startup 
+  watcher.onDidChange(uri => {
+    updater(uri);
+  });
+
+  // fires on file/folder delete AND rename (inc. git branch switch)
+  watcher.onDidDelete((uri) => {
+
+    if (uri.scheme !== "file")
+      return;
+
+    try {
+      treeBuilder.buildTree(ctrl, true);
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+  });
+
+
+  treeBuilder.buildTree(ctrl, true);
+
+  return watcher;
+}
+
+

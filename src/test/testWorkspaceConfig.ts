@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration 
-{
-	constructor(private runParallel:boolean, private runAllAsOne:boolean, private fastSkipList: string, 
-		private envVarList:string) {}
+
+export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
+	constructor(private runParallel: boolean, private runAllAsOne: boolean, private fastSkipList: string,
+		private envVarList: string, private featuresPath: string) { }
 
 	get<T>(section: string): T | undefined {
-		
+
 		switch (section) {
 			case "runParallel":
 				return <T><unknown>(this.runParallel);
@@ -15,8 +15,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration
 			case "fastSkipList":
 				return <T><unknown>(this.fastSkipList);
 			case "envVarList":
-					return <T><unknown>(this.envVarList);
-							
+				return <T><unknown>(this.envVarList);
+			case "featuresPath":
+				return <T><unknown>(this.featuresPath);
+
 			default:
 				break;
 		}
@@ -28,22 +30,21 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	inspect<T>(section: string): { 
-		key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; 
-		workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined; 
-		workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined; 
-		languageIds?: string[] | undefined; } | undefined 
-	{
+	inspect<T>(section: string): {
+		key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined;
+		workspaceFolderValue?: T | undefined; defaultLanguageValue?: T | undefined; globalLanguageValue?: T | undefined;
+		workspaceLanguageValue?: T | undefined; workspaceFolderLanguageValue?: T | undefined;
+		languageIds?: string[] | undefined;
+	} | undefined {
 		throw new Error('Function not implemented.');
 	}
 
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	update(section: string, value: never, configurationTarget?: boolean | vscode.ConfigurationTarget | null, 
+	update(section: string, value: never, configurationTarget?: boolean | vscode.ConfigurationTarget | null,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		overrideInLanguage?: boolean): Thenable<void> 
-	{
-			throw new Error('Function not implemented.');
+		overrideInLanguage?: boolean): Thenable<void> {
+		throw new Error('Function not implemented.');
 	}
 
 }

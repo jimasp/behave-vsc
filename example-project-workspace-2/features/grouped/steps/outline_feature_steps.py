@@ -1,7 +1,8 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from behave import given,when,then # pylint: disable=no-name-in-module
+from behave import *
+
 
 @given('I put "{thing}" in a blender')
 def step_given_put_thing_into_blender(context, thing):

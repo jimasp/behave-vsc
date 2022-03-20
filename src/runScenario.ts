@@ -5,39 +5,45 @@ import { JsonFeature, parseJsonFeatures, updateTestResults } from './outputParse
 import { QueueItem } from './extension';
 
 
-export async function runAll(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args: string[], 
-  friendlyCmd:string, cancellation: vscode.CancellationToken) : Promise<void> {
+export async function runAll(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+  friendlyCmd: string, cancellation: vscode.CancellationToken): Promise<void> {
 
-  await runBehave(context, pythonExec, run, queue, args, config.workspaceFolderPath,  friendlyCmd, cancellation);
+  await runBehave(context, pythonExec, run, queue, args, config.workspaceFolderPath, friendlyCmd, cancellation);
 }
 
 
-export async function runScenario(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queueItem:QueueItem, args: string[], 
-  cancellation: vscode.CancellationToken, friendlyCmd:string) : Promise<void> {
-    await runBehave(context, pythonExec, run, [queueItem], args, config.workspaceFolderPath, friendlyCmd, cancellation);
+export async function runScenario(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
+  cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
+  await runBehave(context, pythonExec, run, [queueItem], args, config.workspaceFolderPath, friendlyCmd, cancellation);
 }
 
 
-async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run:vscode.TestRun, queue:QueueItem[], args:string[], 
-  workingDirectory:string, friendlyCmd:string, cancellation: vscode.CancellationToken) : Promise<void> {
+async function runBehave(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+  workingDirectory: string, friendlyCmd: string, cancellation: vscode.CancellationToken): Promise<void> {
 
   config.logger.logInfo(`${friendlyCmd}\n`);
 
   const local_args = [...args];
   local_args.unshift("-m", "behave");
 
-  const options = { cwd: workingDirectory, env: config.userSettings.envVarList}; 
-  
-  // spawn() is old-skool async via callbacks
-  const cp = spawn(pythonExec, local_args, options); 
+  const options = { cwd: workingDirectory, env: config.userSettings.envVarList };
 
-  context.subscriptions.push(cancellation.onCancellationRequested(() => {
-    // (note - vscode will have ended the run, so we cannot update the test status)
-    config.logger.logInfo("-- TEST RUN CANCELLED --\n");    
-    cp.kill()
-  }));
-  
-  let loopStr = "";
+  // spawn() is old-skool async via callbacks
+  const cp = spawn(pythonExec, local_args, options);
+
+  const cancelledEvent = cancellation.onCancellationRequested(() => {
+    try {
+      // (note - vscode will have ended the run, so we cannot update the test status)
+      config.logger.logInfo("-- TEST RUN CANCELLED --\n");
+      cp.kill();
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+    finally {
+      cancelledEvent.dispose();
+    }
+  });
 
 
   // parseJsonFeatures is expecting a full behave output string, which when 
@@ -46,27 +52,28 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
   // BUT when we are using "RunAllAsOne", then chunks could be ANY partial output of
   // the above format, for example: "\n,HOOK-ERROR blah,\n{..."  or  "...}]\n"
   // so our loop will adjust the format as the output comes in and see if it can parse it to a result
+  let loopStr = "";
   for await (const chunk of cp.stdout) {
-    const sChunk = `${chunk}`; 
+    const sChunk = `${chunk}`;
     config.logger.logInfo(sChunk);
-    loopStr += sChunk;  
-    
-    let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{") 
-       ? loopStr.replace(/((\s|\S)*?)\[/, "[") 
-       : loopStr.replace(/((\s|\S)*?)\{/, "{"); 
+    loopStr += sChunk;
 
-    if(tmpStr.endsWith("\r\n"))
+    let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{")
+      ? loopStr.replace(/((\s|\S)*?)\[/, "[")
+      : loopStr.replace(/((\s|\S)*?)\{/, "{");
+
+    if (tmpStr.endsWith("\r\n"))
       tmpStr = tmpStr.slice(0, -2);
-    else if(tmpStr.endsWith("\n"))
+    else if (tmpStr.endsWith("\n"))
       tmpStr = tmpStr.slice(0, -1);
 
-    if(!tmpStr.startsWith("["))
+    if (!tmpStr.startsWith("["))
       tmpStr = "[" + tmpStr;
 
-    if(!tmpStr.endsWith("]"))
+    if (!tmpStr.endsWith("]"))
       tmpStr = tmpStr + "]";
 
-    let jFeatures:JsonFeature[];
+    let jFeatures: JsonFeature[];
     try {
       jFeatures = parseJsonFeatures(tmpStr);
     }
@@ -75,21 +82,21 @@ async function runBehave(context:vscode.ExtensionContext, pythonExec:string, run
       // i.e. ONLY if/when behave gives us output that splits a feature result, 
       // for example when we only have the output: ..."status":"pa  when we need:  ..."status":"passed"}]}
       // (or also when the last behave output is \n] on it's own)
-      continue; 
+      continue;
     }
 
     updateTestResults(run, queue, jFeatures, false);
     loopStr = "";
   }
-  
+
 
   for await (const chunk of cp.stderr) {
-    const sChunk:string = chunk.toString();
-    if(sChunk.startsWith("SKIP ") && sChunk.indexOf("Marked with @") !== -1)
-      config.logger.logInfo(sChunk); 
+    const sChunk: string = chunk.toString();
+    if (sChunk.startsWith("SKIP ") && sChunk.indexOf("Marked with @") !== -1)
+      config.logger.logInfo(sChunk);
     else
       config.logger.logError(sChunk)
-  }    
+  }
 
   return await new Promise((resolve) => cp.on('close', () => resolve()));
 }

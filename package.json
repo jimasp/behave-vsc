@@ -8,38 +8,47 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample 'var1':'val1','var2':'val2'"
-				},				
+					"description": "Example: 'var1':'val1','var2':'val2'\nOptional SINGLE-quoted csv list of environment variables to use when calling a behave command\nYou can escape contained single quotes like this: 'var3':'a value containing a \\' quote'  (double-slashed \\\\' in the settings.json file itself)."
+				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional unquoted csv list of fast skip tags, example: @skip, @skip-me-too.\nThis will stop behave being called for those tags. Use if you have a lot of tests to skip.\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
+					"description": "Example: @skip, @skipped\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled, or when debugging.\nOptional csv list of fast skip tags that each start with @.\nThis will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne."
+				},
+				"behave-vsc.featuresPath": {
+					"type": "string",
+					"default": "",
+					"description": "Example: mysubfolder/my_behave_tests\nOptional setting for workspace-relative features subfolder. If empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"path=\" setting in your behave configuration file."
 				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,
-					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to leave this on, unless you can enable 'Run Parallel'."
-				},						
+					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests.\nNote that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation."
+				},
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Run behave tests in fast async mode.\nLeave this off for your initial run, then enable if your test setup supports it (i.e. your tests are fully isolated).\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled. "
-				}				
+					"description": "Run tests in async mode.\nThis setting has no effect when you are running all tests at once and 'Run All As One' is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nNote that behave itself does not support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
+				}
 			}
 		},
-		"commands": [{
+		"commands": [
+			{
 				"command": "behave-vsc.gotoStep",
 				"title": "Go to step (experimental)"
-		}],
+			}
+		],
 		"menus": {
-			"editor/context": [{
-				"when": "editorTextFocus && resourceExtname =~ /\\.feature$/",
-				"command": "behave-vsc.gotoStep",
-				"group": "navigation"
-			}]
+			"editor/context": [
+				{
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/",
+					"command": "behave-vsc.gotoStep",
+					"group": "navigation"
+				}
+			]
 		}
 	},
-	"description": "Debug/Run Behave tests from Sidebar or Feature file",
+	"description": "Debug and Run Behave tests from Sidebar or Feature file",
 	"version": "0.0.9",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
@@ -52,9 +61,9 @@
 	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
 	"bugs": {
 		"url": "https://github.com/jimasp/behave-vsc/issues"
-	},	
+	},
 	"repository": {
-		"type":"git", 
+		"type": "git",
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
@@ -85,11 +94,11 @@
 	"devDependencies": {
 		"@types/glob": "^7.1.4",
 		"@types/mocha": "^9.0.0",
-		"@types/node": "14.x",
+		"@types/node": "17.x",
 		"@types/vscode": "^1.63.0",
 		"@typescript-eslint/eslint-plugin": "^5.9.0",
 		"@typescript-eslint/parser": "^5.9.0",
-		"@vscode/test-electron": "^1.6.2",
+		"@vscode/test-electron": "^2.1.3",
 		"eslint": "^8.6.0",
 		"glob": "^7.1.7",
 		"mocha": "^9.1.3",

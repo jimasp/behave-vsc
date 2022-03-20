@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import config, { ExtensionConfiguration } from "../configuration";
+import { ExtensionConfiguration } from "../configuration";
 import { QueueItem } from '../extension';
-import {TestResult} from "./expectedResults.helpers";
+import { TestResult } from "./expectedResults.helpers";
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -11,21 +12,21 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 	const match = expectedResults.filter((expectedResult: TestResult) => {
 
 		if (
-				expectedResult.test_id !== actualResult.test_id ||
-				expectedResult.test_uri !== actualResult.test_uri,
-				expectedResult.test_parent !== actualResult.test_parent ||			
-				expectedResult.test_children !== actualResult.test_children ||
-				expectedResult.test_description !== actualResult.test_description ||
-				expectedResult.test_error !== actualResult.test_error ||
-				expectedResult.test_label !== actualResult.test_label ||
-				expectedResult.scenario_isOutline !== actualResult.scenario_isOutline ||
-				expectedResult.scenario_getLabel !== actualResult.scenario_getLabel ||
-				expectedResult.scenario_featureName !== actualResult.scenario_featureName ||
-				expectedResult.scenario_scenarioName !== actualResult.scenario_scenarioName ||
-				expectedResult.scenario_fastSkip !== actualResult.scenario_fastSkip
+			expectedResult.test_id !== actualResult.test_id ||
+			expectedResult.test_uri !== actualResult.test_uri,
+			expectedResult.test_parent !== actualResult.test_parent ||
+			expectedResult.test_children !== actualResult.test_children ||
+			expectedResult.test_description !== actualResult.test_description ||
+			expectedResult.test_error !== actualResult.test_error ||
+			expectedResult.test_label !== actualResult.test_label ||
+			expectedResult.scenario_isOutline !== actualResult.scenario_isOutline ||
+			expectedResult.scenario_getLabel !== actualResult.scenario_getLabel ||
+			expectedResult.scenario_featureName !== actualResult.scenario_featureName ||
+			expectedResult.scenario_scenarioName !== actualResult.scenario_scenarioName ||
+			expectedResult.scenario_fastSkip !== actualResult.scenario_fastSkip
 		) {
 
-			if(expectedResult.test_id === actualResult.test_id) {
+			if (expectedResult.test_id === actualResult.test_id) {
 				console.log(actualResult);
 				// eslint-disable-next-line no-debugger
 				debugger; // UHOH
@@ -40,14 +41,14 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 			console.log(actualResult);
 			// eslint-disable-next-line no-debugger
 			debugger; // UHOH			
-			
+
 			return false;
 		}
 
 		return true;
 	});
 
-	if(match.length !== 1) {
+	if (match.length !== 1) {
 		console.log(actualResult);
 		// eslint-disable-next-line no-debugger
 		debugger; // UHOH 
@@ -56,67 +57,67 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 	return match;
 }
 
+
+
+
 let actRet: ActivateReturnType;
-type ActivateReturnType = { 
-	runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[]>, 
-	config: ExtensionConfiguration,
-	ctrl: vscode.TestController,
-	findInitialFiles: (controller: vscode.TestController) => Promise<void>,
-};	
+type ActivateReturnType = {
+	runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[]>,
+	config: ExtensionConfiguration
+};
 
 
-const activateExtension = async():Promise<ActivateReturnType> => {
-	await vscode.commands.executeCommand("workbench.view.testing.focus");	
-	if(actRet !== undefined)
+const activateExtension = async (): Promise<ActivateReturnType> => {
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
+	if (actRet !== undefined)
 		return actRet;
 
-	const ext = vscode.extensions.getExtension(config.extensionFullName);			
+	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
 	actRet = await ext?.activate() as ActivateReturnType;
 	return actRet;
 }
 
-export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: vscode.WorkspaceConfiguration, 
-	getExpectedResults: (debug:boolean, testConfig:vscode.WorkspaceConfiguration) => TestResult[]) => {
+export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
+	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
 
 	actRet = await activateExtension();
 	actRet.config.reloadUserSettings(testConfig);
-	const expectedResults = getExpectedResults(debug, testConfig);
+	const expectedResults = getExpectedResults(debug, actRet.config);
 
-	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);	
+	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
 	const cancelToken = new vscode.CancellationTokenSource().token;
-	await actRet.findInitialFiles(actRet.ctrl);
-	const results = await actRet?.runHandler(debug, runRequest, cancelToken);		
+	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
 
-	if(results.length === 0)
-		throw "no results found";
+	if (!results || results.length === 0)
+		throw Error("no results returned from runHandler");
 
 
-	const standardisePath = (path:string|undefined): string|undefined => {
+	const standardisePath = (path: string | undefined): string | undefined => {
 		return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
 	}
 
-	const standardiseResult = (result:string|undefined): string|undefined => {
+	const standardiseResult = (result: string | undefined): string | undefined => {
 		let res = result;
-		if(!result)
+		if (!result)
 			return undefined;
 
 
 		const tb = "Traceback (most recent call last):\n  File ";
 		const tbAss = "assert ";
 
-		if(result.startsWith(tb)) {
+		if (result.startsWith(tb)) {
 			const tbAssStart = result.indexOf(tbAss);
-			if(tbAssStart)
-				res = result.replace(result.substring(tb.length-1, tbAssStart), "... ");
+			if (tbAssStart)
+				res = result.replace(result.substring(tb.length - 1, tbAssStart), "... ");
 		}
 
 		return res;
 	}
 
-	const getChildrenIds = (children:vscode.TestItemCollection): string|undefined => {
-		if(children.size === 0)
+	const getChildrenIds = (children: vscode.TestItemCollection): string | undefined => {
+		if (children.size === 0)
 			return undefined;
-		const arrChildrenIds:string[] = [];
+		const arrChildrenIds: string[] = [];
 		children.forEach(child => {
 			arrChildrenIds.push(child.id);
 		});
@@ -135,21 +136,21 @@ export const runAllTestsAndAssertTheResults = async(debug:boolean, testConfig: v
 			test_label: result.test.label,
 			scenario_isOutline: result.scenario.isOutline,
 			scenario_getLabel: result.scenario.getLabel(),
-			scenario_featureFilePath: standardisePath(result.scenario.featureFileRelativePath),
+			scenario_featureFileRelativePath: result.scenario.featureFileRelativePath,
 			scenario_featureName: result.scenario.featureName,
 			scenario_scenarioName: result.scenario.scenarioName,
 			scenario_fastSkip: result.scenario.fastSkip,
 			scenario_result: standardiseResult(result.scenario.result)
 		});
-		
-		
-		assert(JSON.stringify(result.test.range).indexOf("line") !== -1);		
-		
+
+
+		assert(JSON.stringify(result.test.range).indexOf("line") !== -1);
+
 		const match = findMatch(expectedResults, scenResult);
 		assert.strictEqual(match.length, 1);
 	});
 
-	
+
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
 }
