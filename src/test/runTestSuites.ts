@@ -7,10 +7,11 @@ import {
 } from '@vscode/test-electron';
 
 
-// this code runs for `npm run test`
-// it does not run when debugging from the vscode ide
-async function main() {
+// this code handles `npm run test` or `npm run testinsiders`
+// (to debug this code, go to package.json and click the ">Debug" link and choose "test" or "testinsiders")
+async function runTestSuites() {
   try {
+    const version = process.argv[2].slice(2);
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
 
     // console.log("running pip...");
@@ -21,11 +22,11 @@ async function main() {
     // if(result.error)
     //   throw result.error;    
 
-    console.log("checking for latest stable vscode...");
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('stable');
+    console.log(`checking for latest ${version} vscode...`);
+    const vscodeExecutablePath = await downloadAndUnzipVSCode(version);
 
 
-    console.log("installing ms-python.python extension into stable version...");
+    console.log(`installing ms-python.python extension into ${version} version...`);
     const [cliPath, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
     const result = cp.spawnSync(cliPath, [...args, "--install-extension", "ms-python.python"], {
       encoding: 'utf-8',
@@ -59,9 +60,10 @@ async function main() {
     console.log("test run complete");
 
   } catch (err) {
-    console.error('Failed to run tests');
+    console.error('Failed to run tests, ', err);
     process.exit(1);
   }
 }
 
-main();
+
+runTestSuites();

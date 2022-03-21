@@ -88,13 +88,14 @@ paths=behave_tests/features
 - When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:  
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
+- The extension then parses the behave output and updates the test result.
 - For each run, the equivalent behave command to run the test manually appears in the Behave VSC output window.
 - The json output and any errors also appear in the Behave VSC output window.
 
 ### How debug works:
 
-- It dynamically builds a debug launch config and runs that.    
-- This enables `ms-python.python` to do the heavy lifting of setting up the debug port etc.
+- It dynamically builds a debug launch config and runs that. (This enables `ms-python.python` to do the heavy lifting of setting up the debug port etc.)
+- The extension then parses the behave output and updates the test result.
 - Error output is shown in the debug console window and/or Behave VSC window depending on the nature of the error.
 - Unlike running the test, the behave command and behave output is not shown when in debug (to reduce noise). Run the test instead if you want this 
 output.
