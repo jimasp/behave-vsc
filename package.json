@@ -70,7 +70,8 @@
 		"vscode": "^1.63.0"
 	},
 	"categories": [
-		"Testing"
+		"Testing",
+		"Debuggers"
 	],
 	"extensionDependencies": [
 		"ms-python.python"
@@ -89,7 +90,9 @@
 		"watch-tests": "tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTestSuites.js --stable",
+		"pretestinsiders": "npm run compile-tests && npm run compile && npm run lint",
+		"testinsiders": "node ./out/test/runTestSuites.js --insiders"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.4",
