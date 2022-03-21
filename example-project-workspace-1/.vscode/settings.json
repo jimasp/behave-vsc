@@ -13,5 +13,6 @@
     "behave-vsc.runAllAsOne": true,
     "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
     "behave-vsc.envVarList": "'some_var':'some value','some_var2':'quo\\'ted'",
-    "behave-vsc.featuresPath": "behave_tests/some_tests"
+    "behave-vsc.featuresPath": "behave_tests/some_tests",
+    "behave-vsc.justMyCode": false
 }

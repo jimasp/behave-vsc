@@ -281,7 +281,7 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         if (e.affectsConfiguration(config.extensionName)) {
           config.reloadUserSettings();
-          treeBuilder.buildTree(ctrl, false);
+          treeBuilder.buildTree(ctrl, false); // user may have e.g. changed featuresPath
         }
       }
       catch (e: unknown) {

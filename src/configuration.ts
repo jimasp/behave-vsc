@@ -131,6 +131,7 @@ class Logger {
 class UserSettings {
   public envVarList: { [name: string]: string } = {};
   public fastSkipList: string[] = [];
+  public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
   public featuresPath = "features";
@@ -139,11 +140,13 @@ class UserSettings {
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
     const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
+    const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
 
-    this.runAllAsOne = runAllAsOneCfg ? runAllAsOneCfg : true;
-    this.runParallel = runParallelCfg ? runParallelCfg : false;
+    this.justMyCode = justMyCodeCfg === undefined ? true : justMyCodeCfg;
+    this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
+    this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
 
     if (featuresPathCfg) {
       const path = featuresPathCfg.trim();
