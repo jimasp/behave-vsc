@@ -19,7 +19,7 @@
 
 - Debug or Run behave tests from the test workbench, or from inside a feature file.
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to step"). You can also map a keybinding for this command if you wish e.g. F12.
-- Run customisation via extension [settings](README.md#extension-settings).
+- Run customisation via extension settings.
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -33,7 +33,7 @@
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. If your features folder has another name, then see `featuresPath` in extension [settings](README.md#extension-settings).
+- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. If your features folder has another name, then see `featuresPath` in extension settings.
 - `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
 - A behave-conformant directory structure, for example:
 ```  
@@ -68,8 +68,9 @@ paths=behave_tests/features
 ---
 ## Extension settings
 
-- This extension has various settings to customise your test run via `settings.json`.  
-- For more information, see the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
+- This extension has various settings to customise your test run via `settings.json`. 
+- You can also disable/enable justMyCode for debug.
+- For more information, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
 ---  
 ## How it works
@@ -116,20 +117,19 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 - The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (Does the same issue occur with the example project workspaces, or just in your own project?) 
 ### Q&A
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
-- How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis "..." at the top of the test side bar and then click "Clear all results".
+- How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 
 ---
 ## Known issues and limitations
 
 - Does not support multiple vscode workspace folders ("multi-root workspaces").
-- "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters in behave - parse;  re; cfparse, and we would have to recreate these matching algorithms exactly. 
+- "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features foler (e.g. if you import steps in python from an external steps library folder it won't find them). 
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
 - Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
 - Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
 - In order to ensure that the output is parseable and consistent, the internally executed behave command adds extra parameters to override any configured settings that may affect behave output.
 - See [Troubleshooting](README.md#troubleshooting).
-
 
 
 ---
