@@ -8,12 +8,12 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)"
+					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape any contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne.\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled, or when debugging."
+					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, or when debugging.\nThe listed tags will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne.\n"
 				},
 				"behave-vsc.featuresPath": {
 					"type": "string",
@@ -33,7 +33,7 @@
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and 'Run All As One' is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nNote that behave itself does not support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
+					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nNote that behave itself does not support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
 				}
 			}
 		},
