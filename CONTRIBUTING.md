@@ -57,7 +57,7 @@ please do contribute bug fix PRs to the [original repo](https://github.com/jimas
 2. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
 3. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway , but you should do it if it's your first ever debug).
 4. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
-5. (`Ctrl+Shift+D`) to open the Run and Debug panel.
+5. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
 6. Disable "caught exceptions" if you have it enabled.
 7. Click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
 7. Tips:
@@ -120,7 +120,7 @@ debugging, e.g. is there a node module import/webpack issue?
 - Generally, you should not modify the example project workspaces in your PR, unless you are _adding_ new feature/steps files. (Either way, any 
 changes to the exmample project workspaces will require you to update the test code for expected results.)
 - Quickly review your code vs the project's [Design principles](#design-principles)
-- Is your bug/use case covered by an existing test? If not, is it possible to add one so it doesn't break again?
+- Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors (errors must be fixed, warnings should be fixed unless they would result in changes to `extension.ts`.)
 - Automated tests (verify behave results):
 	- Close vscode and run `npm run test` (currently these only verify test results, they do not test anything else)
@@ -140,23 +140,25 @@ tests as a minimum:
 	4. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	5. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
-	6. rename a feature file, in the test panel, check the feature is not duplicated, check feature tests run from the panel
-	7. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from panel
+	6. rename a feature file, in the test side bar, check the feature is not duplicated, check feature tests run from the side bar
+	7. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from side bar
 	8. go to a feature file, click "go to step" and check at least some of them work
 	9. rename the same steps file, then check you can still use "go to step" for a step in that file
 
 ---
 ## Design principles
-- Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary node functions, to handle things wherever possible. 
-- KISS - "It just works" - simple, minimal code to get the job done. Avoid anything that might break on someone else's box - for example don't rely on 
-bash/cmd, installed programs etc.
+- KISS - "It just works" - simple, minimal code to get the job done. 
+
 - YAGNI - don't be tempted to add extension capabilities the majority of people don't need. More code means more stuff that can break and/or lead to 
 slower performance. Edge-case capabilities for an in-house project with an unusual custom setup should be supported in forked repos. (If it's a common 
 concern, then please do submit a feature request issue or PR.) 
+- Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary node functions, to handle things wherever possible. 
+(At the same time, don't add extra npm packages - lightweight, and less versioning/security/licensing/audit concerns.)
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the 
 behave command manually. Also any such changes are more likely to break in future versions of behave.
 - Always consider performance.
 - Cross-platform, i.e. OS-independent drive/path separators (`C:\...` vs `/home/...`), line-endings (use `\n`), encoding (use `utf8`), etc. Also
 	consider relative paths and path matching. (where possible vscode/node  converts `\`to `/` itself for consistency.)
+- Avoid anything that might break on someone else's machine - for example don't rely on 
+bash/cmd, installed programs etc.
 - No reliance on other extensions except `ms-python.python`.	
-- Try not to add extra npm packages - lightweight, less versioning/security/licensing/audit concerns. 
