@@ -46,7 +46,7 @@ async function runBehave(context: vscode.ExtensionContext, pythonExec: string, r
   });
 
 
-  // parseJsonFeatures is expecting a full behave output string, which when 
+  // parseJsonFeatures is expecting a full behave JSON output string, which when 
   // behave has completed executing, looks something like this: 
   // [\n{...}\n,\n{...}\n,\n {...},\nHOOK-ERROR blah,\n{...},\n{...}\n\n]
   // BUT when we are using "RunAllAsOne", then chunks could be ANY partial output of

@@ -48,8 +48,11 @@ class TreeBuilder {
     this._featuresLoaded = true;
     findStepsFiles();
 
-    console.log(`buildTree took ${Date.now() - start}ms ` +
-      `(slower during contention, like vscode startup, click test refresh button for more representative time)`);
+    console.log(
+      `buildTree took ${Date.now() - start}ms. ` +
+      `(ignore if there are active breakpoints. slower during contention, like vscode startup. ` +
+      `click test refresh button without active breakpoints for a more representative time.)`
+    );
   }
 
 }
@@ -296,9 +299,10 @@ export async function activate(context: vscode.ExtensionContext) {
         item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
     }
 
-    // for any open documents on startup
-    for (const document of vscode.workspace.textDocuments) {
-      await updateNodeForDocument(document);
+    // for any open .feature documents on startup
+    const docs = vscode.workspace.textDocuments.filter(d => d.uri.scheme === "file" && d.uri.path.toLowerCase().endsWith(".feature"));
+    for (const doc of docs) {
+      await updateNodeForDocument(doc);
     }
 
     return { runHandler: runHandler, config: config }; // support extensiontest.ts
@@ -322,10 +326,8 @@ export async function activate(context: vscode.ExtensionContext) {
 async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
-
-  if (uri.scheme !== "file" || !uri.path.endsWith('.feature')) {
-    return undefined;
-  }
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+    throw Error(`${uri.path} is not a feature file`);
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
@@ -376,9 +378,8 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
   controller.items.forEach(item => controller.items.delete(item.id));
-  const featureFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/*.feature`);
-  const featureFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/*.feature`);
-  const featureFiles = featureFiles1.concat(featureFiles2);
+  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
+  const featureFiles = await vscode.workspace.findFiles(pattern);
 
   for (const uri of featureFiles) {
     await updateTestItemFromFeatureFile(controller, uri, reparse);
@@ -387,24 +388,18 @@ async function findFeatureFiles(controller: vscode.TestController, reparse?: boo
 
 async function findStepsFiles() {
   steps.clear();
-  const stepFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/*.py`);
-  const stepFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
-  const stepFiles = stepFiles1.concat(stepFiles2);
+  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
+  const stepFiles = await vscode.workspace.findFiles(pattern);
 
-  for (const stepFile of stepFiles) {
-    await updateStepsFromStepsFile(stepFile);
+  for (const uri of stepFiles) {
+    await updateStepsFromStepsFile(uri);
   }
 }
 
 async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
-  if (uri.scheme !== "file")
-    return;
-
-  const path = uri.path.toLowerCase();
-
-  if (!path.indexOf("/steps/") && path.toLowerCase().endsWith(".py"))
-    throw `${uri.path} ignored -not a steps path`;
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
+    throw Error(`${uri.path} is not a python file`);
 
   await parseStepsFile(uri, steps);
   return;
@@ -412,18 +407,14 @@ async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
 
-  if (uri.scheme !== "file")
-    return;
-
-  if (!uri.path.toLowerCase().endsWith(".feature"))
-    throw `${uri.path} ignored - not a feature file`;
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+    throw Error(`${uri.path} is not a feature file`);
 
   const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
   if (item && reparse) {
     await item.testFile.updateFromDisk(controller, item.testItem);
   }
   return;
-
 }
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
@@ -437,10 +428,8 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     if (uri.scheme !== "file")
       return;
 
-    const path = uri.path.toLowerCase();
-
     try {
-      if (path.indexOf("/steps/") !== -1) {
+      if (uri.path.toLowerCase().indexOf("/steps/") !== -1) {
         updateStepsFromStepsFile(uri);
       }
       else {

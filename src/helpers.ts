@@ -41,12 +41,6 @@ export function logUserSettings(consoleOnly = false) {
 
 
 export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string> => {
-  try {
-    const doc = await vscode.workspace.openTextDocument(uri);
-    return doc.getText();
-  }
-  catch (e: unknown) {
-    config.logger.logError(e, `Error reading content from file ${uri.fsPath}`);
-    return "";
-  }
+  const doc = await vscode.workspace.openTextDocument(uri);
+  return doc.getText();
 };

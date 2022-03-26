@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import config from "./configuration";
-import { getTextFileContentFromFilesystem } from './helpers';
+import { getContentFromFilesystem } from './helpers';
 
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -11,7 +11,7 @@ const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 
 
 export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
-  const content = await getTextFileContentFromFilesystem(uri);
+  const content = await getContentFromFilesystem(uri);
   const featureName = featureReFile.exec(content);
 
   if (featureName === null)

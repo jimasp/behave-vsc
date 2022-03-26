@@ -42,6 +42,24 @@
 			"justMyCode": true,
 		},
 		{
+			"name": "Debug Extension - My Project",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceFolder}/../my-project",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+			"justMyCode": true,
+		},
+		{
 			"name": "Run Extension Test Suite - Workspace 1",
 			"type": "extensionHost",
 			"request": "launch",
@@ -70,6 +88,6 @@
 				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "tasks: watch-tests",
-		}
+		},
 	]
 }

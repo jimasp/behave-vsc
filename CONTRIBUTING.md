@@ -67,8 +67,8 @@ please do contribute bug fix PRs to the [original repo](https://github.com/jimas
 	 hit play multiple times in the extension vscode environment to continue if it hits external code.
 
 ## Debugging with your own host project
-- To debug using a different host project, open `.vscode/launch.json` in the extension projet and change the `args` setting 
-`"${workspaceFolder}/example-project-workspace-1"` repoint it at your project path. 
+- To debug using your own project, open `.vscode/launch.json` in the extension repo project and change the `args` setting containing
+`"${workspaceFolder}/../my-project"` to repoint it at your project path. 
 
 ---
 ## Running extension integration tests

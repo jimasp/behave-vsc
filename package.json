@@ -40,7 +40,7 @@
 		"commands": [
 			{
 				"command": "behave-vsc.gotoStep",
-				"title": "Go to step definition (best guess)"
+				"title": "Go to Step Definition (best guess)"
 			}
 		],
 		"menus": {

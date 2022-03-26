@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { parseFeatureFile } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
-import { getTextFileContentFromFilesystem } from './helpers';
+import { getContentFromFilesystem } from './helpers';
 
 
 let generationCounter = 0;
@@ -20,7 +20,7 @@ export class TestFile {
     try {
       if (!item.uri)
         throw "missing test item uri"
-      const content = await getTextFileContentFromFilesystem(item.uri);
+      const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
       this.updateFromContents(controller, content, item);
     } catch (e: unknown) {
