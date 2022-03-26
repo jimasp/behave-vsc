@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { parseFeatureFile } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
-import { getContentFromFilesystem } from './helpers';
+import { getTextFileContentFromFilesystem } from './helpers';
 
 
 let generationCounter = 0;
@@ -20,7 +20,7 @@ export class TestFile {
     try {
       if (!item.uri)
         throw "missing test item uri"
-      const content = await getContentFromFilesystem(item.uri);
+      const content = await getTextFileContentFromFilesystem(item.uri);
       item.error = undefined;
       this.updateFromContents(controller, content, item);
     } catch (e: unknown) {
@@ -31,10 +31,8 @@ export class TestFile {
 
   public updateFromContents(controller: vscode.TestController, content: string, item: vscode.TestItem) {
     const thisGeneration = generationCounter++;
-    this.didResolve = true;
-
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
-    ancestors.push({ item, children: [] });
+    this.didResolve = true;
 
     const ascend = (depth: number) => {
       while (ancestors.length > depth) {
@@ -58,7 +56,12 @@ export class TestFile {
       parent.children.push(tcase);
     }
 
-    parseFeatureFile(item.label, content, onScenarioLine);
+    const onFeatureLine = (range: vscode.Range) => {
+      item.range = range;
+      ancestors.push({ item: item, children: [] });
+    }
+
+    parseFeatureFile(item.label, content, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }
