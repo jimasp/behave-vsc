@@ -103,7 +103,7 @@ consistent and parseable.
 ---
 ## Troubleshooting
 If you used a previous version, but you have issues with the latest version, then please rollback to previous version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
-- Does your project match the [Project Requirements](README.md#project-requirements) section above?
+- Does your project meet the [Project Requirements](README.md#project-requirements) section above?
 - If you have set the `featuresPath` in extension settings, make sure it matches your behave configuration file.
 - Have you tried _manually_ running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
@@ -124,13 +124,11 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 
 - Does not support multiple vscode workspace folders ("multi-root workspaces").
 - "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
-- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features foler (e.g. if you import steps in python from an steps library folder external to your features folder it won't find them). 
+- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
 - Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
 - Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
-- In order to ensure that the output is parseable and consistent, the internally executed behave command adds extra parameters to override any configured settings that may affect behave output.
-- See [Troubleshooting](README.md#troubleshooting).
-
+- In order to ensure that the output is parseable and consistent, the internally executed behave command must add extra parameters to override any configured settings that may affect behave output.
 
 ---
 ## Contributing

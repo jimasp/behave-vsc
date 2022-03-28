@@ -428,11 +428,13 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     if (uri.scheme !== "file")
       return;
 
+    const path = uri.path.toLowerCase();
+
     try {
-      if (uri.path.toLowerCase().indexOf("/steps/") !== -1) {
+      if (path.indexOf("/steps/") !== -1 && path.endsWith(".py")) {
         updateStepsFromStepsFile(uri);
       }
-      else {
+      else if (path.endsWith(".feature")) {
         updateTestItemFromFeatureFile(ctrl, uri, true);
       }
     }
