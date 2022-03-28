@@ -432,7 +432,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
 
     try {
 
-      if (path.indexOf("/steps/") !== -1 && path.endsWith(".py")) {
+      if (path.endsWith(".py") && path.indexOf("/steps/") !== -1) {
         updateStepsFromStepsFile(uri);
         return;
       }
