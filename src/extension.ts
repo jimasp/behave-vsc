@@ -431,12 +431,16 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     const path = uri.path.toLowerCase();
 
     try {
+
       if (path.indexOf("/steps/") !== -1 && path.endsWith(".py")) {
         updateStepsFromStepsFile(uri);
+        return;
       }
-      else if (path.endsWith(".feature")) {
+
+      if (path.endsWith(".feature")) {
         updateTestItemFromFeatureFile(ctrl, uri, true);
       }
+
     }
     catch (e: unknown) {
       config.logger.logError(e);
