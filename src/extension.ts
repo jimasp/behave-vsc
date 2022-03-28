@@ -402,7 +402,6 @@ async function updateStepsFromStepsFile(uri: vscode.Uri) {
     throw Error(`${uri.path} is not a python file`);
 
   await parseStepsFile(uri, steps);
-  return;
 }
 
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
@@ -414,12 +413,11 @@ async function updateTestItemFromFeatureFile(controller: vscode.TestController, 
   if (item && reparse) {
     await item.testFile.updateFromDisk(controller, item.testItem);
   }
-  return;
 }
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
 
-  // not just *.feature and /steps/* files, but also support folder changes inside the features folder
+  // not just *.feature and /steps/*.py files, but also support folder changes inside the features folder
   const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
