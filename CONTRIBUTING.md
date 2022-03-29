@@ -94,7 +94,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 ## Generating the extension installer manually (.vsix file)
 If you have a custom fork and you want to distribute it to your team, you will want to create your own .vsix file:
 1. `npm install -g vsce` (installs latest version of packaging tool)
-2. `vsce package -o ../mypackagefolder`
+2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`
 
 ---
 ## Troubleshooting
