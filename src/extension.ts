@@ -327,7 +327,7 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
-    throw Error(`${uri.path} is not a feature file`);
+    throw new Error(`${uri.path} is not a feature file`);
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
@@ -399,7 +399,7 @@ async function findStepsFiles() {
 async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
-    throw Error(`${uri.path} is not a python file`);
+    throw new Error(`${uri.path} is not a python file`);
 
   await parseStepsFile(uri, steps);
 }
@@ -407,7 +407,7 @@ async function updateStepsFromStepsFile(uri: vscode.Uri) {
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
 
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
-    throw Error(`${uri.path} is not a feature file`);
+    throw new Error(`${uri.path} is not a feature file`);
 
   const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
   if (item && reparse) {

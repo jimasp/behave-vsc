@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { ExtensionConfiguration } from "../configuration";
-import { QueueItem } from '../extension';
-import { TestResult } from "./expectedResults.helpers";
-import { TestWorkspaceConfig } from './testWorkspaceConfig';
+import { ExtensionConfiguration } from "../../configuration";
+import { QueueItem } from '../../extension';
+import { TestResult } from "../expectedResults.helpers";
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -77,20 +77,18 @@ const activateExtension = async (): Promise<ActivateReturnType> => {
 	return actRet;
 }
 
+
+function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+	assert.deepStrictEqual(config.userSettings.envVarList, testConfig.getExpected("envVarList"));
+	assert.deepStrictEqual(config.userSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
+	assert.strictEqual(config.userSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(config.userSettings.justMyCode, testConfig.getExpected("justMyCode"));
+	assert.strictEqual(config.userSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
+	assert.strictEqual(config.userSettings.runParallel, testConfig.getExpected("runParallel"));
+}
+
 export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
 	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
-
-	actRet = await activateExtension();
-	actRet.config.reloadUserSettings(testConfig);
-	const expectedResults = getExpectedResults(debug, actRet.config);
-
-	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
-	const cancelToken = new vscode.CancellationTokenSource().token;
-	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
-
-	if (!results || results.length === 0)
-		throw Error("no results returned from runHandler");
-
 
 	const standardisePath = (path: string | undefined): string | undefined => {
 		return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
@@ -124,6 +122,22 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 		return arrChildrenIds.join();
 	}
 
+
+	actRet = await activateExtension();
+	actRet.config.reloadUserSettings(testConfig);
+	assertUserSettingsAsExpected(testConfig, actRet.config);
+
+	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
+	const cancelToken = new vscode.CancellationTokenSource().token;
+
+	//run tests
+	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
+
+	if (!results || results.length === 0)
+		throw new Error("no results returned from runHandler");
+
+	const expectedResults = getExpectedResults(debug, actRet.config);
+
 	results.forEach(result => {
 
 		const scenResult = new TestResult({
@@ -154,4 +168,5 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
 }
+
 

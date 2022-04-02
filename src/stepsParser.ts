@@ -13,7 +13,7 @@ export type Steps = Map<string, StepDetail>;
 export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
-    throw Error(`${uri.path} is not a python file`);
+    throw new Error(`${uri.path} is not a python file`);
 
   const content = await getContentFromFilesystem(uri);
   if (!content)

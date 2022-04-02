@@ -40,7 +40,7 @@
 		"commands": [
 			{
 				"command": "behave-vsc.gotoStep",
-				"title": "Go to Step Definition (best guess)"
+				"title": "Go to Step Definition"
 			}
 		],
 		"menus": {
@@ -62,7 +62,7 @@
 	},
 	"publisher": "jimasp",
 	"private": true,
-	"license": "See LICENSE.txt",
+	"license": "SEE LICENSE IN LICENSE.txt",
 	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
 	"bugs": {
 		"url": "https://github.com/jimasp/behave-vsc/issues"
@@ -72,12 +72,19 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.66.0"
 	},
 	"categories": [
 		"Testing",
 		"Debuggers"
 	],
+	"keywords": [
+		"behave",
+		"feature",
+		"debug",
+		"python"
+	],
+	"qna": false,
 	"extensionDependencies": [
 		"ms-python.python"
 	],
