@@ -1,5 +1,5 @@
 import { ExtensionConfiguration } from "../../configuration";
-import { TestResult, applyTestConfiguration } from "../expectedResults.helpers";
+import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 
 export const getExpectedResults = (debug: boolean, config: ExtensionConfiguration): TestResult[] => {

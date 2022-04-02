@@ -1,5 +1,5 @@
-import { ExtensionConfiguration } from '../configuration';
-import { moreInfo } from '../outputParser';
+import { ExtensionConfiguration } from '../../configuration';
+import { moreInfo } from '../../outputParser';
 
 interface ITestResult {
   test_id: string | undefined;

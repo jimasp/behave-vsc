@@ -1,7 +1,7 @@
-import { runAllTestsAndAssertTheResults } from '../workspace-tests/extension.test.helpers';
-import { TestWorkspaceConfig } from '../testWorkspaceConfig';
+import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { ExtensionConfiguration } from '../../configuration';
-import { TestResult } from '../expectedResults.helpers';
+import { TestResult } from './expectedResults.helpers';
 
 const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ";
 const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '";

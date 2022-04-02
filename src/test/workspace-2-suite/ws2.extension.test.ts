@@ -1,5 +1,5 @@
 import { getExpectedResults } from "./ws2.expectedResults";
-import { SharedWorkspaceTests } from "../workspace-tests/shared.workspace.tests";
+import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace.tests";
 
 
 suite(`workspace-2-suite test run`, () => {

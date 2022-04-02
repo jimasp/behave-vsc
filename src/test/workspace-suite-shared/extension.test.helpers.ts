@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { ExtensionConfiguration } from "../../configuration";
 import { QueueItem } from '../../extension';
-import { TestResult } from "../expectedResults.helpers";
-import { TestWorkspaceConfig } from '../testWorkspaceConfig';
+import { TestResult } from "./expectedResults.helpers";
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
