@@ -2,7 +2,7 @@ import { ExtensionConfiguration } from "../../configuration";
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 
-export const getExpectedResults = (debug: boolean, config: ExtensionConfiguration): TestResult[] => {
+export const getWs2ExpectedResults = (debug: boolean, config: ExtensionConfiguration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({

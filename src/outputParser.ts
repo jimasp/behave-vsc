@@ -246,7 +246,7 @@ export function parseJsonFeatures(behaveOutput: string): JsonFeature[] {
   // handle behave bug where it doesn't always stick a \n before the first HOOK-ERROR
   fixOutput = fixOutput.replaceAll("}]}", "}]}\n");
 
-  // remove non-json lines (HOOK-ERROR / SKIP)
+  // remove non-json lines (HOOK-ERROR / SKIP / ABORTED)
   const lines = fixOutput.split("\n");
   let cleanedOutput = "";
   for (const i in lines) {
@@ -261,6 +261,7 @@ export function parseJsonFeatures(behaveOutput: string): JsonFeature[] {
   catch {
     // if cleaned output is not parseable json, then most likely something 
     // went wrong calling behave, e.g. a behave configuration error, or an invalid feature file
+    // NOTE - let the caller decide whether to log this or not
     throw `Unparseable output:\n${behaveOutput}\n`;
   }
   return jsonObj;

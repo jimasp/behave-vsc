@@ -55,8 +55,12 @@ async function runBehave(context: vscode.ExtensionContext, pythonExec: string, r
   let loopStr = "";
   for await (const chunk of cp.stdout) {
     const sChunk = `${chunk}`;
-    config.logger.logInfo(sChunk);
     loopStr += sChunk;
+
+    if (sChunk.indexOf("HOOK-ERROR") !== -1)
+      config.logger.logError(sChunk.split("\n")[0]);
+    else
+      config.logger.logInfo(sChunk);
 
     let tmpStr = loopStr.indexOf("[") < loopStr.indexOf("{")
       ? loopStr.replace(/((\s|\S)*?)\[/, "[")

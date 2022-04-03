@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { ExtensionConfiguration } from "../../configuration";
-import { QueueItem } from '../../extension';
+import { ActivateResult } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 
@@ -59,26 +59,20 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 
+let actRet: ActivateResult;
 
-let actRet: ActivateReturnType;
-type ActivateReturnType = {
-	runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[]>,
-	config: ExtensionConfiguration
-};
-
-
-const activateExtension = async (): Promise<ActivateReturnType> => {
+export const activateExtension = async (): Promise<ActivateResult> => {
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	if (actRet !== undefined)
 		return actRet;
 
 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	actRet = await ext?.activate() as ActivateReturnType;
+	actRet = await ext?.activate() as ActivateResult;
 	return actRet;
 }
 
 
-function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+export function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
 	assert.deepStrictEqual(config.userSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(config.userSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
 	assert.strictEqual(config.userSettings.featuresPath, testConfig.getExpected("featuresPath"));
@@ -122,15 +116,25 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 		return arrChildrenIds.join();
 	}
 
-
+	// get populated instances from returned object
 	actRet = await activateExtension();
-	actRet.config.reloadUserSettings(testConfig);
-	assertUserSettingsAsExpected(testConfig, actRet.config);
+	assert(actRet.config);
+	assert(actRet.runHandler);
+	assert(actRet.ctrl);
+	assert(actRet.ctrl.refreshHandler);
 
-	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
 	const cancelToken = new vscode.CancellationTokenSource().token;
 
+	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
+	// we need to call the methods in that function manually:
+	actRet.config.reloadUserSettings(testConfig);
+	actRet.treeBuilder.buildTree(actRet.ctrl, false);
+
+	assertUserSettingsAsExpected(testConfig, actRet.config);
+
+
 	//run tests
+	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
 	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
 
 	if (!results || results.length === 0)

@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import config from "./configuration";
+import config, { ExtensionConfiguration } from "./configuration";
 import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
@@ -17,8 +17,18 @@ export const getSteps = () => steps;
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
+export type ActivateResult = {
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
+  config: ExtensionConfiguration,
+  ctrl: vscode.TestController,
+  treeBuilder: TreeBuilder
+};
+
 
 class TreeBuilder {
+
+  private _featuresLoaded = false;
+  private _cancelTokenSource: vscode.CancellationTokenSource | null = null;
 
   async readyForRun(timeout: number) {
     const interval = 100;
@@ -38,28 +48,65 @@ class TreeBuilder {
     return new Promise<boolean>(check);
   }
 
-  private _featuresLoaded = false;
-  // this should only be awaited on user request, i.e. when called by the refreshHandler
+
+  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken, reparse?: boolean) => {
+    controller.items.forEach(item => controller.items.delete(item.id));
+    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
+    const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+
+    for (const uri of featureFiles) {
+      if (!cancelToken.isCancellationRequested)
+        await updateTestItemFromFeatureFile(controller, uri, reparse);
+    }
+  }
+
+  private _findStepsFiles = async (cancelToken: vscode.CancellationToken) => {
+    steps.clear();
+    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
+    const stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+
+    for (const uri of stepFiles) {
+      if (!cancelToken.isCancellationRequested)
+        await updateStepsFromStepsFile(uri);
+    }
+  }
+
+
+
+  // NOTE - this is a background task that should only be awaited on 
+  // user request, i.e. when called by the refreshHandler
   async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+    this._featuresLoaded = false;
     const start = Date.now();
 
-    this._featuresLoaded = false;
-    await findFeatureFiles(ctrl, reparseFeatures);
-    this._featuresLoaded = true;
-    findStepsFiles();
+    // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree
+    if (this._cancelTokenSource) {
+      this._cancelTokenSource.cancel();
+      await new Promise(t => setTimeout(t, 100));
+      this._cancelTokenSource.dispose();
+    }
 
-    console.log(
-      `buildTree took ${Date.now() - start}ms. ` +
-      `(ignore if there are active breakpoints. slower during contention, like vscode startup. ` +
-      `click test refresh button without active breakpoints for a more representative time.)`
-    );
+    this._cancelTokenSource = new vscode.CancellationTokenSource();
+    await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
+    this._findStepsFiles(this._cancelTokenSource.token);
+
+    if (!this._cancelTokenSource.token.isCancellationRequested) {
+      this._featuresLoaded = true;
+
+      console.log(
+        `buildTree of ${ctrl.items.size} items took ${Date.now() - start}ms. ` +
+        `(ignore if there are active breakpoints. slower during contention like vscode startup. ` +
+        `click test refresh button a few times without active breakpoints for a more representative time.)`
+      );
+    }
+
   }
 
 }
 
 const treeBuilder = new TreeBuilder();
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<ActivateResult | undefined> {
 
   try {
 
@@ -284,7 +331,7 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         if (e.affectsConfiguration(config.extensionName)) {
           config.reloadUserSettings();
-          treeBuilder.buildTree(ctrl, false); // user may have e.g. changed featuresPath
+          treeBuilder.buildTree(ctrl, false); // need to rebuild - user may have e.g. changed featuresPath, fastSkipList, etc.
         }
       }
       catch (e: unknown) {
@@ -305,7 +352,13 @@ export async function activate(context: vscode.ExtensionContext) {
       await updateNodeForDocument(doc);
     }
 
-    return { runHandler: runHandler, config: config }; // support extensiontest.ts
+    return {
+      // support extensiontest.ts (i.e. maintain same instances)
+      runHandler: runHandler,
+      config: config,
+      ctrl: ctrl,
+      treeBuilder: treeBuilder
+    };
 
   }
   catch (e: unknown) {
@@ -318,8 +371,8 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-
 } // end activate()
+
 
 
 
@@ -331,7 +384,7 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
-    return { testItem: existing, testFile: testData.get(existing) as TestFile };
+    return { testItem: existing, testFile: testData.get(existing) as TestFile || new TestFile() };
   }
 
   const featureName = await getFeatureNameFromFile(uri);
@@ -375,26 +428,6 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 }
 
 
-
-async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
-  controller.items.forEach(item => controller.items.delete(item.id));
-  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
-  const featureFiles = await vscode.workspace.findFiles(pattern);
-
-  for (const uri of featureFiles) {
-    await updateTestItemFromFeatureFile(controller, uri, reparse);
-  }
-}
-
-async function findStepsFiles() {
-  steps.clear();
-  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
-  const stepFiles = await vscode.workspace.findFiles(pattern);
-
-  for (const uri of stepFiles) {
-    await updateStepsFromStepsFile(uri);
-  }
-}
 
 async function updateStepsFromStepsFile(uri: vscode.Uri) {
 

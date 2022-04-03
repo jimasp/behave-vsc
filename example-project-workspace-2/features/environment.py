@@ -2,16 +2,18 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 
-def before_scenario(context, scenario): #pylint: disable=unused-argument
+from behave import model
+
+def before_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
     if "normal_skip" in scenario.effective_tags:
         scenario.skip("Marked with @normal_skip")
         return
-    if "raise_before_hook_error" in scenario.effective_tags:
+    if "raise_error_in_before_scenario" in scenario.effective_tags:
         raise Exception("error in before_scenario hook")
 
-def after_scenario(context, scenario): #pylint: disable=unused-argument
+def after_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
     if "normal_skip" in scenario.effective_tags:
         scenario.skip("Marked with @normal_skip")
         return
-    if "raise_after_hook_error" in scenario.effective_tags:
+    if "raise_error_in_after_scenario" in scenario.effective_tags:
         raise Exception("error in after_scenario hook")

@@ -42,7 +42,7 @@ class Configuration implements ExtensionConfiguration {
 
   private constructor() {
     Configuration._configuration = this;
-    console.log("Configuration singleton constructed");
+    console.log("Configuration singleton constructed (this should only fire once except for test runs)");
   }
 
   static get configuration() {

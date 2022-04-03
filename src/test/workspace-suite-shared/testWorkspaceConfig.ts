@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 
 
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
-	constructor(private runParallel: boolean, private runAllAsOne: boolean, private fastSkipList: string,
-		private envVarList: string, private featuresPath: string, private justMyCode: boolean = true) { }
+	constructor(private runParallel?: boolean, private runAllAsOne?: boolean, private fastSkipList?: string,
+		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean) { }
 
 	get<T>(section: string): T | undefined {
 
@@ -23,7 +23,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;
-				throw new Error("missing case for section: " + section);
+				throw new Error("missing test case for section: " + section);
 		}
 	}
 
@@ -31,50 +31,65 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	getExpected<T>(section: string): T | undefined {
 
 
-		const expEnvVarList = (): { [name: string]: string } | undefined => {
+		const getExpectedEnvVarList = (): { [name: string]: string } | undefined => {
 			switch (this.envVarList) {
 				case "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ":
 					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', empty_var: '', space_var: ' ' };
 				case "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '":
 					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', empty_var: '', space_var: ' ' };
+				case undefined:
+					return {};
 				case "":
 					return {};
 				default:
 					// eslint-disable-next-line no-debugger
 					debugger;
-					throw new Error("missing case for envVarList: " + this.envVarList);
+					throw new Error("missing test case for envVarList: " + this.envVarList);
 			}
 
 		}
 
-		const expFastSkipList = (): string[] => {
+		const getExpectedFastSkipList = (): string[] => {
 			switch (this.fastSkipList) {
 				case "  @fast-skip-me,  @fast-skip-me-too, ":
 					return ["@fast-skip-me", "@fast-skip-me-too"];
 				case "@fast-skip-me,@fast-skip-me-too":
 					return ["@fast-skip-me", "@fast-skip-me-too"];
+				case undefined:
+					return [];
 				case "":
 					return [];
 				default:
 					// eslint-disable-next-line no-debugger
 					debugger;
-					throw new Error("missing case for fastSkipList: " + this.envVarList);
+					throw new Error("missing test case for fastSkipList: " + this.envVarList);
+			}
+		}
+
+		const getExpectedFeaturesPath = (): string => {
+			switch (this.featuresPath) {
+				case undefined:
+					return "features";
+				case "":
+					return "features";
+				default:
+					return this.featuresPath;
 			}
 		}
 
 		switch (section) {
 			case "envVarList":
-				return <T><unknown>expEnvVarList();
+				return <T><unknown>getExpectedEnvVarList();
 			case "fastSkipList":
-				return <T><unknown>expFastSkipList();
+				return <T><unknown>getExpectedFastSkipList();
 			case "justMyCode":
-				return <T><unknown>this.justMyCode;
+				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "featuresPath":
-				return <T><unknown>this.featuresPath;
+				return <T><unknown>getExpectedFeaturesPath();
 			case "runAllAsOne":
-				return <T><unknown>this.runAllAsOne;
+				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
-				return <T><unknown>this.runParallel;
+				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;

@@ -97,6 +97,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ---
 ## Troubleshooting
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
+- If you're not hitting a breakpoint, delete _all_ breakpoints and re-add your breakpoint (see below for more info).
 - Do you have the latest version of the source code?
 - If you get an error debugging "Debug Extension...", set a breakpoint in the `activate()` function.
 - If you get an error debugging "Run Extension Test Suite...", set a breakpoint in the `runAllTestsAndAssertTheResults()` function.
