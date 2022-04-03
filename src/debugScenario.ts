@@ -55,21 +55,35 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
     }
   });
 
+
   // handle debug stop click - hacky way to determine if debug stopped by user click
   // (onDidTerminateDebugSession doesn't provide reason for the stop)
-  const debugEvent = vscode.debug.onDidReceiveDebugSessionCustomEvent((m) => {
-    try {
-      // 247 = magic number exit code (probably specific to ms python debugger)
-      if (m.event === "exited" && m.body?.exitCode === 247) {
-        debugStopClicked = true;
-        console.log("debug stop clicked");
-      }
-    }
-    catch (e: unknown) {
-      config.logger.logError(e);
-    }
-    finally {
-      debugEvent.dispose();
+  const tracker = vscode.debug.registerDebugAdapterTrackerFactory('*', {
+    createDebugAdapterTracker() {
+      let threadExit = false;
+
+      return {
+        onDidSendMessage: (m) => {
+
+          // console.log(m);
+
+          if (m.body?.reason === "exited" && m.body?.threadId) {
+            // thread exit
+            threadExit = true;
+            tracker.dispose();
+            return;
+          }
+
+          if (m.event === "exited") {
+            // most likely debug stopped by user click
+            if (!threadExit) {
+              debugStopClicked = true;
+              tracker.dispose();
+            }
+          }
+
+        },
+      };
     }
   });
 
