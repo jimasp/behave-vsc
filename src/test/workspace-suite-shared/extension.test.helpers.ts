@@ -116,12 +116,12 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 		return arrChildrenIds.join();
 	}
 
-	// get populated instances from returned object
+	// get instances from returned object
 	actRet = await activateExtension();
 	assert(actRet.config);
 	assert(actRet.runHandler);
 	assert(actRet.ctrl);
-	assert(actRet.ctrl.refreshHandler);
+	assert(actRet);
 
 	const cancelToken = new vscode.CancellationTokenSource().token;
 
