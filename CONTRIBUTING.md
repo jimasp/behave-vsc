@@ -129,13 +129,13 @@ some manual tests of the affected areas For example, if you changed feature file
 	1. commit your changes locally (because you are about to make file changes)
 	2. start debug on workspace 1, then	
 	3. edit a group1 feature file, change the name of the feature and save it, then: 
-		- check the test UI tree shows the renamed feature
-		- check you can run the changed scenario from UI tree
-		- check you can run the renamed feature from inside the feature file
-	4. edit a group2 outline feature file, change the name of a scenario and save it, then: 
-		- check the test UI tree shows the renamed scenario
+		- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
+		- check the test UI tree shows the renamed feature (you may need to reopen the node)
+		- check you can run the renamed feature from UI tree
+	4. edit a group1 outline feature file, change the name of a scenario and save it, then: 
 		- check you can run the changed scenario from inside the feature file
-		- check you can debug the renamed scenario from inside the feature file
+		- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file		
+		- check the test UI tree shows the renamed scenario (you may need to reopen the node)
 	5. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	6. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
