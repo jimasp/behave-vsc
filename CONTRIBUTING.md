@@ -139,10 +139,10 @@ some manual tests of the affected areas For example, if you changed feature file
 	5. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	6. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
-	7. rename a feature file, in the test side bar, check the feature is not duplicated, check feature tests run from the side bar
-	8. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from side bar
-	9. go to a feature file, click "go to step" and check at least some of them work
-	10. rename the same steps file, then check you can still use "go to step" for a step in that file
+	7. rename a feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test ui
+	8. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from test ui tree
+	9. go to a feature file, click "go to step defintion" and check at least some of them work
+	10. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
 
 ---
 ## Design principles
