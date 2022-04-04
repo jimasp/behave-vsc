@@ -7,14 +7,13 @@ import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { debugStopped, resetDebugStop } from './debugScenario';
 import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
+let stopDebugRun = false;
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
-
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
 export type ActivateResult = {
@@ -204,11 +203,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
           const asyncPromises: Promise<void>[] = [];
-          resetDebugStop();
+          stopDebugRun = false;
 
           for (const qi of queue) {
             run.appendOutput(`Running ${qi.test.id}\r\n`);
-            if (debugStopped() || cancellation.isCancellationRequested) {
+            if (stopDebugRun || cancellation.isCancellationRequested) {
               updateRun(qi.test, coveredLines, run);
             }
             else {
@@ -336,6 +335,38 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
       }
       catch (e: unknown) {
         config.logger.logError(e);
+      }
+    }));
+
+
+    // onDidTerminateDebugSession doesn't provide reason for the stop,
+    // so we need to check the reason from the debug adapter protocol
+    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
+      createDebugAdapterTracker() {
+        let threadExit = false;
+
+        return {
+          onDidSendMessage: (m) => {
+
+            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
+            console.log(m);
+
+            if (m.body?.reason === "exited" && m.body?.threadId) {
+              // thread exit
+              threadExit = true;
+              return;
+            }
+
+            if (m.event === "exited") {
+              if (!threadExit) {
+                // exit, but not a thread exit, so we need to set flag to 
+                // stop the run, (most likely debug was stopped by user)
+                stopDebugRun = true;
+              }
+            }
+
+          },
+        };
       }
     }));
 

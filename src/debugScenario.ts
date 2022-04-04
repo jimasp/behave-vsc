@@ -5,11 +5,6 @@ import config from "./configuration";
 import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
-let debugStopClicked = false;
-export const resetDebugStop = () => debugStopClicked = false;
-export const debugStopped = () => debugStopClicked;
-
-
 
 export async function debugScenario(context: vscode.ExtensionContext, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
   args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
@@ -56,39 +51,6 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
   });
 
 
-  // handle debug stop click - hacky way to determine if debug stopped by user click
-  // (onDidTerminateDebugSession doesn't provide reason for the stop)
-  const tracker = vscode.debug.registerDebugAdapterTrackerFactory('*', {
-    createDebugAdapterTracker() {
-      let threadExit = false;
-
-      return {
-        onDidSendMessage: (m) => {
-
-          // console.log(m);
-
-          if (m.body?.reason === "exited" && m.body?.threadId) {
-            // thread exit
-            threadExit = true;
-            tracker.dispose();
-            return;
-          }
-
-          if (m.event === "exited") {
-            // most likely debug stopped by user click
-            if (!threadExit) {
-              debugStopClicked = true;
-              tracker.dispose();
-            }
-          }
-
-        },
-      };
-    }
-  });
-
-
-
   if (!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
     return;
 
@@ -99,16 +61,14 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
 
       try {
 
-        // user clicked stop, so there will be no output, just return
-        if (debugStopClicked)
-          return resolve();
+        let behaveOutput = "";
+        if (fs.existsSync(outFile))
+          behaveOutput = fs.readFileSync(outFile, "utf8");
 
-        // user didn't click stop, so if no output file, something went wrong with behave
-        if (!fs.existsSync(outFile))
-          return reject("Error: see behave output in debug console");
-
-        const behaveOutput = fs.readFileSync(outFile, "utf8");
-        parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
+        // if there is no behave output, then either debug stop was clicked, or something went wrong with behave.
+        // in the second case, the error should be logged in debug console and won't be parseable
+        if (behaveOutput.trim() !== "")
+          parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
 
         resolve();
       }
