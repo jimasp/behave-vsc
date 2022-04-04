@@ -1,5 +1,5 @@
-import { ExtensionConfiguration } from '../configuration';
-import { moreInfo } from '../outputParser';
+import { ExtensionConfiguration } from '../../configuration';
+import { moreInfo } from '../../outputParser';
 
 interface ITestResult {
   test_id: string | undefined;
@@ -46,7 +46,7 @@ export function applyTestConfiguration(debug: boolean, config: ExtensionConfigur
 
   expectedResults = applyFeaturesPath(expectedResults, config);
   expectedResults = applyDebugTextReplacements(expectedResults, debug, runMoreInfo, debugMoreInfo);
-  expectedResults = applyFastSkipTextReplacements(expectedResults, debug, config);
+  expectedResults = applyFastSkipReplacements(expectedResults, debug, config);
 
   return expectedResults;
 }
@@ -76,19 +76,26 @@ function applyDebugTextReplacements(expectedResults: TestResult[], debug: boolea
   return expectedResults;
 }
 
-function applyFastSkipTextReplacements(expectedResults: TestResult[], debug: boolean, config: ExtensionConfiguration) {
+function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean, config: ExtensionConfiguration) {
 
-  const fastSkipEnabled = config.userSettings.fastSkipList && !debug && !config.userSettings.runAllAsOne;
+  const fastSkipSet = config.userSettings.fastSkipList.length > 0;
+  const fastSkipActive = fastSkipSet && !debug && !config.userSettings.runAllAsOne;
 
-  if (!fastSkipEnabled)
+  if (!fastSkipSet) {
+    expectedResults.forEach(expectedResult => {
+      expectedResult.scenario_fastSkip = false;
+    });
     return expectedResults;
+  }
 
   // these could be "passed" or "Traceback..." etc. as appropriate to the test, 
   // but if fastskip is enabled, they should always be "skipped"
-  expectedResults.forEach(expectedResult => {
-    if (expectedResult.scenario_fastSkip)
-      expectedResult.scenario_result = "skipped";
-  });
+  if (fastSkipActive) {
+    expectedResults.forEach(expectedResult => {
+      if (expectedResult.scenario_fastSkip)
+        expectedResult.scenario_result = "skipped";
+    });
+  }
 
   return expectedResults;
 }

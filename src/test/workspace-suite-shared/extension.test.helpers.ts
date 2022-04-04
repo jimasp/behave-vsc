@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { ExtensionConfiguration } from "../configuration";
-import { QueueItem } from '../extension';
+import { ExtensionConfiguration } from "../../configuration";
+import { ActivateResult } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 
@@ -59,38 +59,30 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 
+let actRet: ActivateResult;
 
-let actRet: ActivateReturnType;
-type ActivateReturnType = {
-	runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[]>,
-	config: ExtensionConfiguration
-};
-
-
-const activateExtension = async (): Promise<ActivateReturnType> => {
+export const activateExtension = async (): Promise<ActivateResult> => {
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	if (actRet !== undefined)
 		return actRet;
 
 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	actRet = await ext?.activate() as ActivateReturnType;
+	actRet = await ext?.activate() as ActivateResult;
 	return actRet;
+}
+
+
+export function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+	assert.deepStrictEqual(config.userSettings.envVarList, testConfig.getExpected("envVarList"));
+	assert.deepStrictEqual(config.userSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
+	assert.strictEqual(config.userSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(config.userSettings.justMyCode, testConfig.getExpected("justMyCode"));
+	assert.strictEqual(config.userSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
+	assert.strictEqual(config.userSettings.runParallel, testConfig.getExpected("runParallel"));
 }
 
 export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
 	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
-
-	actRet = await activateExtension();
-	actRet.config.reloadUserSettings(testConfig);
-	const expectedResults = getExpectedResults(debug, actRet.config);
-
-	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
-	const cancelToken = new vscode.CancellationTokenSource().token;
-	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
-
-	if (!results || results.length === 0)
-		throw Error("no results returned from runHandler");
-
 
 	const standardisePath = (path: string | undefined): string | undefined => {
 		return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
@@ -124,6 +116,32 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 		return arrChildrenIds.join();
 	}
 
+	// get instances from returned object
+	actRet = await activateExtension();
+	assert(actRet.config);
+	assert(actRet.runHandler);
+	assert(actRet.ctrl);
+	assert(actRet);
+
+	const cancelToken = new vscode.CancellationTokenSource().token;
+
+	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
+	// we need to call the methods in that function manually:
+	actRet.config.reloadUserSettings(testConfig);
+	actRet.treeBuilder.buildTree(actRet.ctrl, false);
+
+	assertUserSettingsAsExpected(testConfig, actRet.config);
+
+
+	//run tests
+	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
+	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
+
+	if (!results || results.length === 0)
+		throw new Error("no results returned from runHandler");
+
+	const expectedResults = getExpectedResults(debug, actRet.config);
+
 	results.forEach(result => {
 
 		const scenResult = new TestResult({
@@ -154,4 +172,5 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
 }
+
 

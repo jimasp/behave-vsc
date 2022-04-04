@@ -2,23 +2,32 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import config from "./configuration";
+import config, { ExtensionConfiguration } from "./configuration";
 import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { debugStopped, resetDebugStop } from './debugScenario';
 import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
+let stopDebugRun = false;
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
-
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
+
+export type ActivateResult = {
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
+  config: ExtensionConfiguration,
+  ctrl: vscode.TestController,
+  treeBuilder: TreeBuilder
+};
 
 
 class TreeBuilder {
+
+  private _featuresLoaded = false;
+  private _cancelTokenSource: vscode.CancellationTokenSource | null = null;
 
   async readyForRun(timeout: number) {
     const interval = 100;
@@ -38,25 +47,65 @@ class TreeBuilder {
     return new Promise<boolean>(check);
   }
 
-  private _featuresLoaded = false;
-  // this should only be awaited on user request, i.e. when called by the refreshHandler
+
+  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken, reparse?: boolean) => {
+    controller.items.forEach(item => controller.items.delete(item.id));
+    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
+    const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+
+    for (const uri of featureFiles) {
+      if (!cancelToken.isCancellationRequested)
+        await updateTestItemFromFeatureFile(controller, uri, reparse);
+    }
+  }
+
+  private _findStepsFiles = async (cancelToken: vscode.CancellationToken) => {
+    steps.clear();
+    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
+    const stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+
+    for (const uri of stepFiles) {
+      if (!cancelToken.isCancellationRequested)
+        await updateStepsFromStepsFile(uri);
+    }
+  }
+
+
+
+  // NOTE - this is a background task that should only be awaited on 
+  // user request, i.e. when called by the refreshHandler
   async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+    this._featuresLoaded = false;
     const start = Date.now();
 
-    this._featuresLoaded = false;
-    await findFeatureFiles(ctrl, reparseFeatures);
-    this._featuresLoaded = true;
-    findStepsFiles();
+    // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree
+    if (this._cancelTokenSource) {
+      this._cancelTokenSource.cancel();
+      await new Promise(t => setTimeout(t, 100));
+      this._cancelTokenSource.dispose();
+    }
 
-    console.log(`buildTree took ${Date.now() - start}ms ` +
-      `(slower during contention, like vscode startup, click test refresh button for more representative time)`);
+    this._cancelTokenSource = new vscode.CancellationTokenSource();
+    await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
+    this._findStepsFiles(this._cancelTokenSource.token);
+
+    if (!this._cancelTokenSource.token.isCancellationRequested) {
+      this._featuresLoaded = true;
+
+      console.log(
+        `buildTree of ${ctrl.items.size} items took ${Date.now() - start}ms. ` +
+        `(ignore if there are active breakpoints. slower during contention like vscode startup. ` +
+        `click test refresh button a few times without active breakpoints for a more representative time.)`
+      );
+    }
+
   }
 
 }
 
 const treeBuilder = new TreeBuilder();
 
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<ActivateResult | undefined> {
 
   try {
 
@@ -154,11 +203,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
           const asyncPromises: Promise<void>[] = [];
-          resetDebugStop();
+          stopDebugRun = false;
 
           for (const qi of queue) {
             run.appendOutput(`Running ${qi.test.id}\r\n`);
-            if (debugStopped() || cancellation.isCancellationRequested) {
+            if (stopDebugRun || cancellation.isCancellationRequested) {
               updateRun(qi.test, coveredLines, run);
             }
             else {
@@ -281,11 +330,43 @@ export async function activate(context: vscode.ExtensionContext) {
       try {
         if (e.affectsConfiguration(config.extensionName)) {
           config.reloadUserSettings();
-          treeBuilder.buildTree(ctrl, false); // user may have e.g. changed featuresPath
+          treeBuilder.buildTree(ctrl, false); // need to rebuild - user may have e.g. changed featuresPath, fastSkipList, etc.
         }
       }
       catch (e: unknown) {
         config.logger.logError(e);
+      }
+    }));
+
+
+    // onDidTerminateDebugSession doesn't provide reason for the stop,
+    // so we need to check the reason from the debug adapter protocol
+    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
+      createDebugAdapterTracker() {
+        let threadExit = false;
+
+        return {
+          onDidSendMessage: (m) => {
+
+            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
+            // console.log(m);
+
+            if (m.body?.reason === "exited" && m.body?.threadId) {
+              // thread exit
+              threadExit = true;
+              return;
+            }
+
+            if (m.event === "exited") {
+              if (!threadExit) {
+                // exit, but not a thread exit, so we need to set flag to 
+                // stop the run, (most likely debug was stopped by user)
+                stopDebugRun = true;
+              }
+            }
+
+          },
+        };
       }
     }));
 
@@ -296,12 +377,19 @@ export async function activate(context: vscode.ExtensionContext) {
         item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
     }
 
-    // for any open documents on startup
-    for (const document of vscode.workspace.textDocuments) {
-      await updateNodeForDocument(document);
+    // for any open .feature documents on startup
+    const docs = vscode.workspace.textDocuments.filter(d => d.uri.scheme === "file" && d.uri.path.toLowerCase().endsWith(".feature"));
+    for (const doc of docs) {
+      await updateNodeForDocument(doc);
     }
 
-    return { runHandler: runHandler, config: config }; // support extensiontest.ts
+    return {
+      // support extensiontest.ts (i.e. maintain same instances)
+      runHandler: runHandler,
+      config: config,
+      ctrl: ctrl,
+      treeBuilder: treeBuilder
+    };
 
   }
   catch (e: unknown) {
@@ -314,22 +402,20 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   }
 
-
 } // end activate()
+
 
 
 
 async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
-
-  if (uri.scheme !== "file" || !uri.path.endsWith('.feature')) {
-    return undefined;
-  }
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+    throw new Error(`${uri.path} is not a feature file`);
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
-    return { testItem: existing, testFile: testData.get(existing) as TestFile };
+    return { testItem: existing, testFile: testData.get(existing) as TestFile || new TestFile() };
   }
 
   const featureName = await getFeatureNameFromFile(uri);
@@ -374,61 +460,28 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 
 
-async function findFeatureFiles(controller: vscode.TestController, reparse?: boolean) {
-  controller.items.forEach(item => controller.items.delete(item.id));
-  const featureFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/*.feature`);
-  const featureFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/*.feature`);
-  const featureFiles = featureFiles1.concat(featureFiles2);
-
-  for (const uri of featureFiles) {
-    await updateTestItemFromFeatureFile(controller, uri, reparse);
-  }
-}
-
-async function findStepsFiles() {
-  steps.clear();
-  const stepFiles1 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/*.py`);
-  const stepFiles2 = await vscode.workspace.findFiles(`**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
-  const stepFiles = stepFiles1.concat(stepFiles2);
-
-  for (const stepFile of stepFiles) {
-    await updateStepsFromStepsFile(stepFile);
-  }
-}
-
 async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
-  if (uri.scheme !== "file")
-    return;
-
-  const path = uri.path.toLowerCase();
-
-  if (!path.indexOf("/steps/") && path.toLowerCase().endsWith(".py"))
-    throw `${uri.path} ignored -not a steps path`;
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
+    throw new Error(`${uri.path} is not a python file`);
 
   await parseStepsFile(uri, steps);
-  return;
 }
 
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
 
-  if (uri.scheme !== "file")
-    return;
-
-  if (!uri.path.toLowerCase().endsWith(".feature"))
-    throw `${uri.path} ignored - not a feature file`;
+  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+    throw new Error(`${uri.path} is not a feature file`);
 
   const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
   if (item && reparse) {
     await item.testFile.updateFromDisk(controller, item.testItem);
   }
-  return;
-
 }
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
 
-  // not just *.feature and /steps/* files, but also support folder changes inside the features folder
+  // not just *.feature and /steps/*.py files, but also support folder changes inside the features folder
   const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
@@ -440,12 +493,16 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     const path = uri.path.toLowerCase();
 
     try {
-      if (path.indexOf("/steps/") !== -1) {
+
+      if (path.endsWith(".py") && path.indexOf("/steps/") !== -1) {
         updateStepsFromStepsFile(uri);
+        return;
       }
-      else {
+
+      if (path.endsWith(".feature")) {
         updateTestItemFromFeatureFile(ctrl, uri, true);
       }
+
     }
     catch (e: unknown) {
       config.logger.logError(e);

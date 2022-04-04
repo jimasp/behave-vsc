@@ -42,7 +42,7 @@ class Configuration implements ExtensionConfiguration {
 
   private constructor() {
     Configuration._configuration = this;
-    console.log("Configuration singleton constructed");
+    console.log("Configuration singleton constructed (this should only fire once except for test runs)");
   }
 
   static get configuration() {
@@ -166,7 +166,18 @@ class UserSettings {
         logger.logError("Invalid FastSkipList setting ignored.");
       }
       else {
-        this.fastSkipList = fastSkipListCfg.trim().split(',').filter(s => { if (s.startsWith("@")) return s; });
+        try {
+          const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
+          let invalid = false;
+          skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
+          if (invalid)
+            logger.logError("Invalid FastSkipList setting ignored.");
+          else
+            this.fastSkipList = skipList.filter(s => s !== "");
+        }
+        catch {
+          logger.logError("Invalid FastSkipList setting ignored.");
+        }
       }
     }
 
@@ -175,14 +186,21 @@ class UserSettings {
         logger.logError("Invalid EnvVarList setting ignored.");
       }
       else {
-        const escaped = "#^@";
-        envVarListCfg.trim().split("',").map(s => {
-          s = s.replace(/\\'/, escaped);
-          const e = s.split("':");
-          const name = e[0].replace(/'/g, "").replace(escaped, "'");
-          const value = e[1].replace(/'/g, "").replace(escaped, "'");
-          this.envVarList[name] = value;
-        });
+        try {
+          const escape = "#^@";
+          const envList = envVarListCfg.replace(/'\s*:\s*'/g, "':'").replace(/'\s*,\s*'/g, "','").trim();
+          envList.split("',").filter(s => s.trim() !== "").map(s => {
+            s = s.replace(/\\'/g, escape);
+            const e = s.split("':");
+            const name = e[0].trim().replace(/'/g, "").replace(escape, "'");
+            const value = e[1].trim().replace(/'/g, "").replace(escape, "'");
+            console.log(`${name}='${value}'`)
+            this.envVarList[name] = value;
+          });
+        }
+        catch {
+          logger.logError("Invalid EnvVarList setting ignored.");
+        }
       }
     }
   }

@@ -8,39 +8,39 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Example: 'var1':'val1','var2':'val2'\nOptional SINGLE-quoted csv list of environment variables to use when calling a behave command\nYou can escape contained single quotes like this: 'var3':'a value containing a \\' quote'  (double-slashed \\\\' in the settings.json file itself)."
+					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape any contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Example: @skip, @skipped\nThis setting has no effect when you run all tests at once and 'Run All As One' is enabled, or when debugging.\nOptional csv list of fast skip tags that each start with @.\nThis will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne."
+					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, or when debugging.\nThe listed tags will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne.\n"
 				},
 				"behave-vsc.featuresPath": {
 					"type": "string",
 					"default": "",
-					"description": "Example: mysubfolder/my_behave_tests\nOptional setting for workspace-relative features subfolder. If empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"path=\" setting in your behave configuration file."
+					"description": "Optional setting for workspace-relative features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"path=\" setting in your behave configuration file."
 				},
 				"behave-vsc.justMyCode": {
 					"type": "boolean",
 					"default": true,
-					"description": "Controls whether to step into external code when debugging a behave test."
+					"description": "Default true (enabled).\nControls whether to step into external code when debugging a behave test."
 				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,
-					"description": "When running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests.\nNote that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation."
+					"description": "Default:true (enabled).\nWhen running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests.\nNote that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation."
 				},
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Run tests in async mode.\nThis setting has no effect when you are running all tests at once and 'Run All As One' is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nNote that behave itself does not support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
+					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nIf you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel.\n.Note that behave itself does not support parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
 				}
 			}
 		},
 		"commands": [
 			{
 				"command": "behave-vsc.gotoStep",
-				"title": "Go to step (experimental)"
+				"title": "Go to Step Definition"
 			}
 		],
 		"menus": {
@@ -62,7 +62,7 @@
 	},
 	"publisher": "jimasp",
 	"private": true,
-	"license": "See LICENSE.txt",
+	"license": "SEE LICENSE IN LICENSE.txt",
 	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
 	"bugs": {
 		"url": "https://github.com/jimasp/behave-vsc/issues"
@@ -72,12 +72,19 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.66.0"
 	},
 	"categories": [
 		"Testing",
 		"Debuggers"
 	],
+	"keywords": [
+		"behave",
+		"feature",
+		"debug",
+		"python"
+	],
+	"qna": false,
 	"extensionDependencies": [
 		"ms-python.python"
 	],
@@ -89,15 +96,17 @@
 		"prevscode:prepublish": "npm run test",
 		"vscode:prepublish": "npm run package",
 		"compile": "webpack",
-		"watch": "webpack --watch",
+		"watch": "npm run clean-output && webpack --watch",
 		"package": "webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "tsc -p . --outDir out",
-		"watch-tests": "tsc -p . -w --outDir out",
+		"compile-tests": "npm run clean-output && tsc -p . --outDir out",
+		"watch-tests": "npm run clean-output && tsc -p . -w --outDir out",
 		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTestSuites.js --stable",
 		"pretestinsiders": "npm run compile-tests && npm run compile && npm run lint",
-		"testinsiders": "node ./out/test/runTestSuites.js --insiders"
+		"testinsiders": "node ./out/test/runTestSuites.js --insiders",
+		"rimraf": "./node_modules/rimraf/bin.js",
+		"clean-output": "rimraf out/ dist/"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.4",
@@ -110,6 +119,7 @@
 		"eslint": "^8.6.0",
 		"glob": "^7.1.7",
 		"mocha": "^9.1.3",
+		"rimraf": "^3.0.2",
 		"ts-loader": "^9.2.5",
 		"typescript": "^4.5.5",
 		"webpack": "^5.52.1",

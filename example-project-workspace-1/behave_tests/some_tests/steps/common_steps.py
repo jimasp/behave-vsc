@@ -16,8 +16,12 @@ def step_inst(context):
 def envvars(context):
     some_var = os.environ.get("some_var")
     some_var2 = os.environ.get("some_var2")
-    assert some_var == "some value"
-    assert some_var2 == "quo'ted"
+    empty_var = os.environ.get("empty_var")
+    space_var = os.environ.get("space_var")
+    assert some_var == "double qu\"oted"
+    assert some_var2 == "single qu'oted"
+    assert empty_var == ""
+    assert space_var == " "
     
 
 @when("we implement a {successful_or_failing} test")

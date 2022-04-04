@@ -31,10 +31,8 @@ export class TestFile {
 
   public updateFromContents(controller: vscode.TestController, content: string, item: vscode.TestItem) {
     const thisGeneration = generationCounter++;
-    this.didResolve = true;
-
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
-    ancestors.push({ item, children: [] });
+    this.didResolve = true;
 
     const ascend = (depth: number) => {
       while (ancestors.length > depth) {
@@ -58,7 +56,12 @@ export class TestFile {
       parent.children.push(tcase);
     }
 
-    parseFeatureFile(item.label, content, onScenarioLine);
+    const onFeatureLine = (range: vscode.Range) => {
+      item.range = range;
+      ancestors.push({ item: item, children: [] });
+    }
+
+    parseFeatureFile(item.label, content, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

@@ -8,11 +8,10 @@
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
-    "python.formatting.provider": "black",
-    "behave-vsc.runParallel": false,
-    "behave-vsc.runAllAsOne": true,
+    "behave-vsc.runParallel": true,
+    "behave-vsc.runAllAsOne": false,
     "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
-    "behave-vsc.envVarList": "'some_var':'some value','some_var2':'quo\\'ted'",
+    "behave-vsc.envVarList": "  'some_var':'double qu\"oted',  'some_var2':'single qu\\'oted',  ",
     "behave-vsc.featuresPath": "behave_tests/some_tests",
-    "behave-vsc.justMyCode": false
+    "behave-vsc.justMyCode": true
 }

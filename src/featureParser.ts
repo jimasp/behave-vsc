@@ -23,7 +23,8 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const parseFeatureFile = (featureName: string, text: string,
-  onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void) => {
+  onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
+  onFeatureName: (range: vscode.Range) => void) => {
 
   const lines = text.split('\n');
   let fastSkipFeature = false;
@@ -59,6 +60,9 @@ export const parseFeatureFile = (featureName: string, text: string,
     const feature = featureReLine.exec(line);
     if (feature) {
       featureName = feature[3];
+
+      const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
+      onFeatureName(range);
 
       if (lineNo > 0) {
         config.userSettings.fastSkipList.forEach(skipStr => {
