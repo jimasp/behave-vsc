@@ -349,7 +349,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
           onDidSendMessage: (m) => {
 
             // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-            console.log(m);
+            // console.log(m);
 
             if (m.body?.reason === "exited" && m.body?.threadId) {
               // thread exit
