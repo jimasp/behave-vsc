@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getContentFromFilesystem } from './helpers';
 
-const stepRe = /^(\s*)(@given|@when|@then|@and|@but)\((.?)("|')(.+)("|')\)(\s*)$/i;
+const stepRe = /^(\s*)(@step|@given|@when|@then|@and|@but)\((.?)("|')(.+)("|')\)(\s*)$/i;
 
 export class StepDetail {
   constructor(public uri: vscode.Uri, public range: vscode.Range) { }

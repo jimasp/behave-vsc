@@ -10,9 +10,31 @@ export function gotoStepHandler(uri: vscode.Uri) {
 
     let stepMatch: StepDetail | null = null;
 
-    const steps = getSteps();
+    const allSteps = getSteps();
 
-    for (const [key, value] of steps) {
+
+    const exactSteps = new Map([...allSteps].filter(
+      ([k,]) => k.indexOf('.+') === -1)
+    );
+
+    const paramsSteps = new Map([...allSteps].filter(
+      ([k,]) => k.indexOf('.+') !== -1)
+    );
+
+    for (const [key, value] of exactSteps) {
+      const rx = new RegExp(key);
+      const match = rx.exec(stepText);
+      if (match && match.length !== 0) {
+        stepMatch = value;
+        break;
+      }
+    }
+
+    if (stepMatch)
+      return stepMatch;
+
+    // params match
+    for (const [key, value] of paramsSteps) {
       const rx = new RegExp(key);
       const match = rx.exec(stepText);
       if (match && match.length !== 0) {
@@ -25,7 +47,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
       return stepMatch;
 
     // fallback - reverse the lookup
-    for (const [key, value] of steps) {
+    for (const [key, value] of allSteps) {
       const rx = new RegExp("^\\^" + stepText + ".*");
       const match = rx.exec(key);
       if (match && match.length !== 0) {
