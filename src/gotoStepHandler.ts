@@ -12,7 +12,6 @@ export function gotoStepHandler(uri: vscode.Uri) {
 
     const allSteps = getSteps();
 
-
     const exactSteps = new Map([...allSteps].filter(
       ([k,]) => k.indexOf('.+') === -1)
     );
@@ -34,18 +33,35 @@ export function gotoStepHandler(uri: vscode.Uri) {
     if (stepMatch)
       return stepMatch;
 
-    // params match
+    const matches = new Map<string, StepDetail>();
+
+    // parameters match - pick longest match
     for (const [key, value] of paramsSteps) {
       const rx = new RegExp(key);
       const match = rx.exec(stepText);
       if (match && match.length !== 0) {
-        stepMatch = value;
-        break;
+        matches.set(key, value);
       }
     }
 
-    if (stepMatch)
-      return stepMatch;
+    // get longest matched key
+    if (matches.size === 1)
+      return matches.values().next().value;
+
+    if (matches.size > 1) {
+      let longestKey = "";
+      let longestKeyLength = 0;
+      for (const [key,] of matches) {
+        if (key.length > longestKeyLength) {
+          longestKey = key;
+          longestKeyLength = key.length;
+        }
+      }
+
+      const stepMatch = matches.get(longestKey);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return stepMatch!;
+    }
 
     // fallback - reverse the lookup
     for (const [key, value] of allSteps) {
