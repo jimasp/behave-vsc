@@ -33,9 +33,12 @@ export function gotoStepHandler(uri: vscode.Uri) {
     if (stepMatch)
       return stepMatch;
 
-    const matches = new Map<string, StepDetail>();
+
 
     // parameters match - pick longest match
+
+    const matches = new Map<string, StepDetail>();
+
     for (const [key, value] of paramsSteps) {
       const rx = new RegExp(key);
       const match = rx.exec(stepText);
@@ -63,7 +66,8 @@ export function gotoStepHandler(uri: vscode.Uri) {
       return stepMatch!;
     }
 
-    // fallback - reverse the lookup
+
+    // fallback match - reverse the lookup
     for (const [key, value] of allSteps) {
       const rx = new RegExp("^\\^" + stepText + ".*");
       const match = rx.exec(key);
@@ -76,6 +80,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
     return stepMatch;
   }
 
+
   try {
     const activeEditor = vscode.window.activeTextEditor;
     if (!activeEditor) {
@@ -86,7 +91,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
     if (line.endsWith(":")) // table
       line = line.slice(0, -1);
 
-    const stepRe = /^(\s*)(given|when|then|but|and)(.+)$/i;
+    const stepRe = /^(\s*)(given|when|then|and)(.+)$/i;
     const matches = stepRe.exec(line);
     if (!matches || !matches[3])
       return;
