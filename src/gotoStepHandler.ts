@@ -21,6 +21,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
       ([k,]) => k.indexOf('.+') !== -1)
     );
 
+    // exact match
     for (const [key, value] of exactSteps) {
       const rx = new RegExp(key);
       const match = rx.exec(stepText);

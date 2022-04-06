@@ -47,7 +47,7 @@
 			"request": "launch",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceFolder}/../my-project",
+				"${workspaceFolder}/../mesh-to-cloud",
 			],
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
