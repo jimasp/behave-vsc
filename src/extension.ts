@@ -534,6 +534,11 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     if (uri.scheme !== "file")
       return;
 
+    const path = uri.path.toLowerCase();
+
+    if (!path.endsWith("/") && !path.endsWith(".py") && !path.endsWith(".feature"))
+      return;
+
     try {
       treeBuilder.buildTree(ctrl, true);
     }
