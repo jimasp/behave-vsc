@@ -84,12 +84,12 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
   }
 
-  // if (foundSteps.length !== steps.size) {
-  //   foundSteps.forEach(foundStep => {
-  //     if()
-  //   });
-  // }
-  //   debugger;
+  if (foundSteps.length !== steps.size) {
+    foundSteps.forEach(foundStep => {
+      if ()
+    });
+  }
+  debugger;
 
 
 };

@@ -29,12 +29,13 @@
 ## Project requirements
 - No conflicting behave extension is enabled
 - A single vscode workspace folder (this extension does not support "multi-root workspaces")
+- A compatible project directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. If your features folder has another name, then see `featuresPath` in extension settings.
+- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. (If your features folder is not called "features", then you will need to set the `featuresPath` in extension settings.)
 - `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
 - A behave-conformant directory structure, for example:
 ```  
@@ -70,7 +71,7 @@ paths=behave_tests/features
 ## Extension settings
 
 - This extension has various settings to customise your test run via `settings.json`. 
-- You can also disable/enable justMyCode for debug.
+- You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - For more information, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
 ---  
@@ -108,7 +109,7 @@ consistent and parseable.
 ## Troubleshooting
 This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please rollback to the previous version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
 - Does your project meet the [Project Requirements](#project-requirements) section above?
-- If you have set the `featuresPath` in extension settings, make sure it matches your behave configuration file.
+- If you have set the `featuresPath` in extension settings, make sure it matches the paths setting in your behave configuration file.
 - Have you tried _manually_ running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. 
