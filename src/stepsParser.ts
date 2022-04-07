@@ -1,29 +1,28 @@
 import * as vscode from 'vscode';
 import { getContentFromFilesystem } from './helpers';
 
-const stepRe = /^\s*(?:@step|@given|@when|@then|@and)\(.?(?:"|')(.+)"|'.+\).*$/i;
-const startRe = /^\s*(@step|@given|@when|@then|@and).+/i;
+const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:"|')(.+)("|').*\).*$/i;
+const startRe = /^\s*(@step|@given|@when|@then).+/i;
 
 export class StepDetail {
   constructor(public uri: vscode.Uri, public range: vscode.Range) { }
 }
 
 export type Steps = Map<string, StepDetail>;
-const foundSteps: string[] = [];
 
 export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
     throw new Error(`${uri.path} is not a python file`);
 
-  const content = await getContentFromFilesystem(uri);
-  if (!content)
-    return;
-
   steps.forEach((value, key, map) => {
     if (value.uri.path === uri.path)
       map.delete(key);
   });
+
+  const content = await getContentFromFilesystem(uri);
+  if (!content)
+    return;
 
   let multiLineBuilding = false;
   let multiLine = "";
@@ -42,6 +41,16 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
     if (line.endsWith("\\"))
       line.slice(0, -1);
 
+
+    const foundStep = startRe.exec(line);
+    if (foundStep) {
+      if (foundStep && line.endsWith("(")) {
+        startLine = lineNo;
+        multiLineBuilding = true;
+        continue;
+      }
+    }
+
     if (multiLineBuilding) {
       if (line.startsWith(")")) {
         multiLine = multiLine.replaceAll('""', "");
@@ -53,17 +62,8 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
       }
     }
 
-    const foundStep = startRe.exec(line);
-    if (foundStep) {
-      foundSteps.push(foundStep[1]);
-      if (foundStep && line.endsWith("(")) {
-        startLine = lineNo;
-        multiLineBuilding = true;
-        continue;
-      }
-    }
 
-    if (multiLine && !multiLineBuilding) {
+    if (multiLine) {
       line = "@step(" + multiLine + ")";
       multiLine = "";
     }
@@ -71,8 +71,9 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
       startLine = lineNo;
     }
 
+
     const step = stepRe.exec(line);
-    if (step && step[1]) {
+    if (step) {
       let stepText = step[1].trim();
       stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
       stepText = stepText.replace(/{.*?}/g, '.+');
@@ -83,13 +84,5 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
     }
 
   }
-
-  // if (foundSteps.length !== steps.size) {
-  //   foundSteps.forEach(foundStep => {
-  //     if ()
-  //   });
-  // }
-  // debugger;
-
 
 };
