@@ -76,7 +76,6 @@ class TreeBuilder {
   // user request, i.e. when called by the refreshHandler
   async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
     this._featuresLoaded = false;
-    const start = Date.now();
 
     // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree
     if (this._cancelTokenSource) {
@@ -86,16 +85,25 @@ class TreeBuilder {
     }
 
     this._cancelTokenSource = new vscode.CancellationTokenSource();
+    const start = Date.now();
     await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
-    this._findStepsFiles(this._cancelTokenSource.token);
+    const featTime = Date.now() - start;
+    const stepsStart = Date.now();
+    await this._findStepsFiles(this._cancelTokenSource.token);
+    const stepsTime = Date.now() - stepsStart;
 
     if (!this._cancelTokenSource.token.isCancellationRequested) {
       this._featuresLoaded = true;
 
+      let featCount = 0, childCount = 0;
+      ctrl.items.forEach((item: vscode.TestItem) => { featCount++; childCount += item.children.size; });
+
       console.log(
-        `buildTree of ${ctrl.items.size} items took ${Date.now() - start}ms. ` +
-        `(ignore if there are active breakpoints. slower during contention like vscode startup. ` +
-        `click test refresh button a few times without active breakpoints for a more representative time.)`
+        `buildTree fired. Building ${featCount} features, ${featCount + childCount} test nodes, and ${steps.size} ` +
+        `steps took ${Date.now() - start}ms. Breakdown = features: ${featTime}ms, steps: ${stepsTime}ms.\n` +
+        `(Ignore times if there are active breakpoints. Slower during contention like vscode startup or when` +
+        `another test extension is also refreshing. Click test refresh button a few times without active breakpoints and with other test ` +
+        `extensions disabled for a more representative time.)`
       );
     }
 
