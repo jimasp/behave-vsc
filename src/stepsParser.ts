@@ -15,6 +15,8 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
   if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
     throw new Error(`${uri.path} is not a python file`);
 
+  // TODO - key/uri map to make this faster?
+  // user may have deleted a step, so clear the steps for this uri
   steps.forEach((value, key, map) => {
     if (value.uri.path === uri.path)
       map.delete(key);

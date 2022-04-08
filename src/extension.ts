@@ -535,8 +535,12 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
       return;
 
     const path = uri.path.toLowerCase();
+    const py = path.endsWith(".py");
 
-    if (!path.endsWith("/") && !path.endsWith(".py") && !path.endsWith(".feature"))
+    if (!py && !path.endsWith(".feature"))
+      return;
+
+    if (py && path.indexOf("/steps/") === -1)
       return;
 
     try {
