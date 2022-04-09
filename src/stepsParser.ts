@@ -23,6 +23,8 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
       map.delete(key);
   });
 
+  let fileSteps = 0;
+
   const content = await getContentFromFilesystem(uri);
   if (!content)
     return;
@@ -42,7 +44,7 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
     }
 
     if (line.endsWith("\\"))
-      line.slice(0, -1);
+      line = line.slice(0, -1).trim();
 
 
     const foundStep = startRe.exec(line);
@@ -56,6 +58,7 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
     if (multiLineBuilding) {
       if (line.startsWith(")")) {
+        multiLine = multiLine.replaceAll("''", "");
         multiLine = multiLine.replaceAll('""', "");
         multiLineBuilding = false;
       }
@@ -79,13 +82,18 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
     if (step) {
       let stepText = step[1].trim();
       stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
-      stepText = stepText.replace(/{.*?}/g, '.+');
+      stepText = stepText.replace(/{.*?}/g, '.*');
       const reKey = `^${stepText}$`;
       const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
       const detail = new StepDetail(uri, range);
+      if (steps.get(reKey))
+        console.log("replacing duplicate step re: " + reKey);
       steps.set(reKey, detail); // there can be only one
+      fileSteps++;
     }
 
   }
 
-};
+  console.log(`parsed ${fileSteps} steps from ${uri.path}`);
+
+}

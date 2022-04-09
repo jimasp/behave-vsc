@@ -13,11 +13,11 @@ export function gotoStepHandler(uri: vscode.Uri) {
     const allSteps = getSteps();
 
     const exactSteps = new Map([...allSteps].filter(
-      ([k,]) => k.indexOf('.+') === -1)
+      ([k,]) => k.indexOf('.*') === -1)
     );
 
     const paramsSteps = new Map([...allSteps].filter(
-      ([k,]) => k.indexOf('.+') !== -1)
+      ([k,]) => k.indexOf('.*') !== -1)
     );
 
     // exact match
@@ -47,10 +47,11 @@ export function gotoStepHandler(uri: vscode.Uri) {
       }
     }
 
-    // get longest matched key
+
     if (matches.size === 1)
       return matches.values().next().value;
 
+    // get longest matched key      
     if (matches.size > 1) {
       let longestKey = "";
       let longestKeyLength = 0;

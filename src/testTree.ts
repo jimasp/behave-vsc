@@ -41,15 +41,28 @@ export class TestFile {
       while (ancestors.length > depth) {
         const finished = ancestors.pop();
         if (finished === undefined)
-          throw "finished is undefined"
-        finished.item.children.replace(finished.children);
+          throw new Error("finished is undefined");
+        try {
+          finished.item.children.replace(finished.children);
+        }
+        catch (e: unknown) {
+          let err = (e as Error).toString();
+          if (err.indexOf("duplicate") !== -1) {
+            const n = err.lastIndexOf('/');
+            const scen = err.substring(n);
+            err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
+            config.logger.logError(err);
+          }
+          else
+            throw e;
+        }
       }
     };
 
     const onScenarioLine = (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => {
       const parent = ancestors[ancestors.length - 1];
       if (item.uri === undefined)
-        throw "testitem uri is undefined"
+        throw new Error("testitem uri is undefined");
       const data = new Scenario(vscode.workspace.asRelativePath(item.uri), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       const id = `${item.uri}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);

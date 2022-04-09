@@ -28,6 +28,7 @@ export const parseFeatureFile = (featureName: string, text: string,
 
   const lines = text.split('\n');
   let fastSkipFeature = false;
+  let fileScenarios = 0;
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
     const line = lines[lineNo].trim();
@@ -54,6 +55,7 @@ export const parseFeatureFile = (featureName: string, text: string,
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, featureName, scenarioName, isOutline, fastSkipScenario);
+      fileScenarios++;
       continue;
     }
 
@@ -73,5 +75,7 @@ export const parseFeatureFile = (featureName: string, text: string,
       }
     }
   }
+
+  console.log(`parsed ${fileScenarios} scenarios from feature ${featureName}`);
 };
 
