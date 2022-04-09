@@ -7,7 +7,7 @@ import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
+import { getContentFromFilesystem, isFeatureFile, isStepsFile, logActivate, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
@@ -48,28 +48,58 @@ class TreeBuilder {
   }
 
 
-  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken, reparse?: boolean) => {
+  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken,
+    reparse?: boolean): Promise<number> => {
+
     controller.items.forEach(item => controller.items.delete(item.id));
-    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
+    const pattern = new vscode.RelativePattern(config.userSettings.fullFeaturesPath, "**/*.feature");
     const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
 
     for (const uri of featureFiles) {
-      if (!cancelToken.isCancellationRequested)
+      if (!cancelToken.isCancellationRequested) {
         await updateTestItemFromFeatureFile(controller, uri, reparse);
+      }
     }
+
+    return featureFiles.length;
   }
 
-  private _findStepsFiles = async (cancelToken: vscode.CancellationToken) => {
+  private _findStepsFiles = async (cancelToken: vscode.CancellationToken): Promise<number> => {
     steps.clear();
-    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
+    const pattern = new vscode.RelativePattern(config.userSettings.fullFeaturesPath, "**/steps/**/*.py");
     const stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
 
     for (const uri of stepFiles) {
       if (!cancelToken.isCancellationRequested)
         await updateStepsFromStepsFile(uri);
     }
+
+    return stepFiles.length;
   }
 
+  private _logTimesToConsole = (testItems: vscode.TestItemCollection,
+    featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
+
+    const countTestItems = (items: vscode.TestItemCollection): number => {
+      let count = 0;
+      items.forEach((item: vscode.TestItem) => {
+        count += item.children.size;
+        count += countTestItems(item.children);
+      });
+      return count;
+    }
+
+    const testNodeCount = countTestItems(testItems);
+
+    // show diag times for extension developers
+    console.log(
+      `buildTree fired. Processing ${featureFileCount} feature files, ${stepFileCount} step files, producing ${testNodeCount} test tree nodes, ` +
+      `and ${steps.size} steps took ${stepsTime + featTime}ms. Breakdown = features: ${featTime}ms, steps: ${stepsTime}ms.\n` +
+      `(Ignore times if there are active breakpoints. Slower during contention like vscode startup or when ` +
+      `another test extension is also refreshing. Click test refresh button a few times without active breakpoints and with other test ` +
+      `extensions disabled for a more representative time.)`
+    );
+  }
 
 
   // NOTE - this is a background task that should only be awaited on 
@@ -86,27 +116,16 @@ class TreeBuilder {
 
     this._cancelTokenSource = new vscode.CancellationTokenSource();
     const start = Date.now();
-    await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
+    const featureFileCount = await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
     const featTime = Date.now() - start;
     const stepsStart = Date.now();
-    await this._findStepsFiles(this._cancelTokenSource.token);
+    const stepFileCount = await this._findStepsFiles(this._cancelTokenSource.token);
     const stepsTime = Date.now() - stepsStart;
 
     if (!this._cancelTokenSource.token.isCancellationRequested) {
       this._featuresLoaded = true;
-
-      let featCount = 0, childCount = 0;
-      ctrl.items.forEach((item: vscode.TestItem) => { featCount++; childCount += item.children.size; });
-
-      console.log(
-        `buildTree fired. Building ${featCount} features, ${featCount + childCount} test nodes, and ${steps.size} ` +
-        `steps took ${Date.now() - start}ms. Breakdown = features: ${featTime}ms, steps: ${stepsTime}ms.\n` +
-        `(Ignore times if there are active breakpoints. Slower during contention like vscode startup or when` +
-        `another test extension is also refreshing. Click test refresh button a few times without active breakpoints and with other test ` +
-        `extensions disabled for a more representative time.)`
-      );
+      this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount);
     }
-
   }
 
 }
@@ -124,6 +143,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
     context.subscriptions.push(ctrl);
     context.subscriptions.push(startWatchingWorkspace(ctrl));
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
+
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
@@ -414,11 +434,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
 
-
 async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+  if (!isFeatureFile(uri))
     throw new Error(`${uri.path} is not a feature file`);
 
   const existing = controller.items.get(uri.toString());
@@ -470,7 +489,7 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
+  if (!isStepsFile(uri))
     throw new Error(`${uri.path} is not a python file`);
 
   await parseStepsFile(uri, steps);
@@ -478,7 +497,7 @@ async function updateStepsFromStepsFile(uri: vscode.Uri) {
 
 async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
 
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
+  if (!isFeatureFile(uri))
     throw new Error(`${uri.path} is not a feature file`);
 
   const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
@@ -489,25 +508,19 @@ async function updateTestItemFromFeatureFile(controller: vscode.TestController, 
 
 function startWatchingWorkspace(ctrl: vscode.TestController) {
 
-  // not just *.feature and /steps/*.py files, but also support folder changes inside the features folder
-  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
+  // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
+  const pattern = new vscode.RelativePattern(config.userSettings.fullFeaturesPath, "**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = (uri: vscode.Uri) => {
-
-    if (uri.scheme !== "file")
-      return;
-
-    const path = uri.path.toLowerCase();
-
     try {
 
-      if (path.endsWith(".py") && path.indexOf("/steps/") !== -1) {
+      if (isStepsFile(uri)) {
         updateStepsFromStepsFile(uri);
         return;
       }
 
-      if (path.endsWith(".feature")) {
+      if (isFeatureFile(uri)) {
         updateTestItemFromFeatureFile(ctrl, uri, true);
       }
 
@@ -518,30 +531,34 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
   }
 
 
-  // fires on file/folder creation (inc. git branch switch)
+  // fires on either new file/folder creation OR rename (inc. git actions)
   watcher.onDidCreate(uri => {
-    updater(uri);
+    updater(uri)
   });
 
-  // fires on file/folder rename (inc. git branch switch) AND when file is open in editor on startup 
+  // fires on file save (inc. git actions)
   watcher.onDidChange(uri => {
-    updater(uri);
+    updater(uri)
   });
 
-  // fires on file/folder delete AND rename (inc. git branch switch)
-  watcher.onDidDelete((uri) => {
-
-    if (uri.scheme !== "file")
-      return;
+  // fires on either file/folder delete OR rename (inc. git actions)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  watcher.onDidDelete(uri => {
 
     const path = uri.path.toLowerCase();
-    const py = path.endsWith(".py");
 
-    if (!py && !path.endsWith(".feature"))
+    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child files    
+    // but we cannot determine if this is a file or folder deletion as:
+    //   (a) it has been deleted so we can't stat, and 
+    //   (b) "." is valid in folder names so we can't determine by looking at the path
+    // but we should ignore specific file extensions or paths we know we don't care about
+    if (path.endsWith(".tmp")) // .tmp = vscode file history file
       return;
 
-    if (py && path.indexOf("/steps/") === -1)
-      return;
+    // log for extension developers in case we need to add another file type above
+    if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+      console.warn("detected deletion of unanticipated file type");
+    }
 
     try {
       treeBuilder.buildTree(ctrl, true);
@@ -550,6 +567,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
       config.logger.logError(e);
     }
   });
+
 
 
   treeBuilder.buildTree(ctrl, true);

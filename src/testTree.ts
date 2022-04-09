@@ -2,12 +2,10 @@ import * as vscode from 'vscode';
 import { parseFeatureFile } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
-import { getContentFromFilesystem } from './helpers';
-
+import { getContentFromFilesystem, isFeatureFile } from './helpers';
+import config from "./configuration";
 
 let generationCounter = 0;
-
-
 type BehaveTestData = TestFile | Feature | Scenario;
 export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 
@@ -19,12 +17,17 @@ export class TestFile {
   public async updateFromDisk(controller: vscode.TestController, item: vscode.TestItem) {
     try {
       if (!item.uri)
-        throw "missing test item uri"
+        throw new Error("missing test item uri");
+      if (!isFeatureFile(item.uri))
+        throw new Error(`${item.uri.path} is not a feature file`);
+
       const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
       this.updateFromContents(controller, content, item);
-    } catch (e: unknown) {
+    }
+    catch (e: unknown) {
       item.error = (e as Error).stack;
+      config.logger.logError(e);
     }
   }
 

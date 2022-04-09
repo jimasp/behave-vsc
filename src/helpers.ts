@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import config from "./configuration";
 
-
 export function logActivate(context: vscode.ExtensionContext) {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
     version += " pre-release";
   }
-  config.logger.logInfo(`${config.extensionFriendlyName} activated, (version ${version}).`);
+  config.logger.logInfo(`${config.extensionFriendlyName} v${version}`);
   logUserSettings();
 }
 
@@ -31,12 +30,14 @@ export function logRunDiagOutput(debugRun: boolean) {
 }
 
 
-export function logUserSettings(consoleOnly = false) {
-  const configText = `\nSettings:\n${JSON.stringify(config.userSettings, null, 2)}\n`;
-  if (!consoleOnly)
-    config.logger.logInfo(configText);
-  else
-    console.log(configText);
+export function logUserSettings() {
+
+  const keys = Object.keys(config.userSettings).sort();
+  keys.splice(keys.indexOf("fullFeaturesPath"), 1);
+  const json = JSON.stringify(config.userSettings, keys, 2);
+  const output = `\nsettings:\n${json}\n`;
+  config.logger.logInfo(output);
+  config.logger.logInfo(`fullFeaturesPath: ${config.userSettings.fullFeaturesPath}`);
 }
 
 
@@ -44,3 +45,13 @@ export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string>
   const doc = await vscode.workspace.openTextDocument(uri);
   return doc.getText();
 };
+
+
+export const isStepsFile = (uri: vscode.Uri) => {
+  const path = uri.path.toLowerCase();
+  return path.indexOf("/steps/") !== -1 && path.endsWith(".py");
+}
+
+export const isFeatureFile = (uri: vscode.Uri) => {
+  return uri.path.toLowerCase().endsWith(".feature");
+}

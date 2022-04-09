@@ -1,6 +1,8 @@
 # Behave VSC 
 
 ## Pre-release v0.2.0
+
+- NOTE to users of previous versions - if the `features` folder is not in your project root, you must now specify your features path in extension settings. 
 - A simple test runner (and debugger) for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API  
 - See [Troubleshooting](#troubleshooting) below if you have any problems
@@ -13,6 +15,7 @@
 - Ubuntu 21.10 / Windows 10
 
 ### Release notes
+- If the `features` folder is not in your project root, you must now specify your features path in extension settings. 
 - See [here](https://github.com/jimasp/behave-vsc/releases)
 
 ---
@@ -35,7 +38,8 @@
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. (If your features folder is not called "features", then you will need to set the `featuresPath` in extension settings.)
+- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. (If your features folder is not in the root of your project and/or is not called "features", then you will need to set the `featuresPath` in extension settings.)
+
 - `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
 - A behave-conformant directory structure, for example:
 ```  
@@ -48,7 +52,7 @@
   .       |      +-- *.feature  
   .       +-- environment.py
 ```
- - If you don't want your `features` folder in the project root, you can add a `behave.ini` or `.behaverc` file to your project root folder and add a `paths` setting:
+ - If you don't want your `features` folder in the project root, you can add a `behave.ini` or `.behaverc` file to your project root folder and add a `paths` setting and update the `featuresPath` setting in extension settings.
 ```
 [behave]
 paths=behave_tests/features 

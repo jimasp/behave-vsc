@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isStepsFile } from './helpers';
 import { getContentFromFilesystem } from './helpers';
 
 const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:"|')(.+)("|').*\).*$/i;
@@ -12,8 +13,8 @@ export type Steps = Map<string, StepDetail>;
 
 export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
-    throw new Error(`${uri.path} is not a python file`);
+  if (!isStepsFile(uri))
+    throw new Error(`${uri.path} is not a steps file`);
 
   // TODO - key/uri map to make this faster?
   // user may have deleted a step, so clear the steps for this uri

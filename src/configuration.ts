@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { logUserSettings } from './helpers';
 
 const EXTENSION_NAME = "behave-vsc";
@@ -13,7 +14,7 @@ const getWorkspaceFolder = () => {
   const wsf = vscode.workspace.workspaceFolders;
   if (wsf && wsf?.length > 0)
     return wsf[0];
-  throw "could not resolve workspace folder";
+  throw new Error("Could not resolve workspace folder");
 }
 
 export interface ExtensionConfiguration {
@@ -131,10 +132,11 @@ class Logger {
 class UserSettings {
   public envVarList: { [name: string]: string } = {};
   public fastSkipList: string[] = [];
+  public featuresPath = "features";
+  public fullFeaturesPath: string; // not set by user, derived from featuresPath
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
-  public featuresPath = "features";
   constructor(wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
@@ -149,17 +151,22 @@ class UserSettings {
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
 
     if (featuresPathCfg) {
-      const path = featuresPathCfg.trim();
-      const uri = vscode.Uri.joinPath(getWorkspaceFolder().uri, path);
-      const wsf = vscode.workspace.getWorkspaceFolder(uri);
-      if (wsf) {
-        this.featuresPath = vscode.workspace.asRelativePath(path);
+
+      const path = featuresPathCfg.trim().replace(/^\/|\/$/g, "");
+      const fullPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, path).path;
+
+      // note - we can't use vscode.workspace.fs here because that's an async func and we are in a constructor
+      if (fs.existsSync(fullPath)) {
+        this.featuresPath = path;
       }
       else {
         logger.logError(`Invalid featuresPath '${featuresPathCfg}' setting ignored.\nMust be a relative path within the workspace.\n` +
           "Defaulting to 'features' path instead.");
       }
     }
+
+    this.fullFeaturesPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, this.featuresPath).path;
+
 
     if (fastSkipListCfg) {
       if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2) {
