@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import config from "./configuration";
 import { getSteps } from './extension';
-import { StepDetail } from "./stepsParser";
+import { parseRepWildcard, StepDetail } from "./stepsParser";
 
 
 export function gotoStepHandler(uri: vscode.Uri) {
@@ -13,16 +13,16 @@ export function gotoStepHandler(uri: vscode.Uri) {
     const allSteps = getSteps();
 
     const exactSteps = new Map([...allSteps].filter(
-      ([k,]) => k.indexOf('.*') === -1)
+      ([k,]) => k.indexOf(parseRepWildcard) === -1)
     );
 
     const paramsSteps = new Map([...allSteps].filter(
-      ([k,]) => k.indexOf('.*') !== -1)
+      ([k,]) => k.indexOf(parseRepWildcard) !== -1)
     );
 
     // exact match
     for (const [key, value] of exactSteps) {
-      const rx = new RegExp(key);
+      const rx = new RegExp(key, "i");
       const match = rx.exec(stepText);
       if (match && match.length !== 0) {
         stepMatch = value;
@@ -40,7 +40,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
     const matches = new Map<string, StepDetail>();
 
     for (const [key, value] of paramsSteps) {
-      const rx = new RegExp(key);
+      const rx = new RegExp(key, "i");
       const match = rx.exec(stepText);
       if (match && match.length !== 0) {
         matches.set(key, value);
@@ -70,7 +70,7 @@ export function gotoStepHandler(uri: vscode.Uri) {
 
     // fallback match - reverse the lookup
     for (const [key, value] of allSteps) {
-      const rx = new RegExp("^\\^" + stepText + ".*");
+      const rx = new RegExp("^\\^" + stepText + ".*", "i");
       const match = rx.exec(key);
       if (match && match.length !== 0) {
         stepMatch = value;

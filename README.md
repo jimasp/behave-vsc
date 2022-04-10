@@ -111,12 +111,13 @@ consistent and parseable.
 
 ---
 ## Troubleshooting
-This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please rollback to the previous version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
+This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please check the [release notes](#release-notes). If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
 - Does your project meet the [Project Requirements](#project-requirements) section above?
 - If you have set the `featuresPath` in extension settings, make sure it matches the paths setting in your behave configuration file.
 - Have you tried _manually_ running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
-- Do you have the correct extension [settings](#extension-settings) for your project? Do you have runParallel turned on? Try turning it off. 
+- Do you have the correct extension [settings](#extension-settings) for your project? 
+- Do you have runParallel turned on? Try turning it off. 
 (Also if you have removed extension settings from your workspace `.vscode/settings.json`, then do you still have any of the extension settings in your user settings json? 
 See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations) for user settings file locations.)
 - Try temporarily disabling other extensions. 

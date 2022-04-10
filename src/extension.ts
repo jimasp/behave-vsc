@@ -26,6 +26,7 @@ export type ActivateResult = {
 
 class TreeBuilder {
 
+  private calls = 0;
   private _featuresLoaded = false;
   private _cancelTokenSource: vscode.CancellationTokenSource | null = null;
 
@@ -48,37 +49,47 @@ class TreeBuilder {
   }
 
 
-  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken,
-    reparse?: boolean): Promise<number> => {
+  private _parseFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken,
+    reparse: boolean, caller: string): Promise<number> => {
 
+    let processed = 0;
     controller.items.forEach(item => controller.items.delete(item.id));
     const pattern = new vscode.RelativePattern(config.userSettings.fullFeaturesPath, "**/*.feature");
     const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
 
     for (const uri of featureFiles) {
-      if (!cancelToken.isCancellationRequested) {
-        await updateTestItemFromFeatureFile(controller, uri, reparse);
+      await updateTestItemFromFeatureFile(controller, uri, reparse, caller);
+      processed++;
+      if (cancelToken.isCancellationRequested) {
+        console.log(`${caller} cancelled`);
+        break;
       }
     }
 
-    return featureFiles.length;
+    return processed;
   }
 
-  private _findStepsFiles = async (cancelToken: vscode.CancellationToken): Promise<number> => {
+  private _parseStepsFiles = async (cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
+
+    let processed = 0;
     steps.clear();
     const pattern = new vscode.RelativePattern(config.userSettings.fullFeaturesPath, "**/steps/**/*.py");
     const stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
 
     for (const uri of stepFiles) {
-      if (!cancelToken.isCancellationRequested)
-        await updateStepsFromStepsFile(uri);
+      await updateStepsFromStepsFile(uri, caller);
+      processed++;
+      if (cancelToken.isCancellationRequested) {
+        console.log(`${caller} cancelled`);
+        break;
+      }
     }
 
-    return stepFiles.length;
+    return processed;
   }
 
   private _logTimesToConsole = (testItems: vscode.TestItemCollection,
-    featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
+    featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number, reparse: boolean) => {
 
     const countTestItems = (items: vscode.TestItemCollection): number => {
       let count = 0;
@@ -93,8 +104,9 @@ class TreeBuilder {
 
     // show diag times for extension developers
     console.log(
-      `buildTree fired. Processing ${featureFileCount} feature files, ${stepFileCount} step files, producing ${testNodeCount} test tree nodes, ` +
-      `and ${steps.size} steps took ${stepsTime + featTime}ms. Breakdown = features: ${featTime}ms, steps: ${stepsTime}ms.\n` +
+      `buildTree fired with reparse features ${reparse}. Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
+      `producing ${testNodeCount} test tree nodes, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
+      `Breakdown: features ${featTime}ms, steps ${stepsTime}ms.\n` +
       `(Ignore times if there are active breakpoints. Slower during contention like vscode startup or when ` +
       `another test extension is also refreshing. Click test refresh button a few times without active breakpoints and with other test ` +
       `extensions disabled for a more representative time.)`
@@ -102,30 +114,38 @@ class TreeBuilder {
   }
 
 
-  // NOTE - this is a background task that should only be awaited on 
-  // user request, i.e. when called by the refreshHandler
+  // NOTE - this is a background task 
+  // it should only be awaited on user request
+  // i.e. when called by the refreshHandler
   async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
     this._featuresLoaded = false;
+    this.calls++;
+    const caller = `buildTree ${this.calls}`;
 
-    // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree
+    console.log(`${caller}: started`);
+
+    // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree call
     if (this._cancelTokenSource) {
       this._cancelTokenSource.cancel();
-      await new Promise(t => setTimeout(t, 100));
+      await new Promise(t => setTimeout(t, 100)); // let cancellation complete
       this._cancelTokenSource.dispose();
     }
 
     this._cancelTokenSource = new vscode.CancellationTokenSource();
     const start = Date.now();
-    const featureFileCount = await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
+    const featureFileCount = await this._parseFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures, caller);
     const featTime = Date.now() - start;
     const stepsStart = Date.now();
-    const stepFileCount = await this._findStepsFiles(this._cancelTokenSource.token);
+    const stepFileCount = await this._parseStepsFiles(this._cancelTokenSource.token, caller);
     const stepsTime = Date.now() - stepsStart;
 
     if (!this._cancelTokenSource.token.isCancellationRequested) {
       this._featuresLoaded = true;
-      this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount);
+      console.log(`${caller}: complete`);
+      this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount, reparseFeatures);
+      this._cancelTokenSource.dispose();
     }
+
   }
 
 }
@@ -184,7 +204,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
             }
             else {
               if (data instanceof TestFile && !data.didResolve) {
-                await data.updateFromDisk(ctrl, test);
+                await data.updateFromDisk(ctrl, test, "queueSelectedItems");
               }
 
               await queueSelectedTestItems(gatherTestItems(test.children));
@@ -209,6 +229,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
         const runTestQueue = async (request: vscode.TestRunRequest) => {
+
+          console.log("\n=== starting test run ===\n");
 
           if (queue.length === 0) {
             const err = "empty queue - nothing to do";
@@ -257,6 +279,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
           }
 
           await Promise.all(asyncPromises);
+          console.log("\n=== test run complete ===\n");
         };
 
 
@@ -336,7 +359,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
         const data = testData.get(item);
         if (data instanceof TestFile) {
-          await data.updateFromDisk(ctrl, item);
+          await data.updateFromDisk(ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
@@ -400,9 +423,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
     const updateNodeForDocument = async (e: vscode.TextDocument) => {
-      const item = await getOrCreateTestItemFromFeatureFile(ctrl, e.uri);
+      const item = await getOrCreateTestItemFromFeatureFile(ctrl, e.uri, "updateNodeForDocument");
       if (item)
-        item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
+        item.testFile.updateFromContents(e.uri.path, ctrl, e.getText(), item.testItem, "updateNodeForDocument");
     }
 
     // for any open .feature documents on startup
@@ -434,7 +457,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
 
-async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
+async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, caller: string)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
   if (!isFeatureFile(uri))
@@ -442,6 +465,7 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
 
   const existing = controller.items.get(uri.toString());
   if (existing) {
+    console.log(`${caller}: found existing test item for ${uri.path}`);
     return { testItem: existing, testFile: testData.get(existing) as TestFile || new TestFile() };
   }
 
@@ -476,6 +500,7 @@ async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestControl
 
   testItem.canResolveChildren = true;
 
+  console.log(`${caller}: created test item for ${uri.path}`);
   return { testItem: testItem, testFile: testFile };
 }
 
@@ -487,22 +512,31 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
 
 
 
-async function updateStepsFromStepsFile(uri: vscode.Uri) {
+async function updateStepsFromStepsFile(uri: vscode.Uri, caller: string) {
 
   if (!isStepsFile(uri))
     throw new Error(`${uri.path} is not a python file`);
 
-  await parseStepsFile(uri, steps);
+  await parseStepsFile(uri, steps, caller);
 }
 
-async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
+async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, parse: boolean, caller: string) {
 
   if (!isFeatureFile(uri))
-    throw new Error(`${uri.path} is not a feature file`);
+    throw new Error(`${caller}: ${uri.path} is not a feature file`);
 
-  const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
-  if (item && reparse) {
-    await item.testFile.updateFromDisk(controller, item.testItem);
+  const item = await getOrCreateTestItemFromFeatureFile(controller, uri, caller);
+  if (!parse) {
+    console.log(`${caller}: feature parse not set, skipping parse of ${uri.path}`);
+  }
+  else {
+    if (item) {
+      console.log(`${caller}: parsing ${uri.path}`);
+      await item.testFile.updateFromDisk(controller, item.testItem, caller);
+    }
+    else {
+      console.log(`${caller}: no scenarios found in ${uri.path}`);
+    }
   }
 }
 
@@ -516,12 +550,12 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     try {
 
       if (isStepsFile(uri)) {
-        updateStepsFromStepsFile(uri);
+        updateStepsFromStepsFile(uri, "updater");
         return;
       }
 
       if (isFeatureFile(uri)) {
-        updateTestItemFromFeatureFile(ctrl, uri, true);
+        updateTestItemFromFeatureFile(ctrl, uri, true, "updater");
       }
 
     }

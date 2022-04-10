@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { parseFeatureFile } from './featureParser';
+import { parseFeatureContent } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
 import { getContentFromFilesystem, isFeatureFile } from './helpers';
@@ -14,7 +14,7 @@ export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 export class TestFile {
   public didResolve = false;
 
-  public async updateFromDisk(controller: vscode.TestController, item: vscode.TestItem) {
+  public async updateFromDisk(controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     try {
       if (!item.uri)
         throw new Error("missing test item uri");
@@ -23,7 +23,7 @@ export class TestFile {
 
       const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
-      this.updateFromContents(controller, content, item);
+      this.updateFromContents(item.uri.path, controller, content, item, caller);
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
@@ -32,7 +32,7 @@ export class TestFile {
   }
 
 
-  public updateFromContents(controller: vscode.TestController, content: string, item: vscode.TestItem) {
+  public updateFromContents(featureFilePath: string, controller: vscode.TestController, content: string, item: vscode.TestItem, caller: string) {
     const thisGeneration = generationCounter++;
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
     this.didResolve = true;
@@ -77,7 +77,7 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureFile(item.label, content, onScenarioLine, onFeatureLine);
+    parseFeatureContent(featureFilePath, item.label, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

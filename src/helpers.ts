@@ -37,7 +37,7 @@ export function logUserSettings() {
   const json = JSON.stringify(config.userSettings, keys, 2);
   const output = `\nsettings:\n${json}\n`;
   config.logger.logInfo(output);
-  config.logger.logInfo(`fullFeaturesPath: ${config.userSettings.fullFeaturesPath}`);
+  config.logger.logInfo(`fullFeaturesPath: ${config.userSettings.fullFeaturesPath}\n`);
 }
 
 

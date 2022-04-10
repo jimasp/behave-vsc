@@ -99,7 +99,6 @@ class Logger {
   }
 
   clear = () => {
-    console.clear();
     this.outputChannel.clear();
   }
 

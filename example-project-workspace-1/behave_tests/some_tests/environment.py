@@ -5,11 +5,11 @@
 import parse
 from behave import model, register_type
 
-@parse.with_pattern(r"(| present)")
-def parse_present(text:str):
-    return text.strip() == "present"
+@parse.with_pattern(r"(| flag here)")
+def parse_flag(text:str):
+    return text.strip().lower() == "flag here"
 
-register_type(present=parse_present)
+register_type(flag_here=parse_flag)
 
 
 def before_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument

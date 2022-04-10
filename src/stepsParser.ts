@@ -4,6 +4,7 @@ import { getContentFromFilesystem } from './helpers';
 
 const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:"|')(.+)("|').*\).*$/i;
 const startRe = /^\s*(@step|@given|@when|@then).+/i;
+export const parseRepWildcard = ".*";
 
 export class StepDetail {
   constructor(public uri: vscode.Uri, public range: vscode.Range) { }
@@ -11,12 +12,11 @@ export class StepDetail {
 
 export type Steps = Map<string, StepDetail>;
 
-export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
+export const parseStepsFile = async (uri: vscode.Uri, steps: Steps, caller: string) => {
 
   if (!isStepsFile(uri))
     throw new Error(`${uri.path} is not a steps file`);
 
-  // TODO - key/uri map to make this faster?
   // user may have deleted a step, so clear the steps for this uri
   steps.forEach((value, key, map) => {
     if (value.uri.path === uri.path)
@@ -82,7 +82,7 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
     if (step) {
       let stepText = step[1].trim();
       stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
-      stepText = stepText.replace(/{.*?}/g, '.*');
+      stepText = stepText.replace(/{.*?}/g, parseRepWildcard);
       const reKey = `^${stepText}$`;
       const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
       const detail = new StepDetail(uri, range);
@@ -94,6 +94,6 @@ export const parseStepsFile = async (uri: vscode.Uri, steps: Steps) => {
 
   }
 
-  console.log(`parsed ${fileSteps} steps from ${uri.path}`);
+  console.log(`${caller}: parsed ${fileSteps} steps from ${uri.path}`);
 
 }

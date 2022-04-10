@@ -1,10 +1,13 @@
 Feature: Go to Step def tests
 
 Scenario: simple step
-    Given a simple step
+    Given a SIMPLE step
 
 Scenario: simple step with more text
     Given a simple step with more text
+
+Scenario: a cased step
+    Given a CASed StEP
 
 Scenario: param step
     Given a param step
@@ -22,13 +25,13 @@ Scenario: step with param
     Given a step with 1
 
 Scenario: step with quoted param
-    Given a step with "2"    
+    Given a step with ""    
 
-Scenario: step with or without custom flag
-    Given a step with or without custom flag should be False
+Scenario: step without custom flag type
+    Given a step with or without custom type should be False
 
-Scenario: step with or without custom flag present
-    Given a step with or without custom flag present should be True
+Scenario: step with custom flag type present
+    Given a step with or without custom type FLAG HERE should be True
 
 Scenario: yet another step
     Given yet another step

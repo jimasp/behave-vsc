@@ -22,7 +22,7 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureFile = (featureName: string, text: string,
+export const parseFeatureContent = (featureFilePath: string, featureName: string, text: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureName: (range: vscode.Range) => void) => {
 
@@ -76,6 +76,6 @@ export const parseFeatureFile = (featureName: string, text: string,
     }
   }
 
-  console.log(`parsed ${fileScenarios} scenarios from feature ${featureName}`);
+  console.log(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`);
 };
 
