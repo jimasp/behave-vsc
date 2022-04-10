@@ -165,6 +165,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     context.subscriptions.push(ctrl);
     context.subscriptions.push(startWatchingWorkspace(ctrl));
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
+    context.subscriptions.push(vscode.commands.registerCommand("workbench.action.debug.stop", () => stopDebugRun = true));
 
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
@@ -388,38 +389,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         config.logger.logError(e);
-      }
-    }));
-
-
-    // onDidTerminateDebugSession doesn't provide reason for the stop,
-    // so we need to check the reason from the debug adapter protocol
-    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
-      createDebugAdapterTracker() {
-        let threadExit = false;
-
-        return {
-          onDidSendMessage: (m) => {
-
-            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-            // console.log(m);
-
-            if (m.body?.reason === "exited" && m.body?.threadId) {
-              // thread exit
-              threadExit = true;
-              return;
-            }
-
-            if (m.event === "exited") {
-              if (!threadExit) {
-                // exit, but not a thread exit, so we need to set flag to 
-                // stop the run, (most likely debug was stopped by user)
-                stopDebugRun = true;
-              }
-            }
-
-          },
-        };
       }
     }));
 
