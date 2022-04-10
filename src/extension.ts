@@ -16,11 +16,13 @@ const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
-export type ActivateResult = {
+
+export type IntegrationTestInterface = {
   runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
   config: ExtensionConfiguration,
   ctrl: vscode.TestController,
-  treeBuilder: TreeBuilder
+  treeBuilder: TreeBuilder,
+  getSteps: () => Steps
 };
 
 
@@ -152,7 +154,7 @@ class TreeBuilder {
 
 const treeBuilder = new TreeBuilder();
 
-export async function activate(context: vscode.ExtensionContext): Promise<ActivateResult | undefined> {
+export async function activate(context: vscode.ExtensionContext): Promise<IntegrationTestInterface | undefined> {
 
   try {
 
@@ -439,7 +441,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
       runHandler: runHandler,
       config: config,
       ctrl: ctrl,
-      treeBuilder: treeBuilder
+      treeBuilder: treeBuilder,
+      getSteps: getSteps
     };
 
   }

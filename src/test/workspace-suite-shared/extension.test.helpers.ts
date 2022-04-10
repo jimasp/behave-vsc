@@ -2,9 +2,11 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { ExtensionConfiguration } from "../../configuration";
-import { ActivateResult } from '../../extension';
+import { IntegrationTestInterface } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
+import { getStepMatch } from '../../gotoStepHandler';
+import { Steps } from '../../stepsParser';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -59,20 +61,20 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 
-let actRet: ActivateResult;
+let actRet: IntegrationTestInterface;
 
-export const activateExtension = async (): Promise<ActivateResult> => {
+const activateExtension = async (): Promise<IntegrationTestInterface> => {
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	if (actRet !== undefined)
 		return actRet;
 
 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	actRet = await ext?.activate() as ActivateResult;
+	actRet = await ext?.activate() as IntegrationTestInterface;
 	return actRet;
 }
 
 
-export function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
 	assert.deepStrictEqual(config.userSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(config.userSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
 	assert.strictEqual(config.userSettings.featuresPath, testConfig.getExpected("featuresPath"));
@@ -80,6 +82,66 @@ export function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, co
 	assert.strictEqual(config.userSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
 	assert.strictEqual(config.userSettings.runParallel, testConfig.getExpected("runParallel"));
 }
+
+
+function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
+	const lines = content.trim().split('\n');
+	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+
+		const line = lines[lineNo].trim();
+
+		if (line === '' || line.startsWith("#")) {
+			continue;
+		}
+
+		const lcase = line.toLowerCase();
+		if (lcase.startsWith("given ") || lcase.startsWith("when ") || lcase.startsWith("then ")) {
+			featureSteps.push(line);
+		}
+	}
+
+	return featureSteps;
+}
+
+
+async function getAllStepsFromFeatureFiles(path: string) {
+
+	let stepLines: string[] = [];
+	const pattern = new vscode.RelativePattern(path, "**/*.feature");
+	const featureFiles = await vscode.workspace.findFiles(pattern);
+
+	for (const file of featureFiles) {
+		const doc = await vscode.workspace.openTextDocument(file);
+		const content = doc.getText();
+		addStepsFromFeatureFile(content, stepLines);
+	}
+
+	stepLines = [...new Set(stepLines)]; // remove duplicates
+
+	return stepLines;
+}
+
+
+async function assertAllStepsCanBeMatched(parsedSteps: Steps, path: string) {
+
+	const featureSteps = await getAllStepsFromFeatureFiles(path);
+
+	for (const idx in featureSteps) {
+		const line = featureSteps[idx];
+		try {
+			if (line.indexOf("missing step") === -1) {
+				const match = getStepMatch(parsedSteps, line);
+				assert(match);
+			}
+		}
+		catch (e: unknown) {
+			if (e instanceof assert.AssertionError)
+				throw new Error(`getStepMatch() could not find match for step line: "${line}"`);
+			throw e;
+		}
+	}
+}
+
 
 export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
 	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
@@ -171,6 +233,9 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
+
+
+	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.userSettings.fullFeaturesPath);
 }
 
 
