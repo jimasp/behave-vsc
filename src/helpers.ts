@@ -35,9 +35,15 @@ export function logUserSettings() {
   const keys = Object.keys(config.userSettings).sort();
   keys.splice(keys.indexOf("fullFeaturesPath"), 1);
   const json = JSON.stringify(config.userSettings, keys, 2);
-  const output = `\nsettings:\n${json}\n`;
-  config.logger.logInfo(output);
+
+  config.logger.logInfo(`\nsettings:\n${json}`);
   config.logger.logInfo(`fullFeaturesPath: ${config.userSettings.fullFeaturesPath}\n`);
+
+  if (config.userSettings.runParallel && config.userSettings.runAllAsOne)
+    config.logger.logWarn("Note: runParallel is overridden by runAllAsOne when you run all tests at once.");
+
+  if (config.userSettings.fastSkipList.length > 0 && config.userSettings.runAllAsOne)
+    config.logger.logWarn("Note: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
 }
 
 

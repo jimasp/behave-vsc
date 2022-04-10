@@ -109,6 +109,14 @@ class Logger {
       this.run?.appendOutput(text);
   }
 
+  logWarn = (text: string) => {
+    console.log(text);
+    this.outputChannel.appendLine(text);
+    this.outputChannel.show(true);
+    if (this.run)
+      this.run?.appendOutput(text);
+  }
+
   logError = (msgOrError: unknown, prependMsg = "") => {
 
     let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
