@@ -24,9 +24,6 @@ Scenario: two param step no2
 Scenario: step with param
     Given a step with 1
 
-Scenario: step with quoted param
-    Given a step with ""    
-
 Scenario: step without custom flag type
     Given a step with or without custom type should be False
 

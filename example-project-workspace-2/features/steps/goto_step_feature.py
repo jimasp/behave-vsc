@@ -47,10 +47,6 @@ def step_with_typed_param(context, num:int):
 def step_with_typed_param2(context, num:int):
     assert num == 2
     
-@given('a step with ""')
-def step_with_typed_param2(context, a):
-    assert a == ""
-
 @given('a step with or without custom type{environment_py_custom_flag:flag_here} should be {expected_result}')
 def step_with_named_param(context, environment_py_custom_flag:bool, expected_result:bool):
     assert environment_py_custom_flag == (expected_result == "True")
