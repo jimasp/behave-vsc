@@ -161,7 +161,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     logActivate(context);
 
     const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
-    // func in push() will execute immediately, as well as registering it for disposal on extension deactivate
+    // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
+    // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter)
+    // push disposables (registerCommand is a disposable so that your command will not be active when the extension is deactivated)
     context.subscriptions.push(ctrl);
     context.subscriptions.push(startWatchingWorkspace(ctrl));
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
