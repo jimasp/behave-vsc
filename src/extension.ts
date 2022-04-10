@@ -173,9 +173,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
       // the test tree is built as a background process which is called from a few places
-      // (and it will be slow on vscode startup due to contention), so we 
-      // don't want to await it except on user request (refresh click),
-      // but at the same time, we also don't to allow test runs when the tests items are out of date vs the file system
+      // (and it will be slow on vscode startup due to contention), so we don't want to await it except on user request (refresh click),
+      // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
       const ready = await treeBuilder.readyForRun(1000);
       if (!ready) {
         const msg = "cannot run tests while test items are still updating, please try again";
