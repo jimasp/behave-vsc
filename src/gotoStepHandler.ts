@@ -75,17 +75,6 @@ export function getStepMatch(allSteps: Steps, stepLine: string): StepDetail | un
     return stepMatch!;
   }
 
-
-  // fallback match - reverse the lookup
-  for (const [key, value] of allSteps) {
-    const rx = new RegExp("^\\^" + stepText + ".*", "i");
-    const match = rx.exec(key);
-    if (match && match.length !== 0) {
-      stepMatch = value;
-      break;
-    }
-  }
-
   return stepMatch;
 }
 
@@ -98,7 +87,14 @@ export async function gotoStepHandler(uri: vscode.Uri) {
       return;
     }
 
-    const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text.trim();
+    let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
+
+    if (!line)
+      return;
+
+    line = line.trim();
+    if (line == "" || line.startsWith("#"))
+      return;
 
     const allSteps = getSteps();
     const stepMatch = getStepMatch(allSteps, line);
