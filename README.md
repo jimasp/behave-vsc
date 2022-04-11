@@ -106,8 +106,7 @@ paths=behave_tests/features
 
 The python path is obtained via the `ms-python.python` extension (exported settings) and is read before each run, so it is kept in sync with your project.
 
-The _actual_ behave command that is run has extra parameters for json format, etc. so it knows what output to expect and to ensure it is 
-consistent and parseable.
+The _actual_ behave command that is run has extra parameters for json format, etc. so it knows what output to expect and to ensure it is consistent and parseable.
 
 ---
 ## Troubleshooting
@@ -120,9 +119,10 @@ This a pre-release undergoing active development. If you used a previous version
 - Do you have runParallel turned on? Try turning it off. 
 (Also if you have removed extension settings from your workspace `.vscode/settings.json`, then do you still have any of the extension settings in your user settings json? 
 See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations) for user settings file locations.)
+- Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Try temporarily disabling other extensions. 
 - Check if the problem is in [Known Issues](#known-issues-and-limitations)
- - Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in visual studio code, or in [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
+ - Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in vscode, or in [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues). github [issues](https://github.com/jimasp/behave-vsc/issues). 
 - The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (Does the same issue occur with the example project workspaces, or just in your own project?) 
 ### Q&A
