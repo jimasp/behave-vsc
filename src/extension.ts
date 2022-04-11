@@ -154,6 +154,7 @@ class TreeBuilder {
 
 const treeBuilder = new TreeBuilder();
 
+
 export async function activate(context: vscode.ExtensionContext): Promise<IntegrationTestInterface | undefined> {
 
   try {
@@ -163,11 +164,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter)
-    // push disposables (registerCommand is a disposable so that your command will not be active when the extension is deactivated)
+    // push disposables (registerCommand is a disposable so that your command will no longer be active when the extension is deactivated)
     context.subscriptions.push(ctrl);
     context.subscriptions.push(startWatchingWorkspace(ctrl));
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
-    context.subscriptions.push(vscode.commands.registerCommand("workbench.action.debug.stop", () => stopDebugRun = true));
 
 
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
@@ -379,6 +379,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         config.logger.logError(e);
       }
     };
+
+
+    // onDidTerminateDebugSession doesn't provide reason for the stop,
+    // so we need to check the reason from the debug adapter protocol
+    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
+      createDebugAdapterTracker() {
+        let threadExit = false;
+
+        return {
+          onDidSendMessage: (m) => {
+            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
+            // console.log(m);
+
+            if (m.body?.reason === "exited" && m.body?.threadId) {
+              // thread exit
+              threadExit = true;
+              return;
+            }
+
+            if (m.event === "exited") {
+              if (!threadExit) {
+                // exit, but not a thread exit, so we need to set flag to 
+                // stop the run, (most likely debug was stopped by user)
+                stopDebugRun = true;
+              }
+            }
+          },
+        };
+      }
+    }));
 
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
