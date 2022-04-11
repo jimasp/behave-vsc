@@ -79,7 +79,7 @@ export function getStepMatch(allSteps: Steps, stepLine: string): StepDetail | un
 }
 
 
-export async function gotoStepHandler(uri: vscode.Uri) {
+export async function gotoStepHandler() {
 
   try {
     const activeEditor = vscode.window.activeTextEditor;
