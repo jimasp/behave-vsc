@@ -160,10 +160,10 @@ class UserSettings {
     if (featuresPathCfg) {
 
       const path = featuresPathCfg.trim().replace(/^\/|\/$/g, "");
-      const fullPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, path).path;
+      const fullFsPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, path).fsPath;
 
       // note - we can't use vscode.workspace.fs here because that's an async func and we are in a constructor
-      if (fs.existsSync(fullPath)) {
+      if (fs.existsSync(fullFsPath)) {
         this.featuresPath = path;
       }
       else {
