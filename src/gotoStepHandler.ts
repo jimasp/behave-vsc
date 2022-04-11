@@ -104,17 +104,17 @@ export async function gotoStepHandler() {
       return;
     }
 
-    vscode.workspace.openTextDocument(stepMatch.uri).then(doc => {
-      vscode.window.showTextDocument(doc, { preview: false }).then(editor => {
-        if (!editor) {
-          config.logger.logError("Could not open editor for file:" + stepMatch.uri.fsPath);
-          return;
-        }
-        editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
-        editor.revealRange(stepMatch.range);
-      });
-    });
-
+    // note openTextDocument(stepMatch.Uri) does not behave the same as
+    // openTextDocument(vscode.Uri.file(stepMatch.uri.path))
+    // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(stepMatch.uri.path));
+    const editor = await vscode.window.showTextDocument(doc, { preview: false });
+    if (!editor) {
+      config.logger.logError("Could not open editor for file:" + stepMatch.uri.fsPath);
+      return;
+    }
+    editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
+    editor.revealRange(stepMatch.range);
   }
   catch (e: unknown) {
     config.logger.logError(e);
