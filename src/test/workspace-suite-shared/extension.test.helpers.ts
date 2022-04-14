@@ -193,10 +193,9 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	actRet.treeBuilder.buildTree(actRet.ctrl, false);
 	assertUserSettingsAsExpected(testConfig, actRet.config);
 
-	// this will happen in runHandler(), but we need to add a bit more time
-	// here due to vscode startup contention on the first test run
-	// TODO: consider increasing this for contributors with slow computers?
-	await actRet.treeBuilder.readyForRun(1000);
+	// readyForRun() will happen in runHandler(), but we need to add more time
+	// for test parsing here before requesting a test run due to vscode startup contention
+	await actRet.treeBuilder.readyForRun(2000);
 
 	//run tests
 	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);

@@ -17,9 +17,9 @@ suite(`workspace-2-suite test run`, () => {
 	}).timeout(120000);
 
 
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne("", getWs2ExpectedResults)).timeout(120000);
-	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne("", getWs2ExpectedResults)).timeout(120000);
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel("", getWs2ExpectedResults)).timeout(120000);
-	test("runDebug", async () => await sharedWorkspaceTests.runDebug("", getWs2ExpectedResults)).timeout(120000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne("", getWs2ExpectedResults)).timeout(60000);
+	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne("", getWs2ExpectedResults)).timeout(60000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel("", getWs2ExpectedResults)).timeout(60000);
+	test("runDebug", async () => await sharedWorkspaceTests.runDebug("", getWs2ExpectedResults)).timeout(180000);
 }).timeout(600000);
 
