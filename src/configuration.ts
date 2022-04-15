@@ -2,7 +2,6 @@ import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { logUserSettings } from './helpers';
 
 const EXTENSION_NAME = "behave-vsc";
 const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
@@ -56,14 +55,13 @@ class Configuration implements ExtensionConfiguration {
 
   // called by onDidChangeConfiguration
   public reloadUserSettings(testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+    this.logger.clear();
+    this.logger.logInfo("Settings change detected.");
+
     if (!testConfig)
       Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
     else
       Configuration._userSettings = new UserSettings(testConfig, this.logger);
-
-    this.logger.clear();
-    this.logger.logInfo("Settings change detected.")
-    logUserSettings();
   }
 
   public get userSettings() {
@@ -144,8 +142,12 @@ class UserSettings {
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
+  private _errors: string[] = [];
+  private _logger: Logger;
+
   constructor(wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
+    this._logger = logger;
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
     const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
@@ -157,27 +159,18 @@ class UserSettings {
     this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
 
-    if (featuresPathCfg) {
 
-      const path = featuresPathCfg.trim().replace(/^\/|\/$/g, "");
-      const fullFsPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, path).fsPath;
-
-      // note - we can't use vscode.workspace.fs here because that's an async func and we are in a constructor
-      if (fs.existsSync(fullFsPath)) {
-        this.featuresPath = path;
-      }
-      else {
-        logger.logError(`Invalid featuresPath '${featuresPathCfg}' setting ignored.\nMust be a relative path within the workspace.\n` +
-          "Defaulting to 'features' path instead.");
-      }
-    }
-
+    if (featuresPathCfg)
+      this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
     this.fullFeaturesPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, this.featuresPath).path;
+    // note - we can't use "vscode.workspace.fs.stat" here because that's an async func and we are in a constructor
+    if (!fs.existsSync(this.fullFeaturesPath))
+      this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
 
 
     if (fastSkipListCfg) {
       if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2) {
-        logger.logError("Invalid FastSkipList setting ignored.");
+        this._errors.push("Invalid FastSkipList setting ignored.");
       }
       else {
         try {
@@ -185,39 +178,74 @@ class UserSettings {
           let invalid = false;
           skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
           if (invalid)
-            logger.logError("Invalid FastSkipList setting ignored.");
+            this._errors.push("Invalid FastSkipList setting ignored.");
           else
             this.fastSkipList = skipList.filter(s => s !== "");
         }
         catch {
-          logger.logError("Invalid FastSkipList setting ignored.");
+          this._errors.push("Invalid FastSkipList setting ignored.");
         }
       }
     }
 
     if (envVarListCfg) {
       if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7) {
-        logger.logError("Invalid EnvVarList setting ignored.");
+        this._errors.push("Invalid EnvVarList setting ignored.");
       }
       else {
         try {
+          const re = /(?:\s*,?)(?:\s*')(.*?)(?:'\s*)(?::\s*')(.*?)(?:'\s*)/g;
           const escape = "#^@";
-          const envList = envVarListCfg.replace(/'\s*:\s*'/g, "':'").replace(/'\s*,\s*'/g, "','").trim();
-          envList.split("',").filter(s => s.trim() !== "").map(s => {
-            s = s.replace(/\\'/g, escape);
-            const e = s.split("':");
-            const name = e[0].trim().replace(/'/g, "").replace(escape, "'");
-            const value = e[1].trim().replace(/'/g, "").replace(escape, "'");
+          const escaped = envVarListCfg.replace(/\\'/g, escape);
+
+          let matches;
+          while ((matches = re.exec(escaped))) {
+            if (matches.length !== 3)
+              throw null;
+            const name = matches[1].trim();
+            if (name.length === 0) {
+              throw null;
+            }
+            const value = matches[2].trim().replace(escape, "'");
             console.log(`${name}='${value}'`)
             this.envVarList[name] = value;
-          });
+          }
+
         }
         catch {
-          logger.logError("Invalid EnvVarList setting ignored.");
+          this._errors.push("Invalid EnvVarList setting ignored.");
         }
       }
     }
+
+    this.log();
   }
+
+  log() {
+
+    const entries = Object.entries(this).sort();
+
+    const dic: { [name: string]: string } = {};
+
+    entries.forEach(([key, value]) => {
+      if (!key.startsWith("_") && key !== "fullFeaturesPath")
+        dic[key] = value;
+    });
+
+    this._logger.logInfo(`\nSettings:\n${JSON.stringify(dic, null, 2)}`);
+    this._logger.logInfo(`\nfullFeaturesPath: ${this.fullFeaturesPath}\n`);
+
+    if (this.runParallel && this.runAllAsOne)
+      this._logger.logWarn("Note: runParallel is overridden by runAllAsOne when you run all tests at once.");
+
+    if (this.fastSkipList.length > 0 && this.runAllAsOne)
+      this._logger.logWarn("Note: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
+
+    if (this._errors && this._errors.length > 0) {
+      this._logger.logError(`${this._errors.join("\n")}`);
+    }
+  }
+
 }
 
 const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {

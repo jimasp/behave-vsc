@@ -190,7 +190,8 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually:
 	actRet.config.reloadUserSettings(testConfig);
-	actRet.treeBuilder.buildTree(actRet.ctrl, false);
+	actRet.treeBuilder.buildTree(actRet.ctrl, "runAllTestsAndAssertTheResults", false);
+
 	assertUserSettingsAsExpected(testConfig, actRet.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time

@@ -6,8 +6,7 @@
 ### General
 - ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach Release v1.0.0 due to code volatility.*** You should also hold off forking before v1.0.0, or make sure to merge down updates.
 - Before starting any development, please make sure to fully read through the [README](README.md) as well as this document. It may save you some pain and/or solve your issue.
-- If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension 
-enabled while debugging the extension can cause confusing side-effects via background execution.
+- If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
 - Fixes > Features.
@@ -15,9 +14,9 @@ enabled while debugging the extension can cause confusing side-effects via backg
 ---
 ### Development environment setup for extension development:
 - It is assumed that you have already installed git and Python 3.x.x
-- Example commands given for installing external software (nvm, node, python) were correct at the time of writing, but these are likely to go out of date. For external software, you should always check latest instructions on the official sites.
-1. Install node (via nvm) if you don't have it. See official nvm [doc](https://github.com/nvm-sh/nvm#install--update-script):
-	- Linux: 
+- Example commands given for installing external software (nvm, node, python) were correct at the time of writing, but these are likely to go out of date. For external software, you should always check the latest instructions on the official websites.
+1. Install node (via nvm) if you don't have it.
+	- Linux (bash assumed): 
 		- `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash` (command for latest version found [here](https://github.com/nvm-sh/nvm#install--update-script))
 		- `source ~/.bashrc && source ~/.bash_profile && source ~/.profile`
 		- `nvm install --lts`
@@ -28,7 +27,7 @@ enabled while debugging the extension can cause confusing side-effects via backg
 		- `nvm install latest`
 		- `nvm use latest`
 2. Open visual studio code
-3. Disable or uninstall the marketplace version of the extension (otherwise you will have two instances of the extension running, and associaed side effects)
+3. Disable or uninstall the marketplace version of the extension (otherwise you will have two instances of the extension running, and associated side effects)
 4. ***Close visual studio code***
 5. Open a command line window, go to your source folder, and clone the extension source code, example:
 	- `cd mysourcedir`
@@ -94,13 +93,16 @@ If you have a custom fork and you want to distribute it to your team, you will w
 1. `npm install -g vsce` (installs latest version of packaging tool)
 2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`
 
+
 ---
 ## Troubleshooting
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
+- Have you pulled the latest version of the source code?
 - If you're not hitting a breakpoint, delete _all_ breakpoints and re-add your breakpoint (see below for more info).
-- Do you have the latest version of the source code?
-- If you get an error debugging "Debug Extension...", set a breakpoint in the `activate()` function.
-- If you get an error debugging "Run Extension Test Suite...", set a breakpoint in the `runAllTestsAndAssertTheResults()` function.
+- If you are stepping in to external code and you didn't mean to, then it's likely you either hit pause, or you need to delete all breakpoints.
+- If your source goes out of sync with debug, kill any watches in the terminal window to force a rebuild.
+- If you get an error running "Debug Extension...", set a breakpoint in the `activate()` function.
+- If you get an error running "Run Extension Test Suite...", set a breakpoint in the `runAllTestsAndAssertTheResults()` function.
 - If you don't hit either function breakpoint, try putting a breakpoint at the very first line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
 - Delete all breakpoints from both extension and host environments if any of the following occur:
 	- If you don't hit a breakpoint that you're sure you should be hitting. This may be down to sourcemaps and breakpoints being out of sync (in this case, also consider doing a `git commit` and `git clean fdx`). 
@@ -110,6 +112,10 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
+---
+## Adding logs to the code
+1. If you want to log something for users, use `config.logger`, e.g. `config.logger.logInfo(...)`
+2. If you want to log something for extension developers (contributors) only, use `console`, e.g. `console.log(...)`
 
 ---
 ## Before requesting a PR merge
@@ -125,7 +131,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Automated tests (verify behave results):
 	- Close vscode and run `npm run test`
 - After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
-some manual tests of the affected areas For example, if you changed feature file/step file parsing or file watchers you'd want to run these tests as a minimum:
+some manual tests of the _affected areas_. For example, if you changed feature file/step file parsing or filesystem watchers you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
 	2. start debug on workspace 1, then	
 	3. edit a group1 feature file, change the name of the feature and save it, then: 

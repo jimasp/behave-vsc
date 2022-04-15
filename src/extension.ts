@@ -116,61 +116,68 @@ class TreeBuilder {
 
     // show diag times for extension developers
     console.log(
-      `buildTree fired with reparse features ${reparse}. Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
+      `buildTree completed with reparse ${reparse}. Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${testNodeCount} test tree nodes, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
       `Breakdown: features ${featTime}ms, steps ${stepsTime}ms.\n` +
       `(Ignore times if there are active breakpoints. Slower during contention like vscode startup or when ` +
       `another test extension is also refreshing. Click test refresh button a few times without active breakpoints and with other test ` +
-      `extensions disabled for a more representative time.)`
+      `extensions disabled for a more representative time.)` +
+      `\n==================`
     );
   }
 
 
   // NOTE - this is background task - it should only be awaited on user request, i.e. when called by the refreshHandler
-  async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
+  async buildTree(ctrl: vscode.TestController, intiator: string, reparseFeatures = false) {
     this._featuresLoaded = false;
     this._calls++;
     const callName = `buildTree ${this._calls}`;
 
-    console.log(`${callName}: started`);
+    try {
 
-    // this function is usually not awaited, and therefore re-entrant, so cancel any existing buildTree call
-    if (this._cancelTokenSource) {
-      this._cancelTokenSource.cancel();
-      while (this._cancelTokenSource) {
-        await new Promise(t => setTimeout(t, 20));
+      console.log(`\n===== ${callName}: started, initiated by:${intiator}, reparse:${reparseFeatures} =====`);
+
+      // this function is usually not awaited, and therefore re-entrant, so cancel any existing buildTree call
+      if (this._cancelTokenSource) {
+        this._cancelTokenSource.cancel();
+        while (this._cancelTokenSource) {
+          await new Promise(t => setTimeout(t, 20));
+        }
       }
-    }
 
-    this._cancelTokenSource = new vscode.CancellationTokenSource();
+      this._cancelTokenSource = new vscode.CancellationTokenSource();
 
-    const start = Date.now();
-    const featureFileCount = await this._parseFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures, callName);
-    const featTime = Date.now() - start;
-    if (!this._cancelTokenSource.token.isCancellationRequested) {
-      this._featuresLoaded = true;
-      console.log(`${callName}: features loaded`);
-    }
+      const start = Date.now();
+      const featureFileCount = await this._parseFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures, callName);
+      const featTime = Date.now() - start;
+      if (!this._cancelTokenSource.token.isCancellationRequested) {
+        this._featuresLoaded = true;
+        console.log(`${callName}: features loaded`);
+      }
 
-    const stepsStart = Date.now();
-    const stepFileCount = await this._parseStepsFiles(this._cancelTokenSource.token, callName);
-    const stepsTime = Date.now() - stepsStart;
-    if (!this._cancelTokenSource.token.isCancellationRequested) {
-      console.log(`${callName}: steps loaded`);
-    }
+      const stepsStart = Date.now();
+      const stepFileCount = await this._parseStepsFiles(this._cancelTokenSource.token, callName);
+      const stepsTime = Date.now() - stepsStart;
+      if (!this._cancelTokenSource.token.isCancellationRequested) {
+        console.log(`${callName}: steps loaded`);
+      }
 
-    if (this._cancelTokenSource.token.isCancellationRequested) {
-      console.log(`${callName}: cancellation complete`);
-    }
-    else {
-      console.log(`${callName}: complete`);
-      this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount, reparseFeatures);
-    }
+      if (this._cancelTokenSource.token.isCancellationRequested) {
+        console.log(`${callName}: cancellation complete`);
+      }
+      else {
+        console.log(`${callName}: complete`);
+        this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount, reparseFeatures);
+      }
 
-    this._cancelTokenSource.dispose();
-    this._cancelTokenSource = null;
+      this._cancelTokenSource.dispose();
+      this._cancelTokenSource = null;
+
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
   }
-
 }
 
 const treeBuilder = new TreeBuilder();
@@ -394,7 +401,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
     ctrl.refreshHandler = async () => {
       try {
-        await treeBuilder.buildTree(ctrl, true);
+        await treeBuilder.buildTree(ctrl, "refreshHandler", true);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -436,7 +443,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       try {
         if (e.affectsConfiguration(config.extensionName)) {
           config.reloadUserSettings();
-          treeBuilder.buildTree(ctrl, false); // need to rebuild - user may have e.g. changed featuresPath, fastSkipList, etc.
+          treeBuilder.buildTree(ctrl, "OnDidChangeConfiguration", true); // full reparse - user may have changed e.g. fastSkipList
         }
       }
       catch (e: unknown) {
@@ -619,7 +626,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
     }
 
     try {
-      treeBuilder.buildTree(ctrl, true);
+      treeBuilder.buildTree(ctrl, "OnDidDelete", true);
     }
     catch (e: unknown) {
       config.logger.logError(e);
@@ -628,7 +635,7 @@ function startWatchingWorkspace(ctrl: vscode.TestController) {
 
 
 
-  treeBuilder.buildTree(ctrl, true);
+  treeBuilder.buildTree(ctrl, "startWatchingWorkspace", true);
 
   return watcher;
 }

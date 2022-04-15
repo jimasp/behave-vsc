@@ -18,7 +18,7 @@
 				"behave-vsc.featuresPath": {
 					"type": "string",
 					"default": "",
-					"description": "Optional setting for workspace-relative features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"paths=\" setting in your behave configuration file."
+					"description": "Optional setting for workspace-RELATIVE features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"paths=\" setting in your behave configuration file."
 				},
 				"behave-vsc.justMyCode": {
 					"type": "boolean",

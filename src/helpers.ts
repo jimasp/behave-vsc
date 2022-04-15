@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import config from "./configuration";
 
-export function logActivate(context: vscode.ExtensionContext) {
+export function logExtensionVersion(context: vscode.ExtensionContext) {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
     version += " pre-release";
   }
   config.logger.logInfo(`${config.extensionFriendlyName} v${version}`);
-  logUserSettings();
 }
 
 
@@ -24,26 +23,9 @@ export function logRunDiagOutput(debugRun: boolean) {
   }
 
   vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
-  logUserSettings();
+  config.userSettings.log();
   config.logger.logInfo("equivalent commands:\n");
   config.logger.logInfo(`cd "${config.workspaceFolderPath}"`);
-}
-
-
-export function logUserSettings() {
-
-  const keys = Object.keys(config.userSettings).sort();
-  keys.splice(keys.indexOf("fullFeaturesPath"), 1);
-  const json = JSON.stringify(config.userSettings, keys, 2);
-
-  config.logger.logInfo(`\nsettings:\n${json}`);
-  config.logger.logInfo(`fullFeaturesPath: ${config.userSettings.fullFeaturesPath}\n`);
-
-  if (config.userSettings.runParallel && config.userSettings.runAllAsOne)
-    config.logger.logWarn("Note: runParallel is overridden by runAllAsOne when you run all tests at once.");
-
-  if (config.userSettings.fastSkipList.length > 0 && config.userSettings.runAllAsOne)
-    config.logger.logWarn("Note: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
 }
 
 
