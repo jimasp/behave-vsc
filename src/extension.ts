@@ -7,7 +7,7 @@ import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { getContentFromFilesystem, isFeatureFile, isStepsFile, logActivate, logRunDiagOutput } from './helpers';
+import { getContentFromFilesystem, isFeatureFile, isStepsFile, logExtensionVersion, logRunDiagOutput } from './helpers';
 import { gotoStepHandler } from './gotoStepHandler';
 
 
@@ -187,7 +187,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
   try {
 
-    logActivate(context);
+    logExtensionVersion(context);
 
     const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
