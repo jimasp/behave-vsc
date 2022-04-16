@@ -7,6 +7,7 @@ export const EXTENSION_NAME = "behave-vsc";
 export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const MSPY_EXT = "ms-python.python";
+const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
 
 
 export interface ExtensionConfiguration {
@@ -98,10 +99,9 @@ class Logger {
       text = `${prependMsg}\n${text}`;
 
     console.error(text);
-    const ocHighlight = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
-    this.outputChannel.appendLine(ocHighlight);
+    this.outputChannel.appendLine(ERR_HIGHLIGHT);
     this.outputChannel.appendLine(text);
-    this.outputChannel.appendLine(ocHighlight);
+    this.outputChannel.appendLine(ERR_HIGHLIGHT);
     this.outputChannel.show(true);
     vscode.debug.activeDebugConsole.appendLine(text);
     if (this.run)
@@ -166,7 +166,7 @@ export class WorkspaceSettings {
 
 
     if (fastSkipListCfg) {
-      if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2) {
+      if (!fastSkipListCfg.includes("@") || fastSkipListCfg.length < 2) {
         this._errors.push("Invalid FastSkipList setting ignored.");
       }
       else {
@@ -186,7 +186,7 @@ export class WorkspaceSettings {
     }
 
     if (envVarListCfg) {
-      if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7) {
+      if (!envVarListCfg.includes(":") || !envVarListCfg.includes("'") || envVarListCfg.length < 7) {
         this._errors.push("Invalid EnvVarList setting ignored.");
       }
       else {

@@ -6,7 +6,7 @@ import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME, Wo
 import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import {
-  getContentFromFilesystem, getWorkspaceFolder, getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, logRunDiagOutput
+  getContentFromFilesystem, getWorkspaceFolder, getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion
 } from './helpers';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
@@ -306,7 +306,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             throw err;
           }
 
-          const asyncRunPromises: Promise<void>[] = [];
+          const asyncRunPromises: { [wkspUriPath: string]: Promise<void>[] } = {};
           debugCancelSource.dispose();
           debugCancelSource = new vscode.CancellationTokenSource();
 
@@ -314,16 +314,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           // (loop itself does not need to be async)
           for (const wkspUri of getWorkspaceFolderUris()) {
 
+            asyncRunPromises[wkspUri.path] = [];
             const wkspSettings = config.workspaceSettings(wkspUri);
-            logRunDiagOutput(debug, wkspSettings);
 
             const wkspQueue = queue.filter(item => {
-              console.log(`${item.test.uri?.path}`);
               return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
             });
 
             if (wkspQueue.length === 0)
               continue;
+
+            config.logger.logInfo("--- starting test run for workspace " + wkspSettings.workspaceFolder.uri.path + " ---\n");
 
             const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
             let allWkspTestsIncluded = true;
@@ -357,7 +358,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
                 updateRun(qi.test, coveredLines, run);
               }
 
-              return;
+              continue;
             }
 
 
@@ -381,15 +382,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
                   const promise = wskpQueueItem.scenario.runOrDebug(wkspSettings, false, run, wskpQueueItem, cancellation).then(() => {
                     updateRun(wskpQueueItem.test, coveredLines, run)
                   });
-                  asyncRunPromises.push(promise);
+                  asyncRunPromises[wkspUri.path].push(promise);
                 }
               }
             }
 
           }
 
-          await Promise.all(asyncRunPromises);
-          console.log("\n=== test run complete ===\n");
+
+          for (const wkspUriPath in asyncRunPromises) {
+            if (asyncRunPromises[wkspUriPath] && asyncRunPromises[wkspUriPath].length > 0) {
+              await Promise.all(asyncRunPromises[wkspUriPath]);
+              config.logger.logInfo(`\n--- ${wkspUriPath} tests completed ---\n`);
+            }
+          }
+
+          //await Promise.all(asyncRunPromises);
+          config.logger.logInfo("\n=== test run complete ===\n");
 
         }
 
@@ -592,7 +601,7 @@ async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSetting
   const featIdxPath = ("/" + wkspSettings.featuresPath + "/").replace("../", "/").replace("//", "");
   const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
   const sfp = uri.path.substring(featuresFolderIndex);
-  if (sfp.indexOf("/") !== -1) {
+  if (sfp.includes("/")) {
     const groupName = sfp.split("/")[0];
     parentGroup = controller.items.get(groupName);
     if (!parentGroup) {

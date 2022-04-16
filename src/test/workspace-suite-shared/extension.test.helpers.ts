@@ -129,7 +129,7 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, path: string) {
 	for (const idx in featureSteps) {
 		const line = featureSteps[idx];
 		try {
-			if (line.indexOf("missing step") === -1) {
+			if (!line.includes("missing step")) {
 				const match = getStepMatch(parsedSteps, line);
 				assert(match);
 			}
@@ -227,7 +227,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 		});
 
 
-		assert(JSON.stringify(result.test.range).indexOf("line") !== -1);
+		assert(JSON.stringify(result.test.range).includes("line"));
 
 		const match = findMatch(expectedResults, scenResult);
 		assert.strictEqual(match.length, 1);

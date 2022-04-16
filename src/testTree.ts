@@ -49,7 +49,7 @@ export class TestFile {
         }
         catch (e: unknown) {
           let err = (e as Error).toString();
-          if (err.indexOf("duplicate") !== -1) {
+          if (err.includes("duplicate")) {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);

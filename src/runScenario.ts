@@ -5,7 +5,7 @@ import { JsonFeature, parseJsonFeatures, updateTestResults } from './outputParse
 import { QueueItem } from './extension';
 
 
-export async function runAll(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
   await runBehave(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd);
@@ -45,8 +45,7 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
   });
 
 
-  // we could be async, store rather than log, so we can log later with the friendlyCmd above it 
-  // also it means we can put errors at the end for more visibility and we can add to multiple if required
+  // this can be async, so we store output as we go in order to log the friendlyCmd just above the behave output in the output window
   const stdout: string[] = [];
   const skipout: string[] = [];
   const stderr: string[] = [];
@@ -55,20 +54,22 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
   // behave has completed executing, looks something like this: 
   // [\n{...}\n,\n{...}\n,\n {...},\nHOOK-ERROR blah,\n{...},\n{...}\n\n]
   // BUT when we are using "RunAllAsOne", then chunks could be ANY partial output of
-  // the above format, for example: "\n,HOOK-ERROR blah,\n{..."  or  "...}]\n"
+  // the above format, for example: "\n,HOOK-ERROR blah,\n{..."  or "...}]\n"
   // so our loop will adjust the format as the output comes in and see if it can parse it to a result
   let loopStr = "";
+  let err = "";
   for await (const chunk of cp.stdout) {
     const sChunk = `${chunk}`;
     loopStr += sChunk;
 
     switch (true) {
       case sChunk.includes("HOOK-ERROR"):
-        stderr.push(sChunk.split("\n")[0]);
-        stdout.push(sChunk);
+        err = sChunk.split("\n")[0];
+        stderr.push(err);
         break;
       case sChunk.includes("ConfigError"):
-        stderr.push(sChunk.split("\n")[0]);
+        err = sChunk.split("\n")[0];
+        stderr.push(err);
         break;
       default:
         stdout.push(sChunk);
@@ -109,19 +110,22 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
 
   for await (const chunk of cp.stderr) {
     const sChunk: string = chunk.toString();
-    if (sChunk.startsWith("SKIP ") && sChunk.indexOf("Marked with @") !== -1)
+    if (sChunk.startsWith("SKIP ") && sChunk.includes("Marked with @")) {
       skipout.push(sChunk);
-    else
+    }
+    else {
+      stdout.push(sChunk);
       stderr.push(sChunk);
+    }
   }
 
 
   await new Promise((resolve) => cp.on('close', () => resolve("")));
 
   config.logger.logInfo(friendlyCmd);
-  config.logger.logInfo(stdout.join("\n"));
-  config.logger.logInfo(skipout.join("\n"));
+  config.logger.logInfo(stdout.join());
+  config.logger.logInfo(skipout.join());
   if (stderr.length > 0)
-    config.logger.logError(stderr.join("\n"));
+    config.logger.logError(stderr.join());
 }
 

@@ -23,8 +23,8 @@ export function getStepMatch(featureFileUri: vscode.Uri, allSteps: Steps, stepLi
   let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspUri.path)));
   wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspUri.path + ":", ""), v]));
 
-  const exactSteps = new Map([...wkspSteps].filter(([k,]) => k.indexOf(parseRepWildcard) === -1));
-  const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.indexOf(parseRepWildcard) !== -1));
+  const exactSteps = new Map([...wkspSteps].filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.includes(parseRepWildcard)));
 
   let stepMatch: StepDetail | undefined = undefined;
 
