@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config from "./configuration";
+import config, { EXTENSION_FRIENDLY_NAME, WorkspaceSettings } from "./configuration";
 
 
 export const logExtensionVersion = (context: vscode.ExtensionContext) => {
@@ -7,9 +7,21 @@ export const logExtensionVersion = (context: vscode.ExtensionContext) => {
   if (version.startsWith("0")) {
     version += " pre-release";
   }
-  config.logger.logInfo(`${config.extensionFriendlyName} v${version}`);
+  config.logger.logInfo(`${EXTENSION_FRIENDLY_NAME} v${version}`);
 }
 
+export function logRunDiagOutput(debugRun: boolean, wkspSettings: WorkspaceSettings) {
+
+  if (debugRun) {
+    // just log for extension devs
+    console.log(true);
+    console.log(`cd "${wkspSettings.fullWorkingDirectoryPath}\n`);
+    return;
+  }
+
+  config.logger.logInfo("\n\n--- starting test run for workspace " + wkspSettings.workspaceFolder.uri.path + " ---\n\n");
+  config.logger.logInfo(`cd "${wkspSettings.fullWorkingDirectoryPath}"\n`);
+}
 
 export const getWorkspaceFolderUris = (): vscode.Uri[] => {
   const folders = vscode.workspace.workspaceFolders;
@@ -31,7 +43,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined) 
 
 export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined) => {
   const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
-  return config.userSettings(wkspUri);
+  return config.workspaceSettings(wkspUri);
 }
 
 export const getWorkspaceFolder = (wskpUri: vscode.Uri) => {

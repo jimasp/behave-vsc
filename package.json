@@ -11,6 +11,12 @@
 					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape any contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)",
 					"scope": "resource"
 				},
+				"behave-vsc.showConfigurationWarnings": {
+					"type": "boolean",
+					"default": true,
+					"description": "Default true (enabled).\nSet to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings.",
+					"scope": "resource"
+				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",

@@ -12,9 +12,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const outFile = path.join(`${config.debugOutputFilePath}`, `${featureSlug}.${scenarioSlug}.result`);
-
-  // don't show to user in debug - just for extension debug/test
-  console.log(friendlyCmd);
+  console.log(friendlyCmd); // log for extension devs only
 
   // delete any existing file with the same name (e.g. prior run or duplicate slug)
   if (fs.existsSync(outFile)) {

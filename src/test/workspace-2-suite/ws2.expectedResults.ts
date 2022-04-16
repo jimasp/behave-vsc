@@ -7,7 +7,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
   const expectedResults: TestResult[] = [
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
@@ -16,15 +16,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run a successful test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a slow test for async testing',
       scenario_isOutline: false,
@@ -33,15 +33,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run a slow test for async testing',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run a slow test for async testing',
       test_label: 'run a slow test for async testing',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another slow test for async testing',
       scenario_isOutline: false,
@@ -50,15 +50,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run another slow test for async testing',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run another slow test for async testing',
       test_label: 'run another slow test for async testing',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
@@ -67,15 +67,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run a failing test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another successful test',
       scenario_isOutline: false,
@@ -84,15 +84,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run another successful test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run another successful test',
       test_label: 'run another successful test',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a test with a missing steps',
       scenario_isOutline: false,
@@ -101,15 +101,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run a test with a missing steps',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run a test with a missing steps',
       test_label: 'run a test with a missing steps',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a skipped test',
       scenario_isOutline: false,
@@ -118,16 +118,16 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/basic.feature/run a skipped test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../example-project-workspace-2/features/basic.feature',
-      test_uri: '.../example-project-workspace-2/features/basic.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/basic.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/basic.feature'
     }),
 
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/contains_regexchars.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/contains_regexchars.feature',
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
       scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       scenario_isOutline: false,
@@ -136,15 +136,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../example-project-workspace-2/features/contains_regexchars.feature',
-      test_uri: '.../example-project-workspace-2/features/contains_regexchars.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/contains_regexchars.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/contains_regexchars.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/mixed_skip.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_featureName: 'Mixed skip scenarios',
       scenario_getLabel: 'normal skip',
       scenario_isOutline: false,
@@ -153,15 +153,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/mixed_skip.feature/normal skip',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../example-project-workspace-2/features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-2/features/mixed_skip.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkip: false,
       scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: 'features/mixed_skip.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: "don't skip and success",
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -169,16 +169,16 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../example-project-workspace-2/features/mixed_skip.feature/don't skip and success",
+      test_id: ".../example-project-workspace-2/{{featurePath}}/mixed_skip.feature/don't skip and success",
       test_label: "don't skip and success",
-      test_parent: '.../example-project-workspace-2/features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-2/features/mixed_skip.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: true,
       scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: 'features/mixed_skip.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: 'fast skip a successful test',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -186,15 +186,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/mixed_skip.feature/fast skip a successful test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature/fast skip a successful test',
       test_label: 'fast skip a successful test',
-      test_parent: '.../example-project-workspace-2/features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-2/features/mixed_skip.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkip: false,
       scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: 'features/mixed_skip.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: "don't skip and fail",
       scenario_isOutline: false,
       scenario_result: 'Traceback (most recent call last):\n  File... assert successful_or_failing == "successful"\nAssertionError',
@@ -202,15 +202,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../example-project-workspace-2/features/mixed_skip.feature/don't skip and fail",
+      test_id: ".../example-project-workspace-2/{{featurePath}}/mixed_skip.feature/don't skip and fail",
       test_label: "don't skip and fail",
-      test_parent: '.../example-project-workspace-2/features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-2/features/mixed_skip.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkip: true,
       scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: 'features/mixed_skip.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: 'fast skip a failing test',
       scenario_isOutline: false,
       scenario_result: 'Traceback (most recent call last):\n  File... assert successful_or_failing == "successful"\nAssertionError',
@@ -218,15 +218,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/mixed_skip.feature/fast skip a failing test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature/fast skip a failing test',
       test_label: 'fast skip a failing test',
-      test_parent: '.../example-project-workspace-2/features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-2/features/mixed_skip.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/skipped.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/skipped.feature',
       scenario_featureName: 'skipped feature',
       scenario_getLabel: 'normal skip',
       scenario_isOutline: false,
@@ -235,16 +235,16 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/skipped.feature/normal skip',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/skipped.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../example-project-workspace-2/features/skipped.feature',
-      test_uri: '.../example-project-workspace-2/features/skipped.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/skipped.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/skipped.feature'
     }),
 
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/duplicate.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -253,15 +253,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/duplicate.feature/run a test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-2/features/duplicate.feature',
-      test_uri: '.../example-project-workspace-2/features/duplicate.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/duplicate.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/duplicate.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: true,
-      scenario_featureFileRelativePath: 'features/fastskip_feature.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/fastskip_feature.feature',
       scenario_featureName: 'fast skip feature',
       scenario_getLabel: 'fast skip by feature',
       scenario_isOutline: false,
@@ -270,15 +270,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/fastskip_feature.feature/fast skip by feature',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/fastskip_feature.feature/fast skip by feature',
       test_label: 'fast skip by feature',
-      test_parent: '.../example-project-workspace-2/features/fastskip_feature.feature',
-      test_uri: '.../example-project-workspace-2/features/fastskip_feature.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/fastskip_feature.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/fastskip_feature.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/duplicate.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -287,15 +287,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/duplicate.feature/run a test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-2/features/grouped/duplicate.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/duplicate.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/duplicate.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/duplicate.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success',
       scenario_isOutline: true,
@@ -304,15 +304,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Success',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success',
       test_label: 'Blenders Success',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail',
       scenario_isOutline: true,
@@ -321,15 +321,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Fail',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail',
       test_label: 'Blenders Fail',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail 2',
       scenario_isOutline: true,
@@ -338,15 +338,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Fail 2',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail 2',
       test_label: 'Blenders Fail 2',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: true,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fast Skip a Failure',
       scenario_isOutline: true,
@@ -355,15 +355,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Fast Skip a Failure',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Failure',
       test_label: 'Blenders Fast Skip a Failure',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: true,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fast Skip a Success',
       scenario_isOutline: true,
@@ -372,15 +372,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Fast Skip a Success',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Success',
       test_label: 'Blenders Fast Skip a Success',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Skip',
       scenario_isOutline: true,
@@ -389,15 +389,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Skip',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Skip',
       test_label: 'Blenders Skip',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success 2',
       scenario_isOutline: true,
@@ -406,15 +406,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_mixed.feature/Blenders Success 2',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success 2',
       test_label: 'Blenders Success 2',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_mixed.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_success.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success',
       scenario_isOutline: true,
@@ -423,15 +423,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_success.feature/Blend Success',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature/Blend Success',
       test_label: 'Blend Success',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_success.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_success.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/outline_success.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success 2',
       scenario_isOutline: true,
@@ -440,15 +440,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/outline_success.feature/Blend Success 2',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature/Blend Success 2',
       test_label: 'Blend Success 2',
-      test_parent: '.../example-project-workspace-2/features/grouped/outline_success.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/outline_success.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/outline_success.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/table.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (fail)',
       scenario_isOutline: false,
@@ -457,15 +457,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/table.feature/Use a table (fail)',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature/Use a table (fail)',
       test_label: 'Use a table (fail)',
-      test_parent: '.../example-project-workspace-2/features/grouped/table.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/table.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/table.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (success)',
       scenario_isOutline: false,
@@ -474,15 +474,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/table.feature/Use a table (success)',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature/Use a table (success)',
       test_label: 'Use a table (success)',
-      test_parent: '.../example-project-workspace-2/features/grouped/table.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/table.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/table.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/textblock.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a failing textblock test',
       scenario_isOutline: false,
@@ -491,15 +491,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/textblock.feature/run a failing textblock test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature/run a failing textblock test',
       test_label: 'run a failing textblock test',
-      test_parent: '.../example-project-workspace-2/features/grouped/textblock.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/textblock.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/grouped/textblock.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a successful textblock test',
       scenario_isOutline: false,
@@ -508,10 +508,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/grouped/textblock.feature/run a successful textblock test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature/run a successful textblock test',
       test_label: 'run a successful textblock test',
-      test_parent: '.../example-project-workspace-2/features/grouped/textblock.feature',
-      test_uri: '.../example-project-workspace-2/features/grouped/textblock.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/grouped/textblock.feature'
     }),
 
     new TestResult({
@@ -525,10 +525,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/create a before hook-error',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error',
       test_label: 'create a before hook-error',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -542,10 +542,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/skip in middle',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/skip in middle',
       test_label: 'skip in middle',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -559,10 +559,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/skip before hook-error',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/skip before hook-error',
       test_label: 'skip before hook-error',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -576,10 +576,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/before_hook_error again',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/before_hook_error again',
       test_label: 'before_hook_error again',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -593,10 +593,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/create a after hook-error',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/create a after hook-error',
       test_label: 'create a after hook-error',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -610,10 +610,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/another skip',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/another skip',
       test_label: 'another skip',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -627,10 +627,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/skip after hook-error',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/skip after hook-error',
       test_label: 'skip after hook-error',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -644,15 +644,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/feature_with_hook_error.feature/after_hook_error again',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature/after_hook_error again',
       test_label: 'after_hook_error again',
-      test_parent: '.../example-project-workspace-2/features/feature_with_hook_error.feature',
-      test_uri: '.../example-project-workspace-2/features/feature_with_hook_error.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/nested/nested/nested/nested_dupe.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested/nested/nested/nested_dupe.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -661,15 +661,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature/run a test',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/nested/nested/nested/nested_dupe.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature',
-      test_uri: '.../example-project-workspace-2/features/nested/nested/nested/nested_dupe.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/nested/nested/nested/nested_dupe.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/nested/nested/nested/nested_dupe.feature'
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step',
       scenario_isOutline: false,
@@ -678,15 +678,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/simple step',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/simple step',
       test_label: 'simple step',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step with more text',
       scenario_isOutline: false,
@@ -695,15 +695,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/simple step with more text',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/simple step with more text',
       test_label: 'simple step with more text',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'a cased step',
       scenario_isOutline: false,
@@ -712,15 +712,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/a cased step',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/a cased step',
       test_label: 'a cased step',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step',
       scenario_isOutline: false,
@@ -729,15 +729,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/param step',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/param step',
       test_label: 'param step',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step with more text',
       scenario_isOutline: false,
@@ -746,15 +746,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/param step with more text',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/param step with more text',
       test_label: 'param step with more text',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no1',
       scenario_isOutline: false,
@@ -763,15 +763,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/two param step no1',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/two param step no1',
       test_label: 'two param step no1',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no2',
       scenario_isOutline: false,
@@ -780,15 +780,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/two param step no2',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/two param step no2',
       test_label: 'two param step no2',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with param',
       scenario_isOutline: false,
@@ -797,15 +797,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/step with param',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/step with param',
       test_label: 'step with param',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step without custom flag type',
       scenario_isOutline: false,
@@ -814,15 +814,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/step without custom flag type',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/step without custom flag type',
       test_label: 'step without custom flag type',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with custom flag type present',
       scenario_isOutline: false,
@@ -831,15 +831,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/step with custom flag type present',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/step with custom flag type present',
       test_label: 'step with custom flag type present',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'yet another step',
       scenario_isOutline: false,
@@ -848,15 +848,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/yet another step',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/yet another step',
       test_label: 'yet another step',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: '"yet" "another" step double quoted',
       scenario_isOutline: false,
@@ -865,15 +865,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/"yet" "another" step double quoted',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/"yet" "another" step double quoted',
       test_label: '"yet" "another" step double quoted',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: "'yet' 'another' step single quoted",
       scenario_isOutline: false,
@@ -882,15 +882,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../example-project-workspace-2/features/goto_step.feature/'yet' 'another' step single quoted",
+      test_id: ".../example-project-workspace-2/{{featurePath}}/goto_step.feature/'yet' 'another' step single quoted",
       test_label: "'yet' 'another' step single quoted",
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 1',
       scenario_isOutline: false,
@@ -899,15 +899,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/wrapped step 1',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/wrapped step 1',
       test_label: 'wrapped step 1',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 2',
       scenario_isOutline: false,
@@ -916,15 +916,15 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/wrapped step 2',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/wrapped step 2',
       test_label: 'wrapped step 2',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature',
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
       scenario_fastSkip: false,
-      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 3',
       scenario_isOutline: false,
@@ -933,10 +933,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-2/features/goto_step.feature/wrapped step 3',
+      test_id: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature/wrapped step 3',
       test_label: 'wrapped step 3',
-      test_parent: '.../example-project-workspace-2/features/goto_step.feature',
-      test_uri: '.../example-project-workspace-2/features/goto_step.feature'
+      test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature'
     }),
 
   ];

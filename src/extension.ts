@@ -2,11 +2,11 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import config, { ExtensionConfiguration, WorkspaceSettings } from "./configuration";
+import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME, WorkspaceSettings } from "./configuration";
 import { Scenario, testData, TestFile } from './testTree';
 import { runBehaveAll } from './runOrDebug';
 import {
-  getContentFromFilesystem, getWorkspaceFolder, getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion
+  getContentFromFilesystem, getWorkspaceFolder, getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, logRunDiagOutput
 } from './helpers';
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
@@ -153,7 +153,7 @@ class TreeBuilder {
     this._calls++;
     const wkspName = getWorkspaceFolder(wkspUri).name;
     const callName = `buildTree ${this._calls} ${wkspName}`;
-    const wkspSettings = config.userSettings(wkspUri);
+    const wkspSettings = config.workspaceSettings(wkspUri);
     const wkspPath = wkspUri.path;
 
 
@@ -222,7 +222,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
     logExtensionVersion(context);
 
-    const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
+    const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter)
     // push disposables (registerCommand is a disposable so that your command will no longer be active when the extension is deactivated)
@@ -249,7 +249,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       try {
 
         const queue: QueueItem[] = [];
-        const run = ctrl.createTestRun(request, config.extensionFullName, false);
+        const run = ctrl.createTestRun(request, EXTENSION_FULL_NAME, false);
         config.logger.run = run;
 
         // map of file uris to statements on each line:
@@ -297,6 +297,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
         const runTestQueue = async (request: vscode.TestRunRequest) => {
 
+          config.logger.clear();
           console.log("\n=== starting test run ===\n");
 
           if (queue.length === 0) {
@@ -305,21 +306,54 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             throw err;
           }
 
+          const asyncRunPromises: Promise<void>[] = [];
+          debugCancelSource.dispose();
+          debugCancelSource = new vscode.CancellationTokenSource();
 
 
-
+          // (loop itself does not need to be async)
           for (const wkspUri of getWorkspaceFolderUris()) {
 
-            const wkspSettings = config.userSettings(wkspUri);
+            const wkspSettings = config.workspaceSettings(wkspUri);
+            logRunDiagOutput(debug, wkspSettings);
 
-            // ### TODO CHECK INCLUDES AGAINST WORKSPACE
+            const wkspQueue = queue.filter(item => {
+              console.log(`${item.test.uri?.path}`);
+              return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
+            });
+
+            if (wkspQueue.length === 0)
+              continue;
+
             const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+            let allWkspTestsIncluded = true;
 
-            if (!debug && allTestsIncluded && wkspSettings.runAllAsOne) {
+            if (!allTestsIncluded) {
+              const wkspItems: vscode.TestItem[] = [];
 
-              await runBehaveAll(wkspSettings, run, queue, cancellation);
+              ctrl.items.forEach(item => {
+                if (item.uri?.path.startsWith(wkspSettings.fullFeaturesPath))
+                  wkspItems.push(item);
+              });
 
-              for (const qi of queue) {
+              for (const item of wkspItems) {
+                if (!request.include?.includes(item)) {
+                  allWkspTestsIncluded = false;
+                  break;
+                }
+                if (request.exclude?.includes(item)) {
+                  allWkspTestsIncluded = false;
+                  break;
+                }
+              }
+            }
+
+
+            if (!debug && allWkspTestsIncluded && wkspSettings.runAllAsOne) {
+
+              await runBehaveAll(wkspSettings, run, wkspQueue, cancellation);
+
+              for (const qi of wkspQueue) {
                 updateRun(qi.test, coveredLines, run);
               }
 
@@ -327,38 +361,35 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             }
 
 
-            const promises: Promise<void>[] = [];
-            debugCancelSource.dispose();
-            debugCancelSource = new vscode.CancellationTokenSource();
+            for (const wskpQueueItem of wkspQueue) {
 
-
-            for (const qi of queue) {
-              run.appendOutput(`Running ${qi.test.id}\r\n`);
+              run.appendOutput(`Running ${wskpQueueItem.test.id}\r\n`);
 
               if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
-                updateRun(qi.test, coveredLines, run);
+                updateRun(wskpQueueItem.test, coveredLines, run);
               }
               else {
 
-                run.started(qi.test);
+                run.started(wskpQueueItem.test);
 
                 if (!wkspSettings.runParallel || debug) {
-                  await qi.scenario.runOrDebug(wkspSettings, debug, run, qi, debugCancelSource.token);
-                  updateRun(qi.test, coveredLines, run);
+                  await wskpQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wskpQueueItem, debugCancelSource.token);
+                  updateRun(wskpQueueItem.test, coveredLines, run);
                 }
                 else {
                   // async run (parallel)
-                  const promise = qi.scenario.runOrDebug(wkspSettings, false, run, qi, cancellation).then(() => {
-                    updateRun(qi.test, coveredLines, run)
+                  const promise = wskpQueueItem.scenario.runOrDebug(wkspSettings, false, run, wskpQueueItem, cancellation).then(() => {
+                    updateRun(wskpQueueItem.test, coveredLines, run)
                   });
-                  promises.push(promise);
+                  asyncRunPromises.push(promise);
                 }
               }
             }
 
-            await Promise.all(promises);
-            console.log("\n=== test run complete ===\n");
           }
+
+          await Promise.all(asyncRunPromises);
+          console.log("\n=== test run complete ===\n");
 
         }
 
@@ -491,8 +522,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
       try {
         for (const uri of getWorkspaceFolderUris()) {
-          if (e.affectsConfiguration(config.extensionName, uri)) {
-            config.reloadUserSettings(uri);
+          if (e.affectsConfiguration(EXTENSION_NAME, uri)) {
+            config.reloadWorkspaceSettings(uri);
             treeBuilder.buildTree(uri, ctrl, "OnDidChangeConfiguration", true); // full reparse - user may have changed e.g. fastSkipList
           }
         }
@@ -627,7 +658,7 @@ async function updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, co
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
-  const pattern = new vscode.RelativePattern(config.userSettings(wkspUri).fullFeaturesPath, "**");
+  const pattern = new vscode.RelativePattern(config.workspaceSettings(wkspUri).fullFeaturesPath, "**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
   const wkspSettings = getWorkspaceSettingsForFile(wkspUri);
 

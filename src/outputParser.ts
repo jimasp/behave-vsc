@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config from "./configuration";
+import config, { EXTENSION_FRIENDLY_NAME } from "./configuration";
 import { QueueItem } from "./extension";
 
 export interface ParseResult {
@@ -35,7 +35,7 @@ interface JsonStep {
   }
 }
 
-export const moreInfo = (debug: boolean) => "See behave output in " + (debug ? "debug console." : `${config.extensionFriendlyName} output window.`);
+export const moreInfo = (debug: boolean) => "See behave output in " + (debug ? "debug console." : `${EXTENSION_FRIENDLY_NAME} output window.`);
 
 export function parseOutputAndUpdateTestResults(run: vscode.TestRun, contextualQueue: QueueItem[], behaveOutput: string, debug: boolean) {
   const jFeatures: JsonFeature[] = parseJsonFeatures(behaveOutput);

@@ -75,12 +75,12 @@ const activateExtension = async (): Promise<IntegrationTestInterface> => {
 
 
 function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
-	assert.deepStrictEqual(config.userSettings(uri).envVarList, testConfig.getExpected("envVarList"));
-	assert.deepStrictEqual(config.userSettings(uri).fastSkipList, testConfig.getExpected("fastSkipList"));
-	assert.strictEqual(config.userSettings(uri).featuresPath, testConfig.getExpected("featuresPath"));
-	assert.strictEqual(config.userSettings(uri).justMyCode, testConfig.getExpected("justMyCode"));
-	assert.strictEqual(config.userSettings(uri).runAllAsOne, testConfig.getExpected("runAllAsOne"));
-	assert.strictEqual(config.userSettings(uri).runParallel, testConfig.getExpected("runParallel"));
+	assert.deepStrictEqual(config.workspaceSettings(uri).envVarList, testConfig.getExpected("envVarList"));
+	assert.deepStrictEqual(config.workspaceSettings(uri).fastSkipList, testConfig.getExpected("fastSkipList"));
+	assert.strictEqual(config.workspaceSettings(uri).featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(config.workspaceSettings(uri).justMyCode, testConfig.getExpected("justMyCode"));
+	assert.strictEqual(config.workspaceSettings(uri).runAllAsOne, testConfig.getExpected("runAllAsOne"));
+	assert.strictEqual(config.workspaceSettings(uri).runParallel, testConfig.getExpected("runParallel"));
 }
 
 
@@ -189,7 +189,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually:
-	actRet.config.reloadUserSettings(wskpUri, testConfig);
+	actRet.config.reloadWorkspaceSettings(wskpUri, testConfig);
 	actRet.treeBuilder.buildTree(wkspUri, actRet.ctrl, "runAllTestsAndAssertTheResults", false);
 
 	assertUserSettingsAsExpected(testConfig, actRet.config);
@@ -238,7 +238,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	assert.strictEqual(results.length, expectedResults.length);
 
 
-	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.userSettings(uri).fullFeaturesPath);
+	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.workspaceSettings(uri).fullFeaturesPath);
 }
 
 

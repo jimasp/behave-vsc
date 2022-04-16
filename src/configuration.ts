@@ -3,31 +3,25 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 
-const EXTENSION_NAME = "behave-vsc";
-const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
-const EXTENSION_FRIENDLY_NAME = "Behave VSC";
-const MSPY_EXT = "ms-python.python";
+export const EXTENSION_NAME = "behave-vsc";
+export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
+export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
+export const MSPY_EXT = "ms-python.python";
 
 
 export interface ExtensionConfiguration {
-  readonly extensionName: string;
-  readonly extensionFullName: string;
-  readonly extensionFriendlyName: string;
   readonly debugOutputFilePath: string;
   readonly logger: Logger;
-  userSettings(wkspUri: vscode.Uri): WorkspaceSettings;
-  reloadUserSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
+  workspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
+  reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
 }
 
 
 class Configuration implements ExtensionConfiguration {
-  public readonly extensionName = EXTENSION_NAME;
-  public readonly extensionFullName = EXTENSION_FULL_NAME;
-  public readonly extensionFriendlyName = EXTENSION_FRIENDLY_NAME;
   public readonly debugOutputFilePath = path.join(os.tmpdir(), EXTENSION_NAME);
   public readonly logger: Logger = new Logger();
-  private static _userSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
+  private static _workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private static _configuration?: Configuration;
 
@@ -45,20 +39,20 @@ class Configuration implements ExtensionConfiguration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadUserSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+  public reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
     this.logger.clear();
     this.logger.logInfo("Settings change detected.");
 
     if (!testConfig)
-      Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
+      Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
     else
-      Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.logger);
+      Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.logger);
   }
 
-  public userSettings(wkspUri: vscode.Uri) {
-    return Configuration._userSettings[wkspUri.path]
-      ? Configuration._userSettings[wkspUri.path]
-      : Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
+  public workspaceSettings(wkspUri: vscode.Uri) {
+    return Configuration._workspaceSettings[wkspUri.path]
+      ? Configuration._workspaceSettings[wkspUri.path]
+      : Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
@@ -120,6 +114,7 @@ export class WorkspaceSettings {
   public workspaceUri: vscode.Uri;
   public workspaceFolder: vscode.WorkspaceFolder;
   public envVarList: { [name: string]: string } = {};
+  public showConfigurationWarnings: boolean;
   public fastSkipList: string[] = [];
   public featuresPath = "features";
   public justMyCode: boolean;
@@ -148,7 +143,9 @@ export class WorkspaceSettings {
     const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
+    const showConfigurationWarningsCfg: boolean | undefined = wsConfig.get("showConfigurationWarnings");
 
+    this.showConfigurationWarnings = showConfigurationWarningsCfg === undefined ? true : showConfigurationWarningsCfg;
     this.justMyCode = justMyCodeCfg === undefined ? true : justMyCodeCfg;
     this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
@@ -228,18 +225,29 @@ export class WorkspaceSettings {
     const dic: { [name: string]: string } = {};
 
     entries.forEach(([key, value]) => {
-      if (!key.startsWith("_") && key !== "fullFeaturesPath")
+      if (!key.startsWith("_") && key !== "fullFeaturesPath" && key !== "workspaceFolder" && key !== "workspaceUri" && key !== "fullWorkingDirectoryPath")
         dic[key] = value;
     });
 
-    this._logger.logInfo(`\nsettings:\n${JSON.stringify(dic, null, 2)}`);
-    this._logger.logInfo(`\nfullFeaturesPath: ${this.fullFeaturesPath}\n`);
+    this._logger.logInfo(`\nworkspace settings for ${this.workspaceFolder.uri.path}:\n${JSON.stringify(dic, null, 2)}`);
+    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`);
+    this._logger.logInfo(`fullWorkingDirectoryPath: ${this.fullWorkingDirectoryPath}\n`);
 
-    if (this.runParallel && this.runAllAsOne)
-      this._logger.logWarn("Note: runParallel is overridden by runAllAsOne when you run all tests at once.");
+    if (this.showConfigurationWarnings) {
+      let warned = false;
+      if (this.runParallel && this.runAllAsOne) {
+        warned = true;
+        this._logger.logWarn("Warning: runParallel is overridden by runAllAsOne when you run all tests at once.");
+      }
 
-    if (this.fastSkipList.length > 0 && this.runAllAsOne)
-      this._logger.logWarn("Note: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
+      if (this.fastSkipList.length > 0 && this.runAllAsOne) {
+        warned = true;
+        this._logger.logWarn("Warning: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
+      }
+
+      if (warned)
+        this._logger.logInfo(`(You can turn configuration warnings off via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings".)`);
+    }
 
     if (this._errors && this._errors.length > 0) {
       this._logger.logError(`${this._errors.join("\n")}`);

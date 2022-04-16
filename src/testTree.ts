@@ -65,7 +65,7 @@ export class TestFile {
       const parent = ancestors[ancestors.length - 1];
       if (item.uri === undefined)
         throw new Error("testitem uri is undefined");
-      const data = new Scenario(vscode.workspace.asRelativePath(item.uri), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
+      const data = new Scenario(vscode.workspace.asRelativePath(item.uri, false), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       const id = `${item.uri}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);

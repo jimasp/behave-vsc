@@ -19,7 +19,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   const friendlyCmd = `${pythonExec} -m behave`;
 
   try {
-    await runAll(wkspSettings, pythonExec, run, queue, shared_args, friendlyCmd, cancellation);
+    await runAll(wkspSettings, pythonExec, run, queue, shared_args, cancellation, friendlyCmd);
   }
   catch (e: unknown) {
     config.logger.logError(e);
@@ -33,29 +33,13 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
 
   const scenario = queueItem.scenario;
   const scenarioName = scenario.scenarioName;
-
-  config.logger.clear();
-
-  if (debug) {
-    // if a debug run, only log this for extension devs
-    console.log("equivalent commands:\n");
-    console.log(`cd "${wkspSettings.fullWorkingDirectoryPath}"`);
-  }
-  else {
-    vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
-    wkspSettings.log();
-    config.logger.logInfo("equivalent commands:\n");
-    config.logger.logInfo(`cd "${wkspSettings.fullWorkingDirectoryPath}"`);
-  }
-
-
   const pythonExec = await config.getPythonExec(wkspSettings.workspaceUri);
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
   const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName].concat(shared_args);
   const friendlyCmd = `"${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
 
   if (!debug && scenario.fastSkip) {
-    config.logger.logInfo(`Fast skipping '${scenario.featureFileRelativePath}' '${scenarioName}'\n`);
+    config.logger.logInfo(`Fast skipping '${scenario.featureFileRelativePath}' '${scenarioName}'`);
     updateTest(run, { status: "skipped", duration: 0 }, queueItem);
     return;
   }
