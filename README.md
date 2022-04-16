@@ -76,17 +76,6 @@ paths=behave_tests/features
 - If your features folder is not called "features" then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
 - If your features folder is not in the root of your workspace folder, then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
 - If you are using a multi-root workspace, then the settings section in the `.workspace` file will override those in workspace folders. In this case, you need to make sure that all your workspaces can work with the same settings, e.g. they all have the same relative features path, same behave.ini setup etc.
-- One last unsupported option - in theory, if your features folder is in an external folder, then you can use a configuration like below. However, you cannot debug like this, so it's of limited use. To debug you need to add the folder to your workspace, i.e. use a multi-root workspace instead.
-```
-    // settings.json file
-    "behave-vsc.featuresPath": "../external_folder/features",
-    "behave-vsc.workingDirectory": "../external_folder"
-
-    // behave.ini file
-    [behave]
-    paths=external_folder/features    
-```
-
 
 ---
 ## Extension settings
