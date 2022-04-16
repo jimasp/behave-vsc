@@ -30,36 +30,40 @@
 
 ---
 ## Project requirements
+- Extension activation requires at least one `*.feature` file somewhere in your workspace.
 - No conflicting behave extension is enabled
-- A single vscode workspace folder (this extension does not support "multi-root workspaces")
-- A compatible project directory structure (see below)
+- A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere inside your workspace folder, which contains a `steps` folder. (If your features folder is not in the root of your project and/or is not called "features", then you will need to set the `featuresPath` in extension settings.)
-
-- `features` and `steps` folders must be contained somewhere within the vscode workspace working directory (not outside of it).
+- A single `features` folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires "steps".)
 - A behave-conformant directory structure, for example:
 ```  
   . features/  
+  .       +-- environment.py
   .       +-- steps/  
   .       |      +-- *.py  
   .       +-- web_tests/  
   .       |      +-- *.feature  
   .       +-- storage_tests/  
   .       |      +-- *.feature  
-  .       +-- environment.py
 ```
- - If you don't want your `features` folder in the project root, you can add a `behave.ini` or `.behaverc` file to your project root folder and add a `paths` setting and update the `featuresPath` setting in extension settings.
+ - If you don't want your `features` folder in the project root, you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings.
 ```
+// settings.json file
+"behave-vsc.featuresPath": "behave_tests/features",
+"behave-vsc.workingDirectory": "" // (this is optional, empty string defaults to workspace folder root)
+
+// behave.ini file
 [behave]
 paths=behave_tests/features 
 ```
-- You can also import steps from other folders via python (you should test this manually with behave first):
+- While only one features steps folder is supported by behave, you can import steps from other folders via python (you should test this manually with behave first):
 ```  
   . features/  
+  .       +-- environment.py
   .       +-- steps/  
   .       |      +-- import_steps.py  (`from features.web_tests.steps import web_steps`)
   .       +-- web_tests/  
@@ -68,13 +72,26 @@ paths=behave_tests/features
   .       |      +-- *.feature  
   .       +-- storage_tests/  
   .       |      +-- *.feature  
-  .       +-- environment.py
 ```
+- If your features folder is not called "features" then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
+- If your features folder is not in the root of your workspace folder, then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
+- If you are using a multi-root workspace, then the settings section in the `.workspace` file will override those in workspace folders. In this case, you need to make sure that all your workspaces can work with the same settings, e.g. they all have the same relative features path, same behave.ini setup etc.
+- One last unsupported option - in theory, if your features folder is in an external folder, then you can use a configuration like below. However, you cannot debug like this, so it's of limited use. To debug you need to add the folder to your workspace, i.e. use a multi-root workspace instead.
+```
+    // settings.json file
+    "behave-vsc.featuresPath": "../external_folder/features",
+    "behave-vsc.workingDirectory": "../external_folder"
+
+    // behave.ini file
+    [behave]
+    paths=external_folder/features    
+```
+
 
 ---
 ## Extension settings
 
-- This extension has various settings to customise your test run via `settings.json`. 
+- This extension has various settings to customise your test run via `settings.json`, e.g. path settings and `runParallel`. 
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - For more information, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
@@ -133,8 +150,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 ---
 ## Known issues and limitations
 
-- Does not support multiple vscode workspace folders ("multi-root workspaces").
-- "Go to Step" context menu doesn't always work or match correctly. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
+- "Go to Step" context menu doesn't always work or match correctly and never will. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
 - Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 

@@ -97,10 +97,11 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ---
 ## Troubleshooting
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
-- Have you pulled the latest version of the source code?
-- If you're not hitting a breakpoint, delete _all_ breakpoints and re-add your breakpoint (see below for more info).
-- If you are stepping in to external code and you didn't mean to, then it's likely you either hit pause, or you need to delete all breakpoints.
+- Most development problems can be resolved by either removing all breakpoints, or restart the watch tasks in terminal window.
+- If you're not hitting a breakpoint, remove _all_ breakpoints and re-add your breakpoint (see below for more info).
+- If you are stepping in to external code, then it's likely you either hit pause, or you need to remove all breakpoints.
 - If your source goes out of sync with debug, kill any watches in the terminal window to force a rebuild.
+- If you are getting invalid errors in the "problems" window, kill any watch tasks in the terminal window to force a rebuild.
 - If you get an error running "Debug Extension...", set a breakpoint in the `activate()` function.
 - If you get an error running "Run Extension Test Suite...", set a breakpoint in the `runAllTestsAndAssertTheResults()` function.
 - If you don't hit either function breakpoint, try putting a breakpoint at the very first line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
@@ -108,7 +109,8 @@ If you have a custom fork and you want to distribute it to your team, you will w
 	- If you don't hit a breakpoint that you're sure you should be hitting. This may be down to sourcemaps and breakpoints being out of sync (in this case, also consider doing a `git commit` and `git clean fdx`). 
 	- If `npm run test` fails on the command line due to a timeout.
 	- If the "Run Extension Test Suite" debug test fails due to a timeout.
-- Is the problem actually in another extension - which file code path have you stepped into? Try disabling other extensions.
+- Is the problem actually in another extension - _which file path have you stepped into_?
+- Have you pulled the latest version of the source code?
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 

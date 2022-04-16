@@ -1,14 +1,13 @@
 import * as vscode from 'vscode';
 import config from "./configuration";
 import { getSteps } from './extension';
+import { getWorkspaceUriForFile } from './helpers';
 import { parseRepWildcard, StepDetail, Steps } from "./stepsParser";
 
 export const stepMatchRe = /^(\s*)(given|when|then|and)(.+)$/i;
 
 
-export function getStepMatch(allSteps: Steps, stepLine: string): StepDetail | undefined {
-
-  let stepMatch: StepDetail | undefined = undefined;
+export function getStepMatch(featureFileUri: vscode.Uri, allSteps: Steps, stepLine: string): StepDetail | undefined {
 
   if (stepLine.endsWith(":")) // table
     stepLine = stepLine.slice(0, -1);
@@ -17,16 +16,17 @@ export function getStepMatch(allSteps: Steps, stepLine: string): StepDetail | un
   const stMatches = stepRe.exec(stepLine);
   if (!stMatches || !stMatches[3])
     return;
-
   const stepText = stMatches[3].trim();
 
-  const exactSteps = new Map([...allSteps].filter(
-    ([k,]) => k.indexOf(parseRepWildcard) === -1)
-  );
+  const wkspUri = getWorkspaceUriForFile(featureFileUri);
 
-  const paramsSteps = new Map([...allSteps].filter(
-    ([k,]) => k.indexOf(parseRepWildcard) !== -1)
-  );
+  let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspUri.path)));
+  wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspUri.path + ":", ""), v]));
+
+  const exactSteps = new Map([...wkspSteps].filter(([k,]) => k.indexOf(parseRepWildcard) === -1));
+  const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.indexOf(parseRepWildcard) !== -1));
+
+  let stepMatch: StepDetail | undefined = undefined;
 
   // exact match
   for (const [key, value] of exactSteps) {
@@ -79,7 +79,7 @@ export function getStepMatch(allSteps: Steps, stepLine: string): StepDetail | un
 }
 
 
-export async function gotoStepHandler() {
+export async function gotoStepHandler(eventUri: vscode.Uri) {
 
   try {
     const activeEditor = vscode.window.activeTextEditor;
@@ -97,7 +97,7 @@ export async function gotoStepHandler() {
       return;
 
     const allSteps = getSteps();
-    const stepMatch = getStepMatch(allSteps, line);
+    const stepMatch = getStepMatch(eventUri, allSteps, line);
 
     if (!stepMatch) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)
@@ -114,7 +114,7 @@ export async function gotoStepHandler() {
       return;
     }
     editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
-    editor.revealRange(stepMatch.range);
+    editor.revealRange(stepMatch.range, vscode.TextEditorRevealType.InCenter);
   }
   catch (e: unknown) {
     config.logger.logError(e);

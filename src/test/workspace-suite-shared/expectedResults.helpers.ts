@@ -1,4 +1,4 @@
-import { ExtensionConfiguration } from '../../configuration';
+import { ExtensionConfiguration, WorkspaceSettings } from '../../configuration';
 import { moreInfo } from '../../outputParser';
 
 interface ITestResult {
@@ -40,21 +40,21 @@ export class TestResult implements ITestResult {
 }
 
 
-export function applyTestConfiguration(debug: boolean, config: ExtensionConfiguration, expectedResults: TestResult[]) {
+export function applyTestConfiguration(debug: boolean, wkspSettings: WorkspaceSettings, expectedResults: TestResult[]) {
   const runMoreInfo = moreInfo(false);
   const debugMoreInfo = moreInfo(true);
 
-  expectedResults = applyFeaturesPath(expectedResults, config);
+  expectedResults = applyFeaturesPath(expectedResults, wkspSettings);
   expectedResults = applyDebugTextReplacements(expectedResults, debug, runMoreInfo, debugMoreInfo);
-  expectedResults = applyFastSkipReplacements(expectedResults, debug, config);
+  expectedResults = applyFastSkipReplacements(expectedResults, debug, wkspSettings);
 
   return expectedResults;
 }
 
 
-function applyFeaturesPath(expectedResults: TestResult[], config: ExtensionConfiguration) {
+function applyFeaturesPath(expectedResults: TestResult[], wkspSettings: WorkspaceSettings) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
-    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", config.userSettings.featuresPath);
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.featuresPath);
     returnResults[index] = JSON.parse(json);
   });
 
@@ -76,10 +76,10 @@ function applyDebugTextReplacements(expectedResults: TestResult[], debug: boolea
   return expectedResults;
 }
 
-function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean, config: ExtensionConfiguration) {
+function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean, wkspSettings: WorkspaceSettings) {
 
-  const fastSkipSet = config.userSettings.fastSkipList.length > 0;
-  const fastSkipActive = fastSkipSet && !debug && !config.userSettings.runAllAsOne;
+  const fastSkipSet = wkspSettings.fastSkipList.length > 0;
+  const fastSkipActive = fastSkipSet && !debug && !wkspSettings.runAllAsOne;
 
   if (!fastSkipSet) {
     expectedResults.forEach(expectedResult => {

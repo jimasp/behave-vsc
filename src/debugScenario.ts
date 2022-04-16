@@ -1,12 +1,12 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import config from "./configuration";
+import config, { WorkspaceSettings } from "./configuration";
 import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
 
-export async function debugScenario(context: vscode.ExtensionContext, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
+export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
   args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
   const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -27,12 +27,12 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
     name: "behave-vsc-debug",
     console: "internalConsole",
     type: "python",
-    cwd: config.workspaceFolderPath,
+    cwd: wkspSettings.fullWorkingDirectoryPath,
     request: 'launch',
     module: "behave",
     args: args,
-    env: config.userSettings.envVarList,
-    justMyCode: config.userSettings.justMyCode
+    env: wkspSettings.envVarList,
+    justMyCode: wkspSettings.justMyCode
   };
 
 
@@ -51,7 +51,7 @@ export async function debugScenario(context: vscode.ExtensionContext, run: vscod
   });
 
 
-  if (!await vscode.debug.startDebugging(config.workspaceFolder, debugLaunchConfig))
+  if (!await vscode.debug.startDebugging(wkspSettings.workspaceFolder, debugLaunchConfig))
     return;
 
 

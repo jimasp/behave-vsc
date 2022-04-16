@@ -3,7 +3,7 @@ import { parseFeatureContent } from './featureParser';
 import { runOrDebugBehaveScenario } from './runOrDebug';
 import { QueueItem } from './extension';
 import { getContentFromFilesystem, isFeatureFile } from './helpers';
-import config from "./configuration";
+import config, { WorkspaceSettings } from "./configuration";
 
 let generationCounter = 0;
 type BehaveTestData = TestFile | Feature | Scenario;
@@ -14,7 +14,7 @@ export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 export class TestFile {
   public didResolve = false;
 
-  public async updateFromDisk(controller: vscode.TestController, item: vscode.TestItem, caller: string) {
+  public async updateFromDisk(wkspSettings: WorkspaceSettings, controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     try {
       if (!item.uri)
         throw new Error("missing test item uri");
@@ -23,7 +23,7 @@ export class TestFile {
 
       const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
-      this.updateFromContents(item.uri.path, controller, content, item, caller);
+      this.updateFromContents(wkspSettings, item.uri.path, controller, content, item, caller);
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
@@ -32,7 +32,9 @@ export class TestFile {
   }
 
 
-  public updateFromContents(featureFilePath: string, controller: vscode.TestController, content: string, item: vscode.TestItem, caller: string) {
+  public updateFromContents(wkspSettings: WorkspaceSettings, featureFilePath: string, controller: vscode.TestController, content: string,
+    item: vscode.TestItem, caller: string) {
+
     const thisGeneration = generationCounter++;
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
     this.didResolve = true;
@@ -77,7 +79,7 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(featureFilePath, item.label, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(wkspSettings, featureFilePath, item.label, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }
@@ -104,8 +106,10 @@ export class Scenario {
   }
 
 
-  async runOrDebug(context: vscode.ExtensionContext, debug: boolean, run: vscode.TestRun, queueItem: QueueItem, cancellation: vscode.CancellationToken): Promise<void> {
-    await runOrDebugBehaveScenario(context, run, queueItem, debug, cancellation);
+  async runOrDebug(wkspSettings: WorkspaceSettings, debug: boolean, run: vscode.TestRun, queueItem: QueueItem,
+    cancellation: vscode.CancellationToken): Promise<void> {
+
+    await runOrDebugBehaveScenario(wkspSettings, run, queueItem, debug, cancellation);
   }
 
 }

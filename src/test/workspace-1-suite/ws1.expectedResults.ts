@@ -1,7 +1,7 @@
-import { ExtensionConfiguration } from "../../configuration";
+import { WorkspaceSettings } from "../../configuration";
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
-export const getWs1ExpectedResults = (debug: boolean, config: ExtensionConfiguration): TestResult[] => {
+export const getWs1ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSettings): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -518,5 +518,5 @@ export const getWs1ExpectedResults = (debug: boolean, config: ExtensionConfigura
     })
   ];
 
-  return applyTestConfiguration(debug, config, expectedResults);
+  return applyTestConfiguration(debug, wkspSettings, expectedResults);
 }

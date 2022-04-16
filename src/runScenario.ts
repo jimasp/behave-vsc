@@ -1,32 +1,32 @@
 import * as vscode from 'vscode';
 import { spawn } from 'child_process';
-import config from "./configuration";
+import config, { WorkspaceSettings } from "./configuration";
 import { JsonFeature, parseJsonFeatures, updateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 
 
-export async function runAll(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+export async function runAll(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   friendlyCmd: string, cancellation: vscode.CancellationToken): Promise<void> {
 
-  await runBehave(context, pythonExec, run, queue, args, config.workspaceFolderPath, friendlyCmd, cancellation);
+  await runBehave(wkspSettings, pythonExec, run, queue, args, friendlyCmd, cancellation);
 }
 
 
-export async function runScenario(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
+export async function runScenario(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
-  await runBehave(context, pythonExec, run, [queueItem], args, config.workspaceFolderPath, friendlyCmd, cancellation);
+  await runBehave(wkspSettings, pythonExec, run, [queueItem], args, friendlyCmd, cancellation);
 }
 
 
-async function runBehave(context: vscode.ExtensionContext, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
-  workingDirectory: string, friendlyCmd: string, cancellation: vscode.CancellationToken): Promise<void> {
+async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+  friendlyCmd: string, cancellation: vscode.CancellationToken): Promise<void> {
 
   config.logger.logInfo(`${friendlyCmd}\n`);
 
   const local_args = [...args];
   local_args.unshift("-m", "behave");
 
-  const options = { cwd: workingDirectory, env: config.userSettings.envVarList };
+  const options = { cwd: wkspSettings.fullWorkingDirectoryPath, env: wkspSettings.envVarList };
 
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options);
@@ -57,7 +57,7 @@ async function runBehave(context: vscode.ExtensionContext, pythonExec: string, r
     const sChunk = `${chunk}`;
     loopStr += sChunk;
 
-    if (sChunk.indexOf("HOOK-ERROR") !== -1)
+    if (sChunk.indexOf("HOOK-ERROR") !== -1 || sChunk.indexOf("ConfigError") !== -1)
       config.logger.logError(sChunk.split("\n")[0]);
     else
       config.logger.logInfo(sChunk);

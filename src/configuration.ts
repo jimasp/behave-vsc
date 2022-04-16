@@ -9,24 +9,15 @@ const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 const MSPY_EXT = "ms-python.python";
 
 
-const getWorkspaceFolder = () => {
-  const wsf = vscode.workspace.workspaceFolders;
-  if (wsf && wsf?.length > 0)
-    return wsf[0];
-  throw new Error("Could not resolve workspace folder");
-}
-
 export interface ExtensionConfiguration {
   readonly extensionName: string;
   readonly extensionFullName: string;
   readonly extensionFriendlyName: string;
   readonly debugOutputFilePath: string;
   readonly logger: Logger;
-  readonly userSettings: UserSettings;
-  readonly workspaceFolder: vscode.WorkspaceFolder;
-  readonly workspaceFolderPath: string;
-  reloadUserSettings(testConfig: vscode.WorkspaceConfiguration | undefined): void;
-  getPythonExec(): Promise<string>;
+  userSettings(wkspUri: vscode.Uri): WorkspaceSettings;
+  reloadUserSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
+  getPythonExec(wkspUri: vscode.Uri): Promise<string>;
 }
 
 
@@ -36,7 +27,7 @@ class Configuration implements ExtensionConfiguration {
   public readonly extensionFriendlyName = EXTENSION_FRIENDLY_NAME;
   public readonly debugOutputFilePath = path.join(os.tmpdir(), EXTENSION_NAME);
   public readonly logger: Logger = new Logger();
-  private static _userSettings: UserSettings | undefined = undefined;
+  private static _userSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private static _configuration?: Configuration;
 
@@ -54,36 +45,27 @@ class Configuration implements ExtensionConfiguration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadUserSettings(testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+  public reloadUserSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
     this.logger.clear();
     this.logger.logInfo("Settings change detected.");
 
     if (!testConfig)
-      Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
+      Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
     else
-      Configuration._userSettings = new UserSettings(testConfig, this.logger);
+      Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.logger);
   }
 
-  public get userSettings() {
-    return Configuration._userSettings
-      ? Configuration._userSettings
-      : Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
+  public userSettings(wkspUri: vscode.Uri) {
+    return Configuration._userSettings[wkspUri.path]
+      ? Configuration._userSettings[wkspUri.path]
+      : Configuration._userSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
   }
-
-  // WE ONLY SUPPORT A SINGLE WORKSPACE FOLDER ATM
-  public get workspaceFolder(): vscode.WorkspaceFolder {
-    return getWorkspaceFolder();
-  }
-
-  public get workspaceFolderPath(): string {
-    return this.workspaceFolder.uri.fsPath;
-  }
-
 
   // note - this can be changed dynamically by the user, so don't store the result
-  public getPythonExec = async (): Promise<string> => {
-    return await getPythonExecutable(this.logger, this.workspaceFolder.uri);
+  public getPythonExec = async (wkspUri: vscode.Uri): Promise<string> => {
+    return await getPythonExecutable(this.logger, wkspUri);
   }
+
 }
 
 
@@ -134,23 +116,35 @@ class Logger {
 }
 
 
-class UserSettings {
+export class WorkspaceSettings {
+  public workspaceUri: vscode.Uri;
+  public workspaceFolder: vscode.WorkspaceFolder;
   public envVarList: { [name: string]: string } = {};
   public fastSkipList: string[] = [];
   public featuresPath = "features";
-  public fullFeaturesPath: string; // not set by user, derived from featuresPath
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
+  public workingDirectory = "";
+  public fullFeaturesPath: string; // not set by user, derived from featuresPath  
+  public fullWorkingDirectoryPath: string; // not set by user, derived from workingDirectory
   private _errors: string[] = [];
   private _logger: Logger;
 
-  constructor(wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
+  constructor(wkspUri: vscode.Uri, wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
     this._logger = logger;
+    this.workspaceUri = wkspUri;
+
+    const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
+    if (!wsFolder)
+      throw new Error("No workspace folder found for uri " + wkspUri.path);
+    this.workspaceFolder = wsFolder;
+
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
     const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
+    const workingDirectoryCfg: string | undefined = wsConfig.get("workingDirectory");
     const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
@@ -160,10 +154,16 @@ class UserSettings {
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
 
 
+    if (workingDirectoryCfg)
+      this.workingDirectory = workingDirectoryCfg.trim().replace(/\\$|\/$/, "");
+    this.fullWorkingDirectoryPath = vscode.Uri.joinPath(wkspUri, this.workingDirectory).path;
+    // note - we can't use "vscode.workspace.fs.stat" here because that's an async func and we are in a constructor
+    if (!fs.existsSync(this.fullWorkingDirectoryPath))
+      this._errors.push(`FATAL ERROR: working directory ${this.fullWorkingDirectoryPath} not found.`);
+
     if (featuresPathCfg)
       this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
-    this.fullFeaturesPath = vscode.Uri.joinPath(getWorkspaceFolder().uri, this.featuresPath).path;
-    // note - we can't use "vscode.workspace.fs.stat" here because that's an async func and we are in a constructor
+    this.fullFeaturesPath = vscode.Uri.joinPath(wkspUri, this.featuresPath).path;
     if (!fs.existsSync(this.fullFeaturesPath))
       this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
 
@@ -232,7 +232,7 @@ class UserSettings {
         dic[key] = value;
     });
 
-    this._logger.logInfo(`\nSettings:\n${JSON.stringify(dic, null, 2)}`);
+    this._logger.logInfo(`\nsettings:\n${JSON.stringify(dic, null, 2)}`);
     this._logger.logInfo(`\nfullFeaturesPath: ${this.fullFeaturesPath}\n`);
 
     if (this.runParallel && this.runAllAsOne)

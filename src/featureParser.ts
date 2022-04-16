@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config from "./configuration";
+import { WorkspaceSettings } from "./configuration";
 import { getContentFromFilesystem } from './helpers';
 
 
@@ -22,7 +22,7 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (featureFilePath: string, featureName: string, text: string, caller: string,
+export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFilePath: string, featureName: string, text: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureName: (range: vscode.Range) => void) => {
 
@@ -44,7 +44,7 @@ export const parseFeatureContent = (featureFilePath: string, featureName: string
         fastSkipScenario = true;
       }
       else {
-        config.userSettings.fastSkipList.forEach(skipStr => {
+        wkspSettings.fastSkipList.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].indexOf(skipStr) !== -1) {
             fastSkipScenario = true;
           }
@@ -67,7 +67,7 @@ export const parseFeatureContent = (featureFilePath: string, featureName: string
       onFeatureName(range);
 
       if (lineNo > 0) {
-        config.userSettings.fastSkipList.forEach(skipStr => {
+        wkspSettings.fastSkipList.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].indexOf(skipStr) !== -1) {
             fastSkipFeature = true;
           }

@@ -8,32 +8,44 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape any contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)"
+					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(You can escape any contained single quotes like this: 'var3':'myva\\'lue', or \\\\' in the settings.json file itself.)",
+					"scope": "resource"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, or when debugging.\nThe listed tags will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne.\n"
+					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, or when debugging.\nThe listed tags will stop behave being called for features/scenarios marked with those tags. Use if you have a lot of tests to skip.\nUseful only if you have a large amount of skipped tests and either (a) you have grouped your tests into folders, or (b) you are not using runAllAsOne.\n",
+					"scope": "resource"
 				},
 				"behave-vsc.featuresPath": {
 					"type": "string",
 					"default": "",
-					"description": "Optional setting for workspace-RELATIVE features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must match the \"paths=\" setting in your behave configuration file."
+					"description": "Optional setting for workspace-RELATIVE features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must tie up with the \"paths=\" setting in your behave configuration file.",
+					"scope": "resource"
 				},
 				"behave-vsc.justMyCode": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default true (enabled).\nControls whether to step into external code when debugging a behave test."
+					"description": "Default true (enabled).\nControls whether to step into external code when debugging a behave test.",
+					"scope": "resource"
 				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default:true (enabled).\nWhen running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests.\nNote that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation."
+					"description": "Default:true (enabled).\nWhen running all tests, use a single 'python -m behave'.\nRecommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests.\nNote that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation.",
+					"scope": "resource"
 				},
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nIf you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel.\nNote that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n"
+					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nIf you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel.\nNote that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n",
+					"scope": "resource"
+				},
+				"behave-vsc.workingDirectory": {
+					"type": "string",
+					"default": "",
+					"description": "Optional setting for workspace-RELATIVE behave working directory.\nExample: mysubfolder\nIf empty, it will be set to the workspace folder.",
+					"scope": "resource"
 				}
 			}
 		},
@@ -82,7 +94,8 @@
 		"behave",
 		"feature",
 		"debug",
-		"python"
+		"python",
+		"multi-root ready"
 	],
 	"qna": false,
 	"extensionDependencies": [
