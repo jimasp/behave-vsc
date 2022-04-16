@@ -40,13 +40,13 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
     // if a debug run, only log this for extension devs
     console.log("equivalent commands:\n");
     console.log(`cd "${wkspSettings.fullWorkingDirectoryPath}"`);
-    return;
   }
-
-  vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
-  wkspSettings.log();
-  config.logger.logInfo("equivalent commands:\n");
-  config.logger.logInfo(`cd "${wkspSettings.fullWorkingDirectoryPath}"`);
+  else {
+    vscode.commands.executeCommand("workbench.debug.panel.action.clearReplAction");
+    wkspSettings.log();
+    config.logger.logInfo("equivalent commands:\n");
+    config.logger.logInfo(`cd "${wkspSettings.fullWorkingDirectoryPath}"`);
+  }
 
 
   const pythonExec = await config.getPythonExec(wkspSettings.workspaceUri);
