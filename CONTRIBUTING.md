@@ -115,7 +115,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
 ---
-## Adding logs to the code
+## General notes and Q&A
 1. If you want to log something for users, use `config.logger`, e.g. `config.logger.logInfo(...)`
 2. If you want to log something for extension developers (contributors) only, use `console`, e.g. `console.log(...)`
 

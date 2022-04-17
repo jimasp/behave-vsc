@@ -36,8 +36,8 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
   const pythonExec = await config.getPythonExec(wkspSettings.workspaceUri);
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
   const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName].concat(shared_args);
-  const friendlyCmd = `\ncd "${wkspSettings.fullWorkingDirectoryPath}"\n` +
-    `${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
+  const friendlyCmd = `\ncd "${wkspSettings.workspacePath}"\n` +
+    `"${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
 
   try {
     if (!debug && scenario.fastSkip) {

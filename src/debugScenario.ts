@@ -25,7 +25,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     name: "behave-vsc-debug",
     console: "internalConsole",
     type: "python",
-    cwd: wkspSettings.fullWorkingDirectoryPath,
+    cwd: wkspSettings.workspacePath,
     request: 'launch',
     module: "behave",
     args: args,

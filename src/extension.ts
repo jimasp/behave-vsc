@@ -154,7 +154,7 @@ class TreeBuilder {
     const wkspName = getWorkspaceFolder(wkspUri).name;
     const callName = `buildTree ${this._calls} ${wkspName}`;
     const wkspSettings = config.workspaceSettings(wkspUri);
-    const wkspPath = wkspUri.path;
+    const wkspPath = wkspSettings.workspacePath;
 
 
     try {
@@ -178,7 +178,7 @@ class TreeBuilder {
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         console.log(`features loaded for workspace ${wkspName}`);
         this._featuresLoadedForWorkspace[wkspPath] = true;
-        const stillLoading = getWorkspaceFolderUris().filter(wkspUri => !this._featuresLoadedForWorkspace[wkspUri.path])
+        const stillLoading = getWorkspaceFolderUris().filter(wkspFldUri => !this._featuresLoadedForWorkspace[wkspFldUri.path])
         if (stillLoading.length === 0) {
           this._featuresLoadedForAllWorkspaces = true;
           console.log(`${callName}: features loaded for all workspaces`);
@@ -236,7 +236,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
       // the test tree is built as a background process which is called from a few places
-      // (and it will be slow on vscode startup due to contention), so we don't want to await it except on user request (refresh click),
+      // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
       // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
       const ready = await treeBuilder.readyForRun(1000);
       if (!ready) {
@@ -298,7 +298,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         const runTestQueue = async (request: vscode.TestRunRequest) => {
 
           config.logger.clear();
-          console.log("\n=== starting test run ===\n");
+          config.logger.logInfo("\n=== starting test run ===\n");
 
           if (queue.length === 0) {
             const err = "empty queue - nothing to do";
@@ -314,7 +314,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           // (loop itself does not need to be async)
           for (const wkspUri of getWorkspaceFolderUris()) {
 
-            asyncRunPromises[wkspUri.path] = [];
+            const wskpPath = wkspUri.path;
+
+            asyncRunPromises[wkspPath] = [];
             const wkspSettings = config.workspaceSettings(wkspUri);
 
             const wkspQueue = queue.filter(item => {
@@ -324,7 +326,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             if (wkspQueue.length === 0)
               continue;
 
-            config.logger.logInfo("--- starting test run for workspace " + wkspSettings.workspaceFolder.uri.path + " ---\n");
+            config.logger.logInfo("--- workspace " + wkspSettings.workspaceFolder.uri.path + " tests started ---");
 
             const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
             let allWkspTestsIncluded = true;
@@ -332,7 +334,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             if (!allTestsIncluded) {
               const wkspItems: vscode.TestItem[] = [];
 
-              ctrl.items.forEach(item => {
+              getAllTestItems(ctrl.items).forEach(item => {
                 if (item.uri?.path.startsWith(wkspSettings.fullFeaturesPath))
                   wkspItems.push(item);
               });
@@ -350,56 +352,53 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
             }
 
 
-            if (!debug && allWkspTestsIncluded && wkspSettings.runAllAsOne) {
-
+            if (wkspSettings.runAllAsOne && !debug && allWkspTestsIncluded) {
+              wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
               await runBehaveAll(wkspSettings, run, wkspQueue, cancellation);
-
               for (const qi of wkspQueue) {
                 updateRun(qi.test, coveredLines, run);
               }
-
               continue;
             }
 
 
-            for (const wskpQueueItem of wkspQueue) {
+            for (const wkspQueueItem of wkspQueue) {
 
-              run.appendOutput(`Running ${wskpQueueItem.test.id}\r\n`);
+              run.appendOutput(`Running ${wkspQueueItem.test.id}\r\n`);
 
               if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
-                updateRun(wskpQueueItem.test, coveredLines, run);
+                updateRun(wkspQueueItem.test, coveredLines, run);
               }
               else {
-
-                run.started(wskpQueueItem.test);
+                run.started(wkspQueueItem.test);
 
                 if (!wkspSettings.runParallel || debug) {
-                  await wskpQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wskpQueueItem, debugCancelSource.token);
-                  updateRun(wskpQueueItem.test, coveredLines, run);
+                  await wkspQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wkspQueueItem, debugCancelSource.token);
+                  updateRun(wkspQueueItem.test, coveredLines, run);
                 }
                 else {
                   // async run (parallel)
-                  const promise = wskpQueueItem.scenario.runOrDebug(wkspSettings, false, run, wskpQueueItem, cancellation).then(() => {
-                    updateRun(wskpQueueItem.test, coveredLines, run)
+                  const promise = wkspQueueItem.scenario.runOrDebug(wkspSettings, false, run, wkspQueueItem, cancellation).then(() => {
+                    updateRun(wkspQueueItem.test, coveredLines, run)
                   });
-                  asyncRunPromises[wkspUri.path].push(promise);
+                  asyncRunPromises[wkspPath].push(promise);
                 }
               }
             }
 
-          }
+            Promise.all(asyncRunPromises[wkspPath]).then(() => {
+              config.logger.logInfo(`--- ${wkspPath} tests completed ---`);
+            });
 
+          }
 
           for (const wkspUriPath in asyncRunPromises) {
             if (asyncRunPromises[wkspUriPath] && asyncRunPromises[wkspUriPath].length > 0) {
               await Promise.all(asyncRunPromises[wkspUriPath]);
-              config.logger.logInfo(`\n--- ${wkspUriPath} tests completed ---\n`);
             }
           }
 
-          //await Promise.all(asyncRunPromises);
           config.logger.logInfo("\n=== test run complete ===\n");
-
         }
 
 
@@ -457,15 +456,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
 
 
-    ctrl.createRunProfile('Run Tests',
-      vscode.TestRunProfileKind.Run,
+    ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
         runHandler(false, request, token);
       }
       , true);
 
-    ctrl.createRunProfile('Debug Tests',
-      vscode.TestRunProfileKind.Debug,
+    ctrl.createRunProfile('Debug Tests', vscode.TestRunProfileKind.Debug,
       (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
         runHandler(true, request, token);
       }
@@ -596,32 +593,50 @@ async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSetting
   if (featureName === null)
     return undefined;
 
-  // support e.g. /group1_features/ parentGroup folder node
-  let parentGroup: vscode.TestItem | undefined = undefined
+
+  const testItem = controller.createTestItem(uri.toString(), featureName, uri);
+  controller.items.add(testItem);
+  const testFile = new TestFile();
+  testData.set(testItem, testFile);
+  testItem.canResolveChildren = true;
+
+
+  // folder parent node e.g. /group1_features/ 
+  let parentGroupItem: vscode.TestItem | undefined = undefined
   const featIdxPath = ("/" + wkspSettings.featuresPath + "/").replace("../", "/").replace("//", "");
   const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
   const sfp = uri.path.substring(featuresFolderIndex);
   if (sfp.includes("/")) {
     const groupName = sfp.split("/")[0];
-    parentGroup = controller.items.get(groupName);
-    if (!parentGroup) {
-      parentGroup = controller.createTestItem(groupName, groupName, undefined);
-      parentGroup.canResolveChildren = true;
+    parentGroupItem = controller.items.get(wkspSettings.workspaceUri.path + "/" + groupName);
+    if (!parentGroupItem) {
+      parentGroupItem = controller.createTestItem(wkspSettings.workspaceUri.path + "/" + groupName, groupName);
+      parentGroupItem.canResolveChildren = true;
+    }
+    parentGroupItem.children.add(testItem);
+    controller.items.add(parentGroupItem);
+
+    if (groupName === "group1_features") {
+      console.log("group1_features size:" + parentGroupItem.children.size);
     }
   }
 
-  const testItem = controller.createTestItem(uri.toString(), featureName, uri);
-  controller.items.add(testItem);
+  // // multi-root workspace folder grandparent node
+  // if (getWorkspaceFolderUris().length > 0) {
+  //   const wkspName = wkspSettings.workspaceFolder.name;
+  //   let wkspItem = controller.items.get(wkspSettings.workspaceUri.path);
+  //   if (!wkspItem) {
+  //     wkspItem = controller.createTestItem(wkspSettings.workspaceUri.path, wkspName);
+  //     wkspItem.canResolveChildren = true;
+  //   }
+  //   if (parentGroupItem) {
+  //     wkspItem.children.add(parentGroupItem);
+  //   }
+  //   else
+  //     wkspItem.children.add(testItem);
 
-  if (parentGroup !== undefined) {
-    parentGroup.children.add(testItem);
-    controller.items.add(parentGroup);
-  }
-
-  const testFile = new TestFile();
-  testData.set(testItem, testFile);
-
-  testItem.canResolveChildren = true;
+  //   controller.items.add(wkspItem);
+  // }
 
   console.log(`${caller}: created test item for ${uri.path}`);
   return { testItem: testItem, testFile: testFile };
@@ -630,6 +645,16 @@ async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSetting
 function gatherTestItems(collection: vscode.TestItemCollection) {
   const items: vscode.TestItem[] = [];
   collection.forEach((item: vscode.TestItem) => items.push(item));
+  return items;
+}
+
+function getAllTestItems(collection: vscode.TestItemCollection) {
+  const items: vscode.TestItem[] = [];
+  collection.forEach((item: vscode.TestItem) => {
+    items.push(item);
+    if (item.children)
+      items.push(...getAllTestItems(item.children));
+  });
   return items;
 }
 

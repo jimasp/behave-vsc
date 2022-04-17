@@ -10,8 +10,8 @@
 ### Tested with
 - behave 1.2.6
 - Python 3.9.7
-- Visual Studio Code 1.66.0
-- ms-python.python extension v2022.4.0
+- Visual Studio Code 1.66.2
+- ms-python.python extension v2022.4.1
 - Ubuntu 21.10 / Windows 10
 
 ### Release notes
@@ -30,7 +30,7 @@
 
 ---
 ## Project requirements
-- Extension activation requires at least one `*.feature` file somewhere in your workspace.
+- Extension activation requires at least one `*.feature` file somewhere in a workspace.
 - No conflicting behave extension is enabled
 - A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
@@ -38,7 +38,7 @@
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires "steps".)
+- A single `features` folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires you have a "steps" folder.)
 - A behave-conformant directory structure, for example:
 ```  
   . features/  
@@ -50,17 +50,17 @@
   .       +-- storage_tests/  
   .       |      +-- *.feature  
 ```
- - If you don't want your `features` folder in the project root, you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings.
+- If your features folder is not called "features", or is not in the workspace root, then you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. Example:
 ```
-// settings.json file
-"behave-vsc.featuresPath": "behave_tests/features",
-"behave-vsc.workingDirectory": "" // (this is optional, empty string defaults to workspace folder root)
-
 // behave.ini file
 [behave]
 paths=behave_tests/features 
+
+// settings.json file
+"behave-vsc.featuresPath": "behave_tests/features",
 ```
-- While only one features steps folder is supported by behave, you can import steps from other folders via python (you should test this manually with behave first):
+- If you are using a multi-root workspace, then for each workspace that containst features, adjust the `settings.json` in each workspace.
+- While behave only supports one "steps" folder, you can import steps from other folders via python (you should test this manually with behave first):
 ```  
   . features/  
   .       +-- environment.py
@@ -73,16 +73,15 @@ paths=behave_tests/features
   .       +-- storage_tests/  
   .       |      +-- *.feature  
 ```
-- If your features folder is not called "features" then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
-- If your features folder is not in the root of your workspace folder, then you will need to set the `featuresPath` in extension settings (and update your `behave.ini`/`.behaverc` file if required).
-- If you are using a multi-root workspace, then the settings section in the `.workspace` file will override those in workspace folders. In this case, you need to make sure that all your workspaces can work with the same settings, e.g. they all have the same relative features path, same behave.ini setup etc.
+
 
 ---
 ## Extension settings
 
-- This extension has various settings to customise your test run via `settings.json`, e.g. path settings and `runParallel`. 
+- This extension has various options to customise your test run via `settings.json`, e.g. feature path and `runParallel`. 
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- For more information, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
+- If you are using a multi-root workspace, then for each workspace that contains features, adjust the `settings.json` in each workspace as required.
+- For information on available options, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
 ---  
 ## How it works
@@ -134,7 +133,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 ### Q&A
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- When will this extension have a release version? When I have time. At the moment the code is likely to have rewrites/refactoring, and there aren't enough extension tests yet for release confidence.
+- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to rewrites/refactoring.
 
 ---
 ## Known issues and limitations

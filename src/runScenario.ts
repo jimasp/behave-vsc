@@ -25,7 +25,7 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
   const local_args = [...args];
   local_args.unshift("-m", "behave");
 
-  const options = { cwd: wkspSettings.fullWorkingDirectoryPath, env: wkspSettings.envVarList };
+  const options = { cwd: wkspSettings.workspacePath, env: wkspSettings.envVarList };
 
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options);

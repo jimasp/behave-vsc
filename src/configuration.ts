@@ -111,8 +111,7 @@ class Logger {
 
 
 export class WorkspaceSettings {
-  public workspaceUri: vscode.Uri;
-  public workspaceFolder: vscode.WorkspaceFolder;
+  // user-settable
   public envVarList: { [name: string]: string } = {};
   public showConfigurationWarnings: boolean;
   public fastSkipList: string[] = [];
@@ -120,9 +119,12 @@ export class WorkspaceSettings {
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
-  public workingDirectory = "";
-  public fullFeaturesPath: string; // not set by user, derived from featuresPath  
-  public fullWorkingDirectoryPath: string; // not set by user, derived from workingDirectory
+  // other public properties
+  public workspaceUri: vscode.Uri;
+  public workspacePath: string;
+  public workspaceFolder: vscode.WorkspaceFolder;
+  public fullFeaturesPath: string;
+  // internal
   private _errors: string[] = [];
   private _logger: Logger;
 
@@ -130,6 +132,7 @@ export class WorkspaceSettings {
 
     this._logger = logger;
     this.workspaceUri = wkspUri;
+    this.workspacePath = wkspUri.path;
 
     const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
     if (!wsFolder)
@@ -139,7 +142,6 @@ export class WorkspaceSettings {
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
     const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
-    const workingDirectoryCfg: string | undefined = wsConfig.get("workingDirectory");
     const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
@@ -150,13 +152,6 @@ export class WorkspaceSettings {
     this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
 
-
-    if (workingDirectoryCfg)
-      this.workingDirectory = workingDirectoryCfg.trim().replace(/\\$|\/$/, "");
-    this.fullWorkingDirectoryPath = vscode.Uri.joinPath(wkspUri, this.workingDirectory).path;
-    // note - we can't use "vscode.workspace.fs.stat" here because that's an async func and we are in a constructor
-    if (!fs.existsSync(this.fullWorkingDirectoryPath))
-      this._errors.push(`FATAL ERROR: working directory ${this.fullWorkingDirectoryPath} not found.`);
 
     if (featuresPathCfg)
       this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
@@ -215,23 +210,23 @@ export class WorkspaceSettings {
       }
     }
 
-    this.log();
+    this.logUserSettings();
   }
 
-  log() {
+  logUserSettings() {
 
     const entries = Object.entries(this).sort();
 
     const dic: { [name: string]: string } = {};
 
     entries.forEach(([key, value]) => {
+      // remove non-user-settable properties
       if (!key.startsWith("_") && key !== "fullFeaturesPath" && key !== "workspaceFolder" && key !== "workspaceUri" && key !== "fullWorkingDirectoryPath")
         dic[key] = value;
     });
 
     this._logger.logInfo(`\nworkspace settings for ${this.workspaceFolder.uri.path}:\n${JSON.stringify(dic, null, 2)}`);
     this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`);
-    this._logger.logInfo(`fullWorkingDirectoryPath: ${this.fullWorkingDirectoryPath}\n`);
 
     if (this.showConfigurationWarnings) {
       let warned = false;
