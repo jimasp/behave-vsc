@@ -71,7 +71,6 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 let actRet: IntegrationTestInterface;
 
 const activateExtension = async (): Promise<IntegrationTestInterface> => {
-	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	if (actRet !== undefined)
 		return actRet;
 
@@ -206,8 +205,13 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	await actRet.treeBuilder.readyForRun(2000);
 
 	//run tests
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
-	const results = await actRet?.runHandler(debug, runRequest, cancelToken);
+	const resultsPromise = actRet?.runHandler(debug, runRequest, cancelToken);
+	// hack to show test ui for debug run so we can see progress
+	await new Promise(t => setTimeout(t, 1000));
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
+	const results = await resultsPromise;
 
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
@@ -235,6 +239,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 
 
 		assert(JSON.stringify(result.test.range).includes("line"));
+
 
 		const match = findMatch(expectedResults, scenResult);
 		assert.strictEqual(match.length, 1);
