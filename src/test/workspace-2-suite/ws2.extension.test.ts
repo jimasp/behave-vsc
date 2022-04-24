@@ -1,9 +1,11 @@
 import { getWs2ExpectedResults } from "./ws2.expectedResults";
 import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace.tests";
 import { TestWorkspaceConfig } from "../workspace-suite-shared/testWorkspaceConfig";
-import { runAllTestsAndAssertTheResults } from "../workspace-suite-shared/extension.test.helpers";
+import { getWorkspaceUriFromName, runAllTestsAndAssertTheResults } from "../workspace-suite-shared/extension.test.helpers";
 
-const testPre = "runHandler should return expected results for example-project-workpace-2 with configuration:";
+const wkspName = "example-project-workspace-2";
+const wkspUri = getWorkspaceUriFromName(wkspName);
+const testPre = `runHandler should return expected results for ${wkspName} with configuration:`;
 
 suite(`workspace-2-suite test run`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(2);
@@ -13,13 +15,15 @@ suite(`workspace-2-suite test run`, () => {
 			`envVarList: undefined, featuresPath: undefined }`);
 
 		const testConfig = new TestWorkspaceConfig();
-		await runAllTestsAndAssertTheResults(false, testConfig, getWs2ExpectedResults);
+		await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getWs2ExpectedResults);
 	}).timeout(120000);
 
 
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne("", getWs2ExpectedResults)).timeout(60000);
-	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne("", getWs2ExpectedResults)).timeout(60000);
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel("", getWs2ExpectedResults)).timeout(60000);
-	test("runDebug", async () => await sharedWorkspaceTests.runDebug("", getWs2ExpectedResults)).timeout(180000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
+	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
+	test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspUri, "", getWs2ExpectedResults)).timeout(180000);
 }).timeout(600000);
+
+
 

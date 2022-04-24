@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	constructor(private runParallel?: boolean, private runAllAsOne?: boolean, private fastSkipList?: string,
-		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean) { }
+		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean, private showConfigurationWarnings?: boolean) { }
 
 	get<T>(section: string): T | undefined {
 
@@ -20,6 +20,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel);
+			case "showConfigurationWarnings":
+				return <T><unknown>(this.showConfigurationWarnings);
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;
@@ -90,6 +92,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
+			case "showConfigurationWarnings":
+				return <T><unknown>(this.showConfigurationWarnings === undefined ? false : this.showConfigurationWarnings);
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;

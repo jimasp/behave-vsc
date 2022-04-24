@@ -198,7 +198,7 @@ export class WorkspaceSettings {
             if (name.length === 0) {
               throw null;
             }
-            const value = matches[2].trim().replace(escape, "'");
+            const value = matches[2].replace(escape, "'");
             console.log(`${name}='${value}'`)
             this.envVarList[name] = value;
           }

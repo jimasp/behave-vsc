@@ -1,8 +1,9 @@
-import { WorkspaceSettings } from "../../configuration";
+import * as vscode from 'vscode';
+import { ExtensionConfiguration } from "../../configuration";
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 
-export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSettings): TestResult[] => {
+export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -941,6 +942,8 @@ export const getWs2ExpectedResults = (debug: boolean, wkspSettings: WorkspaceSet
 
   ];
 
+
+  const wkspSettings = config.workspaceSettings(wkspUri);
   return applyTestConfiguration(debug, wkspSettings, expectedResults);
 }
 

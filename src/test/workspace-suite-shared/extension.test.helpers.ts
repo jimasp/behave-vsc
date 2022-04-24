@@ -1,12 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
+import * as path from 'path';
 import * as assert from 'assert';
-import { ExtensionConfiguration } from "../../configuration";
+import { ExtensionConfiguration, WorkspaceSettings } from "../../configuration";
 import { IntegrationTestInterface } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
+
+
+export function getWorkspaceUriFromName(wkspName: string) {
+	const wsPath = path.join(`${__dirname}/../../../${wkspName}`);
+	return vscode.Uri.file(wsPath)
+}
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -74,13 +81,14 @@ const activateExtension = async (): Promise<IntegrationTestInterface> => {
 }
 
 
-function assertUserSettingsAsExpected(testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
-	assert.deepStrictEqual(config.workspaceSettings(uri).envVarList, testConfig.getExpected("envVarList"));
-	assert.deepStrictEqual(config.workspaceSettings(uri).fastSkipList, testConfig.getExpected("fastSkipList"));
-	assert.strictEqual(config.workspaceSettings(uri).featuresPath, testConfig.getExpected("featuresPath"));
-	assert.strictEqual(config.workspaceSettings(uri).justMyCode, testConfig.getExpected("justMyCode"));
-	assert.strictEqual(config.workspaceSettings(uri).runAllAsOne, testConfig.getExpected("runAllAsOne"));
-	assert.strictEqual(config.workspaceSettings(uri).runParallel, testConfig.getExpected("runParallel"));
+function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+	const cfgSettings = config.workspaceSettings(wkspUri);
+	assert.deepStrictEqual(cfgSettings.envVarList, testConfig.getExpected("envVarList"));
+	assert.deepStrictEqual(cfgSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
+	assert.strictEqual(cfgSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(cfgSettings.justMyCode, testConfig.getExpected("justMyCode"));
+	assert.strictEqual(cfgSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
+	assert.strictEqual(cfgSettings.runParallel, testConfig.getExpected("runParallel"));
 }
 
 
@@ -104,33 +112,32 @@ function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 }
 
 
-async function getAllStepsFromFeatureFiles(path: string) {
+async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 
-	let stepLines: string[] = [];
-	const pattern = new vscode.RelativePattern(path, "**/*.feature");
-	const featureFiles = await vscode.workspace.findFiles(pattern);
+	const stepLines: string[] = [];
+	//const stepMap: Map<string, string[]> = new Map();
+	const pattern = new vscode.RelativePattern(wkspSettings.fullFeaturesPath, "**/*.feature");
+	const featureFileUris = await vscode.workspace.findFiles(pattern);
 
-	for (const file of featureFiles) {
-		const doc = await vscode.workspace.openTextDocument(file);
+	for (const featFileUri of featureFileUris) {
+		const doc = await vscode.workspace.openTextDocument(featFileUri);
 		const content = doc.getText();
 		addStepsFromFeatureFile(content, stepLines);
 	}
 
-	stepLines = [...new Set(stepLines)]; // remove duplicates
-
-	return stepLines;
+	return [...new Set(stepLines)]; // remove duplicates
 }
 
 
-async function assertAllStepsCanBeMatched(parsedSteps: Steps, path: string) {
+async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: WorkspaceSettings) {
 
-	const featureSteps = await getAllStepsFromFeatureFiles(path);
+	const featureSteps = await getAllStepsFromFeatureFiles(wkspSettings);
 
 	for (const idx in featureSteps) {
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const match = getStepMatch(parsedSteps, line);
+				const match = getStepMatch(wkspSettings.workspaceUri, parsedSteps, line);
 				assert(match);
 			}
 		}
@@ -143,8 +150,8 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, path: string) {
 }
 
 
-export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig: TestWorkspaceConfig,
-	getExpectedResults: (debug: boolean, config: ExtensionConfiguration) => TestResult[]) => {
+export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig,
+	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
 
 	const standardisePath = (path: string | undefined): string | undefined => {
 		return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
@@ -189,10 +196,10 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually:
-	actRet.config.reloadWorkspaceSettings(wskpUri, testConfig);
+	actRet.config.reloadWorkspaceSettings(wkspUri, testConfig);
 	actRet.treeBuilder.buildTree(wkspUri, actRet.ctrl, "runAllTestsAndAssertTheResults", false);
 
-	assertUserSettingsAsExpected(testConfig, actRet.config);
+	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, actRet.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// for test parsing here before requesting a test run due to vscode startup contention
@@ -205,7 +212,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
 
-	const expectedResults = getExpectedResults(debug, actRet.config);
+	const expectedResults = getExpectedResults(debug, wkspUri, actRet.config);
 
 	results.forEach(result => {
 
@@ -238,7 +245,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, testConfig:
 	assert.strictEqual(results.length, expectedResults.length);
 
 
-	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.workspaceSettings(uri).fullFeaturesPath);
+	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.workspaceSettings(wkspUri));
 }
 
 
