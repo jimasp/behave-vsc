@@ -2,8 +2,7 @@
 
 ## Pre-release v0.2.0
 
-- NOTE to users of previous versions - if the `features` folder is not in your project root, you must now specify your features path in extension settings. 
-- A simple test runner (and debugger) for Python behave tests in vscode
+- A test runner (and debugger) for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API  
 - See [Troubleshooting](#troubleshooting) below if you have any problems
 
@@ -15,7 +14,6 @@
 - Ubuntu 21.10 / Windows 10
 
 ### Release notes
-- If the `features` folder is not in your project root, you must now specify your features path in extension settings. 
 - See [here](https://github.com/jimasp/behave-vsc/releases)
 
 ---
