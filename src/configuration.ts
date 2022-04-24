@@ -13,7 +13,7 @@ const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
 export interface ExtensionConfiguration {
   readonly debugOutputFilePath: string;
   readonly logger: Logger;
-  workspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
+  getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
   reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
 }
@@ -50,7 +50,7 @@ class Configuration implements ExtensionConfiguration {
       Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.logger);
   }
 
-  public workspaceSettings(wkspUri: vscode.Uri) {
+  public getWorkspaceSettings(wkspUri: vscode.Uri) {
     return Configuration._workspaceSettings[wkspUri.path]
       ? Configuration._workspaceSettings[wkspUri.path]
       : Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);

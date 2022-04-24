@@ -520,6 +520,6 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
   ];
 
 
-  const wkspSettings = config.workspaceSettings(wkspUri);
+  const wkspSettings = config.getWorkspaceSettings(wkspUri);
   return applyTestConfiguration(debug, wkspSettings, expectedResults);
 }

@@ -19,9 +19,10 @@ export function getStepMatch(featureFileUri: vscode.Uri, allSteps: Steps, stepLi
   const stepText = stMatches[3].trim();
 
   const wkspUri = getWorkspaceUriForFile(featureFileUri);
+  const wkspSettings = config.getWorkspaceSettings(wkspUri);
 
-  let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspUri.path)));
-  wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspUri.path + ":", ""), v]));
+  let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspSettings.fullFeaturesPath)));
+  wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspSettings.fullFeaturesPath + ":", ""), v]));
 
   const exactSteps = new Map([...wkspSteps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.includes(parseRepWildcard)));

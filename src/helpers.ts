@@ -31,7 +31,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined) 
 
 export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined) => {
   const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
-  return config.workspaceSettings(wkspUri);
+  return config.getWorkspaceSettings(wkspUri);
 }
 
 export const getWorkspaceFolder = (wskpUri: vscode.Uri) => {

@@ -7,12 +7,12 @@ const startRe = /^\s*(@step|@given|@when|@then).+/i;
 export const parseRepWildcard = ".*";
 
 export class StepDetail {
-  constructor(public wkspUri: vscode.Uri, public uri: vscode.Uri, public range: vscode.Range) { }
+  constructor(public wkspFullFeaturesPath: string, public uri: vscode.Uri, public range: vscode.Range) { }
 }
 
 export type Steps = Map<string, StepDetail>;
 
-export const parseStepsFile = async (wkspUri: vscode.Uri, uri: vscode.Uri, steps: Steps, caller: string) => {
+export const parseStepsFile = async (wskpFullFeaturesPath: string, uri: vscode.Uri, steps: Steps, caller: string) => {
 
   if (!isStepsFile(uri))
     throw new Error(`${uri.path} is not a steps file`);
@@ -83,9 +83,9 @@ export const parseStepsFile = async (wkspUri: vscode.Uri, uri: vscode.Uri, steps
       let stepText = step[1].trim();
       stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
       stepText = stepText.replace(/{.*?}/g, parseRepWildcard);
-      const reKey = `${wkspUri.path}:^${stepText}$`;
+      const reKey = `${wskpFullFeaturesPath}:^${stepText}$`;
       const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
-      const detail = new StepDetail(wkspUri, uri, range);
+      const detail = new StepDetail(wskpFullFeaturesPath, uri, range);
       if (steps.get(reKey))
         console.log("replacing duplicate step re: " + reKey);
       steps.set(reKey, detail); // there can be only one (per workspace)

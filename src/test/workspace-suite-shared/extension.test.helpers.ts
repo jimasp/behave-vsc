@@ -11,7 +11,7 @@ import { Steps } from '../../stepsParser';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
-	const wsPath = path.join(`${__dirname}/../../../${wkspName}`);
+	const wsPath = path.resolve(__dirname, `../../../${wkspName}`);
 	return vscode.Uri.file(wsPath)
 }
 
@@ -69,7 +69,6 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 let actRet: IntegrationTestInterface;
-
 const activateExtension = async (): Promise<IntegrationTestInterface> => {
 	if (actRet !== undefined)
 		return actRet;
@@ -81,7 +80,7 @@ const activateExtension = async (): Promise<IntegrationTestInterface> => {
 
 
 function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
-	const cfgSettings = config.workspaceSettings(wkspUri);
+	const cfgSettings = config.getWorkspaceSettings(wkspUri);
 	assert.deepStrictEqual(cfgSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(cfgSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
 	assert.strictEqual(cfgSettings.featuresPath, testConfig.getExpected("featuresPath"));
@@ -204,11 +203,19 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	// for test parsing here before requesting a test run due to vscode startup contention
 	await actRet.treeBuilder.readyForRun(2000);
 
-	//run tests
+
+	const include: vscode.TestItem[] = [];
+	actRet.ctrl.items.forEach(item => {
+		if (item.id.startsWith(wkspUri.path))
+			include.push(item);
+	});
+
+	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
+
+	// run tests
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
-	const runRequest = new vscode.TestRunRequest(undefined, undefined, undefined);
 	const resultsPromise = actRet?.runHandler(debug, runRequest, cancelToken);
-	// hack to show test ui for debug run so we can see progress
+	// hack to show test ui during debug testing so we can see progress
 	await new Promise(t => setTimeout(t, 1000));
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const results = await resultsPromise;
@@ -250,7 +257,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	assert.strictEqual(results.length, expectedResults.length);
 
 
-	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.workspaceSettings(wkspUri));
+	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.getWorkspaceSettings(wkspUri));
 }
 
 
