@@ -176,10 +176,10 @@ class TreeBuilder {
       const featureFileCount = await this._parseFeatureFiles(wkspSettings, ctrl, this._cancelTokenSources[wkspPath].token, reparseFeatures, callName);
       const featTime = Date.now() - start;
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
-        console.log(`features loaded for workspace ${wkspName}`);
+        console.log(`${callName}: features loaded for workspace ${wkspName}`);
         this._featuresLoadedForWorkspace[wkspPath] = true;
-        const stillLoading = getWorkspaceFolderUris().filter(wkspFldUri => !this._featuresLoadedForWorkspace[wkspFldUri.path])
-        if (stillLoading.length === 0) {
+        const anyWkspStillLoading = getWorkspaceFolderUris().filter(uri => !this._featuresLoadedForWorkspace[uri.path])
+        if (anyWkspStillLoading.length === 0) {
           this._featuresLoadedForAllWorkspaces = true;
           console.log(`${callName}: features loaded for all workspaces`);
         }
@@ -314,8 +314,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           // (loop itself does not need to be async)
           for (const wkspUri of getWorkspaceFolderUris()) {
 
-            const wskpPath = wkspUri.path;
-
+            const wkspPath = wkspUri.path;
             asyncRunPromises[wkspPath] = [];
             const wkspSettings = config.workspaceSettings(wkspUri);
 
@@ -601,52 +600,57 @@ async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSetting
   testItem.canResolveChildren = true;
 
 
-  // folder parent node e.g. /group1_features/ 
-  let parentGroupItem: vscode.TestItem | undefined = undefined
-  const featIdxPath = ("/" + wkspSettings.featuresPath + "/").replace("../", "/").replace("//", "");
-  const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
-  const sfp = uri.path.substring(featuresFolderIndex);
-  if (sfp.includes("/")) {
-    const groupName = sfp.split("/")[0];
-    parentGroupItem = controller.items.get(wkspSettings.workspaceUri.path + "/" + groupName);
-    if (!parentGroupItem) {
-      parentGroupItem = controller.createTestItem(wkspSettings.workspaceUri.path + "/" + groupName, groupName);
-      parentGroupItem.canResolveChildren = true;
-    }
-    parentGroupItem.children.add(testItem);
-    controller.items.add(parentGroupItem);
-
-    if (groupName === "group1_features") {
-      console.log("group1_features size:" + parentGroupItem.children.size);
+  // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
+  let wkspGrandParent: vscode.TestItem | undefined;
+  const wkspPath = wkspSettings.workspaceUri.path;
+  if (getWorkspaceFolderUris().length > 0) {
+    wkspGrandParent = controller.items.get(wkspPath);
+    if (!wkspGrandParent) {
+      const wkspName = wkspSettings.workspaceFolder.name;
+      wkspGrandParent = controller.createTestItem(wkspPath, wkspName);
+      controller.items.add(wkspGrandParent);
+      wkspGrandParent.canResolveChildren = true;
     }
   }
 
-  // // multi-root workspace folder grandparent node
-  // if (getWorkspaceFolderUris().length > 0) {
-  //   const wkspName = wkspSettings.workspaceFolder.name;
-  //   let wkspItem = controller.items.get(wkspSettings.workspaceUri.path);
-  //   if (!wkspItem) {
-  //     wkspItem = controller.createTestItem(wkspSettings.workspaceUri.path, wkspName);
-  //     wkspItem.canResolveChildren = true;
-  //   }
-  //   if (parentGroupItem) {
-  //     wkspItem.children.add(parentGroupItem);
-  //   }
-  //   else
-  //     wkspItem.children.add(testItem);
 
-  //   controller.items.add(wkspItem);
-  // }
+  // folder parent node e.g. "web_features"
+  let folderParent: vscode.TestItem | undefined = undefined
+  const sfp = uri.path.substring(wkspSettings.fullFeaturesPath.length + 1);
+  if (sfp.includes("/")) {
+    const folderName = sfp.split("/")[0];
+    const groupId = wkspPath + "/" + folderName;
+
+    folderParent = wkspGrandParent?.children.get(groupId);
+    if (!folderParent) {
+      folderParent = controller.createTestItem(groupId, folderName);
+      folderParent.canResolveChildren = true;
+      controller.items.add(folderParent);
+    }
+
+    folderParent.children.add(testItem);
+  }
+
+  if (wkspGrandParent) {
+    if (folderParent) {
+      wkspGrandParent.children.add(folderParent);
+    }
+    else {
+      wkspGrandParent.children.add(testItem);
+    }
+  }
 
   console.log(`${caller}: created test item for ${uri.path}`);
   return { testItem: testItem, testFile: testFile };
 }
+
 
 function gatherTestItems(collection: vscode.TestItemCollection) {
   const items: vscode.TestItem[] = [];
   collection.forEach((item: vscode.TestItem) => items.push(item));
   return items;
 }
+
 
 function getAllTestItems(collection: vscode.TestItemCollection) {
   const items: vscode.TestItem[] = [];
@@ -657,7 +661,6 @@ function getAllTestItems(collection: vscode.TestItemCollection) {
   });
   return items;
 }
-
 
 
 async function updateStepsFromStepsFile(wkspUri: vscode.Uri, uri: vscode.Uri, caller: string) {
