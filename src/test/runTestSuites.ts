@@ -57,7 +57,7 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-project-workspace-multi-root"]
+    launchArgs = ["example-project-workspace-multiroot/workspace.code-workspace"]
     extensionTestsPath = path.resolve(__dirname, './workspace-multiroot-suite/index');
     await runTests({
       vscodeExecutablePath,
