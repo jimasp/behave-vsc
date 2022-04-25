@@ -456,20 +456,6 @@ function testRunHandler(ctrl: vscode.TestController) {
 
           if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem))
             allTestsForThisWkspIncluded = true;
-
-          // if (!wkspGrandParentItem) {
-          //   const wkspItems = allTestItems.filter(item => item.uri?.path.startsWith(wkspSettings.fullFeaturesPath));                
-          //   for (const item of wkspItems) {
-          //     if (!request.include?.includes(item)) {
-          //       allTestsForThisWkspIncluded = false;
-          //       break;
-          //     }
-          //     if (request.exclude?.includes(item)) {
-          //       allTestsForThisWkspIncluded = false;
-          //       break;
-          //     }
-          //   }
-          // }
         }
 
 
