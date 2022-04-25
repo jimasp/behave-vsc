@@ -46,6 +46,12 @@
 					"default": false,
 					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nIf you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel.\nNote that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n",
 					"scope": "resource"
+				},
+				"behave-vsc.runWorkspacesInParallel": {
+					"type": "boolean",
+					"default": true,
+					"description": "Default:true (enabled).\nFor multi-root workspaces, when behave tests are run from both workspaces, run those tests at the same time.\nThis setting should be set in your *.code-workspace file.\n",
+					"scope": "window"
 				}
 			}
 		},
@@ -108,16 +114,15 @@
 	"scripts": {
 		"prevscode:prepublish": "npm run test",
 		"vscode:prepublish": "npm run package",
-		"compile": "webpack",
+		"compile": "npm run clean-output && webpack",
 		"watch": "npm run clean-output && webpack --watch",
 		"package": "webpack --mode production --devtool hidden-source-map",
-		"compile-tests": "npm run clean-output && tsc -p . --outDir out",
-		"prewatch-tests": "npm run pretest",
+		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
-		"pretest": "npm run compile-tests && npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTestSuites.js --stable",
-		"pretestinsiders": "npm run compile-tests && npm run compile && npm run lint",
+		"pretest": "npm run compile && npm run compile-tests && npm run lint",
+		"pretestinsiders": "npm run pretest",
 		"testinsiders": "node ./out/test/runTestSuites.js --insiders",
 		"rimraf": "./node_modules/rimraf/bin.js",
 		"clean-output": "rimraf out/ dist/"

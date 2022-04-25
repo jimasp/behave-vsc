@@ -11,6 +11,8 @@ import {
 import { getFeatureNameFromFile } from './featureParser';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
+import { performance } from 'perf_hooks';
+const vwfs = vscode.workspace.fs;
 
 
 let debugCancelSource = new vscode.CancellationTokenSource();
@@ -162,7 +164,7 @@ class TreeBuilder {
     const wkspName = getWorkspaceFolder(wkspUri).name;
     const callName = `buildTree ${this._calls} ${wkspName}`;
     const wkspSettings = config.getWorkspaceSettings(wkspUri);
-    const wkspPath = wkspSettings.workspacePath;
+    const wkspPath = wkspSettings.uri.path;
 
 
     try {
@@ -224,11 +226,14 @@ class TreeBuilder {
 const treeBuilder = new TreeBuilder();
 
 
+// called on extension activation:
+// set up all relevant event handlers/hooks/subscriptions with vscode api
 export async function activate(context: vscode.ExtensionContext): Promise<IntegrationTestInterface | undefined> {
 
   try {
 
     logExtensionVersion(context);
+    cleanUpTempFiles(config.tempFilesUri);
 
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
@@ -240,231 +245,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
-
-    const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
-
-      // the test tree is built as a background process which is called from a few places
-      // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
-      // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
-      const ready = await treeBuilder.readyForRun(1000);
-      if (!ready) {
-        const msg = "cannot run tests while test items are still updating, please try again";
-        console.warn(msg);
-        vscode.window.showWarningMessage(msg);
-        return;
-      }
-
-      try {
-
-        const queue: QueueItem[] = [];
-        const run = ctrl.createTestRun(request, EXTENSION_FULL_NAME, false);
-        config.logger.run = run;
-
-        // map of file uris to statements on each line:
-        // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-        const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
-
-        const queueSelectedTestItems = async (tests: Iterable<vscode.TestItem>) => {
-          for (const test of tests) {
-            if (request.exclude?.includes(test)) {
-              continue;
-            }
-
-            const data = testData.get(test);
-
-            if (data instanceof Scenario) {
-              run.enqueued(test);
-              queue.push({ test, scenario: data });
-            }
-            else {
-              if (data instanceof TestFile && !data.didResolve) {
-                const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-                await data.updateFromDisk(wkspSettings, ctrl, test, "queueSelectedItems");
-              }
-
-              await queueSelectedTestItems(gatherTestItems(test.children));
-            }
-
-            if (test.uri && !coveredLines.has(test.uri.toString())) {
-              try {
-                const lines = (await getContentFromFilesystem(test.uri)).split('\n');
-                coveredLines.set(
-                  test.uri.toString(),
-                  lines.map((lineText, lineNo) =>
-                    // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-                    lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
-                  )
-                );
-              } catch {
-                // ignored
-              }
-            }
-          }
-        };
-
-
-        const runTestQueue = async (request: vscode.TestRunRequest) => {
-
-          config.logger.clear();
-          config.logger.logInfo("\n=== starting test run ===\n");
-
-          if (queue.length === 0) {
-            const err = "empty queue - nothing to do";
-            config.logger.logError(err);
-            throw err;
-          }
-
-          const asyncRunPromises: { [wkspUriPath: string]: Promise<void>[] } = {};
-          debugCancelSource.dispose();
-          debugCancelSource = new vscode.CancellationTokenSource();
-
-
-          // (loop itself does not need to be async)
-          for (const wkspUri of getWorkspaceFolderUris()) {
-
-            const wkspPath = wkspUri.path;
-            asyncRunPromises[wkspPath] = [];
-            const wkspSettings = config.getWorkspaceSettings(wkspUri);
-
-            const wkspQueue = queue.filter(item => {
-              return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
-            });
-
-            if (wkspQueue.length === 0)
-              continue;
-
-            config.logger.logInfo("--- workspace " + wkspSettings.workspaceFolder.uri.path + " tests started ---");
-
-            const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
-            let allTestsForThisWkspIncluded = true;
-
-            if (!allTestsIncluded) {
-
-              const allTestItems = getAllTestItems(ctrl.items);
-              const wkspGrandParentItem = allTestItems.find(item => item.id === wkspSettings.workspaceFolder.uri.path); // multi-root workspace
-
-              if (wkspGrandParentItem && request.exclude?.includes(wkspGrandParentItem))
-                allTestsForThisWkspIncluded = false;
-
-              // if (!wkspGrandParentItem) {
-              //   const wkspItems = allTestItems.filter(item => item.uri?.path.startsWith(wkspSettings.fullFeaturesPath));                
-              //   for (const item of wkspItems) {
-              //     if (!request.include?.includes(item)) {
-              //       allTestsForThisWkspIncluded = false;
-              //       break;
-              //     }
-              //     if (request.exclude?.includes(item)) {
-              //       allTestsForThisWkspIncluded = false;
-              //       break;
-              //     }
-              //   }
-              // }
-            }
-
-
-            if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
-              wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
-              await runBehaveAll(wkspSettings, run, wkspQueue, cancellation);
-              for (const qi of wkspQueue) {
-                updateRun(qi.test, coveredLines, run);
-              }
-              continue;
-            }
-
-
-            for (const wkspQueueItem of wkspQueue) {
-
-              run.appendOutput(`Running ${wkspQueueItem.test.id}\r\n`);
-              run.started(wkspQueueItem.test);
-
-              if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
-                updateRun(wkspQueueItem.test, coveredLines, run);
-              }
-              else {
-
-                if (!wkspSettings.runParallel || debug) {
-                  await wkspQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wkspQueueItem, debugCancelSource.token);
-                  updateRun(wkspQueueItem.test, coveredLines, run);
-                }
-                else {
-                  // async run (parallel)
-                  const promise = wkspQueueItem.scenario.runOrDebug(wkspSettings, false, run, wkspQueueItem, cancellation).then(() => {
-                    updateRun(wkspQueueItem.test, coveredLines, run)
-                  });
-                  asyncRunPromises[wkspPath].push(promise);
-                }
-              }
-            }
-
-            Promise.all(asyncRunPromises[wkspPath]).then(() => {
-              config.logger.logInfo(`--- ${wkspPath} tests completed ---`);
-            });
-
-          }
-
-          for (const wkspUriPath in asyncRunPromises) {
-            if (asyncRunPromises[wkspUriPath] && asyncRunPromises[wkspUriPath].length > 0) {
-              await Promise.all(asyncRunPromises[wkspUriPath]);
-            }
-          }
-
-          config.logger.logInfo("\n=== test run complete ===\n");
-        }
-
-
-        let completed = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updateRun = (test: vscode.TestItem, coveredLines: Map<string, any[]>, run: vscode.TestRun) => {
-          if (!test || !test.range || !test.uri)
-            throw "invalid test item";
-
-          const lineNo = test.range.start.line;
-          const fileCoverage = coveredLines.get(test.uri.toString());
-          if (fileCoverage) {
-            fileCoverage[lineNo].executionCount++;
-          }
-
-          run.appendOutput(`Completed ${test.id}\r\n`);
-
-          completed++;
-          if (completed === queue.length) {
-            run.end();
-          }
-        };
-
-        // @ts-ignore: Property 'coverageProvider' does not exist on type 'TestRun'
-        run.coverageProvider = {
-          provideFileCoverage() {
-            // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-            const coverage: vscode.FileCoverage[] = [];
-            for (const [uri, statements] of coveredLines) {
-              coverage.push(
-                // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-                vscode.FileCoverage.fromDetails(
-                  vscode.Uri.parse(uri),
-                  // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-                  statements.filter((s): s is vscode.StatementCoverage => !!s)
-                )
-              );
-            }
-
-            return coverage;
-          },
-        };
-
-        await queueSelectedTestItems(request.include ?? gatherTestItems(ctrl.items));
-        await runTestQueue(request);
-
-        return queue;
-
-      }
-      catch (e: unknown) {
-        config.logger.logError(e);
-      }
-
-    };
-
-
+    const runHandler = testRunHandler(ctrl);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
@@ -558,13 +339,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     }
 
     // for any open .feature documents on startup
+    // TODO - review if we still need this?
     const docs = vscode.workspace.textDocuments.filter(d => d.uri.scheme === "file" && d.uri.path.toLowerCase().endsWith(".feature"));
     for (const doc of docs) {
       await updateNodeForDocument(doc);
     }
 
     return {
-      // support extensiontest.ts (i.e. maintain same instances)
+      // return instances to support integraion testing
       runHandler: runHandler,
       config: config,
       ctrl: ctrl,
@@ -574,10 +356,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
   }
   catch (e: unknown) {
-    if (config)
+    if (config) {
       config.logger.logError(e);
+    }
     else {
-      // this should never happen
+      // should never happen
       const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
       vscode.window.showErrorMessage(text);
     }
@@ -586,6 +369,236 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 } // end activate()
 
 
+
+function testRunHandler(ctrl: vscode.TestController) {
+  return async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+
+    // the test tree is built as a background process which is called from a few places
+    // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
+    // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
+    const ready = await treeBuilder.readyForRun(1000);
+    if (!ready) {
+      const msg = "cannot run tests while test items are still updating, please try again";
+      console.warn(msg);
+      vscode.window.showWarningMessage(msg);
+      return;
+    }
+
+    try {
+
+      const queue: QueueItem[] = [];
+      const run = ctrl.createTestRun(request, `${performance.now()}`, false);
+      config.logger.run = run;
+
+      // map of file uris to statements on each line:
+      // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+      const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
+
+      const queueSelectedTestItems = async (tests: Iterable<vscode.TestItem>) => {
+        for (const test of tests) {
+          if (request.exclude?.includes(test)) {
+            continue;
+          }
+
+          const data = testData.get(test);
+
+          if (data instanceof Scenario) {
+            run.enqueued(test);
+            queue.push({ test, scenario: data });
+          }
+          else {
+            if (data instanceof TestFile && !data.didResolve) {
+              const wkspSettings = getWorkspaceSettingsForFile(test.uri);
+              await data.updateFromDisk(wkspSettings, ctrl, test, "queueSelectedItems");
+            }
+
+            await queueSelectedTestItems(gatherTestItems(test.children));
+          }
+
+          if (test.uri && !coveredLines.has(test.uri.toString())) {
+            try {
+              const lines = (await getContentFromFilesystem(test.uri)).split('\n');
+              coveredLines.set(
+                test.uri.toString(),
+                lines.map((lineText, lineNo) =>
+                  // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+                  lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
+                )
+              );
+            } catch {
+              // ignored
+            }
+          }
+        }
+      };
+
+      const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings) => {
+
+        const wkspPath = wkspSettings.uri.path;
+        const asyncRunPromises: Promise<void>[] = [];
+
+        const wkspQueue = queue.filter(item => {
+          return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
+        });
+
+        if (wkspQueue.length === 0)
+          return;
+
+        config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name}---`);
+
+        const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+        let allTestsForThisWkspIncluded = allTestsIncluded;
+
+        if (!allTestsIncluded) {
+
+          const allTestItems = getAllTestItems(ctrl.items);
+          const wkspGrandParentItem = allTestItems.find(item => item.id === wkspSettings.uri.path); // multi-root workspace
+
+          if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem))
+            allTestsForThisWkspIncluded = true;
+
+          // if (!wkspGrandParentItem) {
+          //   const wkspItems = allTestItems.filter(item => item.uri?.path.startsWith(wkspSettings.fullFeaturesPath));                
+          //   for (const item of wkspItems) {
+          //     if (!request.include?.includes(item)) {
+          //       allTestsForThisWkspIncluded = false;
+          //       break;
+          //     }
+          //     if (request.exclude?.includes(item)) {
+          //       allTestsForThisWkspIncluded = false;
+          //       break;
+          //     }
+          //   }
+          // }
+        }
+
+
+        if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
+          wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
+          await runBehaveAll(wkspSettings, run, wkspQueue, cancellation);
+          for (const qi of wkspQueue) {
+            updateRun(qi.test, coveredLines, run);
+          }
+          return;
+        }
+
+
+        for (const wkspQueueItem of wkspQueue) {
+
+          config.logger.logInfo(`Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`);
+
+          if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
+            updateRun(wkspQueueItem.test, coveredLines, run);
+          }
+          else {
+            run.started(wkspQueueItem.test);
+            if (!wkspSettings.runParallel || debug) {
+              await wkspQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wkspQueueItem, debugCancelSource.token);
+              updateRun(wkspQueueItem.test, coveredLines, run);
+            }
+            else {
+              // async run (parallel)
+              const promise = wkspQueueItem.scenario.runOrDebug(wkspSettings, false, run, wkspQueueItem, cancellation).then(() => {
+                updateRun(wkspQueueItem.test, coveredLines, run);
+              });
+              asyncRunPromises.push(promise);
+            }
+          }
+        }
+
+        // either we're done (non-async run), or we have promises to await
+        await Promise.all(asyncRunPromises);
+        config.logger.logInfo(`--- ${wkspPath} tests completed for run ${run.name} ---`);
+
+      };
+
+
+      const runTestQueue = async (request: vscode.TestRunRequest) => {
+
+        config.logger.clear();
+        config.logger.logInfo(`\n=== starting test run ${run.name} ===\n`);
+
+        if (queue.length === 0) {
+          const err = "empty queue - nothing to do";
+          config.logger.logError(err);
+          throw err;
+        }
+
+        const wkspRunPromises: Promise<void>[] = [];
+        debugCancelSource.dispose();
+        debugCancelSource = new vscode.CancellationTokenSource();
+
+
+        // run each workspace queue in parallel (unless debug)
+        for (const wkspUri of getWorkspaceFolderUris()) {
+          const wkspSettings = config.getWorkspaceSettings(wkspUri);
+          if (debug || !wkspSettings.runWorkspacesInParallel)
+            await runWorkspaceQueue(request, wkspSettings); // limit to one debug session
+          else
+            wkspRunPromises.push(runWorkspaceQueue(request, wkspSettings));
+        }
+
+        await Promise.all(wkspRunPromises);
+
+        config.logger.logInfo(`\n=== test run ${run.name} complete ===\n`);
+      };
+
+
+
+      let completed = 0;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updateRun = (test: vscode.TestItem, coveredLines: Map<string, any[]>, run: vscode.TestRun) => {
+        if (!test || !test.range || !test.uri)
+          throw "invalid test item";
+
+        const lineNo = test.range.start.line;
+        const fileCoverage = coveredLines.get(test.uri.toString());
+        if (fileCoverage) {
+          fileCoverage[lineNo].executionCount++;
+        }
+
+        const runDiag = `${test.id} completed for run ${run.name}\r\n`;
+        run.appendOutput(runDiag);
+        console.log(runDiag);
+
+        completed++;
+        if (completed === queue.length) {
+          run.end();
+        }
+      };
+
+      // @ts-ignore: Property 'coverageProvider' does not exist on type 'TestRun'
+      run.coverageProvider = {
+        provideFileCoverage() {
+          // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
+          const coverage: vscode.FileCoverage[] = [];
+          for (const [uri, statements] of coveredLines) {
+            coverage.push(
+              // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
+              vscode.FileCoverage.fromDetails(
+                vscode.Uri.parse(uri),
+                // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
+                statements.filter((s): s is vscode.StatementCoverage => !!s)
+              )
+            );
+          }
+
+          return coverage;
+        },
+      };
+
+      await queueSelectedTestItems(request.include ?? gatherTestItems(ctrl.items));
+      await runTestQueue(request);
+
+      return queue;
+
+    }
+    catch (e: unknown) {
+      config.logger.logError(e);
+    }
+
+  };
+}
 
 async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, controller: vscode.TestController, uri: vscode.Uri, caller: string)
   : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
@@ -613,11 +626,11 @@ async function getOrCreateTestItemFromFeatureFile(wkspSettings: WorkspaceSetting
 
   // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
   let wkspGrandParent: vscode.TestItem | undefined;
-  const wkspPath = wkspSettings.workspaceUri.path;
+  const wkspPath = wkspSettings.uri.path;
   if (getWorkspaceFolderUris().length > 0) {
     wkspGrandParent = controller.items.get(wkspPath);
     if (!wkspGrandParent) {
-      const wkspName = wkspSettings.workspaceFolder.name;
+      const wkspName = wkspSettings.name;
       wkspGrandParent = controller.createTestItem(wkspPath, wkspName);
       controller.items.add(wkspGrandParent);
       wkspGrandParent.canResolveChildren = true;
@@ -775,3 +788,27 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 }
 
 
+
+async function cleanUpTempFiles(dirUri: vscode.Uri) {
+
+  try {
+    const stat = await vwfs.stat(dirUri);
+
+    if (stat) {
+      const children = await vwfs.readDirectory(dirUri);
+      for (const [name, type] of children) {
+        const curUri = vscode.Uri.joinPath(dirUri, name);
+        if (type === vscode.FileType.Directory)
+          cleanUpTempFiles(curUri);
+        else
+          vwfs.delete(curUri);
+      }
+    }
+  }
+  catch (e: unknown) {
+    if ((e as vscode.FileSystemError).code === "FileNotFound")
+      return;
+    else
+      throw e;
+  }
+}

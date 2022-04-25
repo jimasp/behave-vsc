@@ -22,7 +22,7 @@ def step_impl(context, successful_or_failing):
 
 @when("we implement a test that is slow")
 def step_slow(context):
-    time.sleep(1.5)
+    time.sleep(3)
     assert 1 == 1
 
 

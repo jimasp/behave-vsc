@@ -15,7 +15,7 @@ const shared_args = [
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
   cancellation: vscode.CancellationToken): Promise<void> {
 
-  const pythonExec = await config.getPythonExec(wkspSettings.workspaceUri);
+  const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const friendlyCmd = `${pythonExec} -m behave`;
 
   try {
@@ -33,10 +33,10 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
 
   const scenario = queueItem.scenario;
   const scenarioName = scenario.scenarioName;
-  const pythonExec = await config.getPythonExec(wkspSettings.workspaceUri);
+  const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
   const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName].concat(shared_args);
-  const friendlyCmd = `\ncd "${wkspSettings.workspacePath}"\n` +
+  const friendlyCmd = `\ncd "${wkspSettings.uri.path}"\n` +
     `"${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
 
   try {

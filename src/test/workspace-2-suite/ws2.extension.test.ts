@@ -22,7 +22,6 @@ suite(`workspace-2-suite test run`, () => {
 	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
 	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
 	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
-	test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspUri, "", getWs2ExpectedResults)).timeout(180000);
 }).timeout(600000);
 
 

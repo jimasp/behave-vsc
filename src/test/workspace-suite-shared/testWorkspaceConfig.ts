@@ -3,7 +3,8 @@ import * as vscode from 'vscode';
 
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	constructor(private runParallel?: boolean, private runAllAsOne?: boolean, private fastSkipList?: string,
-		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean, private showConfigurationWarnings?: boolean) { }
+		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean, private runWorkspacesInParallel?: boolean,
+		private showConfigurationWarnings?: boolean) { }
 
 	get<T>(section: string): T | undefined {
 
@@ -20,6 +21,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel);
+			case "runWorkspacesInParallel":
+				return <T><unknown>(this.runWorkspacesInParallel);
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.showConfigurationWarnings);
 			default:
@@ -92,6 +95,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
+			case "runWorkspacesInParallel":
+				return <T><unknown>(this.runWorkspacesInParallel === undefined ? true : this.runWorkspacesInParallel);
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.showConfigurationWarnings === undefined ? false : this.showConfigurationWarnings);
 			default:

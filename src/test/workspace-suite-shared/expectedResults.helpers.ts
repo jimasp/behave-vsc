@@ -1,4 +1,4 @@
-import { ExtensionConfiguration, WorkspaceSettings } from '../../configuration';
+import { WorkspaceSettings } from '../../configuration';
 import { moreInfo } from '../../outputParser';
 
 interface ITestResult {

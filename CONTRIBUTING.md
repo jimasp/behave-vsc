@@ -118,6 +118,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ## General notes and Q&A
 1. If you want to log something for users, use `config.logger`, e.g. `config.logger.logInfo(...)`
 2. If you want to log something for extension developers (contributors) only, use `console`, e.g. `console.log(...)`
+3. If you want to log something for the test run output, use `run.appendOutput(...)`
 
 ---
 ## Before requesting a PR merge

@@ -8,24 +8,24 @@ import { QueueItem } from './extension';
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
-  await runBehave(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd);
+  await runBehave(false, wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd);
 }
 
 
 export async function runScenario(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
-  await runBehave(wkspSettings, pythonExec, run, [queueItem], args, cancellation, friendlyCmd);
+  await runBehave(true, wkspSettings, pythonExec, run, [queueItem], args, cancellation, friendlyCmd);
 }
 
 
-async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+async function runBehave(bufferLogOutput: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
 
   const local_args = [...args];
   local_args.unshift("-m", "behave");
 
-  const options = { cwd: wkspSettings.workspacePath, env: wkspSettings.envVarList };
+  const options = { cwd: wkspSettings.uri.path, env: wkspSettings.envVarList };
 
   // spawn() is old-skool async via callbacks
   const cp = spawn(pythonExec, local_args, options);
@@ -45,10 +45,14 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
   });
 
 
-  // this can be async, so we store output as we go in order to log the friendlyCmd just above the behave output in the output window
+  // we buffer up log output as we go so that for async calls we can ensure that we log the friendlyCmd just above the behave output
   const stdout: string[] = [];
   const skipout: string[] = [];
   const stderr: string[] = [];
+
+  const logStd = (out: string) => { if (bufferLogOutput) { stdout.push(out) } else { config.logger.logInfo(out) } };
+  const logSkip = (out: string) => { if (bufferLogOutput) { skipout.push(out) } else { config.logger.logInfo(out) } };
+  const logErr = (err: string) => { if (bufferLogOutput) { stderr.push(err) } else { config.logger.logError(err) } };
 
   // parseJsonFeatures is expecting a full behave JSON output string, which when 
   // behave has completed executing, looks something like this: 
@@ -65,14 +69,14 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
     switch (true) {
       case sChunk.includes("HOOK-ERROR"):
         err = sChunk.split("\n")[0];
-        stderr.push(err);
+        logErr(err);
         break;
       case sChunk.includes("ConfigError"):
         err = sChunk.split("\n")[0];
-        stderr.push(err);
+        logErr(err);
         break;
       default:
-        stdout.push(sChunk);
+        logStd(sChunk);
     }
 
 
@@ -111,21 +115,23 @@ async function runBehave(wkspSettings: WorkspaceSettings, pythonExec: string, ru
   for await (const chunk of cp.stderr) {
     const sChunk: string = chunk.toString();
     if (sChunk.startsWith("SKIP ") && sChunk.includes("Marked with @")) {
-      skipout.push(sChunk);
+      logSkip(sChunk);
     }
     else {
-      stdout.push(sChunk);
-      stderr.push(sChunk);
+      logStd(sChunk);
+      logErr(sChunk);
     }
   }
 
 
   await new Promise((resolve) => cp.on('close', () => resolve("")));
 
-  config.logger.logInfo(friendlyCmd);
-  config.logger.logInfo(stdout.join());
-  config.logger.logInfo(skipout.join());
-  if (stderr.length > 0)
-    config.logger.logError(stderr.join());
+  if (bufferLogOutput) {
+    config.logger.logInfo(friendlyCmd);
+    config.logger.logInfo(stdout.join());
+    config.logger.logInfo(skipout.join());
+    if (stderr.length > 0)
+      config.logger.logError(stderr.join());
+  }
 }
 

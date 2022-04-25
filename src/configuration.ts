@@ -1,7 +1,7 @@
-import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { getWorkspaceFolderUris } from './helpers';
 
 export const EXTENSION_NAME = "behave-vsc";
 export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
@@ -11,7 +11,7 @@ const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
 
 
 export interface ExtensionConfiguration {
-  readonly debugOutputFilePath: string;
+  readonly tempFilesUri: vscode.Uri;
   readonly logger: Logger;
   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
   reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
@@ -20,7 +20,7 @@ export interface ExtensionConfiguration {
 
 
 class Configuration implements ExtensionConfiguration {
-  public readonly debugOutputFilePath = path.join(os.tmpdir(), EXTENSION_NAME);
+  public readonly tempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
   public readonly logger: Logger = new Logger();
   private static _workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
@@ -119,10 +119,10 @@ export class WorkspaceSettings {
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
+  public runWorkspacesInParallel: boolean;
   // other public properties
-  public workspaceUri: vscode.Uri;
-  public workspacePath: string;
-  public workspaceFolder: vscode.WorkspaceFolder;
+  public uri: vscode.Uri;
+  public name: string;
   public fullFeaturesPath: string;
   // internal
   private _errors: string[] = [];
@@ -131,13 +131,12 @@ export class WorkspaceSettings {
   constructor(wkspUri: vscode.Uri, wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
     this._logger = logger;
-    this.workspaceUri = wkspUri;
-    this.workspacePath = wkspUri.path;
+    this.uri = wkspUri;
 
     const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
     if (!wsFolder)
       throw new Error("No workspace folder found for uri " + wkspUri.path);
-    this.workspaceFolder = wsFolder;
+    this.name = wsFolder.name;
 
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
@@ -145,13 +144,14 @@ export class WorkspaceSettings {
     const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
     const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
     const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
+    const runWorkspacesInParallelCfg: boolean | undefined = wsConfig.get("runWorkspacesInParallel"); // (not a workspace-specific setting)
     const showConfigurationWarningsCfg: boolean | undefined = wsConfig.get("showConfigurationWarnings");
 
     this.showConfigurationWarnings = showConfigurationWarningsCfg === undefined ? true : showConfigurationWarningsCfg;
     this.justMyCode = justMyCodeCfg === undefined ? true : justMyCodeCfg;
     this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
     this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
-
+    this.runWorkspacesInParallel = runWorkspacesInParallelCfg === undefined ? true : runWorkspacesInParallelCfg;
 
     if (featuresPathCfg)
       this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
@@ -221,18 +221,23 @@ export class WorkspaceSettings {
 
     entries.forEach(([key, value]) => {
       // remove non-user-settable properties
-      if (!key.startsWith("_") && key !== "fullFeaturesPath" && key !== "workspaceFolder" && key !== "workspaceUri" && key !== "fullWorkingDirectoryPath")
+      if (!key.startsWith("_") && key !== "name" && key !== "runWorkspacesInParallel" && key !== "fullFeaturesPath"
+        && key !== "uri" && key !== "fullWorkingDirectoryPath")
         dic[key] = value;
     });
 
-    this._logger.logInfo(`\nworkspace settings for ${this.workspaceFolder.uri.path}:\n${JSON.stringify(dic, null, 2)}`);
+    const wsUris = getWorkspaceFolderUris();
+    if (wsUris.length > 0 && this.uri === wsUris[0])
+      this._logger.logInfo(`\nMulti-root workspace settings:\n{\n  "runWorkspacesInParallel": ${this.runWorkspacesInParallel}\n}`);
+
+    this._logger.logInfo(`\n${this.name} settings:\n${JSON.stringify(dic, null, 2)}`);
     this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`);
 
     if (this.showConfigurationWarnings) {
       let warned = false;
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("Warning: runParallel is overridden by runAllAsOne when you run all tests at once.");
+        this._logger.logWarn("\nWarning: runParallel is overridden by runAllAsOne when you run all tests at once.");
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
@@ -241,7 +246,7 @@ export class WorkspaceSettings {
       }
 
       if (warned)
-        this._logger.logInfo(`(You can turn configuration warnings off via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings".)`);
+        this._logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`);
     }
 
     if (this._errors && this._errors.length > 0) {
