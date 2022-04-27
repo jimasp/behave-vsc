@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
+import { WorkspaceSettings } from './WorkspaceSettings';
+const vwfs = vscode.workspace.fs;
 
-
-export const logExtensionVersion = (context: vscode.ExtensionContext) => {
+export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
     version += " pre-release";
@@ -19,7 +20,7 @@ export const getWorkspaceFolderUris = (): vscode.Uri[] => {
   return folders.map(folder => folder.uri);
 }
 
-export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined) => {
+export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
   if (!fileorFolderUri) // handling this here for caller convenience
     throw new Error("uri is undefined");
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
@@ -30,13 +31,13 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined) 
 }
 
 
-export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined) => {
+export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): WorkspaceSettings => {
   const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
   return config.getWorkspaceSettings(wkspUri);
 }
 
 
-export const getWorkspaceFolder = (wskpUri: vscode.Uri) => {
+export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder => {
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(wskpUri);
   if (!workspaceFolder)
     throw new Error("No workspace folder found for uri " + wskpUri.path);
@@ -45,12 +46,12 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri) => {
 
 
 export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string> => {
-  const doc = await vscode.workspace.openTextDocument(uri);
-  return doc.getText();
+  const data = await vwfs.readFile(uri);
+  return Buffer.from(data).toString('utf8');
 };
 
 
-export const isStepsFile = (uri: vscode.Uri) => {
+export const isStepsFile = (uri: vscode.Uri): boolean => {
   const path = uri.path.toLowerCase();
   return path.includes("/steps/") && path.endsWith(".py") && !path.endsWith("/__init__.py");
 }
@@ -60,7 +61,7 @@ export const isFeatureFile = (uri: vscode.Uri) => {
   return uri.path.toLowerCase().endsWith(".feature");
 }
 
-export const getAllTestItems = (collection: vscode.TestItemCollection) => {
+export const getAllTestItems = (collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
   collection.forEach((item: vscode.TestItem) => {
     items.push(item);
@@ -73,5 +74,34 @@ export const getAllTestItems = (collection: vscode.TestItemCollection) => {
 export const getTestItem = (id: string, collection: vscode.TestItemCollection): vscode.TestItem | undefined => {
   const all = getAllTestItems(collection);
   return all.find(item => item.id === id);
+}
+
+export const countTestItemsInCollection = (items: vscode.TestItemCollection): { nodeCount: number, testCount: number } => {
+  const arr = getAllTestItems(items);
+  return countTestItemsInArray(arr);
+  // let nodeCount = 0;
+  // let testCount = 0;
+  // items.forEach((item: vscode.TestItem) => {
+  //   nodeCount++;
+  //   if (item.uri?.path && item.children.size === 0 && item.range) {
+  //     testCount++;
+  //   }
+  //   const counts = countTestItemsInCollection(item.children);
+  //   nodeCount += counts.nodeCount;
+  //   testCount += counts.testCount;
+  // });
+  // return { nodeCount, testCount };
+}
+
+export const countTestItemsInArray = (items: vscode.TestItem[]): { nodeCount: number, testCount: number } => {
+  let nodeCount = 0;
+  let testCount = 0;
+  items.forEach((item: vscode.TestItem) => {
+    nodeCount++;
+    if (item.uri?.path && item.children.size === 0 && item.range) {
+      testCount++;
+    }
+  });
+  return { nodeCount, testCount };
 }
 

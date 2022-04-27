@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { runOrDebugBehaveScenario } from './runOrDebug';
+import { runOrDebugBehaveScenario } from './behaveRunOrDebug';
 import { QueueItem } from './extension';
 import { getContentFromFilesystem, isFeatureFile } from './helpers';
 import config from "./Configuration";

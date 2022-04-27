@@ -132,6 +132,7 @@
 		"@types/mocha": "^9.0.0",
 		"@types/node": "17.x",
 		"@types/vscode": "^1.63.0",
+		"@types/xml2js": "^0.4.11",
 		"@typescript-eslint/eslint-plugin": "^5.9.0",
 		"@typescript-eslint/parser": "^5.9.0",
 		"@vscode/test-electron": "^2.1.3",
@@ -143,5 +144,8 @@
 		"typescript": "^4.5.5",
 		"webpack": "^5.52.1",
 		"webpack-cli": "^4.8.0"
+	},
+	"dependencies": {
+		"xml2js": "^0.4.23"
 	}
 }

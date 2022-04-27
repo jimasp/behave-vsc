@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
-import { getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile } from './helpers';
+import { countTestItemsInCollection, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { testData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
@@ -10,7 +10,7 @@ import { performance } from 'perf_hooks';
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
 
-export class Parser {
+export class FileParser {
 
   private _calls = 0;
   private _featuresLoadedForAllWorkspaces = false;
@@ -95,30 +95,14 @@ export class Parser {
   private _logTimesToConsole = (testItems: vscode.TestItemCollection,
     featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
 
-    const countTestItems = (items: vscode.TestItemCollection) => {
-      let itemCount = 0;
-      let testCount = 0;
-      items.forEach((item: vscode.TestItem) => {
-        itemCount++;
-        if (item.uri?.path && item.children.size === 0 && item.range) {
-          testCount++;
-          console.log(item.uri.path + ": " + item.label)
-        }
-        const counts = countTestItems(item.children);
-        itemCount += counts.itemCount;
-        testCount += counts.testCount;
-      });
-      return { itemCount, testCount };
-    }
-
-    const counts = countTestItems(testItems);
+    const counts = countTestItemsInCollection(testItems);
 
     // show diag times for extension developers
     console.log(
       `---` +
       `\nparseFiles() completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.itemCount} tree nodes, ${counts.testCount} tests, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
+      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
       `\nBreakdown: features ${featTime}ms, steps ${stepsTime}ms.` +
       `\nIgnore times if: (a) during vscode startup (contention), or (b) there are active breakpoints, or (c) when another test extension is also refreshing.` +
       `\nFor a more representative time, disable active breakpoints and other test extensions, then click the test refresh button a few times.` +

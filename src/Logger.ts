@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import { EXTENSION_FRIENDLY_NAME, ERR_HIGHLIGHT } from './Configuration';
 
+
+function cleanText(text: string) {
+  return text.replaceAll("\x1b", "").replaceAll("[33m", "").replaceAll("[0m", "");
+}
+
+
 export class Logger {
 
   private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
@@ -15,6 +21,7 @@ export class Logger {
   };
 
   logInfo = (text: string) => {
+    text = cleanText(text);
     console.log(text);
     this.outputChannel.appendLine(text);
     if (this.run)
@@ -34,6 +41,7 @@ export class Logger {
     let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
     if (prependMsg)
       text = `${prependMsg}\n${text}`;
+    text = cleanText(text);
 
     console.error(text);
     this.outputChannel.appendLine(ERR_HIGHLIGHT);
