@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import config, { WorkspaceSettings } from "./configuration";
+import config from "./Configuration";
+import { WorkspaceSettings } from "./WorkspaceSettings";
 import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
 const vwfs = vscode.workspace.fs;

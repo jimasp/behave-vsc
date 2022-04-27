@@ -2,12 +2,14 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as assert from 'assert';
-import { ExtensionConfiguration, WorkspaceSettings } from "../../configuration";
-import { IntegrationTestInterface } from '../../extension';
+import { ExtensionConfiguration } from "../../Configuration";
+import { WorkspaceSettings } from "../../WorkspaceSettings";
+import { Instances } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
+import { getAllTestItems } from '../../helpers';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
@@ -68,13 +70,13 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 
-let actRet: IntegrationTestInterface;
-const activateExtension = async (): Promise<IntegrationTestInterface> => {
+let actRet: Instances;
+const activateExtension = async (): Promise<Instances> => {
 	if (actRet !== undefined)
 		return actRet;
 
 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	actRet = await ext?.activate() as IntegrationTestInterface;
+	actRet = await ext?.activate() as Instances;
 	return actRet;
 }
 
@@ -195,18 +197,19 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually:
 	actRet.config.reloadWorkspaceSettings(wkspUri, testConfig);
-	actRet.treeBuilder.buildTree(wkspUri, actRet.ctrl, "runAllTestsAndAssertTheResults", false);
-
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, actRet.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
-	// for test parsing here before requesting a test run due to vscode startup contention
-	await actRet.treeBuilder.readyForRun(2000);
+	// before requesting a test run due to vscode startup contention
+	// (we could await parseFiles, but then our tests wouldn't cover the same timeout operation as real usage)
+	actRet.parser.parseFiles(wkspUri, actRet.ctrl, "runAllTestsAndAssertTheResults");
+	await actRet.parser.readyForRun(5000);
 
 
 	const include: vscode.TestItem[] = [];
-	actRet.ctrl.items.forEach(item => {
-		if (item.id.startsWith(wkspUri.path))
+	const allItems = getAllTestItems(actRet.ctrl.items);
+	allItems.forEach(item => {
+		if (item.id.includes(wkspUri.path))
 			include.push(item);
 	});
 

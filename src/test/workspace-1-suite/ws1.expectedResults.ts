@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ExtensionConfiguration } from "../../configuration";
+import { ExtensionConfiguration } from "../../Configuration";
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration): TestResult[] => {

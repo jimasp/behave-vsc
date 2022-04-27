@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import config, { WorkspaceSettings } from "./configuration";
+import config from "./Configuration";
+import { WorkspaceSettings } from "./WorkspaceSettings";
 import { runAllAsOne, runScenario } from './runScenario';
 import { debugScenario } from './debugScenario';
 import { QueueItem } from './extension';
@@ -16,7 +17,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   cancellation: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
-  const friendlyCmd = `${pythonExec} -m behave`;
+  const friendlyCmd = `\ncd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
 
   try {
     await runAllAsOne(wkspSettings, pythonExec, run, queue, shared_args, cancellation, friendlyCmd);

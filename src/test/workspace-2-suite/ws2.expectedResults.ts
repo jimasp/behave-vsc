@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ExtensionConfiguration } from "../../configuration";
+import { ExtensionConfiguration } from "../../Configuration";
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 
@@ -938,6 +938,57 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_label: 'wrapped step 3',
       test_parent: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature',
       test_uri: '.../example-project-workspace-2/{{featurePath}}/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'features/nested/nested1.faildupe.feature',
+      scenario_featureName: 'Duplicate',
+      scenario_getLabel: 'run a test',
+      scenario_isOutline: false,
+      scenario_result: 'Traceback (most recent call last):\n  File... assert successful_or_failing == "successful"\nAssertionError',
+      scenario_scenarioName: 'run a test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-2/features/nested/nested1.faildupe.feature/run a test',
+      test_label: 'run a test',
+      test_parent: '.../example-project-workspace-2/features/nested/nested1.faildupe.feature',
+      test_uri: '.../example-project-workspace-2/features/nested/nested1.faildupe.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'features/nested/nested/nested/nested3.sucessdupe.feature',
+      scenario_featureName: 'Duplicate',
+      scenario_getLabel: 'run a test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-2/features/nested/nested/nested/nested3.sucessdupe.feature/run a test',
+      test_label: 'run a test',
+      test_parent: '.../example-project-workspace-2/features/nested/nested/nested/nested3.sucessdupe.feature',
+      test_uri: '.../example-project-workspace-2/features/nested/nested/nested/nested3.sucessdupe.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'features/nested/nested/nested2.successdupe.feature',
+      scenario_featureName: 'Duplicate',
+      scenario_getLabel: 'run a test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-2/features/nested/nested/nested2.successdupe.feature/run a test',
+      test_label: 'run a test',
+      test_parent: '.../example-project-workspace-2/features/nested/nested/nested2.successdupe.feature',
+      test_uri: '.../example-project-workspace-2/features/nested/nested/nested2.successdupe.feature'
     }),
 
   ];

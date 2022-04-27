@@ -1,4 +1,4 @@
-import { WorkspaceSettings } from '../../configuration';
+import { WorkspaceSettings } from "../../WorkspaceSettings";
 import { moreInfo } from '../../outputParser';
 
 interface ITestResult {

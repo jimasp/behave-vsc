@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config, { EXTENSION_FRIENDLY_NAME } from "./configuration";
+import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { QueueItem } from "./extension";
 
 export interface ParseResult {
@@ -219,7 +219,7 @@ function parseScenarioResult(jScenario: JsonScenario, debug: boolean): ParseResu
     throw "Step is undefined"; // should never happen
   }
 
-  // (if the scenario failed, but all steps passed, the it could be e.g. an after_scenario hook error)
+  // (if the scenario failed, but all steps passed, then it could be e.g. an after_scenario hook error)
   if (step.result.status === "passed") {
     return { status: `All steps passed, but scenario failed.\n${moreInfo(debug)}`, duration: duration };
   }

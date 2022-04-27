@@ -7,7 +7,5 @@
         "test_*.py"
     ],
     "python.testing.unittestEnabled": true,
-    "python.testing.pytestEnabled": false, 
-    "behave-vsc.runParallel": false,
-    "behave-vsc.runAllAsOne": true,    
+    "python.testing.pytestEnabled": false,
 }

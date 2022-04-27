@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { WorkspaceSettings } from "./configuration";
+import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getContentFromFilesystem } from './helpers';
 
 
