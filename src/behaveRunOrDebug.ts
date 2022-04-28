@@ -39,14 +39,14 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
   const junitPath = `${config.tempFilesUri.path}/${wkspSettings.name}/${run.name}/`;
   const junitUri = vscode.Uri.file(junitPath);
-  const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName]
+  const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName]
     .concat(shared_args).concat(["--junit", "--junit-directory", junitPath]);
   const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
-    `"${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
+    `"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
 
   try {
     if (!debug && scenario.fastSkip) {
-      config.logger.logInfo(`Fast skipping '${scenario.featureFileRelativePath}' '${scenarioName}'`);
+      config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`);
       updateTest(run, { status: "skipped", duration: 0 }, queueItem);
       return;
     }

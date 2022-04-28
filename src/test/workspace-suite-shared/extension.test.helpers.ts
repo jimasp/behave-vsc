@@ -240,7 +240,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 			test_label: result.test.label,
 			scenario_isOutline: result.scenario.isOutline,
 			scenario_getLabel: result.scenario.getLabel(),
-			scenario_featureFileRelativePath: result.scenario.featureFileRelativePath,
+			scenario_featureFileRelativePath: result.scenario.featureFileWorkspaceRelativePath,
 			scenario_featureName: result.scenario.featureName,
 			scenario_scenarioName: result.scenario.scenarioName,
 			scenario_fastSkip: result.scenario.fastSkip,
