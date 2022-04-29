@@ -96,7 +96,7 @@ export class Feature {
 export class Scenario {
   public result: string | undefined;
   constructor(
-    public readonly featureFileWorkspaceRelativePath: string,
+    public readonly featureFileRelativePath: string,
     public readonly featureName: string,
     public scenarioName: string,
     public generation: number,
