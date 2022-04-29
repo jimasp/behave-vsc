@@ -1,17 +1,20 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
-import { junitFileExists, parseAndUpdateTestResults } from './junitParser';
+import { parseOutputAndUpdateTestResults } from './outputParser';
 import { QueueItem } from './extension';
+const vwfs = vscode.workspace.fs;
 
 
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
-  args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+  args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string): Promise<void> {
 
+  const scenarioSlug = escapedScenarioName.replace(/[^a-z0-9]/gi, '_').slice(1, -1).toLowerCase();
+  const featureSlug = queueItem.scenario.featureName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const outFile = vscode.Uri.joinPath(config.tempFilesUri, `${run.name}__${featureSlug}__${scenarioSlug}.result`);
   console.log(friendlyCmd); // log debug cmd for extension devs only
 
-  // remove stdout noise when debugging
-  args.push("--no-summary", "--outfile", config.tempFilesUri.fsPath + "debug.log");
+  args.push("--outfile", outFile.path);
 
   const debugLaunchConfig = {
     name: "behave-vsc-debug",
@@ -53,17 +56,33 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
       try {
 
-        if (!await junitFileExists(queueItem, wkspSettings.featuresPath, junitUri)) {
-          // if there is no junit output file, then either debug stop was clicked, or something went wrong with behave.
+        try {
+          const stat = await vwfs.stat(outFile);
+          if (stat.size === 0)
+            throw new Error("behave output file exists, but is empty");
+        }
+        catch (e: unknown) {
+          // if there is no behave output file, then either debug stop was clicked, or something went wrong with behave.
           // in the second case, the error should be logged in debug console and won't be parseable          
-          return resolve();
+          if ((e as vscode.FileSystemError).code === "FileNotFound") {
+            return resolve();
+          }
+          else {
+            return reject(e);
+          }
         }
 
-        await parseAndUpdateTestResults(run, queueItem, wkspSettings.featuresPath, junitUri);
+        const data = await vwfs.readFile(outFile);
+        const behaveOutput = Buffer.from(data).toString('utf8');
+
+        if (behaveOutput.trim() !== "")
+          parseOutputAndUpdateTestResults(run, [queueItem], behaveOutput, true);
+
         resolve();
       }
       catch (e: unknown) {
-        return reject(e); // (will get logged in parent try/catch)
+        // (will get logged in parent try/catch)
+        return reject(e);
       }
       finally {
         terminateEvent.dispose();

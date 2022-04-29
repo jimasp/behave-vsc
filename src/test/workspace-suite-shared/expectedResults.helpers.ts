@@ -1,5 +1,5 @@
 import { WorkspaceSettings } from "../../WorkspaceSettings";
-import { moreInfo } from '../../junitParser';
+import { moreInfo } from '../../outputParser';
 
 interface ITestResult {
   test_id: string | undefined;

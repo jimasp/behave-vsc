@@ -7,11 +7,11 @@ import { Scenario, testData, TestFile } from './TestFile';
 import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion } from './helpers';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { getSteps, FileParser } from './FileParser';
+import { getSteps, Parser } from './Parser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
 const vwfs = vscode.workspace.fs;
 
-export const parser = new FileParser();
+export const parser = new Parser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
 
 
@@ -19,7 +19,7 @@ export type Instances = {
   runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
   config: ExtensionConfiguration,
   ctrl: vscode.TestController,
-  parser: FileParser,
+  parser: Parser,
   getSteps: () => Steps
 };
 
@@ -31,6 +31,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
   try {
 
     logExtensionVersion(context);
+    cleanUpTempFiles(config.tempFilesUri);
 
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
@@ -236,4 +237,30 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   parser.parseFiles(wkspUri, ctrl, "startWatchingWorkspace");
 
   return watcher;
+}
+
+
+
+async function cleanUpTempFiles(dirUri: vscode.Uri) {
+
+  try {
+    const stat = await vwfs.stat(dirUri);
+
+    if (stat) {
+      const children = await vwfs.readDirectory(dirUri);
+      for (const [name, type] of children) {
+        const curUri = vscode.Uri.joinPath(dirUri, name);
+        if (type === vscode.FileType.Directory)
+          cleanUpTempFiles(curUri);
+        else
+          vwfs.delete(curUri);
+      }
+    }
+  }
+  catch (e: unknown) {
+    if ((e as vscode.FileSystemError).code === "FileNotFound")
+      return;
+    else
+      throw e;
+  }
 }

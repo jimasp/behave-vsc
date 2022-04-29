@@ -131,7 +131,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 ### Q&A
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to big rewrites/refactoring.
+- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to rewrites/refactoring.
 
 ---
 ## Known issues and limitations

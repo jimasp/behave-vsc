@@ -1,27 +1,26 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
-import { runAllAsOne, runScenario } from './behaveRun';
-import { debugScenario } from './behaveDebug';
+import { runAllAsOne, runScenario } from './runScenario';
+import { debugScenario } from './debugScenario';
 import { QueueItem } from './extension';
-import { updateTest } from './junitParser';
+import { updateTest } from './outputParser';
 
 
-const shared_args = ["--junit", "--show-skipped", "--show-source", "--show-timings"];
-//"--capture", "--capture-stderr", "--logcapture"]; 
+const shared_args = [
+  "-f", "json", "--no-summary", "--no-snippets", "--show-skipped", "--no-junit",
+  "--capture", "--capture-stderr", "--logcapture", "--show-source", "--show-timings",
+];
 
 
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
   cancellation: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
-  const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
-  const junitPath = `${config.tempFilesUri.path}/${wkspSettings.name}/${run.name}/`;
-  const junitUri = vscode.Uri.file(junitPath);
-  const args = shared_args.concat(["--junit", "--junit-directory", junitPath]);
+  const friendlyCmd = `\ncd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
 
   try {
-    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd, junitUri);
+    await runAllAsOne(wkspSettings, pythonExec, run, queue, shared_args, cancellation, friendlyCmd);
   }
   catch (e: unknown) {
     config.logger.logError(e);
@@ -37,11 +36,8 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
   const scenarioName = scenario.scenarioName;
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
-  const junitPath = `${config.tempFilesUri.path}/${wkspSettings.name}/${run.name}/`;
-  const junitUri = vscode.Uri.file(junitPath);
-  const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName]
-    .concat(shared_args).concat(["--junit", "--junit-directory", junitPath]);
-  const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
+  const args = ["-i", scenario.featureFileRelativePath, "-n", escapedScenarioName].concat(shared_args);
+  const friendlyCmd = `\ncd "${wkspSettings.uri.path}"\n` +
     `"${pythonExec}" -m behave -i "${scenario.featureFileRelativePath}" -n "${escapedScenarioName}"`;
 
   try {
@@ -52,10 +48,10 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
     }
 
     if (debug) {
-      await debugScenario(wkspSettings, run, queueItem, escapedScenarioName, args, cancellation, friendlyCmd, junitUri);
+      await debugScenario(wkspSettings, run, queueItem, escapedScenarioName, args, cancellation, friendlyCmd);
     }
     else {
-      await runScenario(wkspSettings, pythonExec, run, queueItem, args, cancellation, friendlyCmd, junitUri);
+      await runScenario(wkspSettings, pythonExec, run, queueItem, args, cancellation, friendlyCmd);
     }
   }
   catch (e: unknown) {

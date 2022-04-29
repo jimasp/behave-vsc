@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, testData, TestFile } from './TestFile';
-import { runBehaveAll } from './behaveRunOrDebug';
-import { countTestItemsInArray, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
+import { runBehaveAll } from './runOrDebug';
+import { getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem } from './extension';
 
@@ -88,19 +88,32 @@ export function testRunHandler(ctrl: vscode.TestController) {
 
         config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name}---`);
 
+        const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+        let allTestsForThisWkspIncluded = allTestsIncluded;
 
-        let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+        if (!allTestsIncluded) {
 
-        if (!allTestsForThisWkspIncluded) {
-          const wkspGrandParentItem = wkspQueue.find(item => item.test.id === wkspSettings.uri.path);
+          const allTestItems = getAllTestItems(ctrl.items);
+          const wkspGrandParentItem = allTestItems.find(item => item.id === wkspSettings.uri.path); // multi-root workspace
 
-          if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem.test))
+          if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem))
             allTestsForThisWkspIncluded = true;
           else {
-            const allWkspItems = getAllTestItems(ctrl.items).filter(item => item.id.includes(wkspPath));
-            const wkspTestCount = countTestItemsInArray(allWkspItems).testCount;
-            allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
+            let bk = false;
+            for (const test of wkspQueue) {
+              if (request.exclude?.includes(test.test)) {
+                bk = true;
+                break;
+              }
+              if (!request.include?.includes(test.test)) {
+                bk = true;
+                break;
+              }
+            }
+            if (!bk)
+              allTestsForThisWkspIncluded = true;
           }
+
         }
 
 
