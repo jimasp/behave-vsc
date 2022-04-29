@@ -135,23 +135,13 @@ function getDotFoldersFeatureName(queueItem: QueueItem, featuresPath: string) {
   return `${dotSubFolders}${featureFileStem}`;
 }
 
-function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri) {
+export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri) {
   const classname = getDotFoldersFeatureName(queueItem, featuresPath);
   const junitFilename = `TESTS-${classname}.xml`;
   return vscode.Uri.joinPath(junitUri, junitFilename);
 }
 
-
-export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], featuresPath: string, junitUri: vscode.Uri) {
-  return queue.map(qi => {
-    const junitFileUri = getJunitFileUri(qi, featuresPath, junitUri);
-    return { queueItem: qi, junitFileUri: junitFileUri, updated: false };
-  });
-}
-
-
 export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<string> {
-
   const result = await parseJunitFile(queueItem, featuresPath, junitUri);
   const fullFeatureName = getDotFoldersFeatureName(queueItem, featuresPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
