@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { getWorkspaceUriForFile } from './helpers';
-import { getSteps } from './Parser';
+import { getSteps } from './FileParser';
 import { parseRepWildcard, StepDetail, Steps } from "./stepsParser";
 
 export const stepMatchRe = /^(\s*)(given|when|then|and)(.+)$/i;
