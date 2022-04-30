@@ -86,7 +86,10 @@ function CreateParseResult(testCase: TestCase): ParseResult {
   const status = testCase.$.status;
 
   if (status === "passed" || status === "skipped")
-    return { status: status, duration: duration }
+    return { status: status, duration: duration };
+
+  if (status === "untested")
+    return { status: "Untested (see output in Behave VSC output window)", duration: duration };
 
   if (status !== "failed")
     config.logger.logError("Unrecognised scenario status result:" + status);

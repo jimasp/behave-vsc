@@ -162,8 +162,6 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 		if (!result)
 			return undefined;
 
-		res?.replace("0.")
-
 		const tbm = /Traceback.*:\n {2}File /;
 		const tbe = tbm.exec(result);
 		if (!tbe)
