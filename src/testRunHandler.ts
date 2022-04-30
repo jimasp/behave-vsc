@@ -141,7 +141,7 @@ export function testRunHandler(ctrl: vscode.TestController) {
 
         // either we're done (non-async run), or we have promises to await
         await Promise.all(asyncRunPromises);
-        config.logger.logInfo(`--- ${wkspPath} tests completed for run ${run.name} ---`);
+        config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} ---`);
 
       };
 

@@ -94,7 +94,7 @@ function CreateParseResult(testCase: TestCase): ParseResult {
   // status === "failed"
 
   const reasonBlocks: string[] = [];
-  const buildErrMessage = (testCase: TestCase) => {
+  const concatErrText = (testCase: TestCase) => {
     const build = (reasons: Reason[]) => {
       if (!reasons)
         return;
@@ -108,41 +108,42 @@ function CreateParseResult(testCase: TestCase): ParseResult {
     build(testCase.error);
   }
 
-  buildErrMessage(testCase);
+  concatErrText(testCase);
 
   if (reasonBlocks.length === 0)
     throw new Error("Failed test has no failure or error message");
 
-  let failStatus = "";
+  // remove any error text we don't need in the ui
+  let errText = "";
   reasonBlocks.forEach(reason => {
     const lines = reason.split("\n");
     lines.forEach(line => {
       if (!line.startsWith("Location: ") && /None$/.exec(line) === null)
-        failStatus += line.replace(/ in .+\..+s$/, "") + "\n";
+        errText += line.replace(/ in .+\..+s$/, "") + "\n";
     });
   });
-  failStatus = failStatus.trim();
+  errText = errText.trim();
 
-  return { status: failStatus, duration: duration };
+  return { status: errText, duration: duration };
 
 }
 
-function getFullFeatureName(queueItem: QueueItem, featuresPath: string) {
-  const featureFileStem = `${queueItem.scenario.featureFileRelativePath.split("/").pop()?.replace(/.feature$/, "")}`;
-  const folders = queueItem.scenario.featureFileRelativePath.split("/").slice(0, -1);
-  const dotFolders = folders.length > 1 ? `${folders.join(".").replace(`${featuresPath}.`, "")}.` : "";
-  return `${dotFolders}${featureFileStem}`;
+function getDotFoldersFeatureName(queueItem: QueueItem, featuresPath: string) {
+  const featureFileStem = `${queueItem.scenario.featureFileWorkspaceRelativePath.split("/").pop()?.replace(/.feature$/, "")}`;
+  let dotSubFolders = queueItem.scenario.featureFileWorkspaceRelativePath.replace(featuresPath + "/", "").split("/").slice(0, -1).join(".");
+  dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
+  return `${dotSubFolders}${featureFileStem}`;
 }
 
 export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri) {
-  const classname = getFullFeatureName(queueItem, featuresPath);
+  const classname = getDotFoldersFeatureName(queueItem, featuresPath);
   const junitFilename = `TESTS-${classname}.xml`;
   return vscode.Uri.joinPath(junitUri, junitFilename);
 }
 
 export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<string> {
   const result = await parseJunitFile(queueItem, featuresPath, junitUri);
-  const fullFeatureName = getFullFeatureName(queueItem, featuresPath);
+  const fullFeatureName = getDotFoldersFeatureName(queueItem, featuresPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
   const queueItemResults = result.junitContents.testsuite.testcase.filter(tc =>
@@ -186,19 +187,7 @@ export async function junitFileExists(queueItem: QueueItem, featuresPath: string
 
 async function parseJunitFile(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<{ junitContents: JunitContents, fsPath: string }> {
   const junitFileUri = getJunitFileUri(queueItem, featuresPath, junitUri);
-
-  let junitXml;
-  try {
-    junitXml = await getContentFromFilesystem(junitFileUri);
-  }
-  catch {
-    const junitFilename = "TESTS-feature_with_hook_error.xml";
-    const junitFileUri = vscode.Uri.joinPath(junitUri, junitFilename);
-    junitXml = await getContentFromFilesystem(junitFileUri);
-  }
-
+  const junitXml = await getContentFromFilesystem(junitFileUri);
   const contents: JunitContents = await parser.parseStringPromise(junitXml);
-  console.log(JSON.stringify(contents, null, 2));
-  console.log(contents);
   return { junitContents: contents, fsPath: junitFileUri.fsPath };
 }

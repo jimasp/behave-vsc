@@ -4,6 +4,7 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { junitFileExists, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
+import { cleanBehaveText } from './Logger';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
@@ -49,19 +50,21 @@ async function runBehave(bufferStdOut: boolean, wkspSettings: WorkspaceSettings,
   const logStd = (s: string) => { if (!s) return; if (bufferStdOut) { stdout.push(s) } else { config.logger.logInfo(s) } };
   // we always buffer errors and skips and stick them at the end
   const skipout: string[] = [];
-  const logSkip = (s: string) => { if (!s) return; skipout.push(s); }
+  const logSkip = (s: string) => { if (!s) return; config.logger.logInfo(s); skipout.push(s); }
   const stderr: string[] = [];
-  const logErr = (s: string) => { if (!s) return; stderr.push(s); }
-
+  const logErr = (s: string) => { if (!s) return; config.logger.logError(s); stderr.push(s); }
+  let err = "";
 
   for await (const chunk of cp.stdout) {
     const sChunk: string = chunk.toString();
     switch (true) {
       case sChunk.startsWith("HOOK-ERROR"):
-        logErr(sChunk.trim());
+        err = sChunk.split("\n")[0].trim();
+        logErr(err);
         break;
       case sChunk.startsWith("ConfigError"):
-        logErr(sChunk.trim());
+        err = sChunk.split("\n")[0].trim();
+        logErr(err);
         break;
     }
     logStd(sChunk);
@@ -85,12 +88,11 @@ async function runBehave(bufferStdOut: boolean, wkspSettings: WorkspaceSettings,
     });
   });
 
-
-
   const updated: QueueItem[] = [];
   while (!complete) {
     // poll for files as they come in so we can update the ui (so user is not waiting in the case of runAll)
     // TODO - improve this to remove updated, or (more complex) use a filesystemwatcher
+    // TODO - does this need a timeout? is it possible for it to loop forever (prolly not?)
     for (const queueItem of queue) {
       if (updated.includes(queueItem))
         continue;
@@ -102,31 +104,39 @@ async function runBehave(bufferStdOut: boolean, wkspSettings: WorkspaceSettings,
     }
   }
 
-  for (const queueItem of queue.filter(qi => !updated.includes(qi))) {
-    await parseAndUpdateTestResults(run, queueItem, wkspSettings.featuresPath, junitUri);
+
+  try {
+    for (const queueItem of queue.filter(qi => !updated.includes(qi))) {
+      await parseAndUpdateTestResults(run, queueItem, wkspSettings.featuresPath, junitUri);
+    }
   }
+  finally { // if we get an error reading the junit file, we still want to log behave's stdout/stderr
 
-  if (bufferStdOut) {
-    // output first
-    config.logger.logInfo("env vars: " + JSON.stringify(wkspSettings.envVarList));
-    config.logger.logInfo(`${friendlyCmd}\n`);
-    config.logger.logInfo(stdout.join(""));
+    if (bufferStdOut) {
+      // output first
+      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList));
+      config.logger.logInfo(`${friendlyCmd}\n`);
+      config.logger.logInfo(stdout.join("").trim());
+    }
+
+    if (skipout.length > 0)
+      config.logger.logInfo(skipout.join(""));
+
+    let stderrStr = "";
+    if (stderr.length > 0) {
+      stderrStr = stderr.join("\n");
+      stderrStr = cleanBehaveText(stderrStr).trim();
+      config.logger.logError(stderrStr);
+    }
+
+    if (bufferStdOut)
+      config.logger.logInfo("---");
+
+    if (!bufferStdOut) {
+      // output last
+      config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList));
+      config.logger.logInfo(`${friendlyCmd}\n`);
+    }
   }
-
-  if (skipout.length > 0)
-    config.logger.logInfo(skipout.join(""));
-
-  let stderrStr = "";
-  if (stderr.length > 0) {
-    stderrStr = stderr.join("\n");
-    config.logger.logError(stderrStr);
-  }
-
-  if (!bufferStdOut) {
-    // output last
-    config.logger.logInfo("env vars: " + JSON.stringify(wkspSettings.envVarList));
-    config.logger.logInfo(`${friendlyCmd}\n`);
-  }
-
 
 }
