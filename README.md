@@ -86,6 +86,8 @@ paths=behave_tests/features
 
 ### How test runs work:
 
+- The python path is obtained via the `ms-python.python` extension (exported settings) and is read before each run, so it is kept in sync with your project.
+
 - When running all tests _and_ the "RunAllAsOne" extension setting is enabled (the default), it runs this command:  
 `python -m behave`
 
@@ -93,23 +95,18 @@ paths=behave_tests/features
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
 - For each run, the equivalent behave command to run the test manually appears in the Behave VSC output window.
-- The extension then parses the behave output and updates the test result.
-- The json output and any errors also appear in the Behave VSC output window.
+- The extension then parses the junit file output and updates the test result.
+- The behave output and any errors appear in the Behave VSC output window.
 - How the run works is controlled by you via extension settings in your `settings.json` file (e.g. `behave-vsc.runParallel` etc.)
 
 ### How debug works:
 
 - It dynamically builds a debug launch config and runs that. (This enables the `ms-python.python` extension to do the heavy lifting of setting up the debug port etc.)
-- The extension then parses the behave output and updates the test result.
+- The extension then parses the junit file output and updates the test result.
 - Error output is shown in the debug console window and/or Behave VSC window depending on the nature of the error.
 - To reduce noise when debugging, the behave command and behave std output is not shown when in debug. Run the test instead if you want this output.
 - Whether debug steps into external code is controlled by you via the extension setting `behave-vsc.justMyCode` (i.e. your `settings.json` not your `launch.json`).
 
-### Notes
-
-The python path is obtained via the `ms-python.python` extension (exported settings) and is read before each run, so it is kept in sync with your project.
-
-The _actual_ behave command that is run has extra parameters for json format, etc. so it knows what output to expect and to ensure it is consistent and parseable.
 
 ---
 ## Troubleshooting
@@ -131,16 +128,16 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 ### Q&A
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to big rewrites/refactoring.
+- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to rewrites/refactoring.
 
 ---
 ## Known issues and limitations
 
 - "Go to Step" context menu doesn't always work or match correctly and never will. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
+- Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
 - Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
-- Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
 - In order to ensure that the output is parseable and consistent, the internally executed behave command must add extra parameters to override any configured settings that may affect behave output.
 
 ---

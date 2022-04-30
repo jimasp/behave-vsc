@@ -9,7 +9,7 @@ import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
-import { getAllTestItems } from '../../helpers';
+import { getAllTestItems, getScenariolTestsInArray } from '../../helpers';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
@@ -162,14 +162,22 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 		if (!result)
 			return undefined;
 
+		res?.replace("0.")
 
-		const tb = "Traceback (most recent call last):\n  File ";
-		const tbAss = "assert ";
+		const tbm = /Traceback.*:\n {2}File /;
+		const tbe = tbm.exec(result);
+		if (!tbe)
+			return res;
 
-		if (result.startsWith(tb)) {
-			const tbAssStart = result.indexOf(tbAss);
-			if (tbAssStart)
-				res = result.replace(result.substring(tb.length - 1, tbAssStart), "... ");
+		const tb = tbe[0];
+		const tbi = result.search(tbm);
+
+		if (tbi !== -1) {
+			let tbSnip = result.indexOf("assert ");
+			if (tbSnip === -1)
+				tbSnip = result.indexOf("raise Exception(");
+			if (tbSnip !== -1)
+				res = result.replace(result.substring(tbi + tb.length, tbSnip), "-snip- ");
 		}
 
 		return res;
@@ -199,6 +207,8 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	actRet.config.reloadWorkspaceSettings(wkspUri, testConfig);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, actRet.config);
 
+	vscode.commands.executeCommand("testing.clearTestResults");
+
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// before requesting a test run due to vscode startup contention
 	// (we could await parseFiles, but then our tests wouldn't cover the same timeout operation as real usage)
@@ -206,19 +216,14 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	await actRet.parser.readyForRun(5000);
 
 
-	const include: vscode.TestItem[] = [];
 	const allItems = getAllTestItems(actRet.ctrl.items);
-	allItems.forEach(item => {
-		if (item.id.includes(wkspUri.path))
-			include.push(item);
-	});
-
+	const include = getScenariolTestsInArray(allItems);
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
 
 	// run tests
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const resultsPromise = actRet?.runHandler(debug, runRequest, cancelToken);
-	// hack to show test ui during debug testing so we can see progress
+	// timeout = hack to show test ui during debug testing so we can see progress
 	await new Promise(t => setTimeout(t, 1000));
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const results = await resultsPromise;
@@ -258,7 +263,6 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
-
 
 	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.getWorkspaceSettings(wkspUri));
 }

@@ -61,6 +61,7 @@ export const isFeatureFile = (uri: vscode.Uri) => {
   return uri.path.toLowerCase().endsWith(".feature");
 }
 
+
 export const getAllTestItems = (collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
   collection.forEach((item: vscode.TestItem) => {
@@ -71,37 +72,32 @@ export const getAllTestItems = (collection: vscode.TestItemCollection): vscode.T
   return items;
 }
 
+
 export const getTestItem = (id: string, collection: vscode.TestItemCollection): vscode.TestItem | undefined => {
   const all = getAllTestItems(collection);
   return all.find(item => item.id === id);
 }
 
+
 export const countTestItemsInCollection = (items: vscode.TestItemCollection): { nodeCount: number, testCount: number } => {
   const arr = getAllTestItems(items);
   return countTestItemsInArray(arr);
-  // let nodeCount = 0;
-  // let testCount = 0;
-  // items.forEach((item: vscode.TestItem) => {
-  //   nodeCount++;
-  //   if (item.uri?.path && item.children.size === 0 && item.range) {
-  //     testCount++;
-  //   }
-  //   const counts = countTestItemsInCollection(item.children);
-  //   nodeCount += counts.nodeCount;
-  //   testCount += counts.testCount;
-  // });
-  // return { nodeCount, testCount };
+}
+
+
+export const getScenariolTestsInArray = (items: vscode.TestItem[]): vscode.TestItem[] => {
+  const arr: vscode.TestItem[] = [];
+  items.forEach((item: vscode.TestItem) => {
+    if (item.uri?.path && item.children.size === 0 && item.range) {
+      arr.push(item);
+    }
+  });
+  return arr;
 }
 
 export const countTestItemsInArray = (items: vscode.TestItem[]): { nodeCount: number, testCount: number } => {
-  let nodeCount = 0;
-  let testCount = 0;
-  items.forEach((item: vscode.TestItem) => {
-    nodeCount++;
-    if (item.uri?.path && item.children.size === 0 && item.range) {
-      testCount++;
-    }
-  });
+  const testCount = getScenariolTestsInArray(items).length;
+  const nodeCount = items.length;
   return { nodeCount, testCount };
 }
 

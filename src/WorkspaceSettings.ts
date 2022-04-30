@@ -34,27 +34,50 @@ export class WorkspaceSettings {
       throw new Error("No workspace folder found for uri " + wkspUri.path);
     this.name = wsFolder.name;
 
-    const envVarListCfg: string | undefined = wsConfig.get("envVarList");
-    const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
-    const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
-    const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
-    const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
-    const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
-    const runWorkspacesInParallelCfg: boolean | undefined = wsConfig.get("runWorkspacesInParallel"); // (not a workspace-specific setting)
-    const showConfigurationWarningsCfg: boolean | undefined = wsConfig.get("showConfigurationWarnings");
+    // get the actual value in the file or return undefined, this is
+    // for cases where we need to distinguish between an unset value and the default value
+    const getActualValue = <T>(name: string): T => {
+      const value = wsConfig.inspect(name)?.workspaceFolderValue;
+      return (value as T);
+    }
 
-    this.showConfigurationWarnings = showConfigurationWarningsCfg === undefined ? true : showConfigurationWarningsCfg;
-    this.justMyCode = justMyCodeCfg === undefined ? true : justMyCodeCfg;
-    this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
-    this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
-    this.runWorkspacesInParallel = runWorkspacesInParallelCfg === undefined ? true : runWorkspacesInParallelCfg;
+    const envVarListCfg: string | undefined = wsConfig.get("envVarList");
+    if (envVarListCfg === undefined)
+      throw "envVarList is undefined";
+    const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
+    if (fastSkipListCfg === undefined)
+      throw "fastSkipList is undefined";
+    const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
+    if (featuresPathCfg === undefined)
+      throw "featuresPath is undefined";
+    const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
+    if (justMyCodeCfg === undefined)
+      throw "justMyCode is undefined";
+    const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
+    if (runParallelCfg === undefined)
+      throw "runParallel is undefined";
+    const runWorkspacesInParallelCfg: boolean | undefined = wsConfig.get("runWorkspacesInParallel"); // (not a workspace-specific setting)
+    if (runWorkspacesInParallelCfg === undefined)
+      throw "runWorkspacesInParallel is undefined";
+    const showConfigurationWarningsCfg: boolean | undefined = wsConfig.get("showConfigurationWarnings");
+    if (showConfigurationWarningsCfg === undefined)
+      throw "showConfigurationWarnings is undefined";
+    const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
+
+    this.showConfigurationWarnings = showConfigurationWarningsCfg;
+    this.justMyCode = justMyCodeCfg;
+    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
+    this.runParallel = runParallelCfg;
+    if (this.runParallel && runAllAsOneCfg === undefined)
+      this.runAllAsOne = false;
+    else
+      this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
     if (featuresPathCfg)
       this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
     this.fullFeaturesPath = vscode.Uri.joinPath(wkspUri, this.featuresPath).path;
     if (!fs.existsSync(this.fullFeaturesPath))
       this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
-
 
     if (fastSkipListCfg) {
       if (!fastSkipListCfg.includes("@") || fastSkipListCfg.length < 2) {

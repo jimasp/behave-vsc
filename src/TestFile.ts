@@ -37,6 +37,14 @@ export class TestFile {
   public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, featureFilePath: string, controller: vscode.TestController,
     content: string, item: vscode.TestItem, caller: string) {
 
+    if (item.uri === undefined)
+      throw new Error("testitem uri is undefined");
+    const featureFileWkspRelativePath = vscode.workspace.asRelativePath(item.uri, false);
+
+    const featureFilename = featureFilePath.split('/').pop();
+    if (featureFilename === undefined)
+      throw new Error("featureFilename is undefined");
+
     const thisGeneration = generationCounter++;
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
     this.didResolve = true;
@@ -65,9 +73,8 @@ export class TestFile {
 
     const onScenarioLine = (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => {
       const parent = ancestors[ancestors.length - 1];
-      if (item.uri === undefined)
-        throw new Error("testitem uri is undefined");
-      const data = new Scenario(vscode.workspace.asRelativePath(item.uri, false), featureName, scenarioName, thisGeneration, isOutline, fastSkip);
+
+      const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       const id = `${item.uri}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
@@ -96,6 +103,7 @@ export class Feature {
 export class Scenario {
   public result: string | undefined;
   constructor(
+    public readonly featureFileName: string,
     public readonly featureFileWorkspaceRelativePath: string,
     public readonly featureName: string,
     public scenarioName: string,

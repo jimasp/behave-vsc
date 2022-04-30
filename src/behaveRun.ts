@@ -24,11 +24,12 @@ async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pytho
   cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
 
   // in the case of runAll, we don't want to wait until the end of the run to update the tests in the ui, 
-  // so we set up a watcher so we can update as the test files are created
+  // so we set up a watcher so we can update as the test files are created, note - this will happen feature by feature
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
   if (runAll) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitUri);
+    await vscode.workspace.fs.createDirectory(junitUri);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings.featuresPath, junitUri);
     });
@@ -144,13 +145,10 @@ async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pytho
 
     config.logger.logInfo("---");
 
-
     if (runAll)
       await updatesComplete;
     else
-      // FOR ASYNC THE SAME FILE CAN BE OVERWRITTEN (MUTIPLE TIMES) BEFORE THIS EXECUTES
       await parseAndUpdateTestResults(run, queue[0], wkspSettings.featuresPath, junitUri);
-
 
   }
   finally {
@@ -171,6 +169,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       const matches = map.filter(m => m.junitFileUri.path === uri.path);
       if (matches.length === 0)
         return reject("could not match queue item to uri"); // TODO extend info
+
       for (const match of matches) {
         await parseAndUpdateTestResults(run, match.queueItem, featuresPath, junitUri);
         match.updated = true;
@@ -185,7 +184,10 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
   }
 
-  const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(config.tempFilesUri, '**/*.xml'), false, false, true);
+
+  const pattern = new vscode.RelativePattern(junitUri, '**/*.xml');
+  console.log(pattern.baseUri + pattern.pattern);
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
   watcher.onDidCreate(async (uri) => {
     console.log("created: " + uri.path);
     await updateResult(uri);

@@ -118,8 +118,9 @@ function CreateParseResult(testCase: TestCase): ParseResult {
   reasonBlocks.forEach(reason => {
     const lines = reason.split("\n");
     lines.forEach(line => {
-      if (!line.startsWith("Location: ") && /None$/.exec(line) === null)
-        errText += line.replace(/ in .+\..+s$/, "") + "\n";
+      if (!line.startsWith("Location: ") && /None$/.exec(line) === null) {
+        errText += line.replace(/ ... failed in .+\..+s$/, " ... failed").replace(/ ... undefined in .+\..+s$/, " ... undefined") + "\n";
+      }
     });
   });
   errText = errText.trim();
@@ -129,7 +130,7 @@ function CreateParseResult(testCase: TestCase): ParseResult {
 }
 
 function getDotFoldersFeatureName(queueItem: QueueItem, featuresPath: string) {
-  const featureFileStem = `${queueItem.scenario.featureFileWorkspaceRelativePath.split("/").pop()?.replace(/.feature$/, "")}`;
+  const featureFileStem = queueItem.scenario.featureFileName.replace(/.feature$/, "");
   let dotSubFolders = queueItem.scenario.featureFileWorkspaceRelativePath.replace(featuresPath + "/", "").split("/").slice(0, -1).join(".");
   dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
   return `${dotSubFolders}${featureFileStem}`;

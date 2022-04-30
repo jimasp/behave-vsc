@@ -88,7 +88,7 @@ function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean
     return expectedResults;
   }
 
-  // these could be "passed" or "Traceback..." etc. as appropriate to the test, 
+  // these could be "passed" or "Failing..." etc. as appropriate to the test, 
   // but if fastskip is enabled, they should always be "skipped"
   if (fastSkipActive) {
     expectedResults.forEach(expectedResult => {

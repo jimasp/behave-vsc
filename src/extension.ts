@@ -9,7 +9,7 @@ import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
-const vwfs = vscode.workspace.fs;
+
 
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
