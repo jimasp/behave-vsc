@@ -115,6 +115,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
       }
     }));
 
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+      event.added.forEach(async (wksp) => {
+        // config.reloadWorkspaceSettings(wksp.uri); TODO do we need this line?
+        parser.parseFiles(wksp.uri, ctrl, "onDidChangeWorkspaceFolders");
+      });
+    }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
       try {

@@ -65,30 +65,35 @@ export const isFeatureFile = (uri: vscode.Uri) => {
 }
 
 
-export const getAllTestItems = (collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getAllTestItems = (wkspUri: vscode.Uri | undefined, collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
+
+  // get all test items, or just the ones in the current workspace if wkspUri supplied  
   collection.forEach((item: vscode.TestItem) => {
-    items.push(item);
-    if (item.children)
-      items.push(...getAllTestItems(item.children));
+    if (!wkspUri || item.id.includes(wkspUri.path)) {
+      items.push(item);
+      if (item.children)
+        items.push(...getAllTestItems(wkspUri, item.children));
+    }
   });
+
   return items;
 }
 
 
 export const getTestItem = (id: string, collection: vscode.TestItemCollection): vscode.TestItem | undefined => {
-  const all = getAllTestItems(collection);
+  const all = getAllTestItems(undefined, collection);
   return all.find(item => item.id === id);
 }
 
 
-export const countTestItemsInCollection = (testData: TestData, items: vscode.TestItemCollection): { nodeCount: number, testCount: number } => {
-  const arr = getAllTestItems(items);
-  return countTestItemsInArray(testData, arr);
+export const countTestItemsInCollection = (wkspUri: vscode.Uri, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
+  const arr = getAllTestItems(wkspUri, items);
+  return countTestItems(testData, arr);
 }
 
 
-export const getScenarioTestsInArray = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
+export const getScenarioTests = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
   const scenarios = items.filter(item => {
     const data = testData.get(item);
     if (data && data.constructor.name === "Scenario")
@@ -97,8 +102,8 @@ export const getScenarioTestsInArray = (testData: TestData, items: vscode.TestIt
   return scenarios;
 }
 
-export const countTestItemsInArray = (testData: TestData, items: vscode.TestItem[]): { nodeCount: number, testCount: number } => {
-  const testCount = getScenarioTestsInArray(testData, items).length;
+export const countTestItems = (testData: TestData, items: vscode.TestItem[]): TestCounts => {
+  const testCount = getScenarioTests(testData, items).length;
   const nodeCount = items.length;
   return { nodeCount, testCount };
 }

@@ -238,7 +238,7 @@ export class FileParser {
     });
 
 
-    // direct recurse for multi-root workspace 
+    // direct recurse for multi-root workspace, e.g. during refresh
     if (!wkspUri) {
 
       const promises: Promise<ParseCounts>[] = [];
@@ -320,14 +320,15 @@ export class FileParser {
           config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`);
         if (stepFileCount === 0)
           config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`);
-        testCounts = countTestItemsInCollection(testData, ctrl.items);
+        testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
       this._cancelTokenSources[wkspPath].dispose();
       delete this._cancelTokenSources[wkspPath];
 
-      return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: steps.size };
+      const wkspSteps = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.fullFeaturesPath)));
+      return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: wkspSteps.size };
     }
     catch (e: unknown) {
       config.logger.logError(e);

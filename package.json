@@ -14,8 +14,8 @@
 				"behave-vsc.showConfigurationWarnings": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default true (enabled).\nSet to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings.",
-					"scope": "resource"
+					"description": "Default true (enabled).\nSet to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings.\nFor multi-root workspaces, this setting may be set in your *.code-workspace file.",
+					"scope": "window"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",

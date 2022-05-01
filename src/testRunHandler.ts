@@ -3,7 +3,7 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestFile } from './TestFile';
 import { runBehaveAll } from './behaveRunOrDebug';
-import { countTestItemsInArray, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
+import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem, testData } from './extension';
 
@@ -97,8 +97,8 @@ export function testRunHandler(ctrl: vscode.TestController) {
           if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem.test))
             allTestsForThisWkspIncluded = true;
           else {
-            const allWkspItems = getAllTestItems(ctrl.items).filter(item => item.id.includes(wkspPath));
-            const wkspTestCount = countTestItemsInArray(testData, allWkspItems).testCount;
+            const allWkspItems = getAllTestItems(wkspSettings.uri, ctrl.items);
+            const wkspTestCount = countTestItems(testData, allWkspItems).testCount;
             allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
           }
         }

@@ -10,7 +10,7 @@ import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getAllTestItems, getScenarioTestsInArray } from '../../helpers';
+import { getAllTestItems, getScenarioTests } from '../../helpers';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
@@ -67,18 +67,6 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 	}
 
 	return match;
-}
-
-
-
-let instances: Instances;
-const activateExtension = async (): Promise<Instances> => {
-	if (instances !== undefined)
-		return instances;
-
-	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	instances = await ext?.activate() as Instances;
-	return instances;
 }
 
 
@@ -189,40 +177,53 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 	return arrChildrenIds.join();
 }
 
-function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts) {
+function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts, multiroot: vscode.TestItem | undefined) {
 	const expectedCounts = getExpectedCounts();
 	assert(actualCounts.featureFileCount == expectedCounts.featureFileCount);
 	assert(actualCounts.stepFileCount === expectedCounts.stepFileCount);
 	assert(actualCounts.stepsCount === expectedCounts.stepsCount);
-	assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount);
 	assert(actualCounts.testCounts.testCount === expectedCounts.testCounts.testCount);
+
+	// add one for the workspace node if in multi-root mode
+	if (multiroot)
+		assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount + 1);
+	else
+		assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount);
+}
+
+
+function assertInstances(instances: Instances) {
+	assert(instances.config);
+	assert(instances.ctrl);
+	assert(instances.getSteps);
+	assert(instances.parser);
+	assert(instances.runHandler);
+	assert(instances.testData);
+}
+
+let inst: Instances;
+const activateExtensionIfNotActive = async (): Promise<Instances> => {
+	if (inst !== undefined)
+		return inst;
+
+	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
+	inst = await ext?.activate() as Instances;
+	return inst;
 }
 
 
 export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
 
-
-
-	// get instances from returned object
-	instances = await activateExtension();
-	assert(instances.config);
-	assert(instances.runHandler);
-	assert(instances.ctrl);
-	assert(instances);
-
 	const cancelToken = new vscode.CancellationTokenSource().token;
+	vscode.commands.executeCommand("testing.clearTestResults");
+	const instances = await activateExtensionIfNotActive();
+	assertInstances(instances);
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
-	// we need to call the methods in that function manually:
+	// we need to call the methods in that function manually so we can insert a test config
 	instances.config.reloadWorkspaceSettings(wkspUri, testConfig);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
-
-	vscode.commands.executeCommand("testing.clearTestResults");
-
-	// sanity check counts before going any further
-	const actualCounts = await instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
-	assertExpectedCounts(getExpectedCounts, actualCounts);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// before requesting a test run due to contention
@@ -230,17 +231,20 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	await instances.parser.readyForRun(2000);
 
-
-	const allItems = getAllTestItems(instances.ctrl.items);
-	const include = getScenarioTestsInArray(instances.testData, allItems);
-
+	// sanity check lengths and counts
+	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
+	const include = getScenarioTests(instances.testData, allWkspItems);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	assert(include.length === expectedResults.length);
 
+	const actualCounts = await instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.path);
+	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
+
+
+	// run behave tests
+
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
-
-
-	// run tests
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const resultsPromise = instances?.runHandler(debug, runRequest, cancelToken);
 	// timeout = hack to show test ui during debug testing so we can see progress
@@ -285,5 +289,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 
 	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.getWorkspaceSettings(wkspUri));
 }
+
+
 
 
