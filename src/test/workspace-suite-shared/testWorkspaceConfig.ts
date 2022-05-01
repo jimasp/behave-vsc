@@ -4,9 +4,43 @@ import * as vscode from 'vscode';
 
 
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
-	constructor(private runParallel?: boolean, private runAllAsOne?: boolean, private fastSkipList?: string,
-		private envVarList?: string, private featuresPath?: string, private justMyCode?: boolean, private runWorkspacesInParallel?: boolean,
-		private showConfigurationWarnings?: boolean) { }
+
+
+	private alwaysShowOutput: boolean | undefined;
+	private envVarList: string | undefined;
+	private fastSkipList: string | undefined;
+	private featuresPath: string | undefined;
+	private justMyCode: boolean | undefined;
+	private runAllAsOne: boolean | undefined;
+	private runParallel: boolean | undefined;
+	private runWorkspacesInParallel: boolean | undefined;
+	private showConfigurationWarnings: boolean | undefined;
+
+	// all user-settable settings in settings.json
+	constructor({
+		alwaysShowOutput, envVarList, fastSkipList, featuresPath, justMyCode,
+		runAllAsOne, runParallel, runWorkspacesInParallel, showConfigurationWarnings
+	}: {
+		alwaysShowOutput: boolean | undefined,
+		envVarList: string | undefined,
+		fastSkipList: string | undefined,
+		featuresPath: string | undefined,
+		justMyCode: boolean | undefined,
+		runAllAsOne: boolean | undefined,
+		runParallel: boolean | undefined,
+		runWorkspacesInParallel: boolean | undefined,
+		showConfigurationWarnings: boolean | undefined
+	}) {
+		this.alwaysShowOutput = alwaysShowOutput;
+		this.envVarList = envVarList;
+		this.fastSkipList = fastSkipList;
+		this.featuresPath = featuresPath;
+		this.justMyCode = justMyCode;
+		this.runAllAsOne = runAllAsOne;
+		this.runParallel = runParallel;
+		this.runWorkspacesInParallel = runWorkspacesInParallel;
+		this.showConfigurationWarnings = showConfigurationWarnings;
+	}
 
 
 	inspect<T>(section: string): {
@@ -16,8 +50,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		languageIds?: string[] | undefined;
 	} | undefined {
 
+		// switch for all user-settable settings in settings.json
 		let response;
 		switch (section) {
+			case "alwaysShowOutput":
+				response = <T><unknown>this.alwaysShowOutput;
+				break;
 			case "envVarList":
 				response = <T><unknown>this.envVarList;
 				break;
@@ -59,18 +97,22 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	get<T>(section: string): T {
 
+		// switch for all user-settable settings in settings.json
+		//		
 		// for get, vscode will use the default in the package.json if there is 
 		// one, or otherwise a default value for the type (e.g. bool = false, string = "", etc.)
 		// so we mirror that behavior here and return defaults
 		switch (section) {
+			case "alwaysShowOutput":
+				return <T><unknown>(this.alwaysShowOutput === undefined ? "" : this.alwaysShowOutput);
 			case "envVarList":
 				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
-			case "justMyCode":
-				return <T><unknown>(this.justMyCode === undefined ? false : this.justMyCode);
 			case "fastSkipList":
 				return <T><unknown>(this.fastSkipList === undefined ? "" : this.fastSkipList);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
+			case "justMyCode":
+				return <T><unknown>(this.justMyCode === undefined ? false : this.justMyCode);
 			case "runAllAsOne":
 				return <T><unknown>(this.runAllAsOne === undefined ? false : this.runAllAsOne);
 			case "runParallel":
@@ -87,7 +129,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	}
 
 
-	getExpected<T>(section: string): T | undefined {
+	getExpected<T>(section: string, wkspUri?: vscode.Uri): T | undefined {
 
 
 		const getExpectedEnvVarList = (): { [name: string]: string } | undefined => {
@@ -133,6 +175,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			}
 		}
 
+		const getExpectedFullFeaturesPath = (): string => {
+			if (!wkspUri)
+				throw "you must supply wkspUri to get the expected fullFeaturesPath";
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
+		}
+
+
 		const getExpectedRunAllAsOne = (): boolean => {
 			if (this.runParallel && this.runAllAsOne === undefined)
 				return this.runAllAsOne = false;
@@ -140,23 +189,29 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return this.runAllAsOne = this.runAllAsOne === undefined ? true : this.runAllAsOne;
 		};
 
+		// switch for ALL workspace settings (i.e. including non-user-settable)
 		switch (section) {
+			case "alwaysShowOutput":
+				return <T><unknown>(this.get("alwaysShowOutput"));
 			case "envVarList":
 				return <T><unknown>getExpectedEnvVarList();
 			case "fastSkipList":
 				return <T><unknown>getExpectedFastSkipList();
-			case "justMyCode":
-				return <T><unknown>(this.get("justMyCode"));
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
+			case "fullFeaturesPath":
+				return <T><unknown>getExpectedFullFeaturesPath();
+			case "justMyCode":
+				return <T><unknown>(this.get("justMyCode"));
 			case "runAllAsOne":
 				return <T><unknown>(getExpectedRunAllAsOne());
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
 			case "runWorkspacesInParallel":
-				return <T><unknown>(this.get("runWorkspacesinParallel"));
+				return <T><unknown>(this.get("runWorkspacesInParallel"));
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.get("showConfigurationWarnings"));
+
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;

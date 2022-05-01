@@ -72,12 +72,16 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
 	const cfgSettings = config.getWorkspaceSettings(wkspUri);
+	assert.strictEqual(cfgSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"));
 	assert.deepStrictEqual(cfgSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(cfgSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
 	assert.strictEqual(cfgSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(cfgSettings.fullFeaturesPath, testConfig.getExpected("fullFeaturesPath", wkspUri));
 	assert.strictEqual(cfgSettings.justMyCode, testConfig.getExpected("justMyCode"));
 	assert.strictEqual(cfgSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
 	assert.strictEqual(cfgSettings.runParallel, testConfig.getExpected("runParallel"));
+	assert.strictEqual(cfgSettings.runWorkspacesInParallel, testConfig.getExpected("runWorkspacesInParallel"));
+	assert.strictEqual(cfgSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"));
 }
 
 
@@ -212,7 +216,7 @@ const activateExtensionIfNotActive = async (): Promise<Instances> => {
 }
 
 
-export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
+export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
 
 	const cancelToken = new vscode.CancellationTokenSource().token;

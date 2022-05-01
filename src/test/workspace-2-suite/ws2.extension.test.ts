@@ -6,18 +6,23 @@ import { getWorkspaceUriFromName, runAllTestsAndAssertTheResults } from "../work
 
 const wkspName = "example-project-workspace-2";
 const wkspUri = getWorkspaceUriFromName(wkspName);
-const testPre = `runHandler should return expected results for ${wkspName} with configuration:`;
+const testPre = `runHandler should return expected results for "example-workspace-2" with configuration:`;
 
 suite(`workspace-2-suite test run`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(2);
 
 	test("runDefault", async () => {
-		console.log(`${testPre}: { runParallel: undefined, runAllAsOne: undefined, fastSkipList: undefined, ` +
-			`envVarList: undefined, featuresPath: undefined }`);
 
-		const testConfig = new TestWorkspaceConfig();
-		await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getWs2ExpectedCounts, getWs2ExpectedResults);
-	}).timeout(120000);
+		const testConfig = new TestWorkspaceConfig({
+			runAllAsOne: undefined, runParallel: undefined, runWorkspacesInParallel: undefined,
+			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
+			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
+		});
+
+		console.log(`${testPre}: ${JSON.stringify(testConfig)}`);
+		await runAllTestsAndAssertTheResults(false, wkspUri, testConfig, getWs2ExpectedCounts, getWs2ExpectedResults);
+
+	}).timeout(60000);
 
 
 	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);

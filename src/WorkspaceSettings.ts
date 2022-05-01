@@ -8,6 +8,7 @@ import { EXTENSION_NAME } from './Configuration';
 
 export class WorkspaceSettings {
   // user-settable
+  public alwaysShowOutput: boolean;
   public envVarList: { [name: string]: string; } = {};
   public showConfigurationWarnings: boolean;
   public fastSkipList: string[] = [];
@@ -23,6 +24,7 @@ export class WorkspaceSettings {
   // internal
   private _errors: string[] = [];
   private _logger: Logger;
+
 
   constructor(wkspUri: vscode.Uri, wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
 
@@ -42,6 +44,9 @@ export class WorkspaceSettings {
       return (value as T);
     }
 
+    const alwaysShowOutputCfg: boolean | undefined = wsConfig.get("alwaysShowOutput");
+    if (alwaysShowOutputCfg === undefined)
+      throw "alwaysShowOutput is undefined";
     const envVarListCfg: string | undefined = wsConfig.get("envVarList");
     if (envVarListCfg === undefined)
       throw "envVarList is undefined";
@@ -65,10 +70,13 @@ export class WorkspaceSettings {
       throw "showConfigurationWarnings is undefined";
     const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
 
-    this.showConfigurationWarnings = showConfigurationWarningsCfg;
+
+    this.alwaysShowOutput = alwaysShowOutputCfg;
     this.justMyCode = justMyCodeCfg;
-    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
     this.runParallel = runParallelCfg;
+    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
+
+    this.showConfigurationWarnings = showConfigurationWarningsCfg;
     if (this.runParallel && runAllAsOneCfg === undefined)
       this.runAllAsOne = false;
     else
@@ -81,7 +89,6 @@ export class WorkspaceSettings {
       this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
       fatal = true;
     }
-
 
     if (fastSkipListCfg) {
       if (!fastSkipListCfg.includes("@") || fastSkipListCfg.length < 2) {
@@ -164,12 +171,12 @@ export class WorkspaceSettings {
       let warned = false;
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("\nWarning: runParallel is overridden by runAllAsOne when you run all tests at once.");
+        this._logger.logWarn("\nWARNING: runParallel is overridden by runAllAsOne when you run all tests at once.");
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("Warning: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
+        this._logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
       }
 
       if (warned)

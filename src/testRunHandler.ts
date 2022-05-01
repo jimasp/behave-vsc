@@ -161,10 +161,13 @@ export function testRunHandler(ctrl: vscode.TestController) {
         debugCancelSource.dispose();
         debugCancelSource = new vscode.CancellationTokenSource();
 
-
         // run each workspace queue in parallel (unless debug)
         for (const wkspUri of getWorkspaceFolderUris()) {
           const wkspSettings = config.getWorkspaceSettings(wkspUri);
+
+          if (wkspSettings.alwaysShowOutput)
+            config.logger.show();
+
           if (debug || !wkspSettings.runWorkspacesInParallel)
             await runWorkspaceQueue(request, wkspSettings); // limit to one debug session
 
