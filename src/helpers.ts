@@ -65,12 +65,12 @@ export const isFeatureFile = (uri: vscode.Uri) => {
 }
 
 
-export const getAllTestItems = (wkspUri: vscode.Uri | undefined, collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
   // get all test items, or just the ones in the current workspace if wkspUri supplied  
   collection.forEach((item: vscode.TestItem) => {
-    if (!wkspUri || item.id.includes(wkspUri.path)) {
+    if (wkspUri === null || item.id.includes(wkspUri.path)) {
       items.push(item);
       if (item.children)
         items.push(...getAllTestItems(wkspUri, item.children));
@@ -82,12 +82,12 @@ export const getAllTestItems = (wkspUri: vscode.Uri | undefined, collection: vsc
 
 
 export const getTestItem = (id: string, collection: vscode.TestItemCollection): vscode.TestItem | undefined => {
-  const all = getAllTestItems(undefined, collection);
+  const all = getAllTestItems(null, collection);
   return all.find(item => item.id === id);
 }
 
 
-export const countTestItemsInCollection = (wkspUri: vscode.Uri, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
+export const countTestItemsInCollection = (wkspUri: vscode.Uri | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
   const arr = getAllTestItems(wkspUri, items);
   return countTestItems(testData, arr);
 }

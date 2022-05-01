@@ -228,7 +228,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// before requesting a test run due to contention
 	// (we could await parseFiles, but then our tests wouldn't cover the same timeout operation as real usage)
-	instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	await instances.parser.readyForRun(2000);
 
 	// sanity check lengths and counts
@@ -237,7 +237,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	assert(include.length === expectedResults.length);
 
-	const actualCounts = await instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.path);
 	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
 

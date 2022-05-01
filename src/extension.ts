@@ -78,7 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-        await parser.parseFiles(undefined, ctrl, "refreshHandler", cancelToken);
+
+        await parser.parseFilesForAllWorkspaces(ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -115,11 +116,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
       }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
-      event.added.forEach(async (wksp) => {
-        // config.reloadWorkspaceSettings(wksp.uri); TODO do we need this line?
-        parser.parseFiles(wksp.uri, ctrl, "onDidChangeWorkspaceFolders");
-      });
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
+      parser.parseFilesForAllWorkspaces(ctrl, "onDidChangeWorkspaceFolders");
     }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
@@ -127,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
         for (const uri of getWorkspaceFolderUris()) {
           if (event.affectsConfiguration(EXTENSION_NAME, uri)) {
             config.reloadWorkspaceSettings(uri);
-            parser.parseFiles(uri, ctrl, "OnDidChangeConfiguration");
+            parser.parseFilesForWorkspace(uri, ctrl, "OnDidChangeConfiguration");
           }
         }
       }
@@ -234,7 +232,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
     }
 
     try {
-      parser.parseFiles(wkspUri, ctrl, "OnDidDelete");
+      parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
       config.logger.logError(e);
@@ -243,7 +241,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
 
 
-  parser.parseFiles(wkspUri, ctrl, "startWatchingWorkspace");
+  parser.parseFilesForWorkspace(wkspUri, ctrl, "startWatchingWorkspace");
 
   return watcher;
 }

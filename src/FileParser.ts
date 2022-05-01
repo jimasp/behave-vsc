@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
-import { countTestItemsInCollection, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts } from './helpers';
+import { countTestItemsInCollection, getAllTestItems, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
@@ -42,11 +42,12 @@ export class FileParser {
     caller: string): Promise<number> => {
 
     let processed = 0;
-    controller.items.forEach(item => {
-      // delete existing folder items and test items for this workspace
-      if (item.id.startsWith(wkspSettings.fullFeaturesPath) || item.uri?.path.startsWith(wkspSettings.fullFeaturesPath))
-        controller.items.delete(item.id);
-    });
+
+    // delete existing folder items and test items for this workspace
+    const items = getAllTestItems(wkspSettings.uri, controller.items);
+    for (const item of items) {
+      controller.items.delete(item.id);
+    }
 
     const pattern = new vscode.RelativePattern(wkspSettings.fullFeaturesPath, "**/*.feature");
     const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
@@ -226,61 +227,45 @@ export class FileParser {
   }
 
 
+  async parseFilesForAllWorkspaces(ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
+
+    // clear everything so we can rebuild the top level nodes
+    const items = getAllTestItems(null, ctrl.items);
+    for (const item of items) {
+      ctrl.items.delete(item.id);
+    }
+
+    for (const wkspUri of getWorkspaceFolderUris()) {
+      this.parseFilesForWorkspace(wkspUri, ctrl, intiator, cancelToken);
+    }
+  }
 
   // NOTE - this is background task
   // it should only be awaited on user request, i.e. when called by the refreshHandler
-  async parseFiles(wkspUri: vscode.Uri | undefined, ctrl: vscode.TestController, intiator: string,
+  async parseFilesForWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts> {
 
-    callerCancelToken?.onCancellationRequested(() => {
-      for (const key in this._cancelTokenSources)
-        this._cancelTokenSources[key].cancel();
-    });
-
-
-    // direct recurse for multi-root workspace, e.g. during refresh
-    if (!wkspUri) {
-
-      const promises: Promise<ParseCounts>[] = [];
-      for (const wkspUri of getWorkspaceFolderUris()) {
-        promises.push(this.parseFiles(wkspUri, ctrl, intiator));
-      }
-
-      const parseCounts = await Promise.all(promises);
-
-      // add up counts
-      let featureFileCount = 0;
-      let stepFileCount = 0;
-      let nodeCount = 0;
-      let testCount = 0;
-      for (const counts of parseCounts) {
-        featureFileCount += counts.featureFileCount;
-        stepFileCount += counts.stepFileCount;
-        nodeCount += counts.testCounts.nodeCount;
-        testCount += counts.testCounts.testCount;
-      }
-
-      return {
-        testCounts: { nodeCount: nodeCount, testCount: testCount },
-        featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: steps.size
-      };
-    }
-
+    const wkspPath = wkspUri.path;
     this._featuresLoadedForAllWorkspaces = false;
-    this._featuresLoadedForWorkspace[wkspUri.fsPath] = false;
+    this._featuresLoadedForWorkspace[wkspPath] = false;
     this._calls++;
     const wkspName = getWorkspaceFolder(wkspUri).name;
     const callName = `parseFiles ${this._calls} ${wkspName}`;
     const wkspSettings = config.getWorkspaceSettings(wkspUri);
-    const wkspPath = wkspSettings.uri.path;
     let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
+
+    // if caller cancels, pass it on to the internal token
+    callerCancelToken?.onCancellationRequested(() => {
+      this._cancelTokenSources[wkspPath].cancel();
+    });
 
 
     try {
 
       console.log(`\n===== ${callName}: started, initiated by:${intiator} =====`);
 
-      // this function is not generally awaited, and therefore re-entrant, so cancel any existing parseFiles call for this workspace
+      // this function is not generally awaited, and therefore re-entrant, so 
+      // cancel any existing parseFiles call for this workspace
       if (this._cancelTokenSources[wkspPath]) {
         this._cancelTokenSources[wkspPath].cancel();
         while (this._cancelTokenSources[wkspPath]) {
