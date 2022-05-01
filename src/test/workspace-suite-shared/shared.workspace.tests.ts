@@ -3,6 +3,7 @@ import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { ExtensionConfiguration } from '../../Configuration';
 import { TestResult } from './expectedResults.helpers';
+import { ParseCounts } from '../../FileParser';
 
 const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ";
 const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '";
@@ -17,36 +18,40 @@ export class SharedWorkspaceTests {
 
 
   runAllAsOne = async (wkspUri: vscode.Uri, featuresPath: string,
+    getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
   ) => {
     console.log(`${this.testPre}: { runParallel: false, runAllAsOne: true, fastSkipList: '${fastSkipList}', ` +
       `envVarList: '${envVarList}', featuresPath: '${featuresPath}' }`);
 
     const testConfig = new TestWorkspaceConfig(false, true, fastSkipList, envVarList, featuresPath);
-    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedResults);
+    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedCounts, getExpectedResults);
   }
 
   runOneByOne = async (wkspUri: vscode.Uri, featuresPath: string,
+    getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
   ) => {
     console.log(`${this.testPre}: { runParallel: false, runAllAsOne: false, fastSkipList: '${fastSkipList2}', ` +
       `envVarList: '${envVarList}', featuresPath: '${featuresPath}' }`);
 
     const testConfig = new TestWorkspaceConfig(false, false, fastSkipList2, envVarList2, featuresPath);
-    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedResults);
+    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedCounts, getExpectedResults);
   }
 
   runParallel = async (wkspUri: vscode.Uri, featuresPath: string,
+    getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
   ) => {
     console.log(`${this.testPre}: { runParallel: true, runAllAsOne: false, fastSkipList: '${fastSkipList2}', ` +
       `envVarList: '${envVarList}', featuresPath: '${featuresPath}' }`);
 
     const testConfig = new TestWorkspaceConfig(true, false, fastSkipList2, envVarList, featuresPath);
-    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedResults);
+    await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getExpectedCounts, getExpectedResults);
   }
 
   runDebug = async (wkspUri: vscode.Uri, featuresPath: string,
+    getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
   ) => {
     console.log(`${this.testPre}: { runParallel: false, runAllAsOne: true, fastSkipList: '${fastSkipList}', ` +
@@ -54,7 +59,7 @@ export class SharedWorkspaceTests {
 
     // NOTE - if this fails, try removing all breakpoints in both environments
     const testConfig = new TestWorkspaceConfig(false, true, fastSkipList, envVarList, featuresPath);
-    await runAllTestsAndAssertTheResults(wkspUri, true, testConfig, getExpectedResults);
+    await runAllTestsAndAssertTheResults(wkspUri, true, testConfig, getExpectedCounts, getExpectedResults);
   }
 
 }

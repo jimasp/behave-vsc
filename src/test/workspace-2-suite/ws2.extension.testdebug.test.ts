@@ -1,4 +1,4 @@
-import { getWs2ExpectedResults } from "./ws2.expectedResults";
+import { getWs2ExpectedCounts, getWs2ExpectedResults } from "./ws2.expectedResults";
 import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace.tests";
 import { getWorkspaceUriFromName } from "../workspace-suite-shared/extension.test.helpers";
 
@@ -9,6 +9,6 @@ const wkspUri = getWorkspaceUriFromName(wkspName);
 
 suite(`workspace-2-suite test run`, () => {
   const sharedWorkspaceTests = new SharedWorkspaceTests(2);
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspUri, "", getWs2ExpectedResults)).timeout(180000);
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(180000);
 }).timeout(600000);
 

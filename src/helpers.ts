@@ -3,6 +3,8 @@ import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { WorkspaceSettings } from './WorkspaceSettings';
 const vwfs = vscode.workspace.fs;
 
+export type TestCounts = { nodeCount: number, testCount: number };
+
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
@@ -79,7 +81,7 @@ export const getTestItem = (id: string, collection: vscode.TestItemCollection): 
 }
 
 
-export const countTestItemsInCollection = (items: vscode.TestItemCollection): { nodeCount: number, testCount: number } => {
+export const countTestItemsInCollection = (items: vscode.TestItemCollection): TestCounts => {
   const arr = getAllTestItems(items);
   return countTestItemsInArray(arr);
 }
@@ -95,7 +97,7 @@ export const getScenariolTestsInArray = (items: vscode.TestItem[]): vscode.TestI
   return arr;
 }
 
-export const countTestItemsInArray = (items: vscode.TestItem[]): { nodeCount: number, testCount: number } => {
+export const countTestItemsInArray = (items: vscode.TestItem[]): TestCounts => {
   const testCount = getScenariolTestsInArray(items).length;
   const nodeCount = items.length;
   return { nodeCount, testCount };

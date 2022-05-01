@@ -1,4 +1,5 @@
 import { getWs2ExpectedResults } from "./ws2.expectedResults";
+import { getWs2ExpectedCounts } from "./ws2.expectedResults";
 import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace.tests";
 import { TestWorkspaceConfig } from "../workspace-suite-shared/testWorkspaceConfig";
 import { getWorkspaceUriFromName, runAllTestsAndAssertTheResults } from "../workspace-suite-shared/extension.test.helpers";
@@ -15,13 +16,13 @@ suite(`workspace-2-suite test run`, () => {
 			`envVarList: undefined, featuresPath: undefined }`);
 
 		const testConfig = new TestWorkspaceConfig();
-		await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getWs2ExpectedResults);
+		await runAllTestsAndAssertTheResults(wkspUri, false, testConfig, getWs2ExpectedCounts, getWs2ExpectedResults);
 	}).timeout(120000);
 
 
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
-	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "", getWs2ExpectedResults)).timeout(60000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
+	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
 }).timeout(600000);
 
 

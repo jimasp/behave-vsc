@@ -10,6 +10,7 @@ import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
 import { getAllTestItems, getScenariolTestsInArray } from '../../helpers';
+import { ParseCounts } from '../../FileParser';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
@@ -70,14 +71,14 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 
-let actRet: Instances;
+let instances: Instances;
 const activateExtension = async (): Promise<Instances> => {
-	if (actRet !== undefined)
-		return actRet;
+	if (instances !== undefined)
+		return instances;
 
 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	actRet = await ext?.activate() as Instances;
-	return actRet;
+	instances = await ext?.activate() as Instances;
+	return instances;
 }
 
 
@@ -149,8 +150,17 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: Work
 	}
 }
 
+function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts) {
+	const expectedCounts = getExpectedCounts();
+	assert(actualCounts.featureFileCount == expectedCounts.featureFileCount);
+	assert(actualCounts.stepFileCount === expectedCounts.stepFileCount);
+	assert(actualCounts.stepsCount === expectedCounts.stepsCount);
+	assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount);
+	assert(actualCounts.testCounts.testCount === expectedCounts.testCounts.testCount);
+}
 
-export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig,
+
+export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
 
 	const standardisePath = (path: string | undefined): string | undefined => {
@@ -192,35 +202,40 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	}
 
 	// get instances from returned object
-	actRet = await activateExtension();
-	assert(actRet.config);
-	assert(actRet.runHandler);
-	assert(actRet.ctrl);
-	assert(actRet);
+	instances = await activateExtension();
+	assert(instances.config);
+	assert(instances.runHandler);
+	assert(instances.ctrl);
+	assert(instances);
 
 	const cancelToken = new vscode.CancellationTokenSource().token;
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually:
-	actRet.config.reloadWorkspaceSettings(wkspUri, testConfig);
-	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, actRet.config);
+	instances.config.reloadWorkspaceSettings(wkspUri, testConfig);
+	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	vscode.commands.executeCommand("testing.clearTestResults");
 
+	// sanity check counts before going any further
+	const actualCounts = await instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	assertExpectedCounts(getExpectedCounts, actualCounts);
+
 	// readyForRun() will happen in runHandler(), but we need to add more time
-	// before requesting a test run due to vscode startup contention
+	// before requesting a test run due to contention
 	// (we could await parseFiles, but then our tests wouldn't cover the same timeout operation as real usage)
-	actRet.parser.parseFiles(wkspUri, actRet.ctrl, "runAllTestsAndAssertTheResults");
-	await actRet.parser.readyForRun(5000);
+	instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	await instances.parser.readyForRun(2000);
 
-
-	const allItems = getAllTestItems(actRet.ctrl.items);
+	const allItems = getAllTestItems(instances.ctrl.items);
 	const include = getScenariolTestsInArray(allItems);
+
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
+
 
 	// run tests
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
-	const resultsPromise = actRet?.runHandler(debug, runRequest, cancelToken);
+	const resultsPromise = instances?.runHandler(debug, runRequest, cancelToken);
 	// timeout = hack to show test ui during debug testing so we can see progress
 	await new Promise(t => setTimeout(t, 1000));
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -229,7 +244,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
 
-	const expectedResults = getExpectedResults(debug, wkspUri, actRet.config);
+	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 
 	results.forEach(result => {
 
@@ -262,7 +277,7 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.strictEqual(results.length, expectedResults.length);
 
-	await assertAllStepsCanBeMatched(actRet.getSteps(), actRet.config.getWorkspaceSettings(wkspUri));
+	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.getWorkspaceSettings(wkspUri));
 }
 
 

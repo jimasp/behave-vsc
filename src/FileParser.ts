@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
-import { countTestItemsInCollection, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile } from './helpers';
+import { countTestItemsInCollection, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { testData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
 
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
+export type ParseCounts = { testCounts: TestCounts, featureFileCount: number, stepFileCount: number, stepsCount: number }; // for integration test assertions      
 
 export class FileParser {
 
@@ -92,11 +93,7 @@ export class FileParser {
   }
 
 
-  private _logTimesToConsole = (testItems: vscode.TestItemCollection,
-    featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
-
-    const counts = countTestItemsInCollection(testItems);
-
+  private _logTimesToConsole = (counts: TestCounts, featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
     // show diag times for extension developers
     console.log(
       `---` +
@@ -231,7 +228,8 @@ export class FileParser {
 
   // NOTE - this is background task
   // it should only be awaited on user request, i.e. when called by the refreshHandler
-  async parseFiles(wkspUri: vscode.Uri | undefined, ctrl: vscode.TestController, intiator: string, callerCancelToken?: vscode.CancellationToken) {
+  async parseFiles(wkspUri: vscode.Uri | undefined, ctrl: vscode.TestController, intiator: string,
+    callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts> {
 
     callerCancelToken?.onCancellationRequested(() => {
       for (const key in this._cancelTokenSources)
@@ -239,13 +237,32 @@ export class FileParser {
     });
 
 
+    // direct recurse for multi-root workspace 
     if (!wkspUri) {
-      const promises: Promise<void>[] = [];
+
+      const promises: Promise<ParseCounts>[] = [];
       for (const wkspUri of getWorkspaceFolderUris()) {
         promises.push(this.parseFiles(wkspUri, ctrl, intiator));
       }
-      await Promise.all(promises);
-      return;
+
+      const parseCounts = await Promise.all(promises);
+
+      // add up counts
+      let featureFileCount = 0;
+      let stepFileCount = 0;
+      let nodeCount = 0;
+      let testCount = 0;
+      for (const counts of parseCounts) {
+        featureFileCount += counts.featureFileCount;
+        stepFileCount += counts.stepFileCount;
+        nodeCount += counts.testCounts.nodeCount;
+        testCount += counts.testCounts.testCount;
+      }
+
+      return {
+        testCounts: { nodeCount: nodeCount, testCount: testCount },
+        featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: steps.size
+      };
     }
 
     this._featuresLoadedForAllWorkspaces = false;
@@ -255,6 +272,7 @@ export class FileParser {
     const callName = `parseFiles ${this._calls} ${wkspName}`;
     const wkspSettings = config.getWorkspaceSettings(wkspUri);
     const wkspPath = wkspSettings.uri.path;
+    let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
 
     try {
@@ -301,14 +319,18 @@ export class FileParser {
           config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`);
         if (stepFileCount === 0)
           config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`);
-        this._logTimesToConsole(ctrl.items, featTime, stepsTime, featureFileCount, stepFileCount);
+        testCounts = countTestItemsInCollection(ctrl.items);
+        this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
       this._cancelTokenSources[wkspPath].dispose();
       delete this._cancelTokenSources[wkspPath];
+
+      return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: steps.size };
     }
     catch (e: unknown) {
       config.logger.logError(e);
+      throw e;
     }
   }
 }
