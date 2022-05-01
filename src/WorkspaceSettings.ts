@@ -28,6 +28,7 @@ export class WorkspaceSettings {
 
     this._logger = logger;
     this.uri = wkspUri;
+    let fatal = false;
 
     const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
     if (!wsFolder)
@@ -74,10 +75,13 @@ export class WorkspaceSettings {
       this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
     if (featuresPathCfg)
-      this.featuresPath = featuresPathCfg.trim().replace(/\\$|\/$/, "");
+      this.featuresPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
     this.fullFeaturesPath = vscode.Uri.joinPath(wkspUri, this.featuresPath).path;
-    if (!fs.existsSync(this.fullFeaturesPath))
+    if (!fs.existsSync(this.fullFeaturesPath)) {
       this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
+      fatal = true;
+    }
+
 
     if (fastSkipListCfg) {
       if (!fastSkipListCfg.includes("@") || fastSkipListCfg.length < 2) {
@@ -133,10 +137,10 @@ export class WorkspaceSettings {
       }
     }
 
-    this.logUserSettings();
+    this.logUserSettings(fatal);
   }
 
-  logUserSettings() {
+  logUserSettings(fatal: boolean) {
 
     const entries = Object.entries(this).sort();
 
@@ -175,6 +179,9 @@ export class WorkspaceSettings {
     if (this._errors && this._errors.length > 0) {
       this._logger.logError(`${this._errors.join("\n")}`);
     }
+
+    if (fatal)
+      throw "fatal error due to invalid workspace setting, cannot continue. see previous error for more details.";
   }
 
 }

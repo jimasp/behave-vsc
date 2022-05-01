@@ -116,10 +116,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     }));
 
 
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
       try {
         for (const uri of getWorkspaceFolderUris()) {
-          if (e.affectsConfiguration(EXTENSION_NAME, uri)) {
+          if (event.affectsConfiguration(EXTENSION_NAME, uri)) {
             config.reloadWorkspaceSettings(uri);
             parser.parseFiles(uri, ctrl, "OnDidChangeConfiguration");
           }

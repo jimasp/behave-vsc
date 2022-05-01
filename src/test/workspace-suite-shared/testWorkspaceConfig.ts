@@ -129,7 +129,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return "features";
 				default:
-					return this.featuresPath;
+					return this.featuresPath.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
 			}
 		}
 
