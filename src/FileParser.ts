@@ -4,8 +4,9 @@ import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
 import { countTestItemsInCollection, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { testData, TestFile } from './TestFile';
+import { TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
+import { testData } from './extension';
 
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
@@ -319,7 +320,7 @@ export class FileParser {
           config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`);
         if (stepFileCount === 0)
           config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`);
-        testCounts = countTestItemsInCollection(ctrl.items);
+        testCounts = countTestItemsInCollection(testData, ctrl.items);
         this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 

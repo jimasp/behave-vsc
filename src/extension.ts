@@ -3,7 +3,7 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
-import { Scenario, testData, TestFile } from './TestFile';
+import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion } from './helpers';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
@@ -11,8 +11,9 @@ import { getSteps, FileParser } from './FileParser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
 
 
-export const parser = new FileParser();
-export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
+export let parser: FileParser;
+export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
 export type Instances = {
@@ -20,7 +21,8 @@ export type Instances = {
   config: ExtensionConfiguration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => Steps
+  getSteps: () => Steps,
+  testData: TestData
 };
 
 
@@ -31,6 +33,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
   try {
 
     logExtensionVersion(context);
+    parser = new FileParser();
 
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
     // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
@@ -143,12 +146,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     }
 
     return {
-      // return instances to support integraion testing
+      // return instances to support integration testing
       runHandler: runHandler,
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getSteps
+      getSteps: getSteps,
+      testData: testData
     };
 
   }

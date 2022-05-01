@@ -9,8 +9,8 @@ import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
-import { getAllTestItems, getScenariolTestsInArray } from '../../helpers';
 import { ParseCounts } from '../../FileParser';
+import { getAllTestItems, getScenarioTestsInArray } from '../../helpers';
 
 
 export function getWorkspaceUriFromName(wkspName: string) {
@@ -227,8 +227,12 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	instances.parser.parseFiles(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	await instances.parser.readyForRun(2000);
 
+
 	const allItems = getAllTestItems(instances.ctrl.items);
-	const include = getScenariolTestsInArray(allItems);
+	const include = getScenarioTestsInArray(instances.testData, allItems);
+
+	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
+	assert(include.length === expectedResults.length);
 
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
 
@@ -244,7 +248,6 @@ export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug:
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
 
-	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 
 	results.forEach(result => {
 

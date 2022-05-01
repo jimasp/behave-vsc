@@ -1,15 +1,14 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { runOrDebugBehaveScenario } from './behaveRunOrDebug';
-import { QueueItem } from './extension';
+import { QueueItem, testData } from './extension';
 import { getContentFromFilesystem, isFeatureFile } from './helpers';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 
 let generationCounter = 0;
-type BehaveTestData = TestFile | Feature | Scenario;
-export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
-
+export type BehaveTestData = TestFile | Feature | Scenario;
+export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 
 
 export class TestFile {
@@ -100,7 +99,20 @@ export class Feature {
   constructor(public generation: number) { }
 }
 
-export class Scenario {
+export interface IScenario {
+  readonly featureFileName: string;
+  readonly featureFileWorkspaceRelativePath: string;
+  readonly featureName: string;
+  scenarioName: string;
+  generation: number;
+  readonly isOutline: boolean;
+  readonly fastSkip: boolean;
+  getLabel(): string;
+  runOrDebug(wkspSettings: WorkspaceSettings, debug: boolean, run: vscode.TestRun, queueItem: QueueItem,
+    cancellation: vscode.CancellationToken): Promise<void>
+}
+
+export class Scenario implements IScenario {
   public result: string | undefined;
   constructor(
     public readonly featureFileName: string,

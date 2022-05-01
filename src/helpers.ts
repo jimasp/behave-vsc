@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
+import { TestData } from './TestFile';
 import { WorkspaceSettings } from './WorkspaceSettings';
 const vwfs = vscode.workspace.fs;
 
@@ -81,24 +82,23 @@ export const getTestItem = (id: string, collection: vscode.TestItemCollection): 
 }
 
 
-export const countTestItemsInCollection = (items: vscode.TestItemCollection): TestCounts => {
+export const countTestItemsInCollection = (testData: TestData, items: vscode.TestItemCollection): { nodeCount: number, testCount: number } => {
   const arr = getAllTestItems(items);
-  return countTestItemsInArray(arr);
+  return countTestItemsInArray(testData, arr);
 }
 
 
-export const getScenariolTestsInArray = (items: vscode.TestItem[]): vscode.TestItem[] => {
-  const arr: vscode.TestItem[] = [];
-  items.forEach((item: vscode.TestItem) => {
-    if (item.uri?.path && item.children.size === 0 && item.range) {
-      arr.push(item);
-    }
+export const getScenarioTestsInArray = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
+  const scenarios = items.filter(item => {
+    const data = testData.get(item);
+    if (data && data.constructor.name === "Scenario")
+      return true;
   });
-  return arr;
+  return scenarios;
 }
 
-export const countTestItemsInArray = (items: vscode.TestItem[]): TestCounts => {
-  const testCount = getScenariolTestsInArray(items).length;
+export const countTestItemsInArray = (testData: TestData, items: vscode.TestItem[]): { nodeCount: number, testCount: number } => {
+  const testCount = getScenarioTestsInArray(testData, items).length;
   const nodeCount = items.length;
   return { nodeCount, testCount };
 }

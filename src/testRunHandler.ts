@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
-import { Scenario, testData, TestFile } from './TestFile';
+import { Scenario, TestFile } from './TestFile';
 import { runBehaveAll } from './behaveRunOrDebug';
 import { countTestItemsInArray, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
-import { parser, QueueItem } from './extension';
+import { parser, QueueItem, testData } from './extension';
 
 export let debugCancelSource = new vscode.CancellationTokenSource();
 
@@ -98,7 +98,7 @@ export function testRunHandler(ctrl: vscode.TestController) {
             allTestsForThisWkspIncluded = true;
           else {
             const allWkspItems = getAllTestItems(ctrl.items).filter(item => item.id.includes(wkspPath));
-            const wkspTestCount = countTestItemsInArray(allWkspItems).testCount;
+            const wkspTestCount = countTestItemsInArray(testData, allWkspItems).testCount;
             allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
           }
         }
