@@ -150,6 +150,45 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: Work
 	}
 }
 
+
+function standardisePath(path: string | undefined): string | undefined {
+	return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
+}
+
+function standardiseResult(result: string | undefined): string | undefined {
+	let res = result;
+	if (!result)
+		return undefined;
+
+	const tbm = /Traceback.*:\n {2}File /;
+	const tbe = tbm.exec(result);
+	if (!tbe)
+		return res;
+
+	const tb = tbe[0];
+	const tbi = result.search(tbm);
+
+	if (tbi !== -1) {
+		let tbSnip = result.indexOf("assert ");
+		if (tbSnip === -1)
+			tbSnip = result.indexOf("raise Exception(");
+		if (tbSnip !== -1)
+			res = result.replace(result.substring(tbi + tb.length, tbSnip), "-snip- ");
+	}
+
+	return res;
+}
+
+function getChildrenIds(children: vscode.TestItemCollection): string | undefined {
+	if (children.size === 0)
+		return undefined;
+	const arrChildrenIds: string[] = [];
+	children.forEach(child => {
+		arrChildrenIds.push(child.id);
+	});
+	return arrChildrenIds.join();
+}
+
 function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts) {
 	const expectedCounts = getExpectedCounts();
 	assert(actualCounts.featureFileCount == expectedCounts.featureFileCount);
@@ -163,43 +202,7 @@ function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts
 export const runAllTestsAndAssertTheResults = async (wkspUri: vscode.Uri, debug: boolean, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
 
-	const standardisePath = (path: string | undefined): string | undefined => {
-		return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
-	}
 
-	const standardiseResult = (result: string | undefined): string | undefined => {
-		let res = result;
-		if (!result)
-			return undefined;
-
-		const tbm = /Traceback.*:\n {2}File /;
-		const tbe = tbm.exec(result);
-		if (!tbe)
-			return res;
-
-		const tb = tbe[0];
-		const tbi = result.search(tbm);
-
-		if (tbi !== -1) {
-			let tbSnip = result.indexOf("assert ");
-			if (tbSnip === -1)
-				tbSnip = result.indexOf("raise Exception(");
-			if (tbSnip !== -1)
-				res = result.replace(result.substring(tbi + tb.length, tbSnip), "-snip- ");
-		}
-
-		return res;
-	}
-
-	const getChildrenIds = (children: vscode.TestItemCollection): string | undefined => {
-		if (children.size === 0)
-			return undefined;
-		const arrChildrenIds: string[] = [];
-		children.forEach(child => {
-			arrChildrenIds.push(child.id);
-		});
-		return arrChildrenIds.join();
-	}
 
 	// get instances from returned object
 	instances = await activateExtension();
