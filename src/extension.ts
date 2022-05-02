@@ -120,17 +120,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
       parser.parseFilesForAllWorkspaces(ctrl, "onDidChangeWorkspaceFolders");
+      for (const wkspUri of getWorkspaceFolderUris()) {
+        config.reloadSettings(wkspUri);
+      }
     }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
       try {
-        for (const uri of getWorkspaceFolderUris()) {
+        for (const wkspUri of getWorkspaceFolderUris()) {
           // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
           // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
           // settings.json, so we don't include the uri in the affectsConfiguration() call
           if (event.affectsConfiguration(EXTENSION_NAME)) {
-            config.reloadWorkspaceSettings(uri);
-            parser.parseFilesForWorkspace(uri, ctrl, "OnDidChangeConfiguration");
+            config.reloadSettings(wkspUri);
+            parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidChangeConfiguration");
           }
         }
       }

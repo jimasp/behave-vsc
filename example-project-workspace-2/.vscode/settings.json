@@ -9,5 +9,6 @@
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
     "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
+    "behave-vsc.runParallel": true,
     "behave-vsc.runAllAsOne": true,
 }

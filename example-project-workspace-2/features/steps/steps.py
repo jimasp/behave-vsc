@@ -20,9 +20,9 @@ def step_impl(context, successful_or_failing):
     assert successful_or_failing == "successful"
 
 
-@when("we implement a test that is slow")
-def step_slow(context):
-    time.sleep(3)
+@when("we implement a test that takes {secs} seconds")
+def step_slow(context, secs):
+    time.sleep(float(secs))
     assert 1 == 1
 
 

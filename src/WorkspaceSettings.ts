@@ -5,19 +5,43 @@ import { Logger } from './Logger';
 import { EXTENSION_NAME } from './Configuration';
 
 
+export class WindowSettings {
+  // class for package.json "window" settings 
+  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace
+  public alwaysShowOutput: boolean;
+  public runWorkspacesInParallel: boolean;
+  public showConfigurationWarnings: boolean;
+
+  constructor(winConfig: vscode.WorkspaceConfiguration) {
+
+    const alwaysShowOutputCfg: boolean | undefined = winConfig.get("alwaysShowOutput");
+    if (alwaysShowOutputCfg === undefined)
+      throw "alwaysShowOutput is undefined";
+    const runWorkspacesInParallelCfg: boolean | undefined = winConfig.get("runWorkspacesInParallel");
+    if (runWorkspacesInParallelCfg === undefined)
+      throw "runWorkspacesInParallel is undefined";
+    const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
+    if (showConfigurationWarningsCfg === undefined)
+      throw "showConfigurationWarnings is undefined";
+
+    this.alwaysShowOutput = alwaysShowOutputCfg;
+    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
+    this.showConfigurationWarnings = showConfigurationWarningsCfg;
+  }
+}
 
 export class WorkspaceSettings {
+  // class for package.json "resource" settings in settings.json
+  // these apply to a single workspace 
+
   // user-settable
-  public alwaysShowOutput: boolean;
   public envVarList: { [name: string]: string; } = {};
-  public showConfigurationWarnings: boolean;
   public fastSkipList: string[] = [];
   public featuresPath = "features";
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
-  public runWorkspacesInParallel: boolean;
-  // other public properties
+  // convenience properties
   public uri: vscode.Uri;
   public name: string;
   public fullFeaturesPath: string;
@@ -26,7 +50,7 @@ export class WorkspaceSettings {
   private _logger: Logger;
 
 
-  constructor(wkspUri: vscode.Uri, wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
+  constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
     this._logger = logger;
     this.uri = wkspUri;
@@ -40,43 +64,34 @@ export class WorkspaceSettings {
     // get the actual value in the file or return undefined, this is
     // for cases where we need to distinguish between an unset value and the default value
     const getActualValue = <T>(name: string): T => {
-      const value = wsConfig.inspect(name)?.workspaceFolderValue;
+      const value = wkspConfig.inspect(name)?.workspaceFolderValue;
       return (value as T);
     }
 
-    const alwaysShowOutputCfg: boolean | undefined = wsConfig.get("alwaysShowOutput");
-    if (alwaysShowOutputCfg === undefined)
-      throw "alwaysShowOutput is undefined";
-    const envVarListCfg: string | undefined = wsConfig.get("envVarList");
+
+    const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
     if (envVarListCfg === undefined)
       throw "envVarList is undefined";
-    const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
+    const fastSkipListCfg: string | undefined = wkspConfig.get("fastSkipList");
     if (fastSkipListCfg === undefined)
       throw "fastSkipList is undefined";
-    const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
+    const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
-    const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
+    const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
-    const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
+    const runParallelCfg: boolean | undefined = wkspConfig.get("runParallel");
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
-    const runWorkspacesInParallelCfg: boolean | undefined = wsConfig.get("runWorkspacesInParallel"); // (not a workspace-specific setting)
-    if (runWorkspacesInParallelCfg === undefined)
-      throw "runWorkspacesInParallel is undefined";
-    const showConfigurationWarningsCfg: boolean | undefined = wsConfig.get("showConfigurationWarnings");
-    if (showConfigurationWarningsCfg === undefined)
-      throw "showConfigurationWarnings is undefined";
+
     const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
 
 
-    this.alwaysShowOutput = alwaysShowOutputCfg;
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
-    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
 
-    this.showConfigurationWarnings = showConfigurationWarningsCfg;
+
     if (this.runParallel && runAllAsOneCfg === undefined)
       this.runAllAsOne = false;
     else
@@ -144,10 +159,11 @@ export class WorkspaceSettings {
       }
     }
 
-    this.logUserSettings(fatal);
+    this.logUserSettings(fatal, winSettings);
   }
 
-  logUserSettings(fatal: boolean) {
+
+  logUserSettings(fatal: boolean, winSettings: WindowSettings) {
 
     const entries = Object.entries(this).sort();
 
@@ -162,25 +178,25 @@ export class WorkspaceSettings {
 
     const wsUris = getWorkspaceFolderUris();
     if (wsUris.length > 0 && this.uri === wsUris[0])
-      this._logger.logInfo(`\nMulti-root workspace settings:\n{\n  "runWorkspacesInParallel": ${this.runWorkspacesInParallel}\n}`);
+      this._logger.logInfo(`\nMulti-root workspace settings:\n{\n  "runWorkspacesInParallel": ${winSettings.runWorkspacesInParallel}\n}`);
 
-    this._logger.logInfo(`\n${this.name} settings:\n${JSON.stringify(dic, null, 2)}`);
-    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`);
+    this._logger.logInfo(`\n${this.name} settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
+    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`, this.uri);
 
-    if (this.showConfigurationWarnings) {
+    if (winSettings.showConfigurationWarnings) {
       let warned = false;
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("\nWARNING: runParallel is overridden by runAllAsOne when you run all tests at once.");
+        this._logger.logWarn("\nWARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).");
+        this._logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).", this.uri);
       }
 
       if (warned)
-        this._logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`);
+        this._logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`, this.uri);
     }
 
     if (this._errors && this._errors.length > 0) {

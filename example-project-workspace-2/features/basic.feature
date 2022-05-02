@@ -7,12 +7,12 @@ Feature: Basic
 
    Scenario: run a slow test for async testing
       Given we have behave installed
-      When we implement a test that is slow
+      When we implement a test that takes 3 seconds
       Then we will see the result
 
    Scenario: run another slow test for async testing
       Given we have behave installed
-      When we implement a test that is slow
+      When we implement a test that takes 1 seconds
       Then we will see the result
 
    Scenario: run a failing test

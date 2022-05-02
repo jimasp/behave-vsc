@@ -71,17 +71,20 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 
 
 function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
-	const cfgSettings = config.getWorkspaceSettings(wkspUri);
-	assert.strictEqual(cfgSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"));
-	assert.deepStrictEqual(cfgSettings.envVarList, testConfig.getExpected("envVarList"));
-	assert.deepStrictEqual(cfgSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
-	assert.strictEqual(cfgSettings.featuresPath, testConfig.getExpected("featuresPath"));
-	assert.strictEqual(cfgSettings.fullFeaturesPath, testConfig.getExpected("fullFeaturesPath", wkspUri));
-	assert.strictEqual(cfgSettings.justMyCode, testConfig.getExpected("justMyCode"));
-	assert.strictEqual(cfgSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
-	assert.strictEqual(cfgSettings.runParallel, testConfig.getExpected("runParallel"));
-	assert.strictEqual(cfgSettings.runWorkspacesInParallel, testConfig.getExpected("runWorkspacesInParallel"));
-	assert.strictEqual(cfgSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"));
+
+	const winSettings = config.getWindowSettings();
+	assert.strictEqual(winSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"));
+	assert.strictEqual(winSettings.runWorkspacesInParallel, testConfig.getExpected("runWorkspacesInParallel"));
+	assert.strictEqual(winSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"));
+
+	const wkspSettings = config.getWorkspaceSettings(wkspUri);
+	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"));
+	assert.deepStrictEqual(wkspSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
+	assert.strictEqual(wkspSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(wkspSettings.fullFeaturesPath, testConfig.getExpected("fullFeaturesPath", wkspUri));
+	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"));
+	assert.strictEqual(wkspSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
+	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"));
 }
 
 
@@ -226,7 +229,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vs
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually so we can insert a test config
-	instances.config.reloadWorkspaceSettings(wkspUri, testConfig);
+	instances.config.reloadSettings(wkspUri, testConfig);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time

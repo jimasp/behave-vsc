@@ -75,20 +75,13 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
       };
 
-      const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings) => {
+      const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspQueue: QueueItem[], wkspSettings: WorkspaceSettings) => {
 
         const wkspPath = wkspSettings.uri.path;
-        const asyncRunPromises: Promise<string>[] = [];
+        const asyncRunPromises: Promise<void>[] = [];
 
-        const wkspQueue = queue.filter(item => {
-          return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
-        });
-
-        if (wkspQueue.length === 0)
-          return;
-
-        config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name}---`);
-
+        const start = Date.now();
+        config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---`, wkspSettings.uri);
 
         let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
@@ -114,8 +107,6 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           return;
         }
 
-        // behave err array so we can highlight behave errors by putting them at the end of the output (for one-by-one runs)
-        let behaveErrs: string[] = [];
 
         for (const wkspQueueItem of wkspQueue) {
 
@@ -129,7 +120,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           else {
             run.started(wkspQueueItem.test);
             if (!wkspSettings.runParallel || debug) {
-              behaveErrs.push(await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token));
+              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token);
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
@@ -144,21 +135,16 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
 
         // either we're done (non-async run), or we have promises to await
-        if (asyncRunPromises.length > 0)
-          behaveErrs = await Promise.all(asyncRunPromises);
+        await Promise.all(asyncRunPromises);
 
-        if (behaveErrs)
-          config.logger.logError(`Behave errors encountered:\n${behaveErrs.join("")}`);
-
-        config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} ---`);
-
+        const end = Date.now();
+        config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`, wkspSettings.uri);
       };
 
 
       const runTestQueue = async (request: vscode.TestRunRequest) => {
 
-        config.logger.clear();
-        config.logger.logInfo(`\n=== starting test run ${run.name} ===\n`);
+        run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
 
         if (queue.length === 0) {
           const err = "empty queue - nothing to do";
@@ -170,23 +156,34 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         debugCancelSource.dispose();
         debugCancelSource = new vscode.CancellationTokenSource();
 
-        // run each workspace queue in parallel (unless debug)
+
+        const winSettings = config.getWindowSettings();
+
+        // run each workspace queue
         for (const wkspUri of getWorkspaceFolderUris()) {
           const wkspSettings = config.getWorkspaceSettings(wkspUri);
 
-          if (wkspSettings.alwaysShowOutput)
-            config.logger.show();
+          const wkspQueue = queue.filter(item => {
+            return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
+          });
 
-          if (debug || !wkspSettings.runWorkspacesInParallel)
-            await runWorkspaceQueue(request, wkspSettings); // limit to one debug session
+          if (wkspQueue.length === 0)
+            continue;
 
+          config.logger.clear();
+          if (winSettings.alwaysShowOutput)
+            config.logger.show(wkspUri);
+
+          if (debug || !winSettings.runWorkspacesInParallel) // limit to one debug session
+            await runWorkspaceQueue(request, wkspQueue, wkspSettings);
           else
-            wkspRunPromises.push(runWorkspaceQueue(request, wkspSettings));
+            wkspRunPromises.push(runWorkspaceQueue(request, wkspQueue, wkspSettings));
         }
 
-        await Promise.all(wkspRunPromises);
+        if (winSettings.runWorkspacesInParallel)
+          await Promise.all(wkspRunPromises);
 
-        config.logger.logInfo(`\n=== test run ${run.name} complete ===\n`);
+        run.appendOutput(`\n=== test run ${run.name} complete @${new Date().toISOString()} ===\n`);
       };
 
 

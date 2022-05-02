@@ -9,45 +9,110 @@ export function cleanBehaveText(text: string) {
 
 export class Logger {
 
-  private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
+  private channels: { [wkspUri: string]: vscode.OutputChannel } = {};
   public run: vscode.TestRun | undefined = undefined;
+  public visible = false;
 
-  show = () => {
-    this.outputChannel.show();
+  constructor(workspaceUris: vscode.Uri[]) {
+
+    // if (workspaceUris.length < 2) {
+    //   this.defaultChannel = this.channels[""] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
+    //   return;
+    // }
+
+    workspaceUris.forEach(wkspUri => {
+      const name = wkspUri.path.split("/").pop();
+      if (!name)
+        throw new Error("can't get workspace name from uri path");
+      this.channels[wkspUri.path] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME + ": " + name);
+    });
+  }
+
+  dispose() {
+    for (const name in this.channels) {
+      this.channels[name].dispose();
+    }
+  }
+
+  show = (wkspUri?: vscode.Uri) => {
+    if (!wkspUri) {
+      for (const wkspPath in this.channels) {
+        this.channels[wkspPath].show();
+      }
+      return;
+    }
+    this.channels[wkspUri.path].show();
   };
 
-  clear = () => {
-    this.outputChannel.clear();
+  clear = (wkspUri?: vscode.Uri) => {
+    if (!wkspUri) {
+      for (const wkspUri in this.channels) {
+        this.channels[wkspUri].clear();
+      }
+      return;
+    }
+    this.channels[wkspUri.path].clear();
   };
 
-  logInfo = (text: string) => {
+  logInfo = (text: string, wkspUri?: vscode.Uri) => {
     text = cleanBehaveText(text);
     console.log(text);
-    this.outputChannel.appendLine(text);
+
+    if (!wkspUri) {
+      for (const wkspPath in this.channels) {
+        this.channels[wkspPath].appendLine(text);
+      }
+      return;
+    }
+    else {
+      this.channels[wkspUri.path].appendLine(text);
+    }
     if (this.run)
       this.run?.appendOutput(text);
   };
 
-  logWarn = (text: string) => {
+  logWarn = (text: string, wkspUri?: vscode.Uri) => {
     console.log(text);
-    this.outputChannel.appendLine(text);
-    this.outputChannel.show(true);
+
+    if (!wkspUri) {
+      for (const wkspUri in this.channels) {
+        this.channels[wkspUri].appendLine(text);
+        this.channels[wkspUri].show(true);
+      }
+    }
+    else {
+      this.channels[wkspUri.path].appendLine(text);
+      this.channels[wkspUri.path].show(true);
+    }
+
     if (this.run)
       this.run?.appendOutput(text);
   };
 
-  logError = (msgOrError: unknown, prependMsg = "") => {
-
+  logError = (msgOrError: unknown, wkspUri?: vscode.Uri, prependMsg = "") => {
     let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
+
     if (prependMsg)
       text = `${prependMsg}\n${text}`;
     text = cleanBehaveText(text);
 
     console.error(text);
-    this.outputChannel.appendLine("\n" + ERR_HIGHLIGHT);
-    this.outputChannel.appendLine(text);
-    this.outputChannel.appendLine(ERR_HIGHLIGHT);
-    this.outputChannel.show(true);
+
+    if (!wkspUri) {
+      for (const wkspPath in this.channels) {
+        this.channels[wkspPath].appendLine("\n" + ERR_HIGHLIGHT);
+        this.channels[wkspPath].appendLine(text);
+        this.channels[wkspPath].appendLine(ERR_HIGHLIGHT);
+        this.channels[wkspPath].show(true);
+      }
+    }
+    else {
+      this.channels[wkspUri.path].appendLine("\n" + ERR_HIGHLIGHT);
+      this.channels[wkspUri.path].appendLine(text);
+      this.channels[wkspUri.path].appendLine(ERR_HIGHLIGHT);
+      this.channels[wkspUri.path].show(true);
+    }
+
     vscode.debug.activeDebugConsole.appendLine(text);
     if (this.run)
       this.run?.appendOutput(text);

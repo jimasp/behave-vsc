@@ -1,7 +1,8 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { getWorkspaceFolderUris } from './helpers';
 import { Logger } from './Logger';
-import { WorkspaceSettings } from './WorkspaceSettings';
+import { WorkspaceSettings, WindowSettings } from './WorkspaceSettings';
 
 export const EXTENSION_NAME = "behave-vsc";
 export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
@@ -14,17 +15,20 @@ export interface ExtensionConfiguration {
   readonly extTempFilesUri: vscode.Uri;
   readonly logger: Logger;
   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
-  reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
+  getWindowSettings(): WindowSettings;
+  reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
 }
 
 
 class Configuration implements ExtensionConfiguration {
   public readonly extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
-  public readonly logger: Logger = new Logger();
-  private static _workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
+  public logger: Logger = new Logger(getWorkspaceFolderUris());
+  private static _multiRootOnlySettings: WindowSettings | undefined = undefined;
+  private static _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private static _configuration?: Configuration;
+
 
   private constructor() {
     Configuration._configuration = this;
@@ -40,20 +44,35 @@ class Configuration implements ExtensionConfiguration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+  public reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+    this.logger.dispose();
+    this.logger = new Logger(getWorkspaceFolderUris());
     this.logger.clear();
     this.logger.logInfo("Settings change detected.");
 
-    if (!testConfig)
-      Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
-    else
-      Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.logger);
+    if (testConfig) {
+      Configuration._multiRootOnlySettings = new WindowSettings(testConfig);
+      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, Configuration._multiRootOnlySettings, this.logger);
+    }
+    else {
+      Configuration._multiRootOnlySettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), Configuration._multiRootOnlySettings, this.logger);
+    }
   }
 
   public getWorkspaceSettings(wkspUri: vscode.Uri) {
-    return Configuration._workspaceSettings[wkspUri.path]
-      ? Configuration._workspaceSettings[wkspUri.path]
-      : Configuration._workspaceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.logger);
+    const _multiRootSettings = this.getWindowSettings();
+    return Configuration._resourceSettings[wkspUri.path]
+      ? Configuration._resourceSettings[wkspUri.path]
+      : Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), _multiRootSettings, this.logger);
+  }
+
+  public getWindowSettings() {
+    return Configuration._multiRootOnlySettings
+      ? Configuration._multiRootOnlySettings
+      : Configuration._multiRootOnlySettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
