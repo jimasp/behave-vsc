@@ -15,19 +15,20 @@ export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: s
 
 
 export async function runScenario(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
-  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
-  await runBehave(false, wkspSettings, pythonExec, run, [queueItem], args, cancellation, friendlyCmd, junitUri);
+  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<string> {
+
+  return await runBehave(false, wkspSettings, pythonExec, run, [queueItem], args, cancellation, friendlyCmd, junitUri);
 }
 
 
-async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
-  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
+  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<string> {
 
-  // in the case of runAll, we don't want to wait until the end of the run to update the tests in the ui, 
-  // so we set up a watcher so we can update as the test files are created, note - this will happen feature by feature
+  // in the case of runAll, we don't want to wait until the end of the run to update the tests results in the ui, 
+  // so we set up a watcher so we can update results as the test files are updated on disk
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
-  if (runAll) {
+  if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitUri);
     await vscode.workspace.fs.createDirectory(junitUri);
     updatesComplete = new Promise(function (resolve, reject) {
@@ -37,6 +38,7 @@ async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pytho
 
 
   try {
+    let behaveErrs = "";
     const local_args = [...args];
     local_args.unshift("-m", "behave");
     console.log(pythonExec, local_args.join(" "));
@@ -60,58 +62,22 @@ async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pytho
     });
 
 
-    if (runAll) {
+    // if not runAllAsOne, we buffer the output as we go, so we can log stuff in the right order for async runs
+    // we always buffer errors regardless so we can log them at the end to highlight them for runAllAsOne
+    const stdout: string[] = [];
+    const skipout: string[] = [];
+    const stderr: string[] = [];
+    const logStd = (s: string) => { if (!s) return; if (runAllAsOne) { config.logger.logInfo(s) } else { stdout.push(s) } }
+    const logSkip = (s: string) => { if (!s) return; if (runAllAsOne) { config.logger.logInfo(s); } else { skipout.push(s); } }
+    const logErr = (s: string) => { if (!s) return; stderr.push(s); }
+
+
+    if (runAllAsOne) {
       config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList));
       config.logger.logInfo(`${friendlyCmd}\n`);
     }
 
-    // we optionally buffer up output as we go so we can log stuff in the right order for async runs
-    const stdout: string[] = [];
-    const logStd = (s: string) => {
-      if (!s) return; if (runAll) {
-        config.logger.logInfo(s)
-      } else { stdout.push(s) }
-    };
-    const skipout: string[] = [];
-    const logSkip = (s: string) => {
-      if (!s) return; if (runAll) {
-        config.logger.logInfo(s);
-      } else { skipout.push(s); }
-    }
-    const stderr: string[] = [];
-    const logErr = (s: string) => {
-      if (!s) return; if (runAll) {
-        config.logger.logError(s);
-      } else { stderr.push(s); }
-    }
     let err = "";
-
-    let errStart = 0;
-    let errEnd = 0;
-
-    for await (const chunk of cp.stdout) {
-      const sChunk: string = chunk.toString();
-      switch (true) {
-        case sChunk.startsWith("HOOK-ERROR"):
-          err = sChunk.split("\n")[0].trim();
-          logErr(err);
-          break;
-        case sChunk.startsWith("ConfigError"):
-          err = sChunk.split("\n")[0].trim();
-          logErr(err);
-          break;
-        case sChunk.includes("\x1b"):
-          if (runAll) {
-            errStart = sChunk.indexOf("\x1b");
-            errEnd = sChunk.lastIndexOf("\x1b");
-            err = sChunk.substring(errStart, errEnd);
-            logErr(err);
-            logStd(sChunk.replace(err, ""));
-          }
-          break;
-      }
-      logStd(sChunk);
-    }
 
     for await (const chunk of cp.stderr) {
       const sChunk: string = chunk.toString();
@@ -123,33 +89,53 @@ async function runBehave(runAll: boolean, wkspSettings: WorkspaceSettings, pytho
       }
     }
 
-    await new Promise((resolve) => cp.on('close', () => resolve("")));
-    if (cancellation.isCancellationRequested)
-      return;
+    for await (const chunk of cp.stdout) {
 
-    if (!runAll) {
-      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList));
-      config.logger.logInfo(`${friendlyCmd}\n`);
-      config.logger.logInfo(stdout.join("").trim());
+      const sChunk: string = cleanBehaveText(chunk.toString());
+      logStd(sChunk);
+
+      switch (true) {
+        case sChunk.includes("HOOK-ERROR"):
+          err = cleanBehaveText(sChunk);
+          err = sChunk.substring(sChunk.indexOf("HOOK-ERROR")).split("\n")[0];
+          logErr(err);
+          break;
+        case sChunk.includes("ConfigError"):
+          err = sChunk.substring(sChunk.indexOf("ConfigError")).split("\n")[0];
+          logErr(err);
+          break;
+      }
     }
 
-    if (skipout.length > 0)
-      config.logger.logInfo(skipout.join(""));
+    await new Promise((resolve) => cp.on('close', () => resolve("")));
+    if (cancellation.isCancellationRequested)
+      return "";
 
-    let stderrStr = "";
+    if (!runAllAsOne) {
+      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList));
+      config.logger.logInfo(`${friendlyCmd}\n`);
+      config.logger.logInfo(stdout.join(""));
+
+      if (skipout.length > 0)
+        config.logger.logInfo(skipout.join(""));
+    }
+
     if (stderr.length > 0) {
-      stderrStr = stderr.join("\n");
-      stderrStr = cleanBehaveText(stderrStr).trim();
-      config.logger.logError(stderrStr);
+      behaveErrs = stderr.join("\n").trim();
+      config.logger.logError(behaveErrs);
     }
 
     config.logger.logInfo("---");
 
-    if (runAll)
+    if (runAllAsOne)
       await updatesComplete;
     else
       await parseAndUpdateTestResults(run, queue[0], wkspSettings.featuresPath, junitUri);
 
+    if (!runAllAsOne)
+      return behaveErrs; // return so one-by-one runs can combine their errors for display at the end of the output
+    else
+      return "";
   }
   finally {
     if (watcher)
@@ -168,8 +154,9 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       const matches = map.filter(m => m.junitFileUri.path === uri.path);
       if (matches.length === 0)
-        return reject("could not match queue item to uri"); // TODO extend info
+        return reject(`could find any queue items for junit file ${uri.path}`);
 
+      // one junit file is created per feature, so update all tests for this feature
       for (const match of matches) {
         await parseAndUpdateTestResults(run, match.queueItem, featuresPath, junitUri);
         match.updated = true;
@@ -184,14 +171,14 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
   }
 
-
   const pattern = new vscode.RelativePattern(junitUri, '**/*.xml');
-  console.log(pattern.baseUri + pattern.pattern);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
   watcher.onDidCreate(async (uri) => {
     console.log("created: " + uri.path);
     await updateResult(uri);
   });
+
   watcher.onDidChange(async (uri) => {
     console.log("changed: " + uri.path);
     await updateResult(uri);

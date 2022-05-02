@@ -5,7 +5,7 @@ import { junitFileExists, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 
 
-export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem, escapedScenarioName: string,
+export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
   args: string[], cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
 
   console.log(friendlyCmd); // log debug cmd for extension devs only

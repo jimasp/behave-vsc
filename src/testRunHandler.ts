@@ -78,7 +78,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings) => {
 
         const wkspPath = wkspSettings.uri.path;
-        const asyncRunPromises: Promise<void>[] = [];
+        const asyncRunPromises: Promise<string>[] = [];
 
         const wkspQueue = queue.filter(item => {
           return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
@@ -114,6 +114,8 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           return;
         }
 
+        // behave err array so we can highlight behave errors by putting them at the end of the output (for one-by-one runs)
+        let behaveErrs: string[] = [];
 
         for (const wkspQueueItem of wkspQueue) {
 
@@ -127,13 +129,14 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           else {
             run.started(wkspQueueItem.test);
             if (!wkspSettings.runParallel || debug) {
-              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token);
+              behaveErrs.push(await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token));
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
               // async run (parallel)
-              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, cancellation).then(() => {
+              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, cancellation).then((errText) => {
                 updateRun(wkspQueueItem.test, coveredLines, run);
+                return errText;
               });
               asyncRunPromises.push(promise);
             }
@@ -141,7 +144,12 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
 
         // either we're done (non-async run), or we have promises to await
-        await Promise.all(asyncRunPromises);
+        if (asyncRunPromises.length > 0)
+          behaveErrs = await Promise.all(asyncRunPromises);
+
+        if (behaveErrs)
+          config.logger.logError(`Behave errors encountered:\n${behaveErrs.join("")}`);
+
         config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} ---`);
 
       };
