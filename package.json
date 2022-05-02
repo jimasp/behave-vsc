@@ -8,7 +8,7 @@
 				"behave-vsc.alwaysShowOutput": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default false (disabled).\nNormallly, the Behave VSC output window will only show if there is an error running behave, an error in this extension, or a configuration warning.\nIf you want to always show the Behave VSC output window on every test run then set this to true.\nFor multi-root workspaces, this setting should be set in in your *.code-workspace file.",
+					"description": "Default false (disabled).\nBy default the Behave VSC output window will only show if there is an error in this extension, or a configuration warning.\nIf you want to always show the Behave VSC output window on every test run then set this to true.\nFor multi-root workspaces, this setting should be set in in your *.code-workspace file.",
 					"scope": "window"
 				},
 				"behave-vsc.envVarList": {

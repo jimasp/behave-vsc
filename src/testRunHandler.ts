@@ -170,7 +170,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           if (wkspQueue.length === 0)
             continue;
 
-          config.logger.clear();
+          config.logger.clear(wkspUri);
           if (winSettings.alwaysShowOutput)
             config.logger.show(wkspUri);
 

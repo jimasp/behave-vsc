@@ -15,10 +15,10 @@ export class Logger {
 
   constructor(workspaceUris: vscode.Uri[]) {
 
-    // if (workspaceUris.length < 2) {
-    //   this.defaultChannel = this.channels[""] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
-    //   return;
-    // }
+    if (workspaceUris.length < 2) {
+      this.channels[workspaceUris[0].path] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
+      return;
+    }
 
     workspaceUris.forEach(wkspUri => {
       const name = wkspUri.path.split("/").pop();

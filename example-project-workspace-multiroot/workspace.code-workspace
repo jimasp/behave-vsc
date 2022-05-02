@@ -8,6 +8,7 @@
 		}
 	],
 	"settings": {
+		"behave-vsc.alwaysShowOutput": true,
 		"behave-vsc.runWorkspacesInParallel": true,
 		"behave-vsc.showConfigurationWarnings": true
 	}
