@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
-import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion } from './helpers';
+import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, removeDirectoryRecursive } from './helpers';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
@@ -45,7 +45,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
-    const runHandler = testRunHandler(ctrl);
+    const cancelRemoveDirectoryRecursive = new vscode.CancellationTokenSource();
+    removeDirectoryRecursive(config.extTempFilesUri, cancelRemoveDirectoryRecursive.token);
+    const runHandler = testRunHandler(ctrl, cancelRemoveDirectoryRecursive);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {

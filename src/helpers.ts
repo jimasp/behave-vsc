@@ -6,12 +6,38 @@ const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
 
+
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
     version += " pre-release";
   }
   config.logger.logInfo(`${EXTENSION_FRIENDLY_NAME} v${version}`);
+}
+
+
+export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
+
+  try {
+
+    const children = await vwfs.readDirectory(dirUri);
+
+    for (const [name,] of children) {
+      if (!cancelToken.isCancellationRequested) {
+        const curUri = vscode.Uri.joinPath(dirUri, name);
+        await vwfs.delete(curUri, { recursive: true, useTrash: true });
+      }
+    }
+
+    if (!cancelToken.isCancellationRequested)
+      await vwfs.delete(dirUri, { recursive: true, useTrash: true });
+  }
+  catch (e: unknown) {
+    if ((e as vscode.FileSystemError).code === "FileNotFound")
+      return;
+    else
+      throw e;
+  }
 }
 
 
@@ -22,6 +48,7 @@ export const getWorkspaceFolderUris = (): vscode.Uri[] => {
   }
   return folders.map(folder => folder.uri);
 }
+
 
 export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
   if (!fileorFolderUri) // handling this here for caller convenience
@@ -101,6 +128,7 @@ export const getScenarioTests = (testData: TestData, items: vscode.TestItem[]): 
   });
   return scenarios;
 }
+
 
 export const countTestItems = (testData: TestData, items: vscode.TestItem[]): TestCounts => {
   const testCount = getScenarioTests(testData, items).length;

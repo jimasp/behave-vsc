@@ -5,11 +5,11 @@
 ---
 ### General
 - ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach Release v1.0.0 due to code volatility.*** You should also hold off forking before v1.0.0, or make sure to merge down updates.
-- Before starting any development, please make sure to fully read through the [README](README.md) as well as this document. It may save you some pain and/or solve your issue.
+- Before starting any development, please make sure to fully read through both the [README](README.md) and this document. It may save you some development pain and/or solve your issue.
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
-- Fixes > Features.
+- Fixes are great. New features will be considered, but see [Design principles](#Design-Principles).
 
 ---
 ### Development environment setup for extension development:
@@ -97,14 +97,14 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ---
 ## Troubleshooting
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
-- Most development problems can be resolved by either removing all breakpoints, or restart the watch tasks in terminal window.
+- Most development problems can be resolved by either (a) removing all breakpoints, (b) restarting the watch tasks in terminal window, or (c) restarting vscode.
 - If you're not hitting a breakpoint, remove _all_ breakpoints and re-add your breakpoint (see below for more info).
 - If you are stepping in to external code, then it's likely you either hit pause, or you need to remove all breakpoints.
-- If your source goes out of sync with debug, kill any watches in the terminal window to force a rebuild.
-- If you are getting invalid errors in the "problems" window, kill any watch tasks in the terminal window to force a rebuild.
+- If your source goes out of sync with debug, kill any watches in the terminal window to force a rebuild. 
+- If you are getting invalid errors in the "problems" window, kill any watch tasks in the terminal window to force a rebuild. If that fails, restart vscode.
 - If you get an error running "Debug Extension...", set a breakpoint in the `activate()` function.
 - If you get an error running "Run Extension Test Suite...", set a breakpoint in the `runAllTestsAndAssertTheResults()` function.
-- If you don't hit either function breakpoint, try putting a breakpoint at the very first line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
+- If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue? 
 - Delete all breakpoints from both extension and host environments if any of the following occur:
 	- If you don't hit a breakpoint that you're sure you should be hitting. This may be down to sourcemaps and breakpoints being out of sync (in this case, also consider doing a `git commit` and `git clean fdx`). 
 	- If `npm run test` fails on the command line due to a timeout.
@@ -115,10 +115,10 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
 ---
-## General notes and Q&A
-1. If you want to log something for users, use `config.logger`, e.g. `config.logger.logInfo(...)`
-2. If you want to log something for extension developers (contributors) only, use `console`, e.g. `console.log(...)`
-3. If you want to log something for the test run output, use `run.appendOutput(...)`
+## Adding logs
+- If you want to log something everywhere, i.e. debug window/ouput window/vscode test output, use `config.logger`, e.g. `config.logger.logInfo(...)`
+- If you want to log something only for extension developers (contributors), use `console`, e.g. `console.log(...)`
+- If you want to log something only to the vscode test run output, use `run.appendOutput(...)`
 
 ---
 ## Before requesting a PR merge
@@ -155,8 +155,8 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 
 ---
 ## Design principles
+- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please do submit a feature request issue or PR.) 
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
-- YAGNI - don't be tempted to add extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities for an in-house project with an unusual custom setup should be supported in forked repos. (If you think it's a common concern, then please do submit a feature request issue or PR.) 
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary standard node functions, to handle things wherever possible. 
 - Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems.
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the behave command manually. Also any such changes would be more likely to break in future versions of behave.

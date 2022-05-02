@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { runOrDebugBehaveScenario } from './behaveRunOrDebug';
-import { QueueItem, testData } from './extension';
+import { testData } from './extension';
 import { getContentFromFilesystem, isFeatureFile } from './helpers';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
@@ -108,8 +107,6 @@ export interface IScenario {
   readonly isOutline: boolean;
   readonly fastSkip: boolean;
   getLabel(): string;
-  runOrDebug(wkspSettings: WorkspaceSettings, debug: boolean, run: vscode.TestRun, queueItem: QueueItem,
-    cancellation: vscode.CancellationToken): Promise<void>
 }
 
 export class Scenario implements IScenario {
@@ -127,14 +124,6 @@ export class Scenario implements IScenario {
   getLabel() {
     return `${this.scenarioName}`;
   }
-
-
-  async runOrDebug(wkspSettings: WorkspaceSettings, debug: boolean, run: vscode.TestRun, queueItem: QueueItem,
-    cancellation: vscode.CancellationToken): Promise<void> {
-
-    await runOrDebugBehaveScenario(wkspSettings, run, queueItem, debug, cancellation);
-  }
-
 }
 
 

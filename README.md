@@ -94,7 +94,7 @@ paths=behave_tests/features
 - When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:  
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
-- For each run, the equivalent behave command to run the test manually appears in the Behave VSC output window.
+- For each run, the equivalent behave command to run the test manually appears in the Behave VSC output window. (The _actual_ command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
 - The extension then parses the junit file output and updates the test result.
 - The behave output and any errors appear in the Behave VSC output window.
 - How the run works is controlled by you via extension settings in your `settings.json` file (e.g. `behave-vsc.runParallel` etc.)
@@ -129,16 +129,16 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to rewrites/refactoring.
+- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. In code this directory is `os.tmpDir()/behave-vsc` and is determined by your OS and temp path environment variables. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature which in async mode would stop us from being able to update the test because behave writes "skipped" (not e.g. "pending") by default for tests that are not yet complete.)
+
 
 ---
 ## Known issues and limitations
-
 - "Go to Step" context menu doesn't always work or match correctly and never will. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
 - Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
-- Running debug against _multiple_ test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
-- In order to ensure that the output is parseable and consistent, the internally executed behave command must add extra parameters to override any configured settings that may affect behave output.
+- Running debug against multiple test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
 
 ---
 ## Contributing

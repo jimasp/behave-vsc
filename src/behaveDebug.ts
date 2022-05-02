@@ -11,7 +11,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
   console.log(friendlyCmd); // log debug cmd for extension devs only
 
   // remove stdout noise when debugging
-  args.push("--no-summary", "--outfile", config.tempFilesUri.fsPath + "debug.log");
+  args.push("--no-summary", "--outfile", config.extTempFilesUri.fsPath + "debug.log");
 
   const debugLaunchConfig = {
     name: "behave-vsc-debug",

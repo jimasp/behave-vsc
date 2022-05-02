@@ -7,18 +7,15 @@ import { QueueItem } from './extension';
 import { updateTest } from './junitParser';
 
 
-const shared_args = ["--junit", "--show-skipped", "--show-source", "--show-timings"];
-//"--capture", "--capture-stderr", "--logcapture"]; 
-
 
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
   cancellation: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
-  const junitPath = `${config.tempFilesUri.path}/${run.name}/${wkspSettings.name}`;
+  const junitPath = `${config.extTempFilesUri.path}/${run.name}/${wkspSettings.name}`;
   const junitUri = vscode.Uri.file(junitPath);
-  const args = shared_args.concat(["--junit", "--junit-directory", junitPath]);
+  const args = ["--junit", "--junit-directory", junitPath];
 
   try {
     await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd, junitUri);
@@ -30,20 +27,27 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
 
 
 
-export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
-  debug: boolean, cancellation: vscode.CancellationToken): Promise<void> {
+export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
+  cancellation: vscode.CancellationToken): Promise<void> {
 
   const scenario = queueItem.scenario;
   const scenarioName = scenario.scenarioName;
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
-  const junitScenarioFileName = formatScenarioNameAsFilename(scenarioName);
+
+  if (async && debug)
+    throw new Error("running async debug is not supported");
+
+  let junitPath = `${config.extTempFilesUri.path}/${run.name}/${wkspSettings.name}`;
   // a junit xml file could be updated several times for a single scenario, so we'll use a different path for each scenario
   // so that when running async we can determine which result is which
-  const junitPath = `${config.tempFilesUri.path}/${run.name}/${wkspSettings.name}/${junitScenarioFileName}`;
+  if (async) {
+    junitPath += `/${formatScenarioNameAsFolderName(scenarioName)}`;
+  }
   const junitUri = vscode.Uri.file(junitPath);
-  const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName]
-    .concat(shared_args).concat(["--junit", "--junit-directory", junitPath]);
+
+  const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName, "--junit", "--junit-directory", junitPath];
+
   const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
     `"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
 
@@ -67,11 +71,10 @@ export async function runOrDebugBehaveScenario(wkspSettings: WorkspaceSettings, 
 
 
 
-  function formatScenarioNameAsFilename(scenarioName: string) {
-    return scenarioName.replace(/\s/g, "_");
-    const valid = /[^a-zA-Z0-9_.-]/g;
-    return scenarioName.replace(valid, (match) => {
-      return `_${match.charCodeAt(0)}_`;
+  function formatScenarioNameAsFolderName(scenarioName: string) {
+    const valid = /[^a-zA-Z0-9_-]/g;
+    return scenarioName.replaceAll(" ", "_").replace(valid, (match) => {
+      return `[${match.charCodeAt(0)}]`;
     });
   }
 

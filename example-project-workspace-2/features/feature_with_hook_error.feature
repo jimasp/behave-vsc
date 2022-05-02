@@ -5,29 +5,29 @@ Feature: With a hook-error
         Given we have behave installed
 
     @normal_skip
-    Scenario: skip in middle
+    Scenario: normal skip
         Given we have behave installed
 
     @normal_skip @raise_error_in_before_scenario
-    Scenario: skip before hook-error
+    Scenario: skip a before hook-error
         Given we have behave installed        
 
     @raise_error_in_before_scenario
-    Scenario: before_hook_error again
-        Given we have behave installed        
-
-    @raise_error_in_after_scenario
-    Scenario: create a after hook-error
+    Scenario: create a before hook-error again
         Given we have behave installed
 
     @normal_skip
-    Scenario: another skip
+    Scenario: another normal skip
+        Given we have behave installed                
+
+    @raise_error_in_after_scenario
+    Scenario: create an after hook-error
         Given we have behave installed
 
     @normal_skip @raise_error_in_after_scenario
-    Scenario: skip after hook-error
+    Scenario: skip an after hook-error
         Given we have behave installed        
 
     @raise_error_in_after_scenario
-    Scenario: after_hook_error again
+    Scenario: create an after hook-error again
         Given we have behave installed        

@@ -11,7 +11,7 @@ export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
 
 
 export interface ExtensionConfiguration {
-  readonly tempFilesUri: vscode.Uri;
+  readonly extTempFilesUri: vscode.Uri;
   readonly logger: Logger;
   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
   reloadWorkspaceSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
@@ -20,7 +20,7 @@ export interface ExtensionConfiguration {
 
 
 class Configuration implements ExtensionConfiguration {
-  public readonly tempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
+  public readonly extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
   public readonly logger: Logger = new Logger();
   private static _workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 

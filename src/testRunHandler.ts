@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestFile } from './TestFile';
-import { runBehaveAll } from './behaveRunOrDebug';
+import { runBehaveAll, runOrDebugBehaveScenario } from './behaveRunOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem, testData } from './extension';
@@ -10,7 +10,7 @@ import { parser, QueueItem, testData } from './extension';
 export let debugCancelSource = new vscode.CancellationTokenSource();
 
 
-export function testRunHandler(ctrl: vscode.TestController) {
+export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
   return async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
 
     // the test tree is built as a background process which is called from a few places
@@ -26,6 +26,7 @@ export function testRunHandler(ctrl: vscode.TestController) {
 
     try {
 
+      cancelRemoveDirectoryRecursiveSource.cancel();
       const queue: QueueItem[] = [];
       const run = ctrl.createTestRun(request, `${performance.now()}`, false);
       config.logger.run = run;
@@ -126,12 +127,12 @@ export function testRunHandler(ctrl: vscode.TestController) {
           else {
             run.started(wkspQueueItem.test);
             if (!wkspSettings.runParallel || debug) {
-              await wkspQueueItem.scenario.runOrDebug(wkspSettings, debug, run, wkspQueueItem, debugCancelSource.token);
+              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token);
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
               // async run (parallel)
-              const promise = wkspQueueItem.scenario.runOrDebug(wkspSettings, false, run, wkspQueueItem, cancellation).then(() => {
+              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, cancellation).then(() => {
                 updateRun(wkspQueueItem.test, coveredLines, run);
               });
               asyncRunPromises.push(promise);
