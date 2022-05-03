@@ -36,10 +36,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     parser = new FileParser();
 
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
-    // the function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
+    // any function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter)
     // push disposables (registerCommand is a disposable so that your command will no longer be active when the extension is deactivated)
+    // (to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment)
     context.subscriptions.push(ctrl);
+    context.subscriptions.push(vscode.Disposable.from(config));
     for (const wkspUri of getWorkspaceFolderUris()) {
       context.subscriptions.push(startWatchingWorkspace(wkspUri, ctrl));
     }

@@ -35,6 +35,10 @@ class Configuration implements ExtensionConfiguration {
     console.log("Configuration singleton constructed (this should only fire once except for test runs)");
   }
 
+  public dispose() {
+    this.logger.dispose();
+  }
+
   static get configuration() {
     if (Configuration._configuration)
       return Configuration._configuration;
