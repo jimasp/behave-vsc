@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import * as xml2js from 'xml2js';
-import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
+import { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem } from './helpers';
-const vwfs = vscode.workspace.fs;
 
 const parser = new xml2js.Parser();
 
@@ -155,14 +154,14 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], features
 
 
 export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string,
-  junitUri: vscode.Uri, runToken: vscode.CancellationToken): Promise<void> {
+  junitUri: vscode.Uri, cancelToken: vscode.CancellationToken): Promise<void> {
 
   let result: parseJunitFileResult;
   try {
     result = await parseJunitFile(queueItem, featuresPath, junitUri);
   }
   catch (e: unknown) {
-    if (runToken.isCancellationRequested &&
+    if (cancelToken.isCancellationRequested &&
       ((e as vscode.FileSystemError).code === "FileNotFound" || (e as vscode.FileSystemError).code === "EntryNotFound")) {
       return;
     }

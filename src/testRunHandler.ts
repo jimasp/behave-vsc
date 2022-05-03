@@ -6,7 +6,10 @@ import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem, testData } from './extension';
-export let debugCancelSource = new vscode.CancellationTokenSource();
+
+// TODO - subscribe/dispose this on extension deactivation
+// (and refactor testRunHandler)
+export const debugCancelSource = new vscode.CancellationTokenSource();
 
 
 export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
@@ -23,10 +26,19 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       return;
     }
 
-    // if run cancelled, pass it on to the debug token
-    const cancellationHandler = runToken.onCancellationRequested(() => {
-      debugCancelSource.cancel();
+    cancelRemoveDirectoryRecursiveSource.cancel();
+
+    const combinedSource = new vscode.CancellationTokenSource();
+    const combinedToken = combinedSource.token;
+
+    const debugCancelHandler = debugCancelSource.token.onCancellationRequested(() => {
+      combinedSource.cancel();
     });
+
+    const runCancelHandler = runToken.onCancellationRequested(() => {
+      combinedSource.cancel();
+    });
+
 
     try {
       const queue: QueueItem[] = [];
@@ -111,7 +123,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
 
         if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
           wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
-          await runBehaveAll(wkspSettings, run, wkspQueue, runToken);
+          await runBehaveAll(wkspSettings, run, wkspQueue, combinedToken);
           for (const qi of wkspQueue) {
             updateRun(qi.test, coveredLines, run);
           }
@@ -120,8 +132,6 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
 
 
-        cancelRemoveDirectoryRecursiveSource.cancel();
-        const debugToken = debugCancelSource.token;
 
 
         for (const wkspQueueItem of wkspQueue) {
@@ -131,18 +141,18 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
             run.appendOutput(runDiag);
           console.log(runDiag);
 
-          if (debugToken.isCancellationRequested || runToken.isCancellationRequested) {
+          if (combinedToken.isCancellationRequested) {
             updateRun(wkspQueueItem.test, coveredLines, run);
           }
           else {
             run.started(wkspQueueItem.test);
             if (!wkspSettings.runParallel || debug) {
-              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, runToken);
+              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, combinedToken);
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
               // async run (parallel)
-              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, debugToken).then((errText) => {
+              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, combinedToken).then((errText) => {
                 updateRun(wkspQueueItem.test, coveredLines, run);
                 return errText;
               });
@@ -170,10 +180,6 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
 
         const wkspRunPromises: Promise<void>[] = [];
-        debugCancelSource.dispose();
-        debugCancelSource = new vscode.CancellationTokenSource();
-
-
         const winSettings = config.getWindowSettings();
 
         // run each workspace queue
@@ -263,7 +269,8 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       config.logger.logErrorAllWksps(e);
     }
     finally {
-      cancellationHandler.dispose();
+      debugCancelHandler.dispose();
+      runCancelHandler.dispose();
     }
 
   };
