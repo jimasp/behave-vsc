@@ -115,7 +115,8 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
 ---
-## Adding logs
+# General development 
+### Adding logs
 (First, note that vscode provides a workspace as soon as a folder is opened.)
 - Logging errors and warnings will show the output window when logged, logging info will not.
 - Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps(...)`. This should only be used when a workspace context does not make sense.
@@ -123,6 +124,8 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Log to the vscode test run output at the same time: specify the run parameter: `config.loger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
 - Log only for extension developers (contributors): `console.log("msg")`.
+### Error handling
+- Any entry points such as `activate()` or event handlers such as `onDidChangeConfiguration`, `onCancellationRequested`, etc. should always have a try/catch with a `config.logError` if they contain any code that could potentially fail.
 
 ---
 ## Before requesting a PR merge

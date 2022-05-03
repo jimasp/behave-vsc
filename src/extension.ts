@@ -12,9 +12,10 @@ import { debugCancelSource, testRunHandler } from './testRunHandler';
 import { Logger } from './Logger';
 
 
-export let parser: FileParser;
+// TODO - does testData have to be global?
 export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
+
 
 
 export type Instances = {
@@ -34,23 +35,25 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
   try {
 
     logExtensionVersion(context);
-    parser = new FileParser();
+    const parser = new FileParser();
 
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
-    // any function contained in push() will execute immediately, as well as registering it for disposal on extension deactivation
-    // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter)
-    // push disposables (registerCommand is a disposable so that your command will no longer be active when the extension is deactivated)
-    // (to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment)
+    // any function contained in subscriptions.push() will execute immediately, 
+    // as well as registering it for disposal on extension deactivation
+    // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
+    // registerCommand, which is a disposable that ensures our custom command will no longer be active when the extension is deactivated).
+    // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.
     context.subscriptions.push(ctrl);
     context.subscriptions.push(vscode.Disposable.from(config));
     for (const wkspUri of getWorkspaceFolderUris()) {
-      context.subscriptions.push(startWatchingWorkspace(wkspUri, ctrl));
+      context.subscriptions.push(startWatchingWorkspace(wkspUri, ctrl, parser));
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
+    // TODO - rename cancelRemoveDirectoryRecursive token and function to reflect that they remove the temp folder
     const cancelRemoveDirectoryRecursive = new vscode.CancellationTokenSource();
     removeDirectoryRecursive(config.extTempFilesUri, cancelRemoveDirectoryRecursive.token);
-    const runHandler = testRunHandler(ctrl, cancelRemoveDirectoryRecursive);
+    const runHandler = testRunHandler(ctrl, parser, cancelRemoveDirectoryRecursive);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
@@ -100,21 +103,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
         return {
           onDidSendMessage: (m) => {
-            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-            // console.log(JSON.stringify(m));
+            try {
+              // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
+              // console.log(JSON.stringify(m));
 
-            if (m.body?.reason === "exited" && m.body?.threadId) {
-              // thread exit
-              threadExit = true;
-              return;
-            }
-
-            if (m.event === "exited") {
-              if (!threadExit) {
-                // exit, but not a thread exit, so we need to set flag to 
-                // stop the run, (most likely debug was stopped by user)
-                debugCancelSource.cancel();
+              if (m.body?.reason === "exited" && m.body?.threadId) {
+                // thread exit
+                threadExit = true;
+                return;
               }
+
+              if (m.event === "exited") {
+                if (!threadExit) {
+                  // exit, but not a thread exit, so we need to set flag to 
+                  // stop the run, (most likely debug was stopped by user)
+                  debugCancelSource.cancel();
+                }
+              }
+            }
+            catch (e: unknown) {
+              config.logger.logErrorAllWksps(e);
             }
           },
         };
@@ -188,7 +196,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
 
 
-function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController) {
+function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
   const wkspFullFeaturesPath = config.getWorkspaceSettings(wkspUri).fullFeaturesPath;

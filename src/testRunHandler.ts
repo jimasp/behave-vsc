@@ -5,14 +5,16 @@ import { Scenario, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
-import { parser, QueueItem, testData } from './extension';
+import { QueueItem, testData } from './extension';
+import { FileParser } from './FileParser';
 
-// TODO - subscribe/dispose this on extension deactivation
-// (and refactor testRunHandler)
-export const debugCancelSource = new vscode.CancellationTokenSource();
+// TODO - subscribe/dispose this on extension deactivation 
+// (with thorough manual retest of debug and run stop/start)
+// ALTERNATIVELY consider rewrite for run one-shot debug mode (maybe try that first?)
+export let debugCancelSource: vscode.CancellationTokenSource;
 
-
-export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
+// TODO refactor
+export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
   return async (debug: boolean, request: vscode.TestRunRequest, runToken: vscode.CancellationToken) => {
 
     // the test tree is built as a background process which is called from a few places
@@ -27,7 +29,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
     }
 
     cancelRemoveDirectoryRecursiveSource.cancel();
-
+    debugCancelSource = new vscode.CancellationTokenSource();
     const combinedSource = new vscode.CancellationTokenSource();
     const combinedToken = combinedSource.token;
 
@@ -269,6 +271,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       config.logger.logErrorAllWksps(e);
     }
     finally {
+      debugCancelSource.dispose();
       debugCancelHandler.dispose();
       runCancelHandler.dispose();
     }
