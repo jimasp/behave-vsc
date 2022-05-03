@@ -35,23 +35,21 @@ export class Logger {
   }
 
   show = (wkspUri: vscode.Uri) => {
-    // if (!wkspUri) {
-    //   for (const wkspPath in this.channels) {
-    //     this.channels[wkspPath].show();
-    //   }
-    //   return;
-    // }
     this.channels[wkspUri.path].show();
   };
 
   clear = (wkspUri: vscode.Uri) => {
-    // if (!wkspUri) {
-    //   for (const wkspUri in this.channels) {
-    //     this.channels[wkspUri].clear();
-    //   }
-    //   return;
-    // }
     this.channels[wkspUri.path].clear();
+  };
+
+  // log without a carriage return, used for behave output
+  logInfoNoCR = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+    text = cleanBehaveText(text);
+    console.log(text);
+
+    this.channels[wkspUri.path].append(text);
+    if (run)
+      run.appendOutput(text);
   };
 
   logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
@@ -60,7 +58,7 @@ export class Logger {
 
     this.channels[wkspUri.path].appendLine(text);
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   };
 
   logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
@@ -72,7 +70,7 @@ export class Logger {
     }
 
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   };
 
   logWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
@@ -83,7 +81,7 @@ export class Logger {
     this.channels[wkspUri.path].show(true);
 
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   };
 
   logWarnAllWksps = (text: string, run?: vscode.TestRun) => {
@@ -100,7 +98,7 @@ export class Logger {
     }
 
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   };
 
   logError = (msgOrError: unknown, wkspUri: vscode.Uri, prependMsg = "", run?: vscode.TestRun) => {
@@ -117,7 +115,7 @@ export class Logger {
 
     vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   }
 
   logErrorAllWksps = (msgOrError: unknown, prependMsg = "", run?: vscode.TestRun) => {
@@ -137,7 +135,7 @@ export class Logger {
 
     vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
-      run.appendOutput(text);
+      run.appendOutput(text + "\n");
   }
 
 }

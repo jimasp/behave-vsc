@@ -34,8 +34,6 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     };
 
 
-
-
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
 
     if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig))

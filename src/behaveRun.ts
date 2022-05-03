@@ -54,7 +54,7 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
 
     // if not runAllAsOne, we buffer the output as we go, so we can log stuff in the right order for async runs
     const out: string[] = [];
-    const log = (s: string) => { if (!s) return; s = cleanBehaveText(s); if (runAllAsOne) { config.logger.logInfo(s, wkspUri) } else { out.push(s) } }
+    const log = (s: string) => { if (!s) return; s = cleanBehaveText(s); if (runAllAsOne) { config.logger.logInfoNoCR(s, wkspUri) } else { out.push(s) } }
 
     if (runAllAsOne) {
       config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);

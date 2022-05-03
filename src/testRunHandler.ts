@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestFile } from './TestFile';
-import { runBehaveAll, runOrDebugBehaveScenario } from './behaveRunOrDebug';
+import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem, testData } from './extension';
