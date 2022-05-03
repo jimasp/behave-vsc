@@ -53,14 +53,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     const runHandler = testRunHandler(ctrl, cancelRemoveDirectoryRecursive);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
-      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
-        runHandler(false, request, token);
+      async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        await runHandler(false, request, token);
       }
       , true);
 
     ctrl.createRunProfile('Debug Tests', vscode.TestRunProfileKind.Debug,
-      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
-        runHandler(true, request, token);
+      async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        await runHandler(true, request, token);
       }
       , true);
 
@@ -121,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
       }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
       // (most of the work will happen in the onDidChangeConfiguration handler)
       config.logger.dispose();
       config.logger = new Logger(getWorkspaceFolderUris());

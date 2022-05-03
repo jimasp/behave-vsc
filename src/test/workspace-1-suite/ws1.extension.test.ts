@@ -8,9 +8,9 @@ const wkspUri = getWorkspaceUriFromName(wkspName);
 suite(`workspace-1-suite test run`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(1);
 
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "/behave_tests/some_tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(60000);
-	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "/behave_tests/some_tests", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(60000);
 	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "behave_tests/some_tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(60000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "/behave_tests/some_tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(60000);
+	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "/behave_tests/some_tests", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(60000);
 	test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspUri, "/behave_tests/some_tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(180000);
 
 }).timeout(600000);

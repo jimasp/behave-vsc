@@ -254,9 +254,11 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vs
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const resultsPromise = instances?.runHandler(debug, runRequest, cancelToken);
-	// timeout = hack to show test ui during debug testing so we can see progress
-	await new Promise(t => setTimeout(t, 1000));
-	await vscode.commands.executeCommand("workbench.view.testing.focus");
+	if (debug) {
+		// timeout hack to show test ui during debug testing so we can see progress		
+		await new Promise(t => setTimeout(t, 1000));
+		await vscode.commands.executeCommand("workbench.view.testing.focus");
+	}
 	const results = await resultsPromise;
 
 	if (!results || results.length === 0)

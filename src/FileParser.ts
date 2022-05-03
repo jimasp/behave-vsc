@@ -255,7 +255,7 @@ export class FileParser {
     let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
     // if caller cancels, pass it on to the internal token
-    callerCancelToken?.onCancellationRequested(() => {
+    const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
       this._cancelTokenSources[wkspPath].cancel();
     });
 
@@ -318,6 +318,9 @@ export class FileParser {
     catch (e: unknown) {
       config.logger.logError(e, wkspUri);
       throw e;
+    }
+    finally {
+      cancellationHandler?.dispose();
     }
   }
 }

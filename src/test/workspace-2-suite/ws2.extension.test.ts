@@ -24,10 +24,9 @@ suite(`workspace-2-suite test run`, () => {
 
 	}).timeout(60000);
 
-
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
-	test("runOneByone", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
 	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
+	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspUri, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
 }).timeout(600000);
 
 

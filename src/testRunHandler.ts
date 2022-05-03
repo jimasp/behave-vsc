@@ -6,12 +6,11 @@ import { runBehaveAll, runOrDebugBehaveScenario } from './behaveRunOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { performance } from 'perf_hooks';
 import { parser, QueueItem, testData } from './extension';
-
 export let debugCancelSource = new vscode.CancellationTokenSource();
 
 
 export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
-  return async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+  return async (debug: boolean, request: vscode.TestRunRequest, runToken: vscode.CancellationToken) => {
 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
@@ -24,9 +23,12 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       return;
     }
 
-    try {
+    // if run cancelled, pass it on to the debug token
+    const cancellationHandler = runToken.onCancellationRequested(() => {
+      debugCancelSource.cancel();
+    });
 
-      cancelRemoveDirectoryRecursiveSource.cancel();
+    try {
       const queue: QueueItem[] = [];
       const run = ctrl.createTestRun(request, `${performance.now()}`, false);
 
@@ -109,13 +111,17 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
 
         if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
           wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
-          await runBehaveAll(wkspSettings, run, wkspQueue, cancellation);
+          await runBehaveAll(wkspSettings, run, wkspQueue, runToken);
           for (const qi of wkspQueue) {
             updateRun(qi.test, coveredLines, run);
           }
           logComplete();
           return;
         }
+
+
+        cancelRemoveDirectoryRecursiveSource.cancel();
+        const debugToken = debugCancelSource.token;
 
 
         for (const wkspQueueItem of wkspQueue) {
@@ -125,18 +131,18 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
             run.appendOutput(runDiag);
           console.log(runDiag);
 
-          if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
+          if (debugToken.isCancellationRequested || runToken.isCancellationRequested) {
             updateRun(wkspQueueItem.test, coveredLines, run);
           }
           else {
             run.started(wkspQueueItem.test);
             if (!wkspSettings.runParallel || debug) {
-              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, debugCancelSource.token);
+              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, runToken);
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
               // async run (parallel)
-              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, cancellation).then((errText) => {
+              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, debugToken).then((errText) => {
                 updateRun(wkspQueueItem.test, coveredLines, run);
                 return errText;
               });
@@ -252,10 +258,12 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       await runTestQueue(request);
 
       return queue;
-
     }
     catch (e: unknown) {
       config.logger.logErrorAllWksps(e);
+    }
+    finally {
+      cancellationHandler.dispose();
     }
 
   };

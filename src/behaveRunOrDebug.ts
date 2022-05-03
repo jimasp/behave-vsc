@@ -9,7 +9,7 @@ import { updateTest } from './junitParser';
 
 
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
-  cancellation: vscode.CancellationToken): Promise<void> {
+  runToken: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
@@ -18,7 +18,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   const args = ["--junit", "--junit-directory", junitPath];
 
   try {
-    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd, junitUri);
+    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, runToken, friendlyCmd, junitUri);
   }
   catch (e: unknown) {
     config.logger.logError(e, wkspSettings.uri, "", run);
@@ -27,8 +27,8 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
 
 
 
-export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
-  cancellation: vscode.CancellationToken): Promise<void> {
+export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, wkspSettings: WorkspaceSettings, run: vscode.TestRun,
+  queueItem: QueueItem, cancelToken: vscode.CancellationToken): Promise<void> {
 
   const scenario = queueItem.scenario;
   const scenarioName = scenario.scenarioName;
@@ -59,10 +59,10 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     }
 
     if (debug) {
-      await debugScenario(wkspSettings, run, queueItem, args, cancellation, friendlyCmd, junitUri);
+      await debugScenario(wkspSettings, run, queueItem, args, cancelToken, friendlyCmd, junitUri);
     }
     else {
-      await runScenario(wkspSettings, pythonExec, run, queueItem, args, cancellation, friendlyCmd, junitUri);
+      await runScenario(wkspSettings, pythonExec, run, queueItem, args, cancelToken, friendlyCmd, junitUri);
     }
   }
   catch (e: unknown) {

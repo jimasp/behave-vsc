@@ -33,7 +33,7 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
       await vwfs.delete(dirUri, { recursive: true, useTrash: true });
   }
   catch (e: unknown) {
-    if ((e as vscode.FileSystemError).code === "FileNotFound")
+    if ((e as vscode.FileSystemError).code === "FileNotFound" || (e as vscode.FileSystemError).code === "EntryNotFound")
       return;
     else
       throw e;

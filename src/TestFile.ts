@@ -61,7 +61,7 @@ export class TestFile {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
-            config.logger.logErrorAllWksps(err);
+            config.logger.logError(err, wkspSettings.uri);
           }
           else
             throw e;

@@ -154,9 +154,21 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], features
 }
 
 
-export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<string> {
+export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string,
+  junitUri: vscode.Uri, runToken: vscode.CancellationToken): Promise<void> {
 
-  const result = await parseJunitFile(queueItem, featuresPath, junitUri);
+  let result: parseJunitFileResult;
+  try {
+    result = await parseJunitFile(queueItem, featuresPath, junitUri);
+  }
+  catch (e: unknown) {
+    if (runToken.isCancellationRequested &&
+      ((e as vscode.FileSystemError).code === "FileNotFound" || (e as vscode.FileSystemError).code === "EntryNotFound")) {
+      return;
+    }
+    throw e;
+  }
+
   const fullFeatureName = getDotFoldersFeatureName(queueItem, featuresPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
@@ -183,23 +195,11 @@ export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: 
 
   const parseResult = CreateParseResult(queueItemResult);
   updateTest(run, parseResult, queueItem);
-  return parseResult.status;
 }
 
-export async function junitFileExists(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<boolean> {
-  const junitFileUri = getJunitFileUri(queueItem, featuresPath, junitUri);
-  try {
-    await vwfs.stat(junitFileUri);
-    return true;
-  }
-  catch (e: unknown) {
-    if ((e as vscode.FileSystemError).code === "FileNotFound")
-      return false;
-    throw e;
-  }
-}
+export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
-async function parseJunitFile(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<{ junitContents: JunitContents, fsPath: string }> {
+async function parseJunitFile(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<parseJunitFileResult> {
   const junitFileUri = getJunitFileUri(queueItem, featuresPath, junitUri);
   const junitXml = await getContentFromFilesystem(junitFileUri);
   const contents: JunitContents = await parser.parseStringPromise(junitXml);

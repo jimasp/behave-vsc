@@ -23,7 +23,23 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, runWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: featuresPath,
-      alwaysShowOutput: false, justMyCode: false, showConfigurationWarnings: undefined
+      alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined
+    });
+
+    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
+    await runAllTestsAndAssertTheResults(false, wkspUri, testConfig, getExpectedCounts, getExpectedResults);
+  }
+
+
+  runParallel = async (wkspUri: vscode.Uri, featuresPath: string,
+    getExpectedCounts: () => ParseCounts,
+    getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
+  ) => {
+
+    const testConfig = new TestWorkspaceConfig({
+      runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
+      envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: featuresPath,
+      alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -38,22 +54,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, runWorkspacesInParallel: true,
       envVarList: envVarList2, fastSkipList: fastSkipList2, featuresPath: featuresPath,
-      alwaysShowOutput: false, justMyCode: false, showConfigurationWarnings: undefined
-    });
-
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspUri, testConfig, getExpectedCounts, getExpectedResults);
-  }
-
-  runParallel = async (wkspUri: vscode.Uri, featuresPath: string,
-    getExpectedCounts: () => ParseCounts,
-    getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]
-  ) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: featuresPath,
-      alwaysShowOutput: false, justMyCode: false, showConfigurationWarnings: undefined
+      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -68,7 +69,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: featuresPath,
-      alwaysShowOutput: false, justMyCode: false, showConfigurationWarnings: undefined
+      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
     });
 
 

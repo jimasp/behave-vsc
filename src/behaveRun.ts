@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { spawn } from 'child_process';
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
@@ -15,14 +15,16 @@ export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: s
 
 
 export async function runScenario(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queueItem: QueueItem, args: string[],
-  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+  runToken: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
 
-  await runBehave(false, wkspSettings, pythonExec, run, [queueItem], args, cancellation, friendlyCmd, junitUri);
+  await runBehave(false, wkspSettings, pythonExec, run, [queueItem], args, runToken, friendlyCmd, junitUri);
 }
 
 
 async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
-  cancellation: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+  runToken: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+
+  const wkspUri = wkspSettings.uri;
 
   // in the case of runAll, we don't want to wait until the end of the run to update the tests results in the ui, 
   // so we set up a watcher so we can update results as the test files are updated on disk
@@ -32,34 +34,23 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitUri);
     await vscode.workspace.fs.createDirectory(junitUri);
     updatesComplete = new Promise(function (resolve, reject) {
-      watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitUri);
+      watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitUri, runToken);
     });
   }
 
+  let cp: ChildProcessWithoutNullStreams;
+
+  const cancellationHandler = runToken.onCancellationRequested(() => {
+    cp?.kill();
+  });
+
 
   try {
-    const wkspUri = wkspSettings.uri;
     const local_args = [...args];
     local_args.unshift("-m", "behave");
     console.log(pythonExec, local_args.join(" "));
     const options = { cwd: wkspUri.path, env: wkspSettings.envVarList };
-    const cp = spawn(pythonExec, local_args, options);
-
-    const cancelledEvent = cancellation.onCancellationRequested(() => {
-      try {
-        // (note - vscode will have ended the run, so we cannot update the test status)
-        config.logger.logInfo("-- TEST RUN CANCELLED --\n", wkspUri, run);
-        cp.kill();
-      }
-      catch (e: unknown) {
-        config.logger.logError(e, wkspUri, "", run);
-      }
-      finally {
-        cancelledEvent.dispose();
-        if (watcher)
-          watcher.dispose();
-      }
-    });
+    cp = spawn(pythonExec, local_args, options);
 
     // if not runAllAsOne, we buffer the output as we go, so we can log stuff in the right order for async runs
     const out: string[] = [];
@@ -74,32 +65,37 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
     cp.stdout.on('data', chunk => log(chunk.toString()));
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
-    if (cancellation.isCancellationRequested)
-      return; // cp was killed
 
-    if (!runAllAsOne) {
+    if (!runAllAsOne && out.length > 0) {
       config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
       config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
       config.logger.logInfo(out.join(""), wkspUri, run);
     }
 
-    config.logger.logInfo("---", wkspUri, run);
+    if (runToken.isCancellationRequested) {
+      config.logger.logInfo("\n-- TEST RUN CANCELLED --", wkspUri, run);
+      // the test run will have been terminated, so we cannot update the test status                  
+      return;
+    }
 
     if (runAllAsOne)
       await updatesComplete;
     else
-      await parseAndUpdateTestResults(run, queue[0], wkspSettings.featuresPath, junitUri);
+      await parseAndUpdateTestResults(run, queue[0], wkspSettings.featuresPath, junitUri, runToken);
+
+    config.logger.logInfo("---", wkspUri, run);
   }
   finally {
-    if (watcher)
-      watcher.dispose();
+    watcher?.dispose();
+    cancellationHandler.dispose();
   }
 
 }
 
 
 function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (value: unknown) => void,
-  map: { queueItem: QueueItem; junitFileUri: vscode.Uri; updated: boolean }[], run: vscode.TestRun, wkspSettings: WorkspaceSettings, junitUri: vscode.Uri) {
+  map: { queueItem: QueueItem; junitFileUri: vscode.Uri; updated: boolean }[], run: vscode.TestRun, wkspSettings: WorkspaceSettings,
+  junitUri: vscode.Uri, runToken: vscode.CancellationToken): vscode.FileSystemWatcher {
 
   let updated = 0;
 
@@ -111,7 +107,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
       // one junit file is created per feature, so update all tests for this feature
       for (const match of matches) {
-        await parseAndUpdateTestResults(run, match.queueItem, wkspSettings.featuresPath, junitUri);
+        await parseAndUpdateTestResults(run, match.queueItem, wkspSettings.featuresPath, junitUri, runToken);
         match.updated = true;
         updated++;
       }
@@ -130,4 +126,5 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   watcher.onDidChange(uri => updateResult(uri));
 
   return watcher;
+
 }

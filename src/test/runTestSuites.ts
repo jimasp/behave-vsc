@@ -8,7 +8,7 @@ import {
 
 
 // this code handles `npm run test` or `npm run testinsiders`
-// (to debug this code, go to package.json and click the ">Debug" link and choose "test" or "testinsiders")
+// to debug this code, open vscode explorer and open "npm scripts" and click the debug link next to "test" or "testinsiders"
 async function runTestSuites() {
   try {
     const version = process.argv[2].slice(2);
