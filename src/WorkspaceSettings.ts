@@ -166,33 +166,40 @@ export class WorkspaceSettings {
   logUserSettings(fatal: boolean, winSettings: WindowSettings) {
 
     const entries = Object.entries(this).sort();
-
     const dic: { [name: string]: string; } = {};
 
+    // remove non-user-settable properties        
+    const nonUser = ["name", "uri", "fullFeaturesPath", "fullWorkingDirectoryPath"];
     entries.forEach(([key, value]) => {
-      // remove non-user-settable properties
-      if (!key.startsWith("_") && key !== "name" && key !== "runWorkspacesInParallel" && key !== "fullFeaturesPath"
-        && key !== "uri" && key !== "fullWorkingDirectoryPath")
+      if (!key.startsWith("_") && !nonUser.includes(key))
         dic[key] = value;
     });
 
     const wsUris = getWorkspaceFolderUris();
     if (wsUris.length > 0 && this.uri === wsUris[0])
-      this._logger.logInfoAllWksps(`\nglobal settings:\n${JSON.stringify(winSettings, null, 2)}`);
+      this._logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettings, null, 2)}`);
 
-    this._logger.logInfo(`\n${this.name} settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
+    this._logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
     this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`, this.uri);
 
     if (winSettings.showConfigurationWarnings) {
+
       let warned = false;
+      this._logger.logInfo("\n", this.uri);
+
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("\nWARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
+        this._logger.logWarn("WARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
         this._logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).", this.uri);
+      }
+
+      if (!this.runParallel && !this.runAllAsOne) {
+        warned = true;
+        this._logger.logWarn("WARNING: runParallel and runAllAsOne are both disabled. This will give the slowest performance.", this.uri);
       }
 
       if (warned)
