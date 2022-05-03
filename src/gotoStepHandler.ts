@@ -125,7 +125,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
     editor.revealRange(stepMatch.range, vscode.TextEditorRevealType.InCenter);
   }
   catch (e: unknown) {
-    config.logger.logError(e);
+    config.logger.logErrorAllWksps(e);
   }
 
 }

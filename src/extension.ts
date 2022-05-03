@@ -9,6 +9,7 @@ import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
+import { Logger } from './Logger';
 
 
 export let parser: FileParser;
@@ -76,17 +77,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
         }
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.logErrorAllWksps(e);
       }
     };
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
 
-        await parser.parseFilesForAllWorkspaces(ctrl, "refreshHandler", cancelToken);
+        await parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.logErrorAllWksps(e);
       }
     };
 
@@ -120,27 +121,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
       }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
-      parser.parseFilesForAllWorkspaces(ctrl, "onDidChangeWorkspaceFolders");
-      for (const wkspUri of getWorkspaceFolderUris()) {
-        config.reloadSettings(wkspUri);
-      }
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
+      // (most of the work will happen in the onDidChangeConfiguration handler)
+      config.logger.dispose();
+      config.logger = new Logger(getWorkspaceFolderUris());
     }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
+      config.logger.logInfoAllWksps("Settings change detected");
       try {
-        for (const wkspUri of getWorkspaceFolderUris()) {
-          // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
-          // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
-          // settings.json, so we don't include the uri in the affectsConfiguration() call
-          if (event.affectsConfiguration(EXTENSION_NAME)) {
+        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
+        // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
+        // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
+        // (separately the change could be a global window setting)
+        if (event.affectsConfiguration(EXTENSION_NAME)) {
+          for (const wkspUri of getWorkspaceFolderUris()) {
             config.reloadSettings(wkspUri);
-            parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidChangeConfiguration");
           }
         }
+
+        parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "OnDidChangeConfiguration");
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.logErrorAllWksps(e);
       }
     }));
 
@@ -172,7 +175,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
   }
   catch (e: unknown) {
     if (config) {
-      config.logger.logError(e);
+      config.logger.logErrorAllWksps(e);
     }
     else {
       // should never happen
@@ -207,7 +210,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logError(e, wkspUri);
     }
   }
 
@@ -245,7 +248,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logErrorAllWksps(e);
     }
   });
 

@@ -126,11 +126,11 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues). github [issues](https://github.com/jimasp/behave-vsc/issues). 
 - The extension is only tested with a couple of example projects. It's quite possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (Does the same issue occur with the example project workspaces, or just in your own project?) 
 ### Q&A
+- How can I see all effective settings for the extension? On starting vscode, look in the Behave VSC output window.
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- When will this extension have a release version? When I have time and the code is stable. At the moment the code is subject to rewrites/refactoring.
-- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. In code this directory is `os.tmpDir()/behave-vsc` and is determined by your OS and temp path environment variables. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature which in async mode would stop us from being able to update the test because behave writes "skipped" (not e.g. "pending") by default for tests that are not yet complete.)
-
+- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. This is determined by your OS and temp path environment variables, in code (nodejs) the directory is `os.tmpDir()/behave-vsc`. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not e.g. "pending") by default for tests that are not yet complete.)
+- When will this extension have a release version? When the code is stable. At the moment the code is subject to rewrites/refactoring.
 
 ---
 ## Known issues and limitations

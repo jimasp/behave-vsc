@@ -29,11 +29,11 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
   // handle test run stop 
   const cancellationEvent = cancellation.onCancellationRequested(() => {
     try {
-      config.logger.logInfo("-- TEST RUN CANCELLED --\n");
+      config.logger.logInfoAllWksps("-- TEST RUN CANCELLED --\n", run);
       vscode.debug.stopDebugging();
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logErrorAllWksps(e, "", run);
     }
     finally {
       cancellationEvent.dispose();

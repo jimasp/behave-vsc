@@ -24,7 +24,7 @@ export interface ExtensionConfiguration {
 class Configuration implements ExtensionConfiguration {
   public readonly extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
   public logger: Logger = new Logger(getWorkspaceFolderUris());
-  private static _multiRootOnlySettings: WindowSettings | undefined = undefined;
+  private static _windowSettings: WindowSettings | undefined = undefined;
   private static _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private static _configuration?: Configuration;
@@ -48,35 +48,31 @@ class Configuration implements ExtensionConfiguration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
-    this.logger.dispose();
-    this.logger = new Logger(getWorkspaceFolderUris());
-    this.logger.clear();
-    this.logger.logInfo("Settings change detected.");
+  public async reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
 
     if (testConfig) {
-      Configuration._multiRootOnlySettings = new WindowSettings(testConfig);
-      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, Configuration._multiRootOnlySettings, this.logger);
+      Configuration._windowSettings = new WindowSettings(testConfig);
+      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, Configuration._windowSettings, this.logger);
     }
     else {
-      Configuration._multiRootOnlySettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      Configuration._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
       Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), Configuration._multiRootOnlySettings, this.logger);
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), Configuration._windowSettings, this.logger);
     }
   }
 
   public getWorkspaceSettings(wkspUri: vscode.Uri) {
-    const _multiRootSettings = this.getWindowSettings();
+    const _windowSettings = this.getWindowSettings();
     return Configuration._resourceSettings[wkspUri.path]
       ? Configuration._resourceSettings[wkspUri.path]
       : Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), _multiRootSettings, this.logger);
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), _windowSettings, this.logger);
   }
 
   public getWindowSettings() {
-    return Configuration._multiRootOnlySettings
-      ? Configuration._multiRootOnlySettings
-      : Configuration._multiRootOnlySettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+    return Configuration._windowSettings
+      ? Configuration._windowSettings
+      : Configuration._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
@@ -95,7 +91,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
   if (!pyext) {
     const msg = EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT;
     vscode.window.showErrorMessage(msg);
-    logger.logError(msg);
+    logger.logErrorAllWksps(msg);
     return undefined;
   }
 
@@ -104,7 +100,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
     if (!pyext.isActive) {
       const msg = EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT;
       vscode.window.showErrorMessage(msg);
-      logger.logError(msg);
+      logger.logErrorAllWksps(msg);
       return undefined;
     }
   }
@@ -113,7 +109,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
   if (!pythonExec) {
     const msg = EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT;
     vscode.window.showErrorMessage(msg);
-    logger.logError(msg);
+    logger.logErrorAllWksps(msg);
     return undefined;
   }
 

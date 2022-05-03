@@ -116,9 +116,13 @@ If you have a custom fork and you want to distribute it to your team, you will w
 
 ---
 ## Adding logs
-- If you want to log something everywhere, i.e. debug window/ouput window/vscode test output, use `config.logger`, e.g. `config.logger.logInfo(...)`
-- If you want to log something only for extension developers (contributors), use `console`, e.g. `console.log(...)`
-- If you want to log something only to the vscode test run output, use `run.appendOutput(...)`
+(First, note that vscode provides a workspace as soon as a folder is opened.)
+- Logging errors and warnings will show the output window when logged, logging info will not.
+- Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps(...)`. This should only be used when a workspace context does not make sense.
+- Log to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
+- Log to the vscode test run output at the same time: specify the run parameter: `config.loger.logInfo("msg", wkspUri, run)`.
+- Log only to the vscode test run output: `run.appendOutput("msg")`.
+- Log only for extension developers (contributors): `console.log("msg")`.
 
 ---
 ## Before requesting a PR merge
@@ -127,13 +131,13 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Fixes are given priority over new functionality. Also, new functionality _must_ have tests.
 - Raise an issue describing the problem that the PR is resolving and link it in the issue
 ### Process
-- Generally speaking, you should not modify the example project workspaces in your PR, unless you are _adding_ new feature/steps files or improving existing tests. (Either way, any changes to the example project workspaces will require you to update the test code for expected results.)
+- Generally speaking, you should not modify the example project workspaces in your PR unless you are _adding_ new feature/steps files or adding to/improving existing tests. (Either way, any changes to the example project workspaces will require you to update the test code for expected results.)
 - Quickly review your code vs the project's [Design principles](#design-principles)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
 - Automated tests (verify behave results):
 	- Close vscode and run `npm run test`
-- After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
+- Manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
 some manual tests of the _affected areas_. For example, if you changed feature file/step file parsing or filesystem watchers you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
 	2. start debug on workspace 1, then	
@@ -161,6 +165,7 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 - Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems.
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the behave command manually. Also any such changes would be more likely to break in future versions of behave.
 - Always consider performance.
+- Always consider multi-root workspaces.
 - Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`), Use `vscode.` functionality like `uri.path` or workspaceFolder etc. wherever possible. Also consider relative paths and path/pattern matching. (Where possible vscode/node converts `\`to `/` itself for consistency.) Line-endings (use `\n` internally, i.e. unless you are handling `\r\n`). Encoding (use `utf8`). 
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
 - No reliance on other extensions except `ms-python.python`.	

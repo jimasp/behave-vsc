@@ -21,7 +21,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
     await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancellation, friendlyCmd, junitUri);
   }
   catch (e: unknown) {
-    config.logger.logError(e);
+    config.logger.logError(e, wkspSettings.uri, "", run);
   }
 }
 
@@ -53,7 +53,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 
   try {
     if (!debug && scenario.fastSkip) {
-      config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`);
+      config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`, wkspSettings.uri, run);
       updateTest(run, { status: "skipped", duration: 0 }, queueItem);
       return;
     }
@@ -66,7 +66,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     }
   }
   catch (e: unknown) {
-    config.logger.logError(e);
+    config.logger.logError(e, wkspSettings.uri, "", run);
   }
 
 

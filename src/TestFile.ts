@@ -27,7 +27,7 @@ export class TestFile {
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
-      config.logger.logError(e);
+      config.logger.logError(e, wkspSettings.uri);
     }
   }
 
@@ -61,7 +61,7 @@ export class TestFile {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
-            config.logger.logError(err);
+            config.logger.logErrorAllWksps(err);
           }
           else
             throw e;

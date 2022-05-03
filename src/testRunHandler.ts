@@ -29,7 +29,6 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
       cancelRemoveDirectoryRecursiveSource.cancel();
       const queue: QueueItem[] = [];
       const run = ctrl.createTestRun(request, `${performance.now()}`, false);
-      config.logger.run = run;
 
       // map of file uris to statements on each line:
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -75,6 +74,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         }
       };
 
+
       const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspQueue: QueueItem[], wkspSettings: WorkspaceSettings) => {
 
         const wkspPath = wkspSettings.uri.path;
@@ -82,7 +82,15 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
 
         const start = Date.now();
         if (!debug)
-          config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---`, wkspSettings.uri);
+          config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
+
+        const logComplete = () => {
+          const end = Date.now();
+          if (!debug) {
+            config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
+              wkspSettings.uri, run);
+          }
+        }
 
         let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
@@ -105,6 +113,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           for (const qi of wkspQueue) {
             updateRun(qi.test, coveredLines, run);
           }
+          logComplete();
           return;
         }
 
@@ -139,9 +148,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         // either we're done (non-async run), or we have promises to await
         await Promise.all(asyncRunPromises);
 
-        const end = Date.now();
-        if (!debug)
-          config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`, wkspSettings.uri);
+        logComplete();
       };
 
 
@@ -152,7 +159,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
 
         if (queue.length === 0) {
           const err = "empty queue - nothing to do";
-          config.logger.logError(err);
+          config.logger.logErrorAllWksps(err);
           throw err;
         }
 
@@ -248,7 +255,7 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
 
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logErrorAllWksps(e);
     }
 
   };

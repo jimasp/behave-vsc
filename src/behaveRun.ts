@@ -32,7 +32,7 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitUri);
     await vscode.workspace.fs.createDirectory(junitUri);
     updatesComplete = new Promise(function (resolve, reject) {
-      watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings.featuresPath, junitUri);
+      watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitUri);
     });
   }
 
@@ -48,11 +48,11 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
     const cancelledEvent = cancellation.onCancellationRequested(() => {
       try {
         // (note - vscode will have ended the run, so we cannot update the test status)
-        config.logger.logInfo("-- TEST RUN CANCELLED --\n", wkspUri);
+        config.logger.logInfo("-- TEST RUN CANCELLED --\n", wkspUri, run);
         cp.kill();
       }
       catch (e: unknown) {
-        config.logger.logError(e, wkspUri);
+        config.logger.logError(e, wkspUri, "", run);
       }
       finally {
         cancelledEvent.dispose();
@@ -66,8 +66,8 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
     const log = (s: string) => { if (!s) return; s = cleanBehaveText(s); if (runAllAsOne) { config.logger.logInfo(s, wkspUri) } else { out.push(s) } }
 
     if (runAllAsOne) {
-      config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri);
-      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri);
+      config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
+      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
     }
 
     cp.stderr.on('data', chunk => log(chunk.toString()));
@@ -78,12 +78,12 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
       return; // cp was killed
 
     if (!runAllAsOne) {
-      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri);
-      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri);
-      config.logger.logInfo(out.join(""), wkspUri);
+      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
+      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
+      config.logger.logInfo(out.join(""), wkspUri, run);
     }
 
-    config.logger.logInfo("---", wkspUri);
+    config.logger.logInfo("---", wkspUri, run);
 
     if (runAllAsOne)
       await updatesComplete;
@@ -99,7 +99,7 @@ async function runBehave(runAllAsOne: boolean, wkspSettings: WorkspaceSettings, 
 
 
 function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (value: unknown) => void,
-  map: { queueItem: QueueItem; junitFileUri: vscode.Uri; updated: boolean }[], run: vscode.TestRun, featuresPath: string, junitUri: vscode.Uri) {
+  map: { queueItem: QueueItem; junitFileUri: vscode.Uri; updated: boolean }[], run: vscode.TestRun, wkspSettings: WorkspaceSettings, junitUri: vscode.Uri) {
 
   let updated = 0;
 
@@ -111,7 +111,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
       // one junit file is created per feature, so update all tests for this feature
       for (const match of matches) {
-        await parseAndUpdateTestResults(run, match.queueItem, featuresPath, junitUri);
+        await parseAndUpdateTestResults(run, match.queueItem, wkspSettings.featuresPath, junitUri);
         match.updated = true;
         updated++;
       }
@@ -119,23 +119,15 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
         resolve("");
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logError(e, wkspSettings.uri);
       reject(e);
     }
   }
 
   const pattern = new vscode.RelativePattern(junitUri, '**/*.xml');
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-
-  watcher.onDidCreate(async (uri) => {
-    console.log("created: " + uri.path);
-    await updateResult(uri);
-  });
-
-  watcher.onDidChange(async (uri) => {
-    console.log("changed: " + uri.path);
-    await updateResult(uri);
-  });
+  watcher.onDidCreate(uri => updateResult(uri));
+  watcher.onDidChange(uri => updateResult(uri));
 
   return watcher;
 }

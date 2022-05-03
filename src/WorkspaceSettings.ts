@@ -178,7 +178,7 @@ export class WorkspaceSettings {
 
     const wsUris = getWorkspaceFolderUris();
     if (wsUris.length > 0 && this.uri === wsUris[0])
-      this._logger.logInfo(`\nMulti-root workspace settings:\n{\n  "runWorkspacesInParallel": ${winSettings.runWorkspacesInParallel}\n}`);
+      this._logger.logInfoAllWksps(`\nglobal settings:\n${JSON.stringify(winSettings, null, 2)}`);
 
     this._logger.logInfo(`\n${this.name} settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
     this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`, this.uri);
@@ -200,7 +200,7 @@ export class WorkspaceSettings {
     }
 
     if (this._errors && this._errors.length > 0) {
-      this._logger.logError(`${this._errors.join("\n")}`);
+      this._logger.logErrorAllWksps(`${this._errors.join("\n")}`);
     }
 
     if (fatal)

@@ -227,7 +227,7 @@ export class FileParser {
   }
 
 
-  async parseFilesForAllWorkspaces(ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
+  async clearTestItemsAndParseFilesForAllWorkspaces(ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
     // clear everything so we can rebuild the top level nodes
     const items = getAllTestItems(null, ctrl.items);
@@ -236,7 +236,7 @@ export class FileParser {
     }
 
     for (const wkspUri of getWorkspaceFolderUris()) {
-      this.parseFilesForWorkspace(wkspUri, ctrl, intiator, cancelToken);
+      this.parseFilesForWorkspace(wkspUri, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
     }
   }
 
@@ -302,9 +302,9 @@ export class FileParser {
       else {
         console.log(`${callName}: complete`);
         if (featureFileCount === 0)
-          config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`);
+          config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`, wkspUri);
         if (stepFileCount === 0)
-          config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`);
+          config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`, wkspUri);
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
@@ -316,7 +316,7 @@ export class FileParser {
       return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: wkspSteps.size };
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.logError(e, wkspUri);
       throw e;
     }
   }

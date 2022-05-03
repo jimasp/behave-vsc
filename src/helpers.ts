@@ -12,7 +12,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   if (version.startsWith("0")) {
     version += " pre-release";
   }
-  config.logger.logInfo(`${EXTENSION_FRIENDLY_NAME} v${version}`);
+  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${version}`);
 }
 
 

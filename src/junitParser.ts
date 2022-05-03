@@ -92,7 +92,7 @@ function CreateParseResult(testCase: TestCase): ParseResult {
     return { status: "Untested (see output in Behave VSC output window)", duration: duration };
 
   if (status !== "failed")
-    config.logger.logError("Unrecognised scenario status result:" + status);
+    throw new Error("Unrecognised scenario status result:" + status);
 
   // status === "failed"
 
