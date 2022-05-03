@@ -50,7 +50,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		languageIds?: string[] | undefined;
 	} | undefined {
 
-		// switch for all user-settable settings in settings.json
+		// switch for all user-settable settings in settings.json or *.code-workspace
 		let response;
 		switch (section) {
 			case "alwaysShowOutput":
@@ -97,7 +97,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	get<T>(section: string): T {
 
-		// switch for all user-settable settings in settings.json
+		// switch for all user-settable settings in settings.json or *.code-workspace
 		//		
 		// for get, vscode will use the default in the package.json if there is 
 		// one, or otherwise a default value for the type (e.g. bool = false, string = "", etc.)
@@ -189,7 +189,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return this.runAllAsOne = this.runAllAsOne === undefined ? true : this.runAllAsOne;
 		};
 
-		// switch for ALL workspace settings (i.e. including non-user-settable)
+		// switch for ALL settings in settings.json or *.code-workspace (i.e. including non-user-settable)
 		switch (section) {
 			case "alwaysShowOutput":
 				return <T><unknown>(this.get("alwaysShowOutput"));

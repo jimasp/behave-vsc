@@ -81,7 +81,8 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         const asyncRunPromises: Promise<void>[] = [];
 
         const start = Date.now();
-        config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---`, wkspSettings.uri);
+        if (!debug)
+          config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---`, wkspSettings.uri);
 
         let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
@@ -111,7 +112,8 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         for (const wkspQueueItem of wkspQueue) {
 
           const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
-          run.appendOutput(runDiag);
+          if (!debug)
+            run.appendOutput(runDiag);
           console.log(runDiag);
 
           if (debugCancelSource.token.isCancellationRequested || cancellation.isCancellationRequested) {
@@ -138,13 +140,15 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         await Promise.all(asyncRunPromises);
 
         const end = Date.now();
-        config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`, wkspSettings.uri);
+        if (!debug)
+          config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`, wkspSettings.uri);
       };
 
 
       const runTestQueue = async (request: vscode.TestRunRequest) => {
 
-        run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
+        if (!debug)
+          run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
 
         if (queue.length === 0) {
           const err = "empty queue - nothing to do";
@@ -170,9 +174,11 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
           if (wkspQueue.length === 0)
             continue;
 
-          config.logger.clear(wkspUri);
-          if (winSettings.alwaysShowOutput)
-            config.logger.show(wkspUri);
+          if (!debug) {
+            config.logger.clear(wkspUri);
+            if (winSettings.alwaysShowOutput)
+              config.logger.show(wkspUri);
+          }
 
           if (debug || !winSettings.runWorkspacesInParallel) // limit to one debug session
             await runWorkspaceQueue(request, wkspQueue, wkspSettings);
@@ -183,7 +189,8 @@ export function testRunHandler(ctrl: vscode.TestController, cancelRemoveDirector
         if (winSettings.runWorkspacesInParallel)
           await Promise.all(wkspRunPromises);
 
-        run.appendOutput(`\n=== test run ${run.name} complete @${new Date().toISOString()} ===\n`);
+        if (!debug)
+          run.appendOutput(`\n=== test run ${run.name} complete @${new Date().toISOString()} ===\n`);
       };
 
 
