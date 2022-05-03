@@ -9,7 +9,7 @@ import { updateTest } from './junitParser';
 
 
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
-  runToken: vscode.CancellationToken): Promise<void> {
+  cancelToken: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExec(wkspSettings.uri);
   const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
@@ -18,7 +18,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   const args = ["--junit", "--junit-directory", junitPath];
 
   try {
-    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, runToken, friendlyCmd, junitUri);
+    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitUri);
   }
   catch (e: unknown) {
     config.logger.logError(e, wkspSettings.uri, "", run);
