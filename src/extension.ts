@@ -108,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
               // console.log(JSON.stringify(m));
 
               if (m.body?.reason === "exited" && m.body?.threadId) {
-                // thread exit
+                // mark threadExit for subsequent calls
                 threadExit = true;
                 return;
               }

@@ -101,11 +101,11 @@ paths=behave_tests/features
 
 ### How debug works:
 
-- It dynamically builds a debug launch config and runs that. (This enables the `ms-python.python` extension to do the heavy lifting of setting up the debug port etc.)
+- It dynamically builds a debug launch config and runs that. (This enables the `ms-python.python` extension to do the work of debugging.)
 - The extension then parses the junit file output and updates the test result.
 - Error output is shown in the debug console window and/or Behave VSC window depending on the nature of the error.
 - To reduce noise when debugging, the behave command and behave std output is not shown when in debug. Run the test instead if you want this output.
-- Whether debug steps into external code is controlled by you via the extension setting `behave-vsc.justMyCode` (i.e. your `settings.json` not your `launch.json`).
+- Whether debug steps into external code is controlled by you via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` not your `launch.json`).
 
 
 ---
@@ -138,7 +138,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
 - Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
 - Parallel test runs add up durations, making it look like they took longer than they actually did.
-- Running debug against multiple test targets at once starts a fresh debug session for each test. This can cause some minor UI side effects like having to click debug stop button multiple times. (If for some reason you _regularly_ debug multiple behave test targets at once, you may wish to map a keyboard shortcut for debug stop, the default is Shift+F5.) 
+- Running debug against multiple test targets at once starts a fresh debug session for each test (because a separate behave process is run for each test). This can cause some knock-on minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets and you want to stop them, you can use the test run stop instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
 
 ---
 ## Contributing
