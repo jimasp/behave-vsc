@@ -64,7 +64,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/../mesh-to-cloud",
+				"${workspaceFolder}/../myproject",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
