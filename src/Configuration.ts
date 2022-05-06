@@ -9,6 +9,7 @@ export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const MSPY_EXT = "ms-python.python";
 export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
+export const WIN_MAX_PATH = 260;
 
 
 export interface ExtensionConfiguration {

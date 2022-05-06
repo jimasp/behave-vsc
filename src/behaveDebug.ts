@@ -6,7 +6,7 @@ import { QueueItem } from './extension';
 
 
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
-  args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitUri: vscode.Uri): Promise<void> {
+  args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<void> {
 
   // handle test run stop 
   const cancellationHandler = cancelToken.onCancellationRequested(async () => {
@@ -44,7 +44,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(run, queueItem, wkspSettings.featuresPath, junitUri, cancelToken);
+          await parseAndUpdateTestResults(junitFileUri, run, queueItem, wkspSettings.featuresPath, cancelToken);
           resolve();
         }
         catch (e: unknown) {

@@ -126,6 +126,8 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Log only for extension developers (contributors): `console.log("msg")`.
 ### Error handling
 - Any entry points such as `activate()` or event handlers such as `onDidChangeConfiguration`, `onCancellationRequested`, etc. should always have a try/catch with a `config.logError` if they contain any code that could potentially fail.
+- In a non-entry point functions, in most cases you want to use `throw '...`, as `throw new Error(...)` will result in a stack trace being logged, so should only be used for things that should never happen, e.g. a logic failure in the extension code.
+- In any given stack, if you are adding a throw, then always test error handling works as expected by deliberately throwing the error.
 
 ---
 ## Before requesting a PR merge
@@ -165,7 +167,7 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 - YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.) 
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary standard node functions, to handle things wherever possible. 
-- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems.
+- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages already in the node_modules folder if required.)
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the behave command manually. Also any such changes would be more likely to break in future versions of behave.
 - Always consider performance.
 - Always consider multi-root workspaces.

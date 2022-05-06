@@ -302,9 +302,9 @@ export class FileParser {
       else {
         console.log(`${callName}: complete`);
         if (featureFileCount === 0)
-          config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesPath}`, wkspUri);
+          config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesFsPath}`, wkspUri);
         if (stepFileCount === 0)
-          config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesPath}/steps`, wkspUri);
+          config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesFsPath}/steps`, wkspUri);
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }

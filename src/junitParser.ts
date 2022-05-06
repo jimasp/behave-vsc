@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
+import * as os from 'os';
 import * as xml2js from 'xml2js';
-import { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem } from './helpers';
+import { WIN_MAX_PATH } from './Configuration';
 
 const parser = new xml2js.Parser();
 
@@ -49,9 +50,6 @@ type ParseResult = {
   status: string,
   duration: number
 }
-
-
-export const moreInfo = (debug: boolean) => "See behave output in " + (debug ? "debug console." : `${EXTENSION_FRIENDLY_NAME} output window.`);
 
 
 export function updateTest(run: vscode.TestRun, result: ParseResult, item: QueueItem): void {
@@ -115,7 +113,7 @@ function CreateParseResult(testCase: TestCase): ParseResult {
   if (reasonBlocks.length === 0)
     throw new Error("Failed test has no failure or error message");
 
-  // remove any error text we don't need in the ui
+  // remove any error text we don't need in the ui context
   let errText = "";
   reasonBlocks.forEach(reason => {
     const lines = reason.split("\n");
@@ -131,34 +129,50 @@ function CreateParseResult(testCase: TestCase): ParseResult {
 
 }
 
-function getDotFoldersFeatureName(queueItem: QueueItem, featuresPath: string) {
+
+function getjUnitClassName(queueItem: QueueItem, featuresPath: string) {
   const featureFileStem = queueItem.scenario.featureFileName.replace(/.feature$/, "");
   let dotSubFolders = queueItem.scenario.featureFileWorkspaceRelativePath.replace(featuresPath + "/", "").split("/").slice(0, -1).join(".");
   dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
   return `${dotSubFolders}${featureFileStem}`;
 }
 
-function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri) {
-  const classname = getDotFoldersFeatureName(queueItem, featuresPath);
-  const junitFilename = `TESTS-${classname}.xml`;
-  return vscode.Uri.joinPath(junitUri, junitFilename);
+
+export class MaxPathError {
+  constructor(public message: string) { }
 }
 
 
-export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], featuresPath: string, junitUri: vscode.Uri) {
+
+export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitDirUri: vscode.Uri, ignoreWinMaxPath = false): vscode.Uri {
+  const classname = getjUnitClassName(queueItem, featuresPath);
+  const junitFilename = `TESTS-${classname}.xml`;
+  const junitFileUri = vscode.Uri.joinPath(junitDirUri, junitFilename);
+
+  if (os.platform() !== "win32" || ignoreWinMaxPath)
+    return junitFileUri;
+
+  if (junitFileUri.fsPath.length <= WIN_MAX_PATH)
+    return junitFileUri;
+
+  throw new MaxPathError(`windows max path exceeded while trying to build junit file path: ${junitFileUri.fsPath}`);
+}
+
+
+export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], featuresPath: string, junitDirUri: vscode.Uri) {
   return queue.map(qi => {
-    const junitFileUri = getJunitFileUri(qi, featuresPath, junitUri);
+    const junitFileUri = getJunitFileUri(qi, featuresPath, junitDirUri);
     return { queueItem: qi, junitFileUri: junitFileUri, updated: false };
   });
 }
 
 
-export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: QueueItem, featuresPath: string,
-  junitUri: vscode.Uri, cancelToken: vscode.CancellationToken): Promise<void> {
+export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, featuresPath: string,
+  cancelToken: vscode.CancellationToken): Promise<void> {
 
   let result: parseJunitFileResult;
   try {
-    result = await parseJunitFile(queueItem, featuresPath, junitUri);
+    result = await parseJunitFile(junitFileUri);
   }
   catch (e: unknown) {
     if (cancelToken.isCancellationRequested &&
@@ -168,7 +182,7 @@ export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: 
     throw e;
   }
 
-  const fullFeatureName = getDotFoldersFeatureName(queueItem, featuresPath);
+  const fullFeatureName = getjUnitClassName(queueItem, featuresPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
   const queueItemResults = result.junitContents.testsuite.testcase.filter(tc =>
@@ -198,8 +212,7 @@ export async function parseAndUpdateTestResults(run: vscode.TestRun, queueItem: 
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
-async function parseJunitFile(queueItem: QueueItem, featuresPath: string, junitUri: vscode.Uri): Promise<parseJunitFileResult> {
-  const junitFileUri = getJunitFileUri(queueItem, featuresPath, junitUri);
+async function parseJunitFile(junitFileUri: vscode.Uri): Promise<parseJunitFileResult> {
   const junitXml = await getContentFromFilesystem(junitFileUri);
   const contents: JunitContents = await parser.parseStringPromise(junitXml);
   return { junitContents: contents, fsPath: junitFileUri.fsPath };

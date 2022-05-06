@@ -6,7 +6,6 @@ const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
 
-
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
@@ -135,4 +134,5 @@ export const countTestItems = (testData: TestData, items: vscode.TestItem[]): Te
   const nodeCount = items.length;
   return { nodeCount, testCount };
 }
+
 

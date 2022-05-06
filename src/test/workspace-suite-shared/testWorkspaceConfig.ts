@@ -181,6 +181,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
 		}
 
+		const getExpectedFullFeaturesFsPath = (): string => {
+			if (!wkspUri)
+				throw "you must supply wkspUri to get the expected fullFeaturesPath";
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
+		}
+
 
 		const getExpectedRunAllAsOne = (): boolean => {
 			if (this.runParallel && this.runAllAsOne === undefined)
@@ -189,7 +195,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return this.runAllAsOne = this.runAllAsOne === undefined ? true : this.runAllAsOne;
 		};
 
-		// switch for ALL settings in settings.json or *.code-workspace (i.e. including non-user-settable)
+		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
 			case "alwaysShowOutput":
 				return <T><unknown>(this.get("alwaysShowOutput"));
@@ -201,6 +207,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedFeaturesPath();
 			case "fullFeaturesPath":
 				return <T><unknown>getExpectedFullFeaturesPath();
+			case "fullFeaturesFsPath":
+				return <T><unknown>getExpectedFullFeaturesFsPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "runAllAsOne":

@@ -34,4 +34,9 @@ Feature: Basic
    Scenario: run a skipped test
       Given we have behave installed
 
+   Scenario: succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name
+      Given we have behave installed
+      When we implement a successful test
+      Then we will see the result    
+
 

@@ -81,6 +81,7 @@ function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: Test
 	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(wkspSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
 	assert.strictEqual(wkspSettings.featuresPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(wkspSettings.fullFeaturesFsPath, testConfig.getExpected("fullFeaturesFsPath", wkspUri));
 	assert.strictEqual(wkspSettings.fullFeaturesPath, testConfig.getExpected("fullFeaturesPath", wkspUri));
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"));
 	assert.strictEqual(wkspSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));

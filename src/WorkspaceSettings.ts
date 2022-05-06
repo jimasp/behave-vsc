@@ -45,6 +45,7 @@ export class WorkspaceSettings {
   public uri: vscode.Uri;
   public name: string;
   public fullFeaturesPath: string;
+  public fullFeaturesFsPath: string;
   // internal
   private _errors: string[] = [];
   private _logger: Logger;
@@ -99,9 +100,11 @@ export class WorkspaceSettings {
 
     if (featuresPathCfg)
       this.featuresPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
-    this.fullFeaturesPath = vscode.Uri.joinPath(wkspUri, this.featuresPath).path;
-    if (!fs.existsSync(this.fullFeaturesPath)) {
-      this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesPath} not found.`);
+    const fullFeaturesUri = vscode.Uri.joinPath(wkspUri, this.featuresPath);
+    this.fullFeaturesPath = fullFeaturesUri.path;
+    this.fullFeaturesFsPath = fullFeaturesUri.fsPath;
+    if (!fs.existsSync(this.fullFeaturesFsPath)) {
+      this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesFsPath} not found.`);
       fatal = true;
     }
 
@@ -169,7 +172,7 @@ export class WorkspaceSettings {
     const dic: { [name: string]: string; } = {};
 
     // remove non-user-settable properties        
-    const nonUser = ["name", "uri", "fullFeaturesPath", "fullWorkingDirectoryPath"];
+    const nonUser = ["name", "uri", "fullFeaturesPath", "fullFeaturesFsPath", "fullWorkingDirectoryPath"];
     entries.forEach(([key, value]) => {
       if (!key.startsWith("_") && !nonUser.includes(key))
         dic[key] = value;
@@ -180,7 +183,7 @@ export class WorkspaceSettings {
       this._logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettings, null, 2)}`);
 
     this._logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
-    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesPath}`, this.uri);
+    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesFsPath}`, this.uri);
 
     if (winSettings.showConfigurationWarnings) {
 

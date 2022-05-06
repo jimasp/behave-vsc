@@ -1,5 +1,4 @@
 import { WorkspaceSettings } from "../../WorkspaceSettings";
-import { moreInfo } from '../../junitParser';
 
 interface ITestResult {
   test_id: string | undefined;
@@ -41,11 +40,7 @@ export class TestResult implements ITestResult {
 
 
 export function applyTestConfiguration(debug: boolean, wkspSettings: WorkspaceSettings, expectedResults: TestResult[]) {
-  const runMoreInfo = moreInfo(false);
-  const debugMoreInfo = moreInfo(true);
-
   expectedResults = applyFeaturesPath(expectedResults, wkspSettings);
-  expectedResults = applyDebugTextReplacements(expectedResults, debug, runMoreInfo, debugMoreInfo);
   expectedResults = applyFastSkipReplacements(expectedResults, debug, wkspSettings);
 
   return expectedResults;
@@ -61,20 +56,6 @@ function applyFeaturesPath(expectedResults: TestResult[], wkspSettings: Workspac
   return expectedResults;
 }
 
-
-function applyDebugTextReplacements(expectedResults: TestResult[], debug: boolean, runMoreInfo: string, debugMoreInfo: string) {
-
-  if (!debug)
-    return expectedResults;
-
-  expectedResults.forEach(expectedResult => {
-    const idx = expectedResult.scenario_result?.indexOf(runMoreInfo);
-    if (idx !== -1)
-      expectedResult.scenario_result = expectedResult.scenario_result?.substring(0, idx) + debugMoreInfo;
-  });
-
-  return expectedResults;
-}
 
 function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean, wkspSettings: WorkspaceSettings) {
 

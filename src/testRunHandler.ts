@@ -4,7 +4,7 @@ import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
-import { performance } from 'perf_hooks';
+import { customAlphabet } from 'nanoid';
 import { QueueItem, testData } from './extension';
 import { FileParser } from './FileParser';
 
@@ -44,7 +44,8 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
 
     try {
       const queue: QueueItem[] = [];
-      const run = ctrl.createTestRun(request, `${performance.now()}`, false);
+      const run_id = customAlphabet('1234567890', 6);
+      const run = ctrl.createTestRun(request, `${run_id()}`, false);
 
       // map of file uris to statements on each line:
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
