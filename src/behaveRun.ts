@@ -36,7 +36,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitDirUri);
-    //await vscode.workspace.fs.createDirectory(junitDirUri);
+    // for runAllAsOne we need to create the junit dir ourselves, or the first junit file of run won't get created
+    await vscode.workspace.fs.createDirectory(junitDirUri);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
     });
@@ -97,6 +98,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       return;
     }
 
+    // because the run ends when all instances of this function have returned, we need to make sure 
+    // that all test have been updated before we return (you can't update a test when the run has ended)
     if (runAllAsOne)
       await updatesComplete;
     else

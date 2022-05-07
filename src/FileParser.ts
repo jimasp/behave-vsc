@@ -140,7 +140,7 @@ export class FileParser {
     if (!isFeatureFile(uri))
       throw new Error(`${uri.path} is not a feature file`);
 
-    const existingItem = controller.items.get(uri.toString());
+    const existingItem = controller.items.get(uri.path);
     if (existingItem) {
       console.log(`${caller}: found existing test item for ${uri.path}`);
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
@@ -150,7 +150,7 @@ export class FileParser {
     if (featureName === null)
       return undefined;
 
-    const testItem = controller.createTestItem(uri.toString(), featureName, uri);
+    const testItem = controller.createTestItem(uri.path, featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
     const testFile = new TestFile();

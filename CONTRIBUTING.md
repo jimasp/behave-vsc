@@ -159,9 +159,9 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
 - Automated tests (verify behave results):
-	- Close vscode and run `npm run test`
+	- Close vscode and run `npm run test` (if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
 - Manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
-some manual tests of the _affected areas_. For example, if you changed feature file/step file parsing or filesystem watchers, then you'd want to run these manual tests as a minimum:
+some manual tests of the _affected areas_. As an example, if you changed feature file/step file parsing or filesystem watchers, then you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
 	2. start debug on workspace 1, then	
 	3. edit a group1 feature file, change the name of the feature and save it, then: 
@@ -177,7 +177,11 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 	(the normal feature file that is open, not the diff view)
 	7. rename a feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test ui
 	8. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from test ui tree
-	9. go to a feature file, click "go to step defintion" and check at least some of them work
-	10. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
+	9. delete a feature file, check it gets removed from the test tree
+	10. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
+	11. copy a feature file, check it gets added to the test tree
+	12. go to a feature file, click "go to step defintion" and check at least some of them work
+	13. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
+	14. use git to undo any changes created in these manual tests
 
 
