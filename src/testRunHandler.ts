@@ -112,9 +112,9 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
         let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
         if (!allTestsForThisWkspIncluded) {
-          const wkspGrandParentItem = wkspQueue.find(item => item.test.id === wkspSettings.uri.path);
+          const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === wkspSettings.uri.path).length === 1;
 
-          if (wkspGrandParentItem && request.include?.includes(wkspGrandParentItem.test))
+          if (wkspGrandParentItemIncluded)
             allTestsForThisWkspIncluded = true;
           else {
             const allWkspItems = getAllTestItems(wkspSettings.uri, ctrl.items);

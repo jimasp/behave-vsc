@@ -73,7 +73,9 @@ export class TestFile {
       const parent = ancestors[ancestors.length - 1];
 
       const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
-      const id = `${item.uri}/${data.getLabel()}`;
+      if (!item.uri)
+        throw new WkspError(`no uri for item ${item.id}`, wkspSettings.uri);
+      const id = `${item.uri.path}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
       tcase.range = range;
