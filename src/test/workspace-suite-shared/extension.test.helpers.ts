@@ -63,7 +63,7 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 	if (match.length !== 1) {
 		console.log(actualResult);
 		// eslint-disable-next-line no-debugger
-		debugger; // UHOH 
+		debugger; // UHOH (did we add a new test that hasn't been added to expected results? if so, see debug console and copy/paste into ws?.expectedResults.ts)
 	}
 
 	return match;
@@ -187,16 +187,20 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 
 function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts, multiroot: vscode.TestItem | undefined) {
 	const expectedCounts = getExpectedCounts();
-	assert(actualCounts.featureFileCount == expectedCounts.featureFileCount);
+
+	// feature file and tests (scenarios) lengths should be equal, but we allow 
+	// greater than because there is a more helpful assert later if feature files/scenarios have been added
+	assert(actualCounts.featureFileCount >= expectedCounts.featureFileCount);
+	assert(actualCounts.testCounts.testCount >= expectedCounts.testCounts.testCount);
+
 	assert(actualCounts.stepFileCount === expectedCounts.stepFileCount);
 	assert(actualCounts.stepsCount === expectedCounts.stepsCount);
-	assert(actualCounts.testCounts.testCount === expectedCounts.testCounts.testCount);
 
-	// add one for the workspace node if in multi-root mode
+	// (see comment above to explain greater than)
 	if (multiroot)
-		assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount + 1);
+		assert(actualCounts.testCounts.nodeCount >= expectedCounts.testCounts.nodeCount + 1); // add one for the workspace parent node if in multi-root mode
 	else
-		assert(actualCounts.testCounts.nodeCount === expectedCounts.testCounts.nodeCount);
+		assert(actualCounts.testCounts.nodeCount >= expectedCounts.testCounts.nodeCount);
 }
 
 
@@ -243,7 +247,9 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vs
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	const include = getScenarioTests(instances.testData, allWkspItems);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
-	assert(include.length === expectedResults.length);
+	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
+	// greater than because there is a more helpful assert later if feature files/scenarios have been added
+	assert(include.length >= expectedResults.length);
 
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	assert(actualCounts !== null);

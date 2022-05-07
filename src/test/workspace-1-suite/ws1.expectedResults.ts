@@ -123,6 +123,24 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
+
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'behave_tests/some_tests/group1_features/basic.feature',
+      scenario_featureName: 'Basic',
+      scenario_getLabel: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_label: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_parent: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature',
+      test_uri: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature'
+    }),
+
     new TestResult({
       scenario_fastSkip: true,
       scenario_featureName: 'fast skip feature',
@@ -507,6 +525,24 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../example-project-workspace-1/{{featurePath}}/duplicate.feature',
       test_uri: '.../example-project-workspace-1/{{featurePath}}/duplicate.feature',
     }),
+
+    new TestResult({
+      scenario_fastSkip: false,
+      scenario_featureFileRelativePath: 'behave_tests/some_tests/duplicate_fail.feature',
+      scenario_featureName: 'Duplicate',
+      scenario_getLabel: 'run a test',
+      scenario_isOutline: false,
+      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_scenarioName: 'run a test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature/run a test',
+      test_label: 'run a test',
+      test_parent: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature',
+      test_uri: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature'
+    }),
+
     new TestResult({
       scenario_fastSkip: false,
       scenario_featureFileRelativePath: 'behave_tests/some_tests/group2_features/envvars.feature',

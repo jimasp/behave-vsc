@@ -97,9 +97,13 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ---
 ## Troubleshooting
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
-- Most development problems can be resolved by either (a) removing all breakpoints, (b) restarting the watch tasks in terminal window, or (c) restarting vscode.
+- Most extension development problems can be resolved by either:
+	- (a) removing all breakpoints, or
+	- (b) restarting the watch tasks in terminal window, or 
+	- (c) restarting vscode.
+- If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
 - If you're not hitting a breakpoint, remove _all_ breakpoints and re-add your breakpoint (see below for more info).
-- If you are stepping in to external code, then it's likely you either hit pause, or you need to remove all breakpoints.
+- If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints.
 - If your source goes out of sync with debug, kill any watches in the terminal window to force a rebuild. 
 - If you are getting invalid errors in the "problems" window, kill any watch tasks in the terminal window to force a rebuild. If that fails, restart vscode.
 - If you get an error running "Debug Extension...", set a breakpoint in the `activate()` function.
@@ -159,7 +163,9 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
 - Automated tests (verify behave results):
-	- Close vscode and run `npm run test` (if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
+	- Close vscode and run `npm run test` 
+		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
+		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
 - Manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
 some manual tests of the _affected areas_. As an example, if you changed feature file/step file parsing or filesystem watchers, then you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
