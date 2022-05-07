@@ -246,6 +246,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vs
 	assert(include.length === expectedResults.length);
 
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	assert(actualCounts !== null);
 	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.path);
 	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
 

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
-import { countTestItemsInCollection, getAllTestItems, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts } from './helpers';
+import { countTestItemsInCollection, getAllTestItems, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts, WkspError } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
@@ -243,7 +243,7 @@ export class FileParser {
   // NOTE - this is background task
   // it should only be awaited on user request, i.e. when called by the refreshHandler
   async parseFilesForWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, intiator: string,
-    callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts> {
+    callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
     const wkspPath = wkspUri.path;
     this._featuresLoadedForAllWorkspaces = false;
@@ -279,6 +279,7 @@ export class FileParser {
       const start = performance.now();
       const featureFileCount = await this._parseFeatureFiles(wkspSettings, ctrl, this._cancelTokenSources[wkspPath].token, callName);
       const featTime = performance.now() - start;
+
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         console.log(`${callName}: features loaded for workspace ${wkspName}`);
         this._featuresLoadedForWorkspace[wkspPath] = true;
@@ -302,9 +303,9 @@ export class FileParser {
       else {
         console.log(`${callName}: complete`);
         if (featureFileCount === 0)
-          config.logger.logError(`No feature files found in ${wkspSettings.fullFeaturesFsPath}`, wkspUri);
+          throw `No feature files found in ${wkspSettings.fullFeaturesFsPath}`;
         if (stepFileCount === 0)
-          config.logger.logError(`No step files found in ${wkspSettings.fullFeaturesFsPath}/steps`, wkspUri);
+          throw `No step files found in ${wkspSettings.fullFeaturesFsPath}/steps`;
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
@@ -316,8 +317,9 @@ export class FileParser {
       return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: wkspSteps.size };
     }
     catch (e: unknown) {
-      config.logger.logError(e, wkspUri);
-      throw e;
+      // unawaited async func, log the error 
+      config.logger.logError(new WkspError(e, wkspUri));
+      return null;
     }
     finally {
       cancellationHandler?.dispose();

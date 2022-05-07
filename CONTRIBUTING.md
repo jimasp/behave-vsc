@@ -115,19 +115,37 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?
 
 ---
-# General development 
-### Adding logs
-(First, note that vscode provides a workspace as soon as a folder is opened.)
-- Logging errors and warnings will show the output window when logged, logging info will not.
-- Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps(...)`. This should only be used when a workspace context does not make sense.
+## Design principles
+- No reliance on other extensions except `ms-python.python`.
+- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.) 
+- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
+- Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary standard node functions, to handle things wherever possible. 
+- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that are already in the `node_modules` folder if required.)
+- Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the outputted behave command manually. 
+- Always consider performance.
+- Always consider multi-root workspaces.
+- Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`), Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). Encoding (use `utf8`). Consider that windows max path is 260 characters.
+- Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
+	
+---
+# General development notes
+### Configuration
+- Configuration and logging is provided by the singleton `config`.
+### Disposables
+- Any disposable object should either be disposed in a `finally` block, or added to `context.subscriptions.push`. The most common example is event handlers.
+### Error handling
+- Any entry point functions/event handlers/hooks such as `activate()`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `OnChange` inside a filesystemwatcher, etc. should always have a try/catch with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. Background _unawaited_ async functions/promises should also contain a catch and `config.logError`.
+- Most of the time, i.e. outside of entry point functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
+- When adding a throw/logError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly.
+### Logging
+- Logging errors and warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
+- Unless you are in an entry point function/handler then errors should be thrown, not logged. This is so that (a) all parent catches know about the error and can act on it, e.g. to stop a test run, and (b) the error only gets logged once.
+- Logging warnings is done via `config.logger.logWarn`.
+- Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. Note - this should only be used where a workspace context does not make sense.
 - Log to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
 - Log to the vscode test run output at the same time: specify the run parameter: `config.loger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
 - Log only for extension developers (contributors): `console.log("msg")`.
-### Error handling
-- Any entry points such as `activate()` or event handlers such as `onDidChangeConfiguration`, `onCancellationRequested`, etc. should always have a try/catch with a `config.logError` if they contain any code that could potentially fail.
-- In a non-entry point functions, in most cases you want to use `throw '...`, as `throw new Error(...)` will result in a stack trace being logged, so should only be used for things that should never happen, e.g. a logic failure in the extension code.
-- In any given stack, if you are adding a throw, then always test error handling works as expected by deliberately throwing the error.
 
 ---
 ## Before requesting a PR merge
@@ -143,7 +161,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Automated tests (verify behave results):
 	- Close vscode and run `npm run test`
 - Manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run 
-some manual tests of the _affected areas_. For example, if you changed feature file/step file parsing or filesystem watchers you'd want to run these manual tests as a minimum:
+some manual tests of the _affected areas_. For example, if you changed feature file/step file parsing or filesystem watchers, then you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
 	2. start debug on workspace 1, then	
 	3. edit a group1 feature file, change the name of the feature and save it, then: 
@@ -152,7 +170,7 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 		- check you can run the renamed feature from UI tree
 	4. edit a group1 outline feature file, change the name of a scenario and save it, then: 
 		- check you can run the changed scenario from inside the feature file
-		- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file		
+		- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
 		- check the test UI tree shows the renamed scenario (you may need to reopen the node)
 	5. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 	6. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
@@ -162,15 +180,4 @@ some manual tests of the _affected areas_. For example, if you changed feature f
 	9. go to a feature file, click "go to step defintion" and check at least some of them work
 	10. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
 
----
-## Design principles
-- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.) 
-- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
-- Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary standard node functions, to handle things wherever possible. 
-- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages already in the node_modules folder if required.)
-- Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the behave command manually. Also any such changes would be more likely to break in future versions of behave.
-- Always consider performance.
-- Always consider multi-root workspaces.
-- Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`), Use `vscode.` functionality like `uri.path` or workspaceFolder etc. wherever possible. Also consider relative paths and path/pattern matching. (Where possible vscode/node converts `\`to `/` itself for consistency.) Line-endings (use `\n` internally, i.e. unless you are handling `\r\n`). Encoding (use `utf8`). 
-- Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- No reliance on other extensions except `ms-python.python`.	
+

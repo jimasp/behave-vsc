@@ -138,10 +138,6 @@ function getjUnitClassName(queueItem: QueueItem, featuresPath: string) {
 }
 
 
-export class MaxPathError {
-  constructor(public message: string) { }
-}
-
 
 
 export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitDirUri: vscode.Uri, ignoreWinMaxPath = false): vscode.Uri {
@@ -155,7 +151,7 @@ export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, juni
   if (junitFileUri.fsPath.length <= WIN_MAX_PATH)
     return junitFileUri;
 
-  throw new MaxPathError(`windows max path exceeded while trying to build junit file path: ${junitFileUri.fsPath}`);
+  throw `windows max path exceeded while trying to build junit file path: ${junitFileUri.fsPath}`;
 }
 
 
@@ -217,3 +213,4 @@ async function parseJunitFile(junitFileUri: vscode.Uri): Promise<parseJunitFileR
   const contents: JunitContents = await parser.parseStringPromise(junitXml);
   return { junitContents: contents, fsPath: junitFileUri.fsPath };
 }
+

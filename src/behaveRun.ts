@@ -4,7 +4,7 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText } from './Logger';
+import { cleanBehaveText, WkspError } from './helpers';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
@@ -36,7 +36,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitDirUri);
-    await vscode.workspace.fs.createDirectory(junitDirUri);
+    //await vscode.workspace.fs.createDirectory(junitDirUri);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
     });
@@ -62,13 +62,13 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     }
 
     const asyncBuff: string[] = [];
-    const log = (str: string) => { 
+    const log = (str: string) => {
       if (!str)
         return;
       str = cleanBehaveText(str);
       if (async)
         asyncBuff.push(str);
-      else 
+      else
         config.logger.logInfoNoCR(str, wkspUri);
     }
 
@@ -105,6 +105,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
     config.logger.logInfo("---", wkspUri, run);
   }
+  catch (e: unknown) {
+    throw new WkspError(e, wkspUri);
+  }
   finally {
     watcher?.dispose();
     cancellationHandler.dispose();
@@ -135,7 +138,8 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
         resolve("");
     }
     catch (e: unknown) {
-      config.logger.logError(e, wkspSettings.uri);
+      const err = new WkspError(e, wkspSettings.uri);
+      config.logger.logError(err);
       reject(e);
     }
   }

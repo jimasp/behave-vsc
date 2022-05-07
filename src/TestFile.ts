@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { testData } from './extension';
-import { getContentFromFilesystem, isFeatureFile } from './helpers';
+import { getContentFromFilesystem, isFeatureFile, WkspError } from './helpers';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 
@@ -27,7 +27,7 @@ export class TestFile {
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
-      config.logger.logError(e, wkspSettings.uri);
+      throw new WkspError(e, wkspSettings.uri);
     }
   }
 
@@ -61,7 +61,7 @@ export class TestFile {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
-            config.logger.logError(err, wkspSettings.uri);
+            config.logger.logError(new WkspError(err, wkspSettings.uri)); // don't throw here, let it carry on
           }
           else
             throw e;

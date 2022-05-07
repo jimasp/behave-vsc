@@ -9,7 +9,7 @@ export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const MSPY_EXT = "ms-python.python";
 export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
-export const WIN_MAX_PATH = 260;
+export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 
 export interface ExtensionConfiguration {
@@ -92,7 +92,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
   if (!pyext) {
     const msg = EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT;
     vscode.window.showErrorMessage(msg);
-    logger.logErrorAllWksps(msg);
+    logger.logError(msg);
     return undefined;
   }
 
@@ -101,7 +101,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
     if (!pyext.isActive) {
       const msg = EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT;
       vscode.window.showErrorMessage(msg);
-      logger.logErrorAllWksps(msg);
+      logger.logError(msg);
       return undefined;
     }
   }
@@ -110,7 +110,7 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
   if (!pythonExec) {
     const msg = EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT;
     vscode.window.showErrorMessage(msg);
-    logger.logErrorAllWksps(msg);
+    logger.logError(msg);
     return undefined;
   }
 

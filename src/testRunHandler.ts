@@ -42,11 +42,11 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
     });
 
 
-    try {
-      const queue: QueueItem[] = [];
-      const run_id = customAlphabet('1234567890', 6);
-      const run = ctrl.createTestRun(request, `${run_id()}`, false);
+    const queue: QueueItem[] = [];
+    const run_id = customAlphabet('1234567890', 6);
+    const run = ctrl.createTestRun(request, `${run_id()}`, false);
 
+    try {
       // map of file uris to statements on each line:
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -136,7 +136,6 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
 
 
 
-
         for (const wkspQueueItem of wkspQueue) {
 
           const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
@@ -177,9 +176,7 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
           run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
 
         if (queue.length === 0) {
-          const err = "empty queue - nothing to do";
-          config.logger.logErrorAllWksps(err);
-          throw err;
+          throw "empty queue - nothing to do";
         }
 
         const wkspRunPromises: Promise<void>[] = [];
@@ -267,9 +264,11 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
       await runTestQueue(request);
 
       return queue;
+
     }
     catch (e: unknown) {
-      config.logger.logErrorAllWksps(e);
+      config.logger.logError(e);
+      run.end();
     }
     finally {
       debugCancelSource.dispose();

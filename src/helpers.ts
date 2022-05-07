@@ -6,6 +6,21 @@ const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
 
+
+// the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
+// can (where required) be thrown back up to the top level of the stack. this means that:
+// - the error is only logged once 
+// - the top level catch can just config.logError(e)
+// - the logger can use the workspace uri to log the error to the correct output window
+export class WkspError extends Error {
+  constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
+    const msg = (errorOrMsg instanceof Error ? (errorOrMsg.stack ? errorOrMsg.stack : errorOrMsg.message) : errorOrMsg as string);
+    super(msg);
+    Object.setPrototypeOf(this, WkspError.prototype);
+  }
+}
+
+
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   let version: string = context.extension.packageJSON.version;
   if (version.startsWith("0")) {
@@ -32,10 +47,8 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
       await vwfs.delete(dirUri, { recursive: true, useTrash: true });
   }
   catch (e: unknown) {
-    if ((e as vscode.FileSystemError).code === "FileNotFound" || (e as vscode.FileSystemError).code === "EntryNotFound")
-      return;
-    else
-      throw e;
+    // don't log this for users - we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
+    console.error(e);
   }
 }
 
@@ -136,3 +149,6 @@ export const countTestItems = (testData: TestData, items: vscode.TestItem[]): Te
 }
 
 
+export function cleanBehaveText(text: string) {
+  return text.replaceAll("\x1b", "").replaceAll("[33m", "").replaceAll("[0m", "");
+}

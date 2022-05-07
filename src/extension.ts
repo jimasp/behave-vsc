@@ -4,7 +4,7 @@
 import * as vscode from 'vscode';
 import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
-import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, removeDirectoryRecursive } from './helpers';
+import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError } from './helpers';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
@@ -80,17 +80,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
         }
       }
       catch (e: unknown) {
-        config.logger.logErrorAllWksps(e);
+        config.logger.logError(e);
       }
     };
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-
         await parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
-        config.logger.logErrorAllWksps(e);
+        config.logger.logError(e);
       }
     };
 
@@ -122,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
               }
             }
             catch (e: unknown) {
-              config.logger.logErrorAllWksps(e);
+              config.logger.logError(e);
             }
           },
         };
@@ -130,9 +129,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
     }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
-      // (most of the work will happen in the onDidChangeConfiguration handler)
-      config.logger.dispose();
-      config.logger = new Logger(getWorkspaceFolderUris());
+      try {
+        // (most of the work will happen in the onDidChangeConfiguration handler)
+        config.logger.dispose();
+        config.logger = new Logger(getWorkspaceFolderUris());
+      }
+      catch (e: unknown) {
+        config.logger.logError(e);
+      }
     }));
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
@@ -151,7 +155,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
         parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "OnDidChangeConfiguration");
       }
       catch (e: unknown) {
-        config.logger.logErrorAllWksps(e);
+        config.logger.logError(e);
       }
     }));
 
@@ -182,11 +186,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
   }
   catch (e: unknown) {
-    if (config) {
-      config.logger.logErrorAllWksps(e);
+    if (config && config.logger) {
+      config.logger.logError(e);
     }
     else {
-      // should never happen
+      // no logger, use vscode.window message
       const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
       vscode.window.showErrorMessage(text);
     }
@@ -218,7 +222,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     }
     catch (e: unknown) {
-      config.logger.logError(e, wkspUri);
+      config.logger.logError(new WkspError(e, wkspUri));
     }
   }
 
@@ -256,10 +260,9 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
-      config.logger.logErrorAllWksps(e);
+      config.logger.logError(new WkspError(e, wkspUri));
     }
   });
-
 
 
   parser.parseFilesForWorkspace(wkspUri, ctrl, "startWatchingWorkspace");

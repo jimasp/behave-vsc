@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getWorkspaceFolderUris } from './helpers';
+import { getWorkspaceFolderUris, WkspError } from './helpers';
 import { Logger } from './Logger';
 import { EXTENSION_NAME } from './Configuration';
 
@@ -210,7 +210,7 @@ export class WorkspaceSettings {
     }
 
     if (this._errors && this._errors.length > 0) {
-      this._logger.logErrorAllWksps(`${this._errors.join("\n")}`);
+      this._logger.logError(new WkspError(`${this._errors.join("\n")}`, this.uri));
     }
 
     if (fatal)

@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
 import { EXTENSION_FRIENDLY_NAME, ERR_HIGHLIGHT } from './Configuration';
+import { WkspError } from './helpers';
 
 
-export function cleanBehaveText(text: string) {
-  return text.replaceAll("\x1b", "").replaceAll("[33m", "").replaceAll("[0m", "");
-}
 
 
 export class Logger {
@@ -44,7 +42,6 @@ export class Logger {
 
   // log without a carriage return, used for behave output
   logInfoNoCR = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    text = cleanBehaveText(text);
     console.log(text);
 
     this.channels[wkspUri.path].append(text);
@@ -53,7 +50,6 @@ export class Logger {
   };
 
   logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    text = cleanBehaveText(text);
     console.log(text);
 
     this.channels[wkspUri.path].appendLine(text);
@@ -62,7 +58,6 @@ export class Logger {
   };
 
   logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
-    text = cleanBehaveText(text);
     console.log(text);
 
     for (const wkspPath in this.channels) {
@@ -74,7 +69,6 @@ export class Logger {
   };
 
   logWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    text = cleanBehaveText(text);
     console.warn(text);
 
     this.channels[wkspUri.path].appendLine(text);
@@ -85,7 +79,6 @@ export class Logger {
   };
 
   logWarnAllWksps = (text: string, run?: vscode.TestRun) => {
-    text = cleanBehaveText(text);
     console.warn(text);
 
     let first = true;
@@ -101,42 +94,44 @@ export class Logger {
       run.appendOutput(text + "\n");
   };
 
-  logError = (msgOrError: unknown, wkspUri: vscode.Uri, prependMsg = "", run?: vscode.TestRun) => {
-    let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
-    text = cleanBehaveText(text);
-    if (prependMsg)
-      text = `${prependMsg}\n${text}`;
+  logError = (error: unknown, run?: vscode.TestRun) => {
+    let text: string;
+    let wkspUri: vscode.Uri | undefined;
+    const extErr: WkspError = (error as WkspError);
+
+    if (error instanceof Error) {
+      if (error instanceof WkspError) {
+        wkspUri = extErr.wkspUri;
+        text = extErr.message;
+      }
+      else {
+        text = `${extErr.message}\n${extErr.stack}`;
+      }
+    }
+    else
+      text = `${error}`;
+
+
     console.error(text);
 
-    this.channels[wkspUri.path].appendLine("\n" + ERR_HIGHLIGHT);
-    this.channels[wkspUri.path].appendLine(text);
-    this.channels[wkspUri.path].appendLine(ERR_HIGHLIGHT);
-    this.channels[wkspUri.path].show(true);
-
-    vscode.debug.activeDebugConsole.appendLine(text);
-    if (run)
-      run.appendOutput(text + "\n");
-  }
-
-  logErrorAllWksps = (msgOrError: unknown, prependMsg = "", run?: vscode.TestRun) => {
-    let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
-    text = cleanBehaveText(text);
-    if (prependMsg)
-      text = `${prependMsg}\n${text}`;
-    console.error(text);
-
-
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].appendLine("\n" + ERR_HIGHLIGHT);
-      this.channels[wkspPath].appendLine(text);
-      this.channels[wkspPath].appendLine(ERR_HIGHLIGHT);
-      this.channels[wkspPath].show(true);
+    if (wkspUri) {
+      this.channels[wkspUri.path].appendLine("\n" + ERR_HIGHLIGHT);
+      this.channels[wkspUri.path].appendLine(text);
+      this.channels[wkspUri.path].appendLine(ERR_HIGHLIGHT);
+      this.channels[wkspUri.path].show(true);
+    }
+    else {
+      for (const wkspPath in this.channels) {
+        this.channels[wkspPath].appendLine("\n" + ERR_HIGHLIGHT);
+        this.channels[wkspPath].appendLine(text);
+        this.channels[wkspPath].appendLine(ERR_HIGHLIGHT);
+        this.channels[wkspPath].show(true);
+      }
     }
 
     vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
       run.appendOutput(text + "\n");
   }
-
 }
 

@@ -13,7 +13,7 @@
     "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
     "behave-vsc.featuresPath": "behave_tests/some_tests/",
     "behave-vsc.justMyCode": true,
-    "behave-vsc.runAllAsOne": false,
+    "behave-vsc.runAllAsOne": true,
     "behave-vsc.runParallel": true,
     "behave-vsc.showConfigurationWarnings": true,
 }
