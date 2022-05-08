@@ -130,9 +130,9 @@ function CreateParseResult(testCase: TestCase): ParseResult {
 }
 
 
-function getjUnitClassName(queueItem: QueueItem, featuresPath: string) {
+function getjUnitClassName(queueItem: QueueItem, wskpRelativeFeaturesPath: string) {
   const featureFileStem = queueItem.scenario.featureFileName.replace(/.feature$/, "");
-  let dotSubFolders = queueItem.scenario.featureFileWorkspaceRelativePath.replace(featuresPath + "/", "").split("/").slice(0, -1).join(".");
+  let dotSubFolders = queueItem.scenario.featureFileWorkspaceRelativePath.replace(wskpRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
   dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
   return `${dotSubFolders}${featureFileStem}`;
 }
@@ -140,8 +140,8 @@ function getjUnitClassName(queueItem: QueueItem, featuresPath: string) {
 
 
 
-export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, junitDirUri: vscode.Uri, ignoreWinMaxPath = false): vscode.Uri {
-  const classname = getjUnitClassName(queueItem, featuresPath);
+export function getJunitFileUri(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, ignoreWinMaxPath = false): vscode.Uri {
+  const classname = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);
   const junitFilename = `TESTS-${classname}.xml`;
   const junitFileUri = vscode.Uri.joinPath(junitDirUri, junitFilename);
 
@@ -155,15 +155,15 @@ export function getJunitFileUri(queueItem: QueueItem, featuresPath: string, juni
 }
 
 
-export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], featuresPath: string, junitDirUri: vscode.Uri) {
+export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri) {
   return queue.map(qi => {
-    const junitFileUri = getJunitFileUri(qi, featuresPath, junitDirUri);
+    const junitFileUri = getJunitFileUri(qi, wkspRelativeFeaturesPath, junitDirUri);
     return { queueItem: qi, junitFileUri: junitFileUri, updated: false };
   });
 }
 
 
-export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, featuresPath: string,
+export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, wkspRelativeFeaturesPath: string,
   cancelToken: vscode.CancellationToken): Promise<void> {
 
   let result: parseJunitFileResult;
@@ -178,7 +178,7 @@ export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: v
     throw e;
   }
 
-  const fullFeatureName = getjUnitClassName(queueItem, featuresPath);
+  const fullFeatureName = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
   const queueItemResults = result.junitContents.testsuite.testcase.filter(tc =>

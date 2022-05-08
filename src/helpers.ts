@@ -30,6 +30,14 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
+export function getIdForUri(uri: vscode.Uri) {
+  // uri.path and uri.fsPath currently seem to give inconsistent results on windows ("C:" vs "c:") 
+  // (found when running integration tests vs debugging extension)
+  // and we use the id for matching strings, so use toString() to provide consistent casing
+  return uri.toString();
+}
+
+
 export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
 
   try {
@@ -107,9 +115,10 @@ export const isFeatureFile = (uri: vscode.Uri) => {
 export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
-  // get all test items, or just the ones in the current workspace if wkspUri supplied  
+  // get all test items if wkspUri is null, or
+  // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspUri === null || item.id.includes(wkspUri.path)) {
+    if (wkspUri === null || item.id.includes(getIdForUri(wkspUri))) {
       items.push(item);
       if (item.children)
         items.push(...getAllTestItems(wkspUri, item.children));
@@ -152,3 +161,4 @@ export const countTestItems = (testData: TestData, items: vscode.TestItem[]): Te
 export function cleanBehaveText(text: string) {
   return text.replaceAll("\x1b", "").replaceAll("[33m", "").replaceAll("[0m", "");
 }
+

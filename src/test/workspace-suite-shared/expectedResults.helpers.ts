@@ -49,7 +49,7 @@ export function applyTestConfiguration(debug: boolean, wkspSettings: WorkspaceSe
 
 function applyFeaturesPath(expectedResults: TestResult[], wkspSettings: WorkspaceSettings) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
-    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.featuresPath);
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.workspaceRelativeFeaturesPath);
     returnResults[index] = JSON.parse(json);
   });
 

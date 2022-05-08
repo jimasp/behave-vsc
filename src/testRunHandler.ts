@@ -3,7 +3,7 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
-import { countTestItems, getAllTestItems, getContentFromFilesystem, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
+import { countTestItems, getAllTestItems, getContentFromFilesystem, getIdForUri, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { customAlphabet } from 'nanoid';
 import { QueueItem, testData } from './extension';
 import { FileParser } from './FileParser';
@@ -73,11 +73,11 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
             await queueSelectedTestItems(gatherTestItems(test.children));
           }
 
-          if (test.uri && !coveredLines.has(test.uri.toString())) {
+          if (test.uri && !coveredLines.has(getIdForUri(test.uri))) {
             try {
               const lines = (await getContentFromFilesystem(test.uri)).split('\n');
               coveredLines.set(
-                test.uri.toString(),
+                getIdForUri(test.uri),
                 lines.map((lineText, lineNo) =>
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -187,7 +187,7 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
           const wkspSettings = config.getWorkspaceSettings(wkspUri);
 
           const wkspQueue = queue.filter(item => {
-            return item.test.uri?.path.startsWith(wkspSettings.fullFeaturesPath);
+            return item.test.uri?.path.startsWith(wkspSettings.featuresUri.path);
           });
 
           if (wkspQueue.length === 0)

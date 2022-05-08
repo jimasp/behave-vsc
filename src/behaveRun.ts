@@ -35,7 +35,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
-    const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.featuresPath, junitDirUri);
+    const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
     // for runAllAsOne we need to create the junit dir ourselves, or the first junit file of run won't get created
     await vscode.workspace.fs.createDirectory(junitDirUri);
     updatesComplete = new Promise(function (resolve, reject) {
@@ -104,7 +104,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       await updatesComplete;
     else
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await parseAndUpdateTestResults(junitFileUri!, run, queue[0], wkspSettings.featuresPath, runToken);
+      await parseAndUpdateTestResults(junitFileUri!, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
 
     config.logger.logInfo("---", wkspUri, run);
   }
@@ -133,7 +133,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
       // one junit file is created per feature, so update all tests for this feature
       for (const match of matches) {
-        await parseAndUpdateTestResults(match.junitFileUri, run, match.queueItem, wkspSettings.featuresPath, runToken);
+        await parseAndUpdateTestResults(match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         match.updated = true;
         updated++;
       }

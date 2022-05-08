@@ -18,13 +18,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// all user-settable settings in settings.json
 	constructor({
-		alwaysShowOutput, envVarList, fastSkipList, featuresPath, justMyCode,
+		alwaysShowOutput, envVarList, fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath, justMyCode,
 		runAllAsOne, runParallel, runWorkspacesInParallel, showConfigurationWarnings
 	}: {
 		alwaysShowOutput: boolean | undefined,
 		envVarList: string | undefined,
 		fastSkipList: string | undefined,
-		featuresPath: string | undefined,
+		wkspRelativeFeaturesPath: string | undefined,
 		justMyCode: boolean | undefined,
 		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
@@ -34,7 +34,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.alwaysShowOutput = alwaysShowOutput;
 		this.envVarList = envVarList;
 		this.fastSkipList = fastSkipList;
-		this.featuresPath = featuresPath;
+		this.featuresPath = wkspRelativeFeaturesPath;
 		this.justMyCode = justMyCode;
 		this.runAllAsOne = runAllAsOne;
 		this.runParallel = runParallel;
@@ -205,9 +205,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedFastSkipList();
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
-			case "fullFeaturesPath":
+			case "featuresUri.path":
 				return <T><unknown>getExpectedFullFeaturesPath();
-			case "fullFeaturesFsPath":
+			case "featuresUri.fsPath":
 				return <T><unknown>getExpectedFullFeaturesFsPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));

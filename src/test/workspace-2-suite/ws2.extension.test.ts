@@ -14,7 +14,7 @@ suite(`workspace-2-suite test run`, () => {
 
 		const testConfig = new TestWorkspaceConfig({
 			runAllAsOne: undefined, runParallel: undefined, runWorkspacesInParallel: undefined,
-			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
+			envVarList: undefined, fastSkipList: undefined, wkspRelativeFeaturesPath: undefined,
 			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
 		});
 

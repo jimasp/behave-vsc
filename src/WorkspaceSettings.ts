@@ -37,15 +37,14 @@ export class WorkspaceSettings {
   // user-settable
   public envVarList: { [name: string]: string; } = {};
   public fastSkipList: string[] = [];
-  public featuresPath = "features";
   public justMyCode: boolean;
   public runAllAsOne: boolean;
   public runParallel: boolean;
+  public workspaceRelativeFeaturesPath = "features";
   // convenience properties
   public uri: vscode.Uri;
   public name: string;
-  public fullFeaturesPath: string;
-  public fullFeaturesFsPath: string;
+  public featuresUri: vscode.Uri;
   // internal
   private _errors: string[] = [];
   private _logger: Logger;
@@ -86,25 +85,22 @@ export class WorkspaceSettings {
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
 
-    const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
-
 
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-
+    const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
     if (this.runParallel && runAllAsOneCfg === undefined)
       this.runAllAsOne = false;
     else
       this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
+
     if (featuresPathCfg)
-      this.featuresPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
-    const fullFeaturesUri = vscode.Uri.joinPath(wkspUri, this.featuresPath);
-    this.fullFeaturesPath = fullFeaturesUri.path;
-    this.fullFeaturesFsPath = fullFeaturesUri.fsPath;
-    if (!fs.existsSync(this.fullFeaturesFsPath)) {
-      this._errors.push(`FATAL ERROR: features path ${this.fullFeaturesFsPath} not found.`);
+      this.workspaceRelativeFeaturesPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
+    this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
+    if (!fs.existsSync(this.featuresUri.fsPath)) {
+      this._errors.push(`FATAL ERROR: features path ${this.featuresUri.fsPath} not found.`);
       fatal = true;
     }
 
@@ -171,11 +167,13 @@ export class WorkspaceSettings {
     const entries = Object.entries(this).sort();
     const dic: { [name: string]: string; } = {};
 
-    // remove non-user-settable properties        
-    const nonUser = ["name", "uri", "fullFeaturesPath", "fullFeaturesFsPath", "fullWorkingDirectoryPath"];
+    // build json of user-settable properties        
+    const nonUser = ["name", "uri", "featuresUri"];
     entries.forEach(([key, value]) => {
-      if (!key.startsWith("_") && !nonUser.includes(key))
-        dic[key] = value;
+      if (!key.startsWith("_") && !nonUser.includes(key)) {
+        const name = key === "workspaceRelativeFeaturesPath" ? "featuresPath" : key;
+        dic[name] = value;
+      }
     });
 
     const wsUris = getWorkspaceFolderUris();
@@ -183,7 +181,7 @@ export class WorkspaceSettings {
       this._logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettings, null, 2)}`);
 
     this._logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
-    this._logger.logInfo(`fullFeaturesPath: ${this.fullFeaturesFsPath}`, this.uri);
+    this._logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
 
     if (winSettings.showConfigurationWarnings) {
 

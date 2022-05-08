@@ -73,9 +73,9 @@ function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: Test
 	const wkspSettings = config.getWorkspaceSettings(wkspUri);
 	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"));
 	assert.deepStrictEqual(wkspSettings.fastSkipList, testConfig.getExpected("fastSkipList"));
-	assert.strictEqual(wkspSettings.featuresPath, testConfig.getExpected("featuresPath"));
-	assert.strictEqual(wkspSettings.fullFeaturesFsPath, testConfig.getExpected("fullFeaturesFsPath", wkspUri));
-	assert.strictEqual(wkspSettings.fullFeaturesPath, testConfig.getExpected("fullFeaturesPath", wkspUri));
+	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"));
+	assert.strictEqual(wkspSettings.featuresUri.path, testConfig.getExpected("featuresUri.path", wkspUri));
+	assert.strictEqual(wkspSettings.featuresUri.fsPath, testConfig.getExpected("featuresUri.fsPath", wkspUri));
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"));
 	assert.strictEqual(wkspSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"));
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"));
@@ -106,7 +106,7 @@ async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 
 	const stepLines: string[] = [];
 	//const stepMap: Map<string, string[]> = new Map();
-	const pattern = new vscode.RelativePattern(wkspSettings.fullFeaturesPath, "**/*.feature");
+	const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/*.feature");
 	const featureFileUris = await vscode.workspace.findFiles(pattern);
 
 	for (const featFileUri of featureFileUris) {
@@ -242,21 +242,24 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// before requesting a test run due to contention
-	// (we could await parseFiles, but then our tests wouldn't cover the same timeout operation as real usage)
+	// (we don't want to await parseFiles, because our tests wouldn't cover the same timeout operation as real usage)
 	instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
-	await instances.parser.readyForRun(2000);
+	const done = await instances.parser.readyForRun(3000);
+	assert(done);
 
 	// sanity check lengths and counts
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
+	console.log("allw:" + allWkspItems.length);
 	const include = getScenarioTests(instances.testData, allWkspItems);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
 	// greater than because there is a more helpful assert later if feature files/scenarios have been added
+	console.log(`includes:${include.length}, expected:${expectedResults.length}`);
 	assert(include.length >= expectedResults.length);
 
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
 	assert(actualCounts !== null);
-	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.path);
+	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);
 	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
 
 

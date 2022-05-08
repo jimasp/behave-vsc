@@ -204,7 +204,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
-  const wkspFullFeaturesPath = config.getWorkspaceSettings(wkspUri).fullFeaturesPath;
+  const wkspFullFeaturesPath = config.getWorkspaceSettings(wkspUri).featuresUri.path;
   const pattern = new vscode.RelativePattern(wkspFullFeaturesPath, "**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
   const wkspSettings = getWorkspaceSettingsForFile(wkspUri);

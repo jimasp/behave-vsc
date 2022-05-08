@@ -44,7 +44,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(junitFileUri, run, queueItem, wkspSettings.featuresPath, cancelToken);
+          await parseAndUpdateTestResults(junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
           resolve();
         }
         catch (e: unknown) {

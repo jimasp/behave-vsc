@@ -47,10 +47,10 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     // this works fine when tests are run sequentially and we read the file just after the test is run, but
     // for async we need to use a different path for each scenario so we can determine which file contains the actual result for that scenario
     if (async) {
-      junitDirUri = createJunitUriDirForAsyncScenario(queueItem, wkspSettings.featuresPath, junitDirUri, scenarioName);
+      junitDirUri = createJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
     }
 
-    const junitFileUri = getJunitFileUri(queueItem, wkspSettings.featuresPath, junitDirUri);
+    const junitFileUri = getJunitFileUri(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
     const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName, "--junit", "--junit-directory", junitDirUri.fsPath];
 
     const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
@@ -86,7 +86,7 @@ function formatScenarioName(string: string, isOutline: boolean) {
 }
 
 
-function createJunitUriDirForAsyncScenario(queueItem: QueueItem, featuresPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
+function createJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
 
   const escape = "#^@";
   const nidSuffix = "_" + customAlphabet("1234567890abcdef", 5)();
@@ -103,7 +103,7 @@ function createJunitUriDirForAsyncScenario(queueItem: QueueItem, featuresPath: s
     return scenJunitDirUri;
 
   // windows, so check if max path would be breached by junit file fspath
-  const junitFileUri = getJunitFileUri(queueItem, featuresPath, scenJunitDirUri, true);
+  const junitFileUri = getJunitFileUri(queueItem, wkspRelativeFeaturesPath, scenJunitDirUri, true);
   const filePathDiff = junitFileUri.fsPath.length - WIN_MAX_PATH;
   if (filePathDiff <= 0)
     return scenJunitDirUri;

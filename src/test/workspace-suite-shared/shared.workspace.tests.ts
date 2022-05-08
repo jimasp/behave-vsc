@@ -14,14 +14,14 @@ const fastSkipList2 = "@fast-skip-me,@fast-skip-me-too";
 export class SharedWorkspaceTests {
   constructor(readonly testPre: string) { }
 
-  runAllAsOne = async (wkspName: string, featuresPath: string,
+  runAllAsOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
     getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: featuresPath,
+      envVarList: envVarList, fastSkipList: fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined
     });
 
@@ -30,14 +30,14 @@ export class SharedWorkspaceTests {
   }
 
 
-  runParallel = async (wkspName: string, featuresPath: string,
+  runParallel = async (wkspName: string, wkspRelativeFeaturesPath: string,
     getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: featuresPath,
+      envVarList: envVarList, fastSkipList: fastSkipList2, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined
     });
 
@@ -45,14 +45,14 @@ export class SharedWorkspaceTests {
     await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getExpectedCounts, getExpectedResults);
   }
 
-  runOneByOne = async (wkspName: string, featuresPath: string,
+  runOneByOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
     getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, runWorkspacesInParallel: true,
-      envVarList: envVarList2, fastSkipList: fastSkipList2, featuresPath: featuresPath,
+      envVarList: envVarList2, fastSkipList: fastSkipList2, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true
     });
 
@@ -60,14 +60,14 @@ export class SharedWorkspaceTests {
     await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getExpectedCounts, getExpectedResults);
   }
 
-  runDebug = async (wkspName: string, featuresPath: string,
+  runDebug = async (wkspName: string, wkspRelativeFeaturesPath: string,
     getExpectedCounts: () => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: featuresPath,
+      envVarList: envVarList, fastSkipList: fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
     });
 
