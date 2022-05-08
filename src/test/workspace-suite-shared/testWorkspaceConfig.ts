@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 
 
-
-
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
-
 
 	private alwaysShowOutput: boolean | undefined;
 	private envVarList: string | undefined;
@@ -101,10 +98,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		//		
 		// for get, vscode will use the default in the package.json if there is 
 		// one, or otherwise a default value for the type (e.g. bool = false, string = "", etc.)
-		// so we mirror that behavior here and return defaults
+		// so we must mirror that behavior here and return defaults
 		switch (section) {
 			case "alwaysShowOutput":
-				return <T><unknown>(this.alwaysShowOutput === undefined ? "" : this.alwaysShowOutput);
+				return <T><unknown>(this.alwaysShowOutput === undefined ? false : this.alwaysShowOutput);
 			case "envVarList":
 				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
 			case "fastSkipList":
@@ -112,15 +109,15 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
 			case "justMyCode":
-				return <T><unknown>(this.justMyCode === undefined ? false : this.justMyCode);
+				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "runAllAsOne":
-				return <T><unknown>(this.runAllAsOne === undefined ? false : this.runAllAsOne);
+				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			case "runWorkspacesInParallel":
-				return <T><unknown>(this.runWorkspacesInParallel === undefined ? false : this.runWorkspacesInParallel);
+				return <T><unknown>(this.runWorkspacesInParallel === undefined ? true : this.runWorkspacesInParallel);
 			case "showConfigurationWarnings":
-				return <T><unknown>(this.showConfigurationWarnings === undefined ? false : this.showConfigurationWarnings);
+				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
 			default:
 				// eslint-disable-next-line no-debugger
 				debugger;

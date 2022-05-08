@@ -9,6 +9,7 @@ import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
+import { TestWorkspaceConfig } from './test/workspace-suite-shared/testWorkspaceConfig';
 
 
 // TODO - do these have to be global?
@@ -22,7 +23,8 @@ export type TestSupport = {
   ctrl: vscode.TestController,
   parser: FileParser,
   getSteps: () => Steps,
-  testData: TestData
+  testData: TestData,
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig) => Promise<void>
 };
 
 
@@ -140,16 +142,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
+
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig) => {
       config.logger.logInfoAllWksps("Settings change detected");
       try {
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately the change could be a global window setting)
-        if (event.affectsConfiguration(EXTENSION_NAME)) {
+        if (!event || event.affectsConfiguration(EXTENSION_NAME)) {
           for (const wkspUri of getWorkspaceFolderUris()) {
-            config.reloadSettings(wkspUri);
+            config.reloadSettings(wkspUri, testConfig);
           }
         }
 
@@ -158,6 +161,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       catch (e: unknown) {
         config.logger.logError(e);
       }
+    }
+
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
+      await configurationChangedHandler(event);
     }));
 
 
@@ -182,7 +190,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       ctrl: ctrl,
       parser: parser,
       getSteps: getSteps,
-      testData: testData
+      testData: testData,
+      configurationChangedHandler: configurationChangedHandler
     };
 
   }

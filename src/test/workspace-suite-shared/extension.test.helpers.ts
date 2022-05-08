@@ -34,9 +34,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 			if (expectedResult.test_id === actualResult.test_id) {
 				console.log("actual:");
-				console.log(actualResult);
+				console.log(JSON.stringify(actualResult));
 				console.log("expected:");
-				console.log(expectedResult);
+				console.log(JSON.stringify(expectedResult));
 				// eslint-disable-next-line no-debugger
 				debugger; // UHOH
 				throw "test ids matched but properties were different";
@@ -49,9 +49,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
 			console.log("actual:");
-			console.log(actualResult);
+			console.log(JSON.stringify(actualResult));
 			console.log("expected:");
-			console.log(expectedResult);
+			console.log(JSON.stringify(expectedResult));
 			// eslint-disable-next-line no-debugger
 			debugger; // UHOH			
 			throw "test ids matched but results did not match expected result";
@@ -215,6 +215,7 @@ function assertInstances(instances: TestSupport) {
 	assert(instances.parser);
 	assert(instances.runHandler);
 	assert(instances.testData);
+	assert(instances.configurationChangedHandler);
 }
 
 function getWorkspaceUri(wkspName: string) {
@@ -232,7 +233,7 @@ export const checkParseFileCounts = async (wkspName: string, getExpectedCounts: 
 	const instances = await extension.activate() as TestSupport;
 	assert(extension.isActive, "extension.isActive");
 	assertInstances(instances);
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "checkParseFileCounts");
 	assert(actualCounts !== null, "actualCounts !== null");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);
@@ -253,9 +254,8 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assertInstances(instances);
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
-	// we need to call the methods in that function manually so we can insert a test config
-	//instances.config.logger.outputChannels();
-	instances.config.reloadSettings(wkspUri, testConfig);
+	// we can insert a test config, so we need call it manually 
+	await instances.configurationChangedHandler(undefined, testConfig);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
