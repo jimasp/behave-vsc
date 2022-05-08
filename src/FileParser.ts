@@ -24,7 +24,7 @@ export class FileParser {
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._featuresLoadedForAllWorkspaces) {
-        console.log("readyForRun - good to go");
+        console.log("readyForRun - good to go (all features parsed, steps parsing may continue in background)");
         resolve(true);
       }
       else {

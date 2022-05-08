@@ -185,10 +185,8 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
         // run each workspace queue
         for (const wkspUri of getWorkspaceFolderUris()) {
           const wkspSettings = config.getWorkspaceSettings(wkspUri);
-
-          const wkspQueue = queue.filter(item => {
-            return item.test.uri?.path.startsWith(wkspSettings.featuresUri.path);
-          });
+          const idMatch = getIdForUri(wkspSettings.featuresUri);
+          const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
           if (wkspQueue.length === 0)
             continue;

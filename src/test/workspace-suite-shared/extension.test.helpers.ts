@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
+import * as chai from 'chai';
 import { Configuration } from "../../Configuration";
 import { WorkspaceSettings } from "../../WorkspaceSettings";
 import { TestSupport } from '../../extension';
@@ -12,7 +13,7 @@ import { ParseCounts } from '../../FileParser';
 import { getWorkspaceFolderUris, getAllTestItems, getScenarioTests } from '../../helpers';
 
 
-function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
+function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
 
 	const match = expectedResults.filter((expectedResult: TestResult) => {
 
@@ -32,9 +33,13 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		) {
 
 			if (expectedResult.test_id === actualResult.test_id) {
+				console.log("actual:");
 				console.log(actualResult);
+				console.log("expected:");
+				console.log(expectedResult);
 				// eslint-disable-next-line no-debugger
 				debugger; // UHOH
+				throw "test ids matched but properties were different";
 			}
 
 			return false;
@@ -43,11 +48,13 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		// now match shortened expected result string:
 
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
+			console.log("actual:");
 			console.log(actualResult);
+			console.log("expected:");
+			console.log(expectedResult);
 			// eslint-disable-next-line no-debugger
 			debugger; // UHOH			
-
-			return false;
+			throw "test ids matched but results did not match expected result";
 		}
 
 		return true;
@@ -57,6 +64,7 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 		console.log(actualResult);
 		// eslint-disable-next-line no-debugger
 		debugger; // UHOH (did we add a new test that hasn't been added to expected results? if so, see debug console and copy/paste into ws?.expectedResults.ts)
+		throw "match.length !== 1";
 	}
 
 	return match;
@@ -128,10 +136,12 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: Work
 		try {
 			if (!line.includes("missing step")) {
 				const match = getStepMatch(wkspSettings.uri, parsedSteps, line);
-				assert(match);
+				assert(match, "match");
 			}
 		}
 		catch (e: unknown) {
+			// eslint-disable-next-line no-debugger
+			debugger; // UHOH
 			if (e instanceof assert.AssertionError)
 				throw new Error(`getStepMatch() could not find match for step line: "${line}"`);
 			throw e;
@@ -183,7 +193,7 @@ function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts
 
 	// feature file and tests (scenarios) lengths should be equal, but we allow 
 	// greater than because there is a more helpful assert later if feature files/scenarios have been added
-	assert(actualCounts.featureFileCount >= expectedCounts.featureFileCount);
+	assert(actualCounts.featureFileCount >= expectedCounts.featureFileCount, `expected:${expectedCounts.featureFileCount}, actual:${actualCounts.featureFileCount}`);
 	assert(actualCounts.testCounts.testCount >= expectedCounts.testCounts.testCount);
 
 	assert(actualCounts.stepFileCount === expectedCounts.stepFileCount);
@@ -207,73 +217,81 @@ function assertInstances(instances: TestSupport) {
 	assert(instances.testData);
 }
 
-// //let inst: Instances;
-// const getInstances = async (): Promise<Instances> => {
-// 	//if (inst !== undefined)
-// 	//return inst;
-
-// 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-// 	const inst = await ext?.activate() as Instances;
-// 	return inst;
-// }
+function getWorkspaceUri(wkspName: string) {
+	const uris = getWorkspaceFolderUris();
+	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
+	assert(wkspUri, "wkspUri");
+	return wkspUri;
+}
 
 
-export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
-	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
-
-	const cancelToken = new vscode.CancellationTokenSource().token;
-	vscode.commands.executeCommand("testing.clearTestResults");
+export const checkParseFileCounts = async (wkspName: string, getExpectedCounts: () => ParseCounts) => {
+	const wkspUri = getWorkspaceUri(wkspName);
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension);
 	const instances = await extension.activate() as TestSupport;
-	assert(extension?.isActive);
+	assert(extension.isActive, "extension.isActive");
 	assertInstances(instances);
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	assert(actualCounts !== null, "actualCounts !== null");
+	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
+	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);
+	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
+}
 
-	const uris = getWorkspaceFolderUris();
-	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
-	assert(wkspUri);
+
+export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
+	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
+
+	const wkspUri = getWorkspaceUri(wkspName);
+	const cancelToken = new vscode.CancellationTokenSource().token;
+	vscode.commands.executeCommand("testing.clearTestResults");
+	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
+	assert(extension, "extension");
+	const instances = await extension.activate() as TestSupport;
+	assert(extension.isActive, "extension.isActive");
+	assertInstances(instances);
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually so we can insert a test config
 	//instances.config.logger.outputChannels();
 	instances.config.reloadSettings(wkspUri, testConfig);
-	assertInstances(instances);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time
 	// before requesting a test run due to contention
-	// (we don't want to await parseFiles, because our tests wouldn't cover the same timeout operation as real usage)
-	instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
+	// (we don't want to await parseFiles, because then our tests wouldn't cover the same timeout operation as real usage)
 	const done = await instances.parser.readyForRun(3000);
 	assert(done);
 
-	// sanity check lengths and counts
+	// sanity check lengths
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
-	console.log("allw:" + allWkspItems.length);
+	console.log("workspace nodes:" + allWkspItems.length);
 	const include = getScenarioTests(instances.testData, allWkspItems);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
 	// greater than because there is a more helpful assert later if feature files/scenarios have been added
-	console.log(`includes:${include.length}, expected:${expectedResults.length}`);
+	console.log(`test includes: ${include.length}, tests expected: ${expectedResults.length}`);
 	assert(include.length >= expectedResults.length);
-
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "runAllTestsAndAssertTheResults");
-	assert(actualCounts !== null);
-	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);
-	assertExpectedCounts(getExpectedCounts, actualCounts, multirootWkspItem);
 
 
 	// run behave tests
 
+	console.log("calling runHandler to run tests...")
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
-	const resultsPromise = instances?.runHandler(debug, runRequest, cancelToken);
+
+	// assert(instances.runHandler)
+	// const results = await instances.runHandler(debug, runRequest, cancelToken);
+	const resultsPromise = instances.runHandler(debug, runRequest, cancelToken);
 	if (debug) {
 		// timeout hack to show test ui during debug testing so we can see progress		
 		await new Promise(t => setTimeout(t, 1000));
 		await vscode.commands.executeCommand("workbench.view.testing.focus");
 	}
 	const results = await resultsPromise;
+	console.log("runHandler completed")
+
 
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
@@ -299,16 +317,14 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 		});
 
 
-		assert(JSON.stringify(result.test.range).includes("line"));
+		assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
 
-
-		const match = findMatch(expectedResults, scenResult);
-		assert.strictEqual(match.length, 1);
+		assertTestResultMatchesExpectedResult(expectedResults, scenResult);
 	});
 
 
 	// (keep this at the end, as individual match asserts are more useful to get first)
-	assert.strictEqual(results.length, expectedResults.length);
+	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 
 	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.getWorkspaceSettings(wkspUri));
 }
