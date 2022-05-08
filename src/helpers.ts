@@ -47,8 +47,8 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
       await vwfs.delete(dirUri, { recursive: true, useTrash: true });
   }
   catch (e: unknown) {
-    // don't log this for users - we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
-    console.error(e);
+    // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
+    // TODO: force a,b,c and check for specific error
   }
 }
 
@@ -56,7 +56,7 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
 export const getWorkspaceFolderUris = (): vscode.Uri[] => {
   const folders = vscode.workspace.workspaceFolders;
   if (!folders) {
-    throw new Error("No workspace folders found");
+    throw new Error("No workspace folders found"); // should never happen
   }
   return folders.map(folder => folder.uri);
 }

@@ -21,7 +21,6 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
 		},
 		{
 			"name": "Debug Extension - Workspace 2",
@@ -39,7 +38,6 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
 		},
 		{
 			"name": "Debug Extension - Workspace MultiRoot",
@@ -57,7 +55,6 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
 		},
 		{
 			"name": "Debug Extension - My Project",
@@ -75,7 +72,6 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
 		},
 		{
 			"name": "Run Extension Test Suite - Workspace 1",

@@ -1,22 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as assert from 'assert';
-import { ExtensionConfiguration } from "../../Configuration";
+import { Configuration } from "../../Configuration";
 import { WorkspaceSettings } from "../../WorkspaceSettings";
-import { Instances } from '../../extension';
+import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getAllTestItems, getScenarioTests } from '../../helpers';
-
-
-export function getWorkspaceUriFromName(wkspName: string) {
-	const wsPath = path.resolve(__dirname, `../../../${wkspName}`);
-	return vscode.Uri.file(wsPath)
-}
+import { getWorkspaceFolderUris, getAllTestItems, getScenarioTests } from '../../helpers';
 
 
 function findMatch(expectedResults: TestResult[], actualResult: TestResult): TestResult[] {
@@ -70,7 +63,7 @@ function findMatch(expectedResults: TestResult[], actualResult: TestResult): Tes
 }
 
 
-function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: ExtensionConfiguration) {
+function assertWorkspaceSettingsAsExpected(wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration) {
 
 	const winSettings = config.getWindowSettings();
 	assert.strictEqual(winSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"));
@@ -204,7 +197,8 @@ function assertExpectedCounts(getExpectedCounts: () => ParseCounts, actualCounts
 }
 
 
-function assertInstances(instances: Instances) {
+function assertInstances(instances: TestSupport) {
+	assert(instances);
 	assert(instances.config);
 	assert(instances.ctrl);
 	assert(instances.getSteps);
@@ -213,28 +207,37 @@ function assertInstances(instances: Instances) {
 	assert(instances.testData);
 }
 
-let inst: Instances;
-const activateExtensionIfNotActive = async (): Promise<Instances> => {
-	if (inst !== undefined)
-		return inst;
+// //let inst: Instances;
+// const getInstances = async (): Promise<Instances> => {
+// 	//if (inst !== undefined)
+// 	//return inst;
 
-	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
-	inst = await ext?.activate() as Instances;
-	return inst;
-}
+// 	const ext = vscode.extensions.getExtension("jimasp.behave-vsc");
+// 	const inst = await ext?.activate() as Instances;
+// 	return inst;
+// }
 
 
-export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
-	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration) => TestResult[]) => {
+export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig, getExpectedCounts: () => ParseCounts,
+	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
 
 	const cancelToken = new vscode.CancellationTokenSource().token;
 	vscode.commands.executeCommand("testing.clearTestResults");
-	const instances = await activateExtensionIfNotActive();
+	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
+	assert(extension);
+	const instances = await extension.activate() as TestSupport;
+	assert(extension?.isActive);
 	assertInstances(instances);
+
+	const uris = getWorkspaceFolderUris();
+	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
+	assert(wkspUri);
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we need to call the methods in that function manually so we can insert a test config
+	//instances.config.logger.outputChannels();
 	instances.config.reloadSettings(wkspUri, testConfig);
+	assertInstances(instances);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time

@@ -2,25 +2,23 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import config, { ExtensionConfiguration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
+import config, { Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError } from './helpers';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { debugCancelSource, testRunHandler } from './testRunHandler';
-import { Logger } from './Logger';
 
 
-// TODO - does testData have to be global?
+// TODO - do these have to be global?
 export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
-
-export type Instances = {
+export type TestSupport = {
   runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
-  config: ExtensionConfiguration,
+  config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
   getSteps: () => Steps,
@@ -28,12 +26,13 @@ export type Instances = {
 };
 
 
-// called on extension activation:
+// called on extension activation or the first time a new/unrecognised workspace gets added.
 // set up all relevant event handlers/hooks/subscriptions with vscode api
-export async function activate(context: vscode.ExtensionContext): Promise<Instances | undefined> {
+export async function activate(context: vscode.ExtensionContext): Promise<TestSupport | undefined> {
 
   try {
 
+    console.log("activate called, node pid:" + process.pid);
     logExtensionVersion(context);
     const parser = new FileParser();
 
@@ -130,9 +129,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Instan
 
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
       try {
-        // (most of the work will happen in the onDidChangeConfiguration handler)
-        config.logger.dispose();
-        config.logger = new Logger(getWorkspaceFolderUris());
+        // note - the first time a new/unrecognised workspace gets added a new node host 
+        // process will start, this host process will terminate, and activate will be called 
+        //
+        // most of the work will happen in the onDidChangeConfiguration handler here we just resync the logger
+        config.resyncLoggerToWorkspaces();
       }
       catch (e: unknown) {
         config.logger.logError(e);

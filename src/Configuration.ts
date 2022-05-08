@@ -12,19 +12,19 @@ export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 
-export interface ExtensionConfiguration {
-  readonly extTempFilesUri: vscode.Uri;
-  readonly logger: Logger;
-  getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
-  getWindowSettings(): WindowSettings;
-  reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
-  getPythonExec(wkspUri: vscode.Uri): Promise<string>;
-}
+// export interface ExtensionConfiguration {
+//   readonly extTempFilesUri: vscode.Uri;
+//   readonly logger: Logger;
+//   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
+//   getWindowSettings(): WindowSettings;
+//   reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
+//   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
+// }
 
 
-class Configuration implements ExtensionConfiguration {
-  public readonly extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
-  public logger: Logger = new Logger(getWorkspaceFolderUris());
+export class Configuration {
+  public readonly extTempFilesUri;
+  public logger: Logger;
   private static _windowSettings: WindowSettings | undefined = undefined;
   private static _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
@@ -32,13 +32,21 @@ class Configuration implements ExtensionConfiguration {
 
 
   private constructor() {
+    this.logger = new Logger(getWorkspaceFolderUris());
+    this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
     Configuration._configuration = this;
-    console.log("Configuration singleton constructed (this should only fire once except for test runs)");
+    console.log("Configuration singleton constructed (this should only fire once, except for extension integration test runs)");
   }
 
   public dispose() {
     this.logger.dispose();
   }
+
+  public resyncLoggerToWorkspaces() {
+    this.logger.dispose();
+    this.logger = new Logger(getWorkspaceFolderUris());
+  }
+
 
   static get configuration() {
     if (Configuration._configuration)
@@ -49,7 +57,7 @@ class Configuration implements ExtensionConfiguration {
   }
 
   // called by onDidChangeConfiguration
-  public async reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+  public reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
 
     if (testConfig) {
       Configuration._windowSettings = new WindowSettings(testConfig);

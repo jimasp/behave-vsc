@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ExtensionConfiguration } from "../../Configuration";
+import { Configuration } from "../../Configuration";
 import { ParseCounts } from '../../FileParser';
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
@@ -8,7 +8,7 @@ export const getWs1ExpectedCounts = (): ParseCounts => {
   return { testCounts: { nodeCount: 48, testCount: 32 }, featureFileCount: 15, stepFileCount: 3, stepsCount: 15 };
 }
 
-export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: ExtensionConfiguration): TestResult[] => {
+export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
