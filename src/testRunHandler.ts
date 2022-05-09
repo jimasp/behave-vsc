@@ -8,10 +8,18 @@ import { customAlphabet } from 'nanoid';
 import { QueueItem, testData } from './extension';
 import { FileParser } from './FileParser';
 
-// TODO - subscribe/dispose this on extension deactivation 
-// (with thorough manual retest of debug and run stop/start)
-// ALTERNATIVELY consider rewrite for run one-shot debug mode (maybe try that first?)
-export let debugCancelSource: vscode.CancellationTokenSource;
+
+let internalCancelSource: vscode.CancellationTokenSource;
+
+export function disposeCancelTestRunSource() {
+  if (internalCancelSource)
+    internalCancelSource.dispose();
+}
+
+export function cancelTestRun() {
+  if (internalCancelSource)
+    internalCancelSource.cancel();
+}
 
 // TODO refactor
 export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
@@ -29,16 +37,16 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
     }
 
     cancelRemoveDirectoryRecursiveSource.cancel();
-    debugCancelSource = new vscode.CancellationTokenSource();
-    const combinedSource = new vscode.CancellationTokenSource();
-    const combinedToken = combinedSource.token;
+    internalCancelSource = new vscode.CancellationTokenSource();
+    const combinedCancelSource = new vscode.CancellationTokenSource();
+    const combinedToken = combinedCancelSource.token;
 
-    const debugCancelHandler = debugCancelSource.token.onCancellationRequested(() => {
-      combinedSource.cancel();
+    const debugCancelHandler = internalCancelSource.token.onCancellationRequested(() => {
+      combinedCancelSource.cancel();
     });
 
     const runCancelHandler = runToken.onCancellationRequested(() => {
-      combinedSource.cancel();
+      combinedCancelSource.cancel();
     });
 
 
@@ -269,7 +277,7 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
       run.end();
     }
     finally {
-      debugCancelSource.dispose();
+      internalCancelSource.dispose();
       debugCancelHandler.dispose();
       runCancelHandler.dispose();
     }

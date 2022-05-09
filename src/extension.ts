@@ -8,7 +8,7 @@ import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isS
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
-import { debugCancelSource, testRunHandler } from './testRunHandler';
+import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfig } from './test/workspace-suite-shared/testWorkspaceConfig';
 
 
@@ -24,9 +24,13 @@ export type TestSupport = {
   parser: FileParser,
   getSteps: () => Steps,
   testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig) => Promise<void>
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig, wkspUri?: vscode.Uri) => Promise<void>
 };
 
+
+export function deactivate() {
+  disposeCancelTestRunSource();
+}
 
 // called on extension activation or the first time a new/unrecognised workspace gets added.
 // set up all relevant event handlers/hooks/subscriptions with vscode api
@@ -117,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
                 if (!threadExit) {
                   // exit, but not a thread exit, so we need to set flag to 
                   // stop the run, (most likely debug was stopped by user)
-                  debugCancelSource.cancel();
+                  cancelTestRun();
                 }
               }
             }
@@ -143,7 +147,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig) => {
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig, testConfigWkspUri?: vscode.Uri) => {
       config.logger.logInfoAllWksps("Settings change detected");
       try {
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
@@ -152,7 +156,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // (separately the change could be a global window setting)
         if (!event || event.affectsConfiguration(EXTENSION_NAME)) {
           for (const wkspUri of getWorkspaceFolderUris()) {
-            config.reloadSettings(wkspUri, testConfig);
+            if (testConfig && testConfigWkspUri === wkspUri)
+              config.reloadSettings(wkspUri, testConfig);
+            else
+              config.reloadSettings(wkspUri);
           }
         }
 
