@@ -12,7 +12,7 @@ suite(`workspace-2-suite test run`, () => {
 
 	test("checkParseCounts", async () => {
 		await checkParseFileCounts(wkspName, getWs2ExpectedCounts);
-	}).timeout(5000);
+	}).timeout(60000);
 
 	test("runDefault", async () => {
 

@@ -255,7 +255,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we can insert a test config, so we need call it manually 
-	await instances.configurationChangedHandler(undefined, testConfig);
+	await instances.configurationChangedHandler(undefined, testConfig, wkspUri);
 	assertWorkspaceSettingsAsExpected(wkspUri, testConfig, instances.config);
 
 	// readyForRun() will happen in runHandler(), but we need to add more time

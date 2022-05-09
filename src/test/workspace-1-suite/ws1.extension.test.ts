@@ -9,7 +9,7 @@ suite(`workspace-1-suite test run`, () => {
 
 	test("checkParseCounts", async () => {
 		await checkParseFileCounts(wkspName, getWs1ExpectedCounts);
-	}).timeout(5000);
+	}).timeout(60000);
 
 	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspName, "/behave_tests/some_tests/", getWs1ExpectedResults)).timeout(60000);
 	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "behave_tests/some_tests/", getWs1ExpectedResults)).timeout(60000);
