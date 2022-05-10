@@ -89,7 +89,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     if (asyncBuff.length > 0) {
       config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
       config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
-      config.logger.logInfo(asyncBuff.join(""), wkspUri, run);
+      config.logger.logInfo(asyncBuff.join("").trim(), wkspUri, run);
+      config.logger.logInfo("---", wkspUri, run);
     }
 
     if (runToken.isCancellationRequested) {
@@ -106,7 +107,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       await parseAndUpdateTestResults(junitFileUri!, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
 
-    config.logger.logInfo("---", wkspUri, run);
   }
   catch (e: unknown) {
     throw new WkspError(e, wkspUri);

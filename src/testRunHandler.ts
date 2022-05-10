@@ -16,9 +16,11 @@ export function disposeCancelTestRunSource() {
     internalCancelSource.dispose();
 }
 
-export function cancelTestRun() {
-  if (internalCancelSource)
+export function cancelTestRun(cancelledBy: string) {
+  if (internalCancelSource) {
+    console.log(`\n=== test run CANCELLED by ${cancelledBy} ===\n\n`);
     internalCancelSource.cancel();
+  }
 }
 
 // TODO refactor
@@ -28,7 +30,7 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
     // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
-    const ready = await parser.readyForRun(1000);
+    const ready = await parser.readyForRun(1000, "testRunHandler");
     if (!ready) {
       const msg = "cannot run tests while test items are still updating, please try again";
       console.warn(msg);
@@ -231,11 +233,6 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
         if (fileCoverage) {
           fileCoverage[lineNo].executionCount++;
         }
-
-        const runDiag = `${test.id} completed for run ${run.name}\r\n`;
-        run.appendOutput(runDiag);
-        console.log(runDiag);
-
         completed++;
         if (completed === queue.length) {
           run.end();

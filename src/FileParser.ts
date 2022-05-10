@@ -14,24 +14,24 @@ export type ParseCounts = { testCounts: TestCounts, featureFileCount: number, st
 
 export class FileParser {
 
-  private _calls = 0;
+  private _parseFilesCallCounts = 0;
   private _featuresLoadedForAllWorkspaces = false;
   private _featuresLoadedForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
 
-  async readyForRun(timeout: number) {
+  async readyForRun(timeout: number, caller: string) {
     const interval = 100;
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._featuresLoadedForAllWorkspaces) {
-        console.log("readyForRun - good to go (all features parsed, steps parsing may continue in background)");
+        console.log(`readyForRun (${caller}) - good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        console.log("readyForRun timeout remaining:" + timeout);
+        console.log(`readyForRun (${caller}) timeout remaining:` + timeout);
         if (timeout < interval) {
-          console.log("readyForRun - timed out");
+          console.log(`readyForRun (${caller})  - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -47,7 +47,7 @@ export class FileParser {
 
     let processed = 0;
 
-    // delete existing folder items and test items for this workspace
+    console.log("removing existing test nodes/items for workspace: " + wkspSettings.name);
     const items = getAllTestItems(wkspSettings.uri, controller.items);
     for (const item of items) {
       controller.items.delete(item.id);
@@ -65,7 +65,7 @@ export class FileParser {
 
     if (cancelToken.isCancellationRequested) {
       // either findFiles or loop will have exited early, log it either way
-      console.log(`${caller} cancelled - _parseFeatureFiles stopped`);
+      console.log(`${caller}: cancelling, _parseFeatureFiles stopped`);
     }
 
     return processed;
@@ -74,6 +74,8 @@ export class FileParser {
   private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     let processed = 0;
+
+    console.log("removing existing steps for workspace: " + wkspSettings.name);
     const wkspStepKeys = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
     for (const key of wkspStepKeys) {
       steps.delete(key);
@@ -92,26 +94,12 @@ export class FileParser {
 
     if (cancelToken.isCancellationRequested) {
       // either findFiles or loop will have exited early, log it either way
-      console.log(`${caller} cancelled - _parseStepFiles stopped`);
+      console.log(`${caller}: cancelling, _parseStepFiles stopped`);
     }
 
     return processed;
   }
 
-
-  private _logTimesToConsole = (counts: TestCounts, featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
-    // show diag times for extension developers
-    console.log(
-      `---` +
-      `\nparseFiles() completed.` +
-      `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
-      `\nBreakdown: features ${featTime}ms, steps ${stepsTime}ms.` +
-      `\nIgnore times if: (a) during vscode startup/integration testing (contention), or (b) there are active breakpoints, or (c) when another test extension is also refreshing.` +
-      `\nFor a more representative time, disable active breakpoints and other test extensions, then click the test refresh button a few times.` +
-      `\n==================`
-    );
-  }
 
 
   async updateStepsFromStepsFile(wkspFullFeaturesPath: string, uri: vscode.Uri, caller: string) {
@@ -235,7 +223,11 @@ export class FileParser {
 
   async clearTestItemsAndParseFilesForAllWorkspaces(ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
-    // clear everything so we can rebuild the top level nodes
+    this._featuresLoadedForAllWorkspaces = false;
+
+    // this function is called e.g. when a workspace gets added/removed, so 
+    // clear everything up-front so that we rebuild the top level nodes
+    console.log("clearTestItemsAndParseFilesForAllWorkspaces - removing all test nodes/items for all workspaces");
     const items = getAllTestItems(null, ctrl.items);
     for (const item of items) {
       ctrl.items.delete(item.id);
@@ -251,12 +243,12 @@ export class FileParser {
   async parseFilesForWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
-    const wkspPath = wkspUri.path;
     this._featuresLoadedForAllWorkspaces = false;
+    const wkspPath = wkspUri.path;
     this._featuresLoadedForWorkspace[wkspPath] = false;
-    this._calls++;
+    this._parseFilesCallCounts++;
     const wkspName = getWorkspaceFolder(wkspUri).name;
-    const callName = `parseFiles ${this._calls} ${wkspName}`;
+    const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
     const wkspSettings = config.getWorkspaceSettings(wkspUri);
     let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
@@ -268,11 +260,12 @@ export class FileParser {
 
     try {
 
-      console.log(`\n===== ${callName}: started, initiated by:${intiator} =====`);
+      console.log(`\n===== ${callName}: started =====`);
 
       // this function is not generally awaited, and therefore re-entrant, so 
       // cancel any existing parseFiles call for this workspace
       if (this._cancelTokenSources[wkspPath]) {
+        console.log(`cancelling previous parseFiles call for ${wkspName}`);
         this._cancelTokenSources[wkspPath].cancel();
         while (this._cancelTokenSources[wkspPath]) {
           await new Promise(t => setTimeout(t, 20));
@@ -313,7 +306,7 @@ export class FileParser {
         if (stepFileCount === 0)
           throw `No step files found in ${wkspSettings.featuresUri.fsPath}/steps`;
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
-        this._logTimesToConsole(testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
+        this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
       this._cancelTokenSources[wkspPath].dispose();
@@ -331,4 +324,22 @@ export class FileParser {
       cancellationHandler?.dispose();
     }
   }
+
+
+  private _logTimesToConsole = (callName: string, counts: TestCounts, featTime: number, stepsTime: number, featureFileCount: number, stepFileCount: number) => {
+    // show diag times for extension developers
+    console.log(
+      `---` +
+      `\n${callName} completed.` +
+      `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
+      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
+      `\nBreakdown: features ${featTime}ms, steps ${stepsTime}ms.` +
+      `\nIgnore times if: (a) during vscode startup/integration testing (contention), or (b) there are active breakpoints, or (c) when another test extension is also refreshing.` +
+      `\nFor a more representative time, disable active breakpoints and other test extensions, then click the test refresh button a few times.` +
+      `\n==================`
+    );
+  }
+
+
+
 }

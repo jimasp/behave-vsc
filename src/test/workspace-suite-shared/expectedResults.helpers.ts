@@ -13,7 +13,7 @@ interface ITestResult {
   scenario_featureName: string;
   scenario_featureFileRelativePath: string | undefined;
   scenario_scenarioName: string;
-  scenario_fastSkip: boolean;
+  scenario_fastSkipTag: boolean;
   scenario_result: string | undefined;
 }
 
@@ -31,7 +31,7 @@ export class TestResult implements ITestResult {
   scenario_featureName!: string;
   scenario_featureFileRelativePath!: string;
   scenario_scenarioName!: string;
-  scenario_fastSkip!: boolean;
+  scenario_fastSkipTag!: boolean;
   scenario_result: string | undefined;
   constructor(testResult: ITestResult) {
     Object.assign(this, testResult);
@@ -64,7 +64,7 @@ function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean
 
   if (!fastSkipSet) {
     expectedResults.forEach(expectedResult => {
-      expectedResult.scenario_fastSkip = false;
+      expectedResult.scenario_fastSkipTag = false;
     });
     return expectedResults;
   }
@@ -73,7 +73,7 @@ function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean
   // but if fastskip is enabled, they should always be "skipped"
   if (fastSkipActive) {
     expectedResults.forEach(expectedResult => {
-      if (expectedResult.scenario_fastSkip)
+      if (expectedResult.scenario_fastSkipTag)
         expectedResult.scenario_result = "skipped";
     });
   }

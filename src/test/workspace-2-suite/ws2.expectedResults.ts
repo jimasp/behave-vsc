@@ -11,7 +11,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a successful test',
@@ -28,7 +28,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a slow test for async testing',
@@ -45,7 +45,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another slow test for async testing',
@@ -62,7 +62,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a failing test',
@@ -79,7 +79,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another successful test',
@@ -96,7 +96,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a test with a missing steps',
@@ -113,7 +113,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a skipped test',
@@ -131,7 +131,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
 
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/contains_regexchars.feature',
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
       scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
@@ -148,7 +148,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_featureName: 'Mixed skip scenarios',
       scenario_getLabel: 'normal skip',
@@ -164,7 +164,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: "don't skip and success",
@@ -181,7 +181,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: 'fast skip a successful test',
@@ -197,7 +197,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: "don't skip and fail",
@@ -213,7 +213,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
       scenario_getLabel: 'fast skip a failing test',
@@ -230,7 +230,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/skipped.feature',
       scenario_featureName: 'skipped feature',
       scenario_getLabel: 'normal skip',
@@ -248,7 +248,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
 
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -265,7 +265,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureFileRelativePath: '{{featurePath}}/fastskip_feature.feature',
       scenario_featureName: 'fast skip feature',
       scenario_getLabel: 'fast skip by feature',
@@ -282,7 +282,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -299,7 +299,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success',
@@ -316,7 +316,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail',
@@ -333,7 +333,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail 2',
@@ -350,7 +350,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fast Skip a Failure',
@@ -367,7 +367,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fast Skip a Success',
@@ -384,7 +384,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Skip',
@@ -401,7 +401,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success 2',
@@ -418,7 +418,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success',
@@ -435,7 +435,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success 2',
@@ -452,7 +452,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (fail)',
@@ -469,7 +469,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (success)',
@@ -486,7 +486,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a failing textblock test',
@@ -503,7 +503,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a successful textblock test',
@@ -520,7 +520,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error',
@@ -537,7 +537,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'normal skip',
@@ -554,7 +554,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip a before hook-error',
@@ -571,7 +571,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error again',
@@ -588,7 +588,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error',
@@ -605,7 +605,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'another normal skip',
@@ -622,7 +622,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip an after hook-error',
@@ -639,7 +639,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error again',
@@ -656,7 +656,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step',
@@ -673,7 +673,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step with more text',
@@ -690,7 +690,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'a cased step',
@@ -707,7 +707,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step',
@@ -724,7 +724,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step with more text',
@@ -741,7 +741,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no1',
@@ -758,7 +758,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no2',
@@ -775,7 +775,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with param',
@@ -792,7 +792,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step without custom flag type',
@@ -809,7 +809,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with custom flag type present',
@@ -826,7 +826,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'yet another step',
@@ -843,7 +843,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: '"yet" "another" step double quoted',
@@ -860,7 +860,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: "'yet' 'another' step single quoted",
@@ -877,7 +877,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 1',
@@ -894,7 +894,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 2',
@@ -911,7 +911,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 3',
@@ -928,7 +928,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested1.faildupe.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -945,7 +945,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested/nested3.sucessdupe.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -962,7 +962,7 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested2.successdupe.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',

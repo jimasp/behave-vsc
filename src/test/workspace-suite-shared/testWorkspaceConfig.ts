@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 
 
+export class TestWorkspaceConfigWithWkspUri {
+	constructor(public testConfig: TestWorkspaceConfig, public wkspUri: vscode.Uri) { }
+}
+
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private alwaysShowOutput: boolean | undefined;
@@ -13,7 +17,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private runWorkspacesInParallel: boolean | undefined;
 	private showConfigurationWarnings: boolean | undefined;
 
-	// all user-settable settings in settings.json
+	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
 		alwaysShowOutput, envVarList, fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath, justMyCode,
 		runAllAsOne, runParallel, runWorkspacesInParallel, showConfigurationWarnings

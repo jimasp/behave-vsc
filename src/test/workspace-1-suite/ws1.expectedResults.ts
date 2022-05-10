@@ -12,7 +12,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a successful test',
@@ -28,7 +28,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a slow test for async testing',
@@ -44,7 +44,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run another slow test for async testing',
@@ -60,7 +60,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a failing test',
@@ -76,7 +76,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run another successful test',
@@ -92,7 +92,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a test with a missing steps',
@@ -108,7 +108,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a skipped test',
@@ -125,7 +125,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'behave_tests/some_tests/group1_features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
@@ -142,7 +142,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'fast skip feature',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/fastskip_feature.feature',
       scenario_getLabel: 'fast skip by feature',
@@ -158,7 +158,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/fastskip_feature.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'skipped feature',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/skipped.feature',
       scenario_getLabel: 'normal skip',
@@ -174,7 +174,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/skipped.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/contains_regexchars.feature',
       scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
@@ -190,7 +190,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/contains_regexchars.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: 'normal skip',
@@ -206,7 +206,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: "don't skip and success",
@@ -222,7 +222,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: 'fast skip a successful test',
@@ -238,7 +238,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: "don't skip and fail",
@@ -254,7 +254,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: 'fast skip a failing test',
@@ -270,7 +270,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Duplicate',
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/duplicate.feature',
       scenario_getLabel: 'run a test',
@@ -286,7 +286,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/duplicate.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Table feature',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/table.feature',
       scenario_getLabel: 'Use a table (success)',
@@ -302,7 +302,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Table feature',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/table.feature',
       scenario_getLabel: 'Use a table (fail)',
@@ -318,7 +318,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Text block',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/textblock.feature',
       scenario_getLabel: 'run a successful textblock test',
@@ -334,7 +334,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Text block',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/textblock.feature',
       scenario_getLabel: 'run a failing textblock test',
@@ -350,7 +350,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Success',
@@ -366,7 +366,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fail',
@@ -382,7 +382,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Skip',
@@ -398,7 +398,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fail 2',
@@ -414,7 +414,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fast Skip a Success',
@@ -430,7 +430,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Success 2',
@@ -446,7 +446,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: true,
+      scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fast Skip a Failure',
@@ -462,7 +462,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Duplicate',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/duplicate.feature',
       scenario_getLabel: 'run a test',
@@ -478,7 +478,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/duplicate.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Outline success',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_success.feature',
       scenario_getLabel: 'Blend Success',
@@ -494,7 +494,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Outline success',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_success.feature',
       scenario_getLabel: 'Blend Success 2',
@@ -510,7 +510,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature'
     }),
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -527,7 +527,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'behave_tests/some_tests/duplicate_fail.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -544,7 +544,7 @@ export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
     }),
 
     new TestResult({
-      scenario_fastSkip: false,
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'behave_tests/some_tests/group2_features/envvars.feature',
       scenario_featureName: 'EnvVars',
       scenario_getLabel: 'run an successful (if not from command line) envvars test',

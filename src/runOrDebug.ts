@@ -57,7 +57,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
       `"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
 
 
-    if (!debug && scenario.fastSkip) {
+    if (!debug && scenario.fastSkipTag) {
       config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`, wkspSettings.uri, run);
       updateTest(run, { status: "skipped", duration: 0 }, queueItem);
       return;

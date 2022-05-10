@@ -81,7 +81,7 @@ export class TestFile {
       tcase.range = range;
       parent.item.label = featureName;
       parent.children.push(tcase);
-      console.log("created child test item " + tcase.id + "from " + featureFilePath);
+      console.log(`created child test item scenario ${tcase.id} from ${featureFilePath}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {
@@ -107,7 +107,7 @@ export interface IScenario {
   scenarioName: string;
   generation: number;
   readonly isOutline: boolean;
-  readonly fastSkip: boolean;
+  readonly fastSkipTag: boolean;
   getLabel(): string;
 }
 
@@ -120,7 +120,7 @@ export class Scenario implements IScenario {
     public scenarioName: string,
     public generation: number,
     public readonly isOutline: boolean,
-    public readonly fastSkip: boolean,
+    public readonly fastSkipTag: boolean,
   ) { }
 
   getLabel() {

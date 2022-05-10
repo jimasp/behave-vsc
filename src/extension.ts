@@ -9,7 +9,7 @@ import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
-import { TestWorkspaceConfig } from './test/workspace-suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
 
 
 // TODO - do these have to be global?
@@ -24,7 +24,7 @@ export type TestSupport = {
   parser: FileParser,
   getSteps: () => Steps,
   testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig, wkspUri?: vscode.Uri) => Promise<void>
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => Promise<void>
 };
 
 
@@ -121,7 +121,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
                 if (!threadExit) {
                   // exit, but not a thread exit, so we need to set flag to 
                   // stop the run, (most likely debug was stopped by user)
-                  cancelTestRun();
+                  cancelTestRun("onDidSendMessage (debug stop)");
                 }
               }
             }
@@ -136,9 +136,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
       try {
         // note - the first time a new/unrecognised workspace gets added a new node host 
-        // process will start, this host process will terminate, and activate will be called 
+        // process will start, this host process will terminate, and activate() will be called shortly after
         //
-        // most of the work will happen in the onDidChangeConfiguration handler here we just resync the logger
+        // most of the work will happen in the onDidChangeConfiguration handler, here we just resync the logger
         config.resyncLoggerToWorkspaces();
       }
       catch (e: unknown) {
@@ -147,23 +147,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testConfig?: TestWorkspaceConfig, testConfigWkspUri?: vscode.Uri) => {
+    // called when there is a settings.json/*.vscode-workspace change, or when workspace folders are added/removed
+    // (also called directly by integation tests with a testCfg)
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => {
+
       config.logger.logInfoAllWksps("Settings change detected");
+
       try {
+        if (!testCfg)
+          cancelTestRun("configurationChangedHandler");
+
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately the change could be a global window setting)
         if (!event || event.affectsConfiguration(EXTENSION_NAME)) {
           for (const wkspUri of getWorkspaceFolderUris()) {
-            if (testConfig && testConfigWkspUri === wkspUri)
-              config.reloadSettings(wkspUri, testConfig);
+            if (testCfg && testCfg.wkspUri === wkspUri)
+              config.reloadSettings(wkspUri, testCfg.testConfig);
             else
               config.reloadSettings(wkspUri);
           }
         }
 
-        parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "OnDidChangeConfiguration");
+        // this function is automatically called after onDidChangeWorkspaceFolders if a workspace is added or removed,
+        // so we need to reparse all test nodes to rebuild the top level test items AFTER the configuration has been applied
+        // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
+        if (testCfg)
+          parser.parseFilesForWorkspace(testCfg.wkspUri, ctrl, "configurationChangedHandler");
+        else
+          parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "configurationChangedHandler");
       }
       catch (e: unknown) {
         config.logger.logError(e);
