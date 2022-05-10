@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
@@ -36,8 +37,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
-    // for runAllAsOne we need to create the junit dir ourselves, or the first junit file of run won't get created
-    await vscode.workspace.fs.createDirectory(junitDirUri);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
     });
@@ -124,6 +123,11 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   junitDirUri: vscode.Uri, runToken: vscode.CancellationToken): vscode.FileSystemWatcher {
 
   let updated = 0;
+
+  // create the junitDirUri directory 
+  // NOTE - we use "fs.mkdirSync" because "await vscode.workspace.fs.createDirectory" is not reliable atm, it causes watcher to 
+  // fail to pick up on first files created (intermittently observed with multi-root in example-project-workspace-1)
+  fs.mkdirSync(junitDirUri.fsPath);
 
   const updateResult = async (uri: vscode.Uri) => {
     try {
