@@ -127,7 +127,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   // create the junitDirUri directory 
   // NOTE - we use "fs.mkdirSync" because "await vscode.workspace.fs.createDirectory" is not reliable atm, it causes watcher to 
   // fail to pick up on first files created (intermittently observed with multi-root in example-project-workspace-1)
-  fs.mkdirSync(junitDirUri.fsPath);
+  fs.mkdirSync(junitDirUri.fsPath, { recursive: true });
 
   const updateResult = async (uri: vscode.Uri) => {
     try {
