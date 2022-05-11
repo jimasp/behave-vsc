@@ -9,11 +9,10 @@ import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
-import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
 
 
-// TODO - do these have to be global?
-export const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
@@ -58,7 +57,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // TODO - rename cancelRemoveDirectoryRecursive token and function to reflect that they remove the temp folder
     const cancelRemoveDirectoryRecursive = new vscode.CancellationTokenSource();
     removeDirectoryRecursive(config.extTempFilesUri, cancelRemoveDirectoryRecursive.token);
-    const runHandler = testRunHandler(ctrl, parser, cancelRemoveDirectoryRecursive);
+    const runHandler = testRunHandler(testData, ctrl, parser, cancelRemoveDirectoryRecursive);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
@@ -81,7 +80,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const data = testData.get(item);
         if (data instanceof TestFile) {
           const wkspSettings = getWorkspaceSettingsForFile(item.uri);
-          await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, ctrl, item, "resolveHandler");
+          await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
@@ -91,7 +90,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-        await parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "refreshHandler", cancelToken);
+        await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -176,9 +175,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // so we need to reparse all test nodes to rebuild the top level test items AFTER the configuration has been applied
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
         if (testCfg)
-          parser.parseFilesForWorkspace(testCfg.wkspUri, ctrl, "configurationChangedHandler");
+          parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");
         else
-          parser.clearTestItemsAndParseFilesForAllWorkspaces(ctrl, "configurationChangedHandler");
+          parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -193,9 +192,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     const updateNodeForDocument = async (e: vscode.TextDocument) => {
       const wkspSettings = getWorkspaceSettingsForFile(e.uri);
-      const item = await parser.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, ctrl, e.uri, "updateNodeForDocument");
-      if (item)
-        item.testFile.createScenarioTestItemsFromFeatureFileContents(wkspSettings, e.uri.path, ctrl, e.getText(), item.testItem, "updateNodeForDocument");
+      const item = await parser.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, testData, ctrl, e.uri, "updateNodeForDocument");
+      if (item) {
+        item.testFile.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, e.uri.path,
+          ctrl, e.getText(), item.testItem, "updateNodeForDocument");
+      }
     }
 
     // for any open .feature documents on startup
@@ -249,7 +250,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       }
 
       if (isFeatureFile(uri)) {
-        parser.updateTestItemFromFeatureFile(wkspSettings, ctrl, uri, "updater");
+        parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
       }
 
     }
@@ -289,7 +290,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
     }
 
     try {
-      parser.parseFilesForWorkspace(wkspUri, ctrl, "OnDidDelete");
+      parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
       config.logger.logError(new WkspError(e, wkspUri));
@@ -297,7 +298,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   });
 
 
-  parser.parseFilesForWorkspace(wkspUri, ctrl, "startWatchingWorkspace");
+  parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "startWatchingWorkspace");
 
   return watcher;
 }

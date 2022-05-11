@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
-import { Scenario, TestFile } from './TestFile';
+import { Scenario, TestData, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import { countTestItems, getAllTestItems, getContentFromFilesystem, getIdForUri, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
 import { customAlphabet } from 'nanoid';
-import { QueueItem, testData } from './extension';
+import { QueueItem } from './extension';
 import { FileParser } from './FileParser';
 
 
@@ -24,7 +24,9 @@ export function cancelTestRun(cancelledBy: string) {
 }
 
 // TODO refactor
-export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
+export function testRunHandler(testData: TestData, ctrl: vscode.TestController, parser: FileParser,
+  cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
+
   return async (debug: boolean, request: vscode.TestRunRequest, runToken: vscode.CancellationToken) => {
 
     // the test tree is built as a background process which is called from a few places
@@ -77,7 +79,7 @@ export function testRunHandler(ctrl: vscode.TestController, parser: FileParser, 
           else {
             if (data instanceof TestFile && !data.didResolve) {
               const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-              await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, ctrl, test, "queueSelectedItems");
+              await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, test, "queueSelectedItems");
             }
 
             await queueSelectedTestItems(gatherTestItems(test.children));

@@ -8,34 +8,40 @@ export const EXTENSION_NAME = "behave-vsc";
 export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const MSPY_EXT = "ms-python.python";
-export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
+export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
-
-// export interface ExtensionConfiguration {
-//   readonly extTempFilesUri: vscode.Uri;
-//   readonly logger: Logger;
-//   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
-//   getWindowSettings(): WindowSettings;
-//   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
-//   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
-// }
+declare global {
+  // eslint-disable-next-line no-var
+  var config: Configuration;
+}
 
 
-export class Configuration {
+export interface Configuration {
+  readonly extTempFilesUri: vscode.Uri;
+  readonly logger: Logger;
+  getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
+  getWindowSettings(): WindowSettings;
+  reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
+  getPythonExec(wkspUri: vscode.Uri): Promise<string>;
+  resyncLoggerToWorkspaces(): void;
+  dispose(): void;
+}
+
+
+// don't export this
+class ExtensionConfiguration implements Configuration {
   public readonly extTempFilesUri;
   public logger: Logger;
-  private static _windowSettings: WindowSettings | undefined = undefined;
-  private static _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
-
-  private static _configuration?: Configuration;
-
+  private static _configuration?: ExtensionConfiguration;
+  private windowSettings: WindowSettings | undefined = undefined;
+  private resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private constructor() {
+    ExtensionConfiguration._configuration = this;
     this.logger = new Logger(getWorkspaceFolderUris());
     this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
-    Configuration._configuration = this;
-    console.log("Configuration singleton constructed (this should only fire once, except for extension integration test runs)");
+    console.log("Configuration singleton constructed (this should only fire once)");
   }
 
   public dispose() {
@@ -49,39 +55,39 @@ export class Configuration {
 
 
   static get configuration() {
-    if (Configuration._configuration)
-      return Configuration._configuration;
+    if (ExtensionConfiguration._configuration)
+      return ExtensionConfiguration._configuration;
 
-    Configuration._configuration = new Configuration();
-    return Configuration._configuration;
+    ExtensionConfiguration._configuration = new ExtensionConfiguration();
+    return ExtensionConfiguration._configuration;
   }
 
   // called by onDidChangeConfiguration
   public reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
 
     if (testConfig) {
-      Configuration._windowSettings = new WindowSettings(testConfig);
-      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, Configuration._windowSettings, this.logger);
+      this.windowSettings = new WindowSettings(testConfig);
+      this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.windowSettings, this.logger);
     }
     else {
-      Configuration._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
-      Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), Configuration._windowSettings, this.logger);
+      this.windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.windowSettings, this.logger);
     }
   }
 
   public getWorkspaceSettings(wkspUri: vscode.Uri) {
     const _windowSettings = this.getWindowSettings();
-    return Configuration._resourceSettings[wkspUri.path]
-      ? Configuration._resourceSettings[wkspUri.path]
-      : Configuration._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+    return this.resourceSettings[wkspUri.path]
+      ? this.resourceSettings[wkspUri.path]
+      : this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
         vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), _windowSettings, this.logger);
   }
 
   public getWindowSettings() {
-    return Configuration._windowSettings
-      ? Configuration._windowSettings
-      : Configuration._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+    return this.windowSettings
+      ? this.windowSettings
+      : this.windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
@@ -126,6 +132,5 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
 }
 
 
-export default Configuration.configuration;
-
-
+global.config = ExtensionConfiguration.configuration;
+export default global.config;

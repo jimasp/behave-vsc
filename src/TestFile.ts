@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { testData } from './extension';
 import { getContentFromFilesystem, getIdForUri, isFeatureFile, WkspError } from './helpers';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
@@ -13,7 +12,7 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, controller: vscode.TestController, item: vscode.TestItem,
+  public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, item: vscode.TestItem,
     caller: string) {
     try {
       if (!item.uri)
@@ -23,7 +22,7 @@ export class TestFile {
 
       const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
-      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, item.uri.path, controller, content, item, caller);
+      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, item.uri.path, controller, content, item, caller);
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
@@ -32,8 +31,8 @@ export class TestFile {
   }
 
 
-  public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, featureFilePath: string, controller: vscode.TestController,
-    content: string, item: vscode.TestItem, caller: string) {
+  public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, testData: TestData, featureFilePath: string,
+    controller: vscode.TestController, content: string, item: vscode.TestItem, caller: string) {
 
     if (item.uri === undefined)
       throw new Error("testitem uri is undefined");
@@ -57,11 +56,12 @@ export class TestFile {
         }
         catch (e: unknown) {
           let err = (e as Error).toString();
-          if (err.includes("duplicate")) {
+          if (err.includes("duplicate test item")) {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
-            config.logger.logError(new WkspError(err, wkspSettings.uri)); // don't throw here, let it carry on
+            // don't throw here, log it and carry on
+            config.logger.logError(new WkspError(err, wkspSettings.uri));
           }
           else
             throw e;

@@ -230,7 +230,7 @@ function getWorkspaceUri(wkspName: string) {
 
 
 async function checkParseFilesCounts(wkspName: string, wkspUri: vscode.Uri, instances: TestSupport, getExpectedCounts: () => ParseCounts) {
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.ctrl, "checkParseFileCounts");
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
 	assert(actualCounts !== null, "actualCounts !== null");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);

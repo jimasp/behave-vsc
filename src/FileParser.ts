@@ -4,9 +4,8 @@ import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
 import { countTestItemsInCollection, getAllTestItems, getIdForUri, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts, WkspError } from './helpers';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { TestFile } from './TestFile';
+import { TestData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
-import { testData } from './extension';
 
 const steps: Steps = new Map<string, StepDetail>();
 export const getSteps = () => steps;
@@ -42,8 +41,8 @@ export class FileParser {
     return new Promise<boolean>(check);
   }
 
-  private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, controller: vscode.TestController, cancelToken: vscode.CancellationToken,
-    caller: string): Promise<number> => {
+  private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
+    cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     let processed = 0;
 
@@ -59,7 +58,7 @@ export class FileParser {
     for (const uri of featureFiles) {
       if (cancelToken.isCancellationRequested)
         break;
-      await this.updateTestItemFromFeatureFile(wkspSettings, controller, uri, caller);
+      await this.updateTestItemFromFeatureFile(wkspSettings, testData, controller, uri, caller);
       processed++;
     }
 
@@ -110,15 +109,15 @@ export class FileParser {
     await parseStepsFile(wkspFullFeaturesPath, uri, steps, caller);
   }
 
-  async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
+  async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
 
     if (!isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
 
-    const item = await this.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, controller, uri, caller);
+    const item = await this.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, testData, controller, uri, caller);
     if (item) {
       console.log(`${caller}: parsing ${uri.path}`);
-      await item.testFile.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, controller, item.testItem, caller);
+      await item.testFile.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, controller, item.testItem, caller);
     }
     else {
       console.log(`${caller}: no scenarios found in ${uri.path}`);
@@ -128,7 +127,7 @@ export class FileParser {
 
 
 
-  async getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, controller: vscode.TestController,
+  async getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
     if (!isFeatureFile(uri))
@@ -221,7 +220,7 @@ export class FileParser {
   }
 
 
-  async clearTestItemsAndParseFilesForAllWorkspaces(ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
+  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
     this._featuresLoadedForAllWorkspaces = false;
 
@@ -234,13 +233,13 @@ export class FileParser {
     }
 
     for (const wkspUri of getWorkspaceFolderUris()) {
-      this.parseFilesForWorkspace(wkspUri, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
+      this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
     }
   }
 
   // NOTE - this is background task
   // it should only be awaited on user request, i.e. when called by the refreshHandler
-  async parseFilesForWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, intiator: string,
+  async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
     this._featuresLoadedForAllWorkspaces = false;
@@ -276,7 +275,7 @@ export class FileParser {
       this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
 
       const start = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(wkspSettings, ctrl, this._cancelTokenSources[wkspPath].token, callName);
+      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
       const featTime = performance.now() - start;
 
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {

@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 
 
+// used only in the extension tests themselves
 export class TestWorkspaceConfigWithWkspUri {
 	constructor(public testConfig: TestWorkspaceConfig, public wkspUri: vscode.Uri) { }
 }
 
+// used in extension code to allow us to dynamically inject a workspace configuration
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private alwaysShowOutput: boolean | undefined;
@@ -42,6 +44,40 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runWorkspacesInParallel = runWorkspacesInParallel;
 		this.showConfigurationWarnings = showConfigurationWarnings;
 	}
+
+	get<T>(section: string): T {
+
+		// switch for all user-settable settings in settings.json or *.code-workspace
+		//		
+		// for get, vscode will use the default in the package.json if there is 
+		// one, or otherwise a default value for the type (e.g. bool = false, string = "", etc.)
+		// so we must mirror that behavior here and return defaults
+		switch (section) {
+			case "alwaysShowOutput":
+				return <T><unknown>(this.alwaysShowOutput === undefined ? false : this.alwaysShowOutput);
+			case "envVarList":
+				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
+			case "fastSkipList":
+				return <T><unknown>(this.fastSkipList === undefined ? "" : this.fastSkipList);
+			case "featuresPath":
+				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
+			case "justMyCode":
+				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
+			case "runAllAsOne":
+				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
+			case "runParallel":
+				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
+			case "runWorkspacesInParallel":
+				return <T><unknown>(this.runWorkspacesInParallel === undefined ? true : this.runWorkspacesInParallel);
+			case "showConfigurationWarnings":
+				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
+			default:
+				// eslint-disable-next-line no-debugger
+				debugger;
+				throw new Error("get() missing case for section: " + section);
+		}
+	}
+
 
 
 	inspect<T>(section: string): {
@@ -92,40 +128,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			workspaceFolderValue: response,
 			workspaceLanguageValue: undefined,
 			languageIds: []
-		}
-	}
-
-
-	get<T>(section: string): T {
-
-		// switch for all user-settable settings in settings.json or *.code-workspace
-		//		
-		// for get, vscode will use the default in the package.json if there is 
-		// one, or otherwise a default value for the type (e.g. bool = false, string = "", etc.)
-		// so we must mirror that behavior here and return defaults
-		switch (section) {
-			case "alwaysShowOutput":
-				return <T><unknown>(this.alwaysShowOutput === undefined ? false : this.alwaysShowOutput);
-			case "envVarList":
-				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
-			case "fastSkipList":
-				return <T><unknown>(this.fastSkipList === undefined ? "" : this.fastSkipList);
-			case "featuresPath":
-				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
-			case "justMyCode":
-				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
-			case "runAllAsOne":
-				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
-			case "runParallel":
-				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
-			case "runWorkspacesInParallel":
-				return <T><unknown>(this.runWorkspacesInParallel === undefined ? true : this.runWorkspacesInParallel);
-			case "showConfigurationWarnings":
-				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
-			default:
-				// eslint-disable-next-line no-debugger
-				debugger;
-				throw new Error("get() missing case for section: " + section);
 		}
 	}
 
