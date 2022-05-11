@@ -163,10 +163,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // (separately the change could be a global window setting)
         if (!event || event.affectsConfiguration(EXTENSION_NAME)) {
           for (const wkspUri of getWorkspaceFolderUris()) {
-            if (testCfg && testCfg.wkspUri === wkspUri)
-              config.reloadSettings(wkspUri, testCfg.testConfig);
-            else
+            if (!testCfg) {
               config.reloadSettings(wkspUri);
+              continue;
+            }
+            if (testCfg.wkspUri === wkspUri)
+              config.reloadSettings(wkspUri, testCfg.testConfig);
           }
         }
 
