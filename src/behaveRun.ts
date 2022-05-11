@@ -133,7 +133,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       const matches = map.filter(m => m.junitFileUri.path === uri.path);
       if (matches.length === 0)
-        return reject(`could find any queue items for junit file ${uri.path}`);
+        return reject(`could not find any matching test items for junit file ${uri.path}`);
 
       // one junit file is created per feature, so update all tests for this feature
       for (const match of matches) {
