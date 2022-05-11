@@ -17,7 +17,7 @@ export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com
 //   readonly logger: Logger;
 //   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
 //   getWindowSettings(): WindowSettings;
-//   reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined): void;
+//   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
 //   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
 // }
 
@@ -57,7 +57,7 @@ export class Configuration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadSettings(wkspUri: vscode.Uri, testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
+  public reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
 
     if (testConfig) {
       Configuration._windowSettings = new WindowSettings(testConfig);
