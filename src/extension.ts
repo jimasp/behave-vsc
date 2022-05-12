@@ -172,7 +172,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         }
 
         // this function is automatically called after onDidChangeWorkspaceFolders if a workspace is added or removed,
-        // so we need to reparse all test nodes to rebuild the top level test items AFTER the configuration has been applied
+        // so we need to reparse all test nodes to rebuild the top level test items after the configuration has been applied (above)
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
         if (testCfg)
           parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");
