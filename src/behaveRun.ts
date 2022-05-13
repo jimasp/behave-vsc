@@ -93,7 +93,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     }
 
     if (runToken.isCancellationRequested) {
-      config.logger.logInfo("\n-- TEST RUN CANCELLED --", wkspUri, run);
+      config.logger.logInfo(`\n-- TEST RUN ${run.name} CANCELLED --`, wkspUri, run);
       // the test run will have been terminated, so we cannot update the test status                  
       return;
     }

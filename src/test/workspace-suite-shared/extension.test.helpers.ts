@@ -255,6 +255,7 @@ function allConfigsLoaded() {
 	return Object.values(configLoaded).every(loaded => loaded);
 }
 
+
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: () => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
@@ -274,6 +275,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const instances = await extension.activate() as TestSupport;
 	assert.strictEqual(extension.isActive, true, wkspName);
 	assertInstances(instances);
+	instances.config.integrationTestRunAll = true;
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we are manually inserting a test config, so we need call it manually too

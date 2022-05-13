@@ -31,6 +31,7 @@ export function deactivate() {
   disposeCancelTestRunSource();
 }
 
+
 // called on extension activation or the first time a new/unrecognised workspace gets added.
 // set up all relevant event handlers/hooks/subscriptions with vscode api
 export async function activate(context: vscode.ExtensionContext): Promise<TestSupport | undefined> {
@@ -150,17 +151,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // (also called directly by integation tests with a testCfg)
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => {
 
+      // for integration test runAllTestsAndAssertTheResults, 
+      // only reload config on request (i.e. when testCfg supplied)
+      if (config.integrationTestRunAll && !testCfg)
+        return;
+
       config.logger.logInfoAllWksps("Settings change detected");
 
       try {
-        if (!testCfg)
-          cancelTestRun("configurationChangedHandler");
+        cancelTestRun("configurationChangedHandler");
 
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately the change could be a global window setting)
-        if (!event || event.affectsConfiguration(EXTENSION_NAME)) {
+        if (testCfg || (event && event.affectsConfiguration(EXTENSION_NAME))) {
           for (const wkspUri of getWorkspaceFolderUris()) {
             if (!testCfg) {
               config.reloadSettings(wkspUri);
@@ -236,10 +241,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
-  const wkspFullFeaturesPath = config.getWorkspaceSettings(wkspUri).featuresUri.path;
+  const wkspSettings = config.getWorkspaceSettings(wkspUri);
+  const wkspFullFeaturesPath = wkspSettings.featuresUri.path;
   const pattern = new vscode.RelativePattern(wkspFullFeaturesPath, "**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-  const wkspSettings = getWorkspaceSettingsForFile(wkspUri);
 
   const updater = (uri: vscode.Uri) => {
     try {

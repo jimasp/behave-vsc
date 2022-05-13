@@ -18,6 +18,7 @@ declare global {
 
 
 export interface Configuration {
+  integrationTestRunAll: boolean;
   readonly extTempFilesUri: vscode.Uri;
   readonly logger: Logger;
   getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
@@ -29,8 +30,9 @@ export interface Configuration {
 }
 
 
-// don't export this
+// don't export this, use the interface
 class ExtensionConfiguration implements Configuration {
+  public integrationTestRunAll = false;
   public readonly extTempFilesUri;
   public logger: Logger;
   private static _configuration?: ExtensionConfiguration;

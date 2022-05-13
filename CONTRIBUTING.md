@@ -41,7 +41,7 @@
 	- `code --install-extension ms-python.python` (if not already installed)
 	- `code --install-extension dbaeumer.vscode-eslint`
 	- `code --install-extension amodio.tsl-problem-matcher`
-9. Check it all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
+9. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
 	- `npm run test`
 10. If any of the tests fail, then double-check the steps above. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests) further down.
 11. Note - if at any point you perform a `git clean`, pull a new version of the source code, or switch branch, you will need to run `npm install` again.
