@@ -6,13 +6,13 @@ import {
   countTestItemsInCollection, getAllTestItems, getIdForUri, getTestItem,
   getWorkspaceFolder, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError
 } from './common';
-import { parseStepsFile, StepDetail, Steps } from './stepsParser';
+import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
 
-const steps: Steps = new Map<string, StepDetail>();
-export const getSteps = () => steps;
-export type ParseCounts = { testCounts: TestCounts, featureFileCount: number, stepFileCount: number, stepsCount: number }; // for integration test assertions      
+const stepMap: StepMap = new Map<string, StepDetail>();
+export const getStepMap = () => stepMap;
+export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
 
 export class FileParser {
 
@@ -78,9 +78,9 @@ export class FileParser {
     let processed = 0;
 
     console.log("removing existing steps for workspace: " + wkspSettings.name);
-    const wkspStepKeys = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
+    const wkspStepKeys = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
     for (const key of wkspStepKeys) {
-      steps.delete(key);
+      stepMap.delete(key);
     }
 
     const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/steps/**/*.py");
@@ -109,7 +109,7 @@ export class FileParser {
     if (!isStepsFile(uri))
       throw new Error(`${uri.path} is not a steps file`);
 
-    await parseStepsFile(wkspFullFeaturesPath, uri, steps, caller);
+    await parseStepsFile(wkspFullFeaturesPath, uri, stepMap, caller);
   }
 
   async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
@@ -240,8 +240,8 @@ export class FileParser {
     }
   }
 
-  // NOTE - this is background task
-  // it should only be awaited on user request, i.e. when called by the refreshHandler
+  // NOTE - this is normally a BACKGROUND task
+  // it should only be await-ed on user request, i.e. when called by the refreshHandler
   async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
@@ -314,8 +314,11 @@ export class FileParser {
       this._cancelTokenSources[wkspPath].dispose();
       delete this._cancelTokenSources[wkspPath];
 
-      const wkspSteps = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
-      return { testCounts: testCounts, featureFileCount: featureFileCount, stepFileCount: stepFileCount, stepsCount: wkspSteps.size };
+      const wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
+      return {
+        tests: testCounts, featureFileCountExcludingEmptyOrCommentedOut: featureFileCount,
+        stepFiles: stepFileCount, stepMappings: wkspSteps.size
+      };
     }
     catch (e: unknown) {
       // unawaited async func, log the error 
@@ -334,7 +337,7 @@ export class FileParser {
       `---` +
       `\n${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} steps took ${stepsTime + featTime}ms. ` +
+      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${stepMap.size} stepMatches took ${stepsTime + featTime}ms. ` +
       `\nBreakdown: features ${featTime}ms, steps ${stepsTime}ms.` +
       `\nIgnore times if: (a) during vscode startup/integration testing (contention), or (b) there are active breakpoints, or (c) when another test extension is also refreshing.` +
       `\nFor a more representative time, disable active breakpoints and other test extensions, then click the test refresh button a few times.` +

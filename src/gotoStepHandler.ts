@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, WkspError } from './common';
-import { getSteps } from './FileParser';
-import { parseRepWildcard, StepDetail, Steps } from "./stepsParser";
+import { getStepMap } from './FileParser';
+import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
 import { WorkspaceSettings } from './WorkspaceSettings';
 
 export const stepMatchRe = /^(\s*)(given|when|then|and)(.+)$/i;
 
 
-export function getStepMatch(wkspSettings: WorkspaceSettings, allSteps: Steps, stepLine: string): StepDetail | undefined {
+export function getStepMatch(wkspSettings: WorkspaceSettings, stepMap: StepMap, stepLine: string): StepDetail | undefined {
 
   if (stepLine.endsWith(":")) // table
     stepLine = stepLine.slice(0, -1);
@@ -20,8 +20,8 @@ export function getStepMatch(wkspSettings: WorkspaceSettings, allSteps: Steps, s
   const stepText = stMatches[3].trim();
 
 
-  let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
-  wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspSettings.featuresUri.path + ":", ""), v]));
+  let wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
+  wkspSteps = new Map([...stepMap].map(([k, v]) => [k.replace(wkspSettings.featuresUri.path + ":", ""), v]));
 
   const exactSteps = new Map([...wkspSteps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.includes(parseRepWildcard)));
@@ -103,9 +103,9 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
     if (line == "" || line.startsWith("#"))
       return;
 
-    const allSteps = getSteps();
+    const stepMap = getStepMap();
     const wkspSettings = getWorkspaceSettingsForFile(eventUri);
-    const stepMatch = getStepMatch(wkspSettings, allSteps, line);
+    const stepMatch = getStepMatch(wkspSettings, stepMap, line);
 
     if (!stepMatch) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)

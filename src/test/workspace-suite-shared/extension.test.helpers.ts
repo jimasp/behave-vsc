@@ -7,9 +7,9 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
-import { Steps } from '../../stepsParser';
+import { StepMap } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getIdForUri } from '../../common';
 import { performance } from 'perf_hooks';
 
 
@@ -130,7 +130,7 @@ async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 }
 
 
-async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: WorkspaceSettings) {
+async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: WorkspaceSettings) {
 
 	const featureSteps = await getAllStepsFromFeatureFiles(wkspSettings);
 
@@ -191,22 +191,22 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 	return arrChildrenIds.join();
 }
 
-function assertExpectedCounts(wkspName: string, getExpectedCounts: () => ParseCounts, actualCounts: ParseCounts, multiroot: vscode.TestItem | undefined) {
-	const expectedCounts = getExpectedCounts();
+function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: string, config: Configuration,
+	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
+	actualCounts: ParseCounts, hasMuliRootWkspNode: boolean) {
 
-	// feature file and tests (scenarios) lengths should be equal, but we allow greater than because there 
-	// are more helpful asserts in assertTestResultMatchesExpectedResult if feature files/scenarios have been added
-	assert(actualCounts.featureFileCount >= expectedCounts.featureFileCount, wkspName);
-	assert(actualCounts.testCounts.testCount >= expectedCounts.testCounts.testCount, wkspName);
+	const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
-	assert(actualCounts.stepFileCount === expectedCounts.stepFileCount, wkspName);
-	assert(actualCounts.stepsCount === expectedCounts.stepsCount, wkspName);
+	assert(actualCounts.featureFileCountExcludingEmptyOrCommentedOut == expectedCounts.featureFileCountExcludingEmptyOrCommentedOut, wkspName);
+	assert(actualCounts.tests.testCount == expectedCounts.tests.testCount, wkspName);
 
-	// (see comment above to explain greater than)
-	if (multiroot)
-		assert(actualCounts.testCounts.nodeCount >= expectedCounts.testCounts.nodeCount + 1, wkspName); // add one for the workspace parent node if in multi-root mode
+	assert(actualCounts.stepFiles === expectedCounts.stepFiles, wkspName);
+	assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
+
+	if (hasMuliRootWkspNode)
+		assert(actualCounts.tests.nodeCount == expectedCounts.tests.nodeCount + 1, wkspName);
 	else
-		assert(actualCounts.testCounts.nodeCount >= expectedCounts.testCounts.nodeCount, wkspName);
+		assert(actualCounts.tests.nodeCount == expectedCounts.tests.nodeCount, wkspName);
 }
 
 
@@ -229,14 +229,6 @@ function getWorkspaceUri(wkspName: string) {
 }
 
 
-async function checkParseFilesCounts(wkspName: string, wkspUri: vscode.Uri, instances: TestSupport, getExpectedCounts: () => ParseCounts) {
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
-	assert(actualCounts !== null, "actualCounts !== null");
-	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
-	const multirootWkspItem = allWkspItems.find(item => item.id === wkspUri.fsPath);
-	assertExpectedCounts(wkspName, getExpectedCounts, actualCounts, multirootWkspItem);
-	return allWkspItems;
-}
 
 
 const configLoaded: { [wkspUriPath: string]: boolean } = buildConfigLoaded();
@@ -259,7 +251,7 @@ let timingInProgress = false;
 
 
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
-	getExpectedCounts: () => ParseCounts,
+	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wkspName}`;
@@ -298,22 +290,21 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
 	configLoaded[wkspUri.path] = true;
 
-	// (to mitigate parallel run) - TODO check if we still need this?
+	// (to mitigate parallel run)
 	while (!allConfigsLoaded()) {
 		await new Promise(t => setTimeout(t, 20));
 	}
 
-
-
 	assert(await instances.parser.readyForRun(3000, consoleName));
-	const allWkspItems = await checkParseFilesCounts(wkspName, wkspUri, instances, getExpectedCounts);
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
+	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
+	const include = getScenarioTests(instances.testData, allWkspItems);
 	// sanity check include length matches expected length
 	console.log(`${consoleName}: calling getAllTestItems`);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
-	const include = getScenarioTests(instances.testData, allWkspItems);
-	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
-	// greater than because there is a more helpful assert later if feature files/scenarios have been added
+	// greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added
+	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	console.log(`${consoleName}: test includes: ${include.length}, tests expected: ${expectedResults.length}`);
 	assert(include.length >= expectedResults.length, wkspName);
 
@@ -337,6 +328,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 	if (!results || results.length === 0)
 		throw new Error("no results returned from runHandler");
+
 
 
 	results.forEach(result => {
@@ -364,6 +356,12 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testConfig);
 	});
 
+
+
+
+	assert(actualCounts !== null, "actualCounts !== null");
+	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getIdForUri(wkspUri)) !== undefined;
+	assertExpectedCounts(debug, wkspUri, wkspName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
 
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");

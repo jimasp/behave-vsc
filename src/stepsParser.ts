@@ -10,9 +10,9 @@ export class StepDetail {
   constructor(public wkspFullFeaturesPath: string, public uri: vscode.Uri, public range: vscode.Range) { }
 }
 
-export type Steps = Map<string, StepDetail>;
+export type StepMap = Map<string, StepDetail>;
 
-export const parseStepsFile = async (wskpFullFeaturesPath: string, uri: vscode.Uri, steps: Steps, caller: string) => {
+export const parseStepsFile = async (wskpFullFeaturesPath: string, uri: vscode.Uri, steps: StepMap, caller: string) => {
 
   if (!isStepsFile(uri))
     throw new Error(`${uri.path} is not a steps file`);

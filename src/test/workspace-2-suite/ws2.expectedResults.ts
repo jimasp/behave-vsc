@@ -3,8 +3,9 @@ import { Configuration } from "../../Configuration";
 import { ParseCounts } from '../../FileParser';
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
-export const getWs2ExpectedCounts = (): ParseCounts => {
-  return { testCounts: { nodeCount: 78, testCount: 57 }, featureFileCount: 17, stepFileCount: 4, stepsCount: 30 };
+export function getWs2ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+  const testCount = getWs2ExpectedResults(debug, wkspUri, config).length;
+  return { tests: { nodeCount: 78, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 17, stepFiles: 4, stepMappings: 30 };
 }
 
 export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {

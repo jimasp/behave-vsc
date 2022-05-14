@@ -4,11 +4,12 @@ import { ParseCounts } from '../../FileParser';
 import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
 
 
-export const getWs1ExpectedCounts = (): ParseCounts => {
-  return { testCounts: { nodeCount: 48, testCount: 32 }, featureFileCount: 15, stepFileCount: 3, stepsCount: 15 };
+export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+  const testCount = getWs1ExpectedResults(debug, wkspUri, config).length;
+  return { tests: { nodeCount: 51, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 16, stepFiles: 3, stepMappings: 15 };
 }
 
-export const getWs1ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] {
 
   const expectedResults: TestResult[] = [
     new TestResult({

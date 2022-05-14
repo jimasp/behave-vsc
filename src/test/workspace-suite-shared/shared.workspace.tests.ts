@@ -15,7 +15,7 @@ export class SharedWorkspaceTests {
   constructor(readonly testPre: string) { }
 
   runAllAsOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: () => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
     getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -31,7 +31,7 @@ export class SharedWorkspaceTests {
 
 
   runParallel = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: () => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -46,7 +46,7 @@ export class SharedWorkspaceTests {
   }
 
   runOneByOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: () => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -61,7 +61,7 @@ export class SharedWorkspaceTests {
   }
 
   runDebug = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: () => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 

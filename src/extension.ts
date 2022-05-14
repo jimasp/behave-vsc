@@ -8,9 +8,9 @@ import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError
 } from './common';
-import { Steps } from './stepsParser';
+import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { getSteps, FileParser } from './FileParser';
+import { getStepMap, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
 
@@ -24,7 +24,7 @@ export type TestSupport = {
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => Steps,
+  getSteps: () => StepMap,
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => Promise<void>
 };
@@ -221,7 +221,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getSteps,
+      getSteps: getStepMap,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
