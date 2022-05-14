@@ -8,7 +8,7 @@ from behave import *
 def simple_step(context):
     pass
 
-@step("a simple step with more text")
+@step(u"a simple step with more text")
 def simple_step_with_more_text(context):
     pass
 

@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { isStepsFile } from './common';
 import { getContentFromFilesystem } from './common';
 
-const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:"|')(.+)("|').*\).*$/i;
+//const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)("|').*\).*$/i;
+const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
 const startRe = /^\s*(@step|@given|@when|@then).+/i;
 export const parseRepWildcard = ".*";
 

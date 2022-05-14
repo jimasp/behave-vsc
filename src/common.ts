@@ -86,7 +86,18 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   // changes (see console.log statement at the end of this function)
 
   function findAFeatureFile(dir: string): boolean {
-    const files = fs.readdirSync(dir, { withFileTypes: true });
+
+    let files;
+    try {
+      files = fs.readdirSync(dir, { withFileTypes: true, encoding: "utf8" });
+    }
+    catch (e: any) { /* eslint-disable-line @typescript-eslint/no-explicit-any */
+      if (e.code && e.code === "ENOENT") {
+        return false; // most likely a folder specified in the *.code-workspace file doesn't exist
+      }
+      throw e;
+    }
+
     let found = false;
     for (const file of files) {
       if (file.isDirectory()) {

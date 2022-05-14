@@ -1,17 +1,17 @@
 {
 	"folders": [
 		{
-			"path": "../example-project-workspace-1"
+			"path": "./example-project-workspace-simple"
 		},
 		{
-			"path": "../example-project-workspace-2"
+			"path": "./example-project-workspace-1"
 		},
 		{
-			"path": "../example-project-workspace-simple"
+			"path": "./example-project-workspace-2"
 		},
 		{
-			"path": "../empty-folder-for-multiroot"
-		}
+			"path": "./empty-folder-for-multiroot-workspace"
+		},
 	],
 	"settings": {
 		"behave-vsc.alwaysShowOutput": true,

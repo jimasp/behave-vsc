@@ -103,6 +103,7 @@ export class Logger {
 
   logError = (error: unknown, run?: vscode.TestRun) => {
 
+
     let text: string;
     let wkspUri: vscode.Uri | undefined;
     const extErr: WkspError = (error as WkspError);
@@ -121,6 +122,12 @@ export class Logger {
 
 
     console.error(text);
+
+
+    // fallback
+    if (!this.channels || Object.keys(this.channels).length < 1)
+      vscode.window.showErrorMessage(text);
+
 
     if (wkspUri) {
       this.channels[wkspUri.path].appendLine("\n" + ERR_HIGHLIGHT);

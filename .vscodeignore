@@ -13,7 +13,7 @@ tsconfig.json
 package-lock.json
 package.json
 vsix/**
-example-project-workspace/**
+example-projects/**
 images/behave-vsc.gif
 **/.venv/**
 **/venv/**

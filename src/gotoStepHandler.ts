@@ -5,7 +5,6 @@ import { getStepMap } from './FileParser';
 import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
 import { WorkspaceSettings } from './WorkspaceSettings';
 
-export const stepMatchRe = /^(\s*)(given|when|then|and)(.+)$/i;
 
 
 export function getStepMatch(wkspSettings: WorkspaceSettings, stepMap: StepMap, stepLine: string): StepDetail | undefined {
