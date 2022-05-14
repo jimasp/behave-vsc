@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { EXTENSION_FRIENDLY_NAME, ERR_HIGHLIGHT } from './Configuration';
-import { WkspError } from './helpers';
+import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 
 
 
@@ -10,7 +10,14 @@ export class Logger {
   private channels: { [wkspUri: string]: vscode.OutputChannel } = {};
   public visible = false;
 
-  constructor(wkspUris: vscode.Uri[]) {
+  syncChannelsToWorkspaceFolders() {
+
+    const wkspUris = getUrisOfWkspFoldersWithFeatures(true);
+
+    for (const wkspPath in this.channels) {
+      this.channels[wkspPath].dispose();
+      delete this.channels[wkspPath];
+    }
 
     const wkspPaths = wkspUris.map(u => u.path);
     if (wkspPaths.length < 2) {
@@ -95,6 +102,7 @@ export class Logger {
   };
 
   logError = (error: unknown, run?: vscode.TestRun) => {
+
     let text: string;
     let wkspUri: vscode.Uri | undefined;
     const extErr: WkspError = (error as WkspError);

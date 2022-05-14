@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getWorkspaceFolderUris, WkspError } from './helpers';
+import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 import { Logger } from './Logger';
 import { EXTENSION_NAME } from './Configuration';
 
@@ -162,7 +162,7 @@ export class WorkspaceSettings {
   }
 
 
-  logUserSettings(fatal: boolean, winSettings: WindowSettings) {
+  async logUserSettings(fatal: boolean, winSettings: WindowSettings) {
 
     const entries = Object.entries(this).sort();
     const dic: { [name: string]: string; } = {};
@@ -176,8 +176,8 @@ export class WorkspaceSettings {
       }
     });
 
-    const wsUris = getWorkspaceFolderUris();
-    if (wsUris.length > 0 && this.uri === wsUris[0])
+    const wkspUris = getUrisOfWkspFoldersWithFeatures();
+    if (wkspUris.length > 0 && this.uri === wkspUris[0])
       this._logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettings, null, 2)}`);
 
     this._logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./WorkspaceSettings";
-import { getContentFromFilesystem } from './helpers';
+import { getContentFromFilesystem } from './common';
 
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";

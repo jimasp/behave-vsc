@@ -7,7 +7,7 @@ import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';
 import { QueueItem } from './extension';
 import { getJunitFileUri, updateTest } from './junitParser';
-import { WkspError } from './helpers';
+import { WkspError } from './common';
 
 
 

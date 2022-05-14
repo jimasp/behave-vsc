@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { TestData } from './TestFile';
 import { WorkspaceSettings } from './WorkspaceSettings';
+import { performance } from 'perf_hooks';
+import * as fs from 'fs';
+import * as path from 'path';
 const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -61,12 +64,59 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
 }
 
 
-export const getWorkspaceFolderUris = (): vscode.Uri[] => {
+let workspaceFoldersWithFeatures: vscode.Uri[];
+
+
+export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
+
+  const start = performance.now();
+
+  if (!forceRefresh && workspaceFoldersWithFeatures)
+    return workspaceFoldersWithFeatures;
+
+  workspaceFoldersWithFeatures = [];
+
   const folders = vscode.workspace.workspaceFolders;
   if (!folders) {
-    throw new Error("No workspace folders found"); // should never happen
+    throw "No workspace folders found";
   }
-  return folders.map(folder => folder.uri);
+
+  // performance is critical here as: (a) we need it to be synchronous, (b) it is called during activate(),
+  // if you change this function, check the performance before and after your 
+  // changes (see console.log statement at the end of this function)
+
+  function findAFeatureFile(dir: string): boolean {
+    const files = fs.readdirSync(dir, { withFileTypes: true });
+    let found = false;
+    for (const file of files) {
+      if (file.isDirectory()) {
+        found = findAFeatureFile(path.join(dir, file.name));
+        if (found)
+          return true;
+      }
+      else {
+        if (file.name.endsWith(".feature")) {
+          found = true;
+          return true;
+        }
+      }
+    }
+    return found;
+  }
+
+
+  for (const folder of folders) {
+    if (findAFeatureFile(folder.uri.fsPath))
+      workspaceFoldersWithFeatures.push(folder.uri);
+  }
+
+  if (workspaceFoldersWithFeatures.length === 0)
+    throw new Error("No workspace folders contain a *.feature file"); // should never happen (because of package.json activationEvents)
+
+  console.log(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
+    `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
+
+  return workspaceFoldersWithFeatures;
 }
 
 

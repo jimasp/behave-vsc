@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
-import { getWorkspaceUriForFile, WkspError } from './helpers';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, WkspError } from './common';
 import { getSteps } from './FileParser';
 import { parseRepWildcard, StepDetail, Steps } from "./stepsParser";
+import { WorkspaceSettings } from './WorkspaceSettings';
 
 export const stepMatchRe = /^(\s*)(given|when|then|and)(.+)$/i;
 
 
-export function getStepMatch(featureFileUri: vscode.Uri, allSteps: Steps, stepLine: string): StepDetail | undefined {
+export function getStepMatch(wkspSettings: WorkspaceSettings, allSteps: Steps, stepLine: string): StepDetail | undefined {
 
   if (stepLine.endsWith(":")) // table
     stepLine = stepLine.slice(0, -1);
@@ -18,8 +19,6 @@ export function getStepMatch(featureFileUri: vscode.Uri, allSteps: Steps, stepLi
     return;
   const stepText = stMatches[3].trim();
 
-  const wkspUri = getWorkspaceUriForFile(featureFileUri);
-  const wkspSettings = config.getWorkspaceSettings(wkspUri);
 
   let wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
   wkspSteps = new Map([...allSteps].map(([k, v]) => [k.replace(wkspSettings.featuresUri.path + ":", ""), v]));
@@ -105,7 +104,8 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
       return;
 
     const allSteps = getSteps();
-    const stepMatch = getStepMatch(eventUri, allSteps, line);
+    const wkspSettings = getWorkspaceSettingsForFile(eventUri);
+    const stepMatch = getStepMatch(wkspSettings, allSteps, line);
 
     if (!stepMatch) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)

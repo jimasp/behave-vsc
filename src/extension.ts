@@ -4,7 +4,10 @@
 import * as vscode from 'vscode';
 import config, { Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
-import { getWorkspaceFolderUris, getWorkspaceSettingsForFile, isFeatureFile, isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError } from './helpers';
+import {
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
+  isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError
+} from './common';
 import { Steps } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getSteps, FileParser } from './FileParser';
@@ -33,12 +36,13 @@ export function deactivate() {
 
 
 // called on extension activation or the first time a new/unrecognised workspace gets added.
-// set up all relevant event handlers/hooks/subscriptions with vscode api
+// call anything that needs to be initialised, and set up all relevant event handlers/hooks/subscriptions with vscode api
 export async function activate(context: vscode.ExtensionContext): Promise<TestSupport | undefined> {
 
   try {
 
     console.log("activate called, node pid:" + process.pid);
+    config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const parser = new FileParser();
 
@@ -50,7 +54,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.
     context.subscriptions.push(ctrl);
     context.subscriptions.push(vscode.Disposable.from(config));
-    for (const wkspUri of getWorkspaceFolderUris()) {
+    for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
       context.subscriptions.push(startWatchingWorkspace(wkspUri, ctrl, parser));
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
@@ -139,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // process will start, this host process will terminate, and activate() will be called shortly after
         //
         // most of the work will happen in the onDidChangeConfiguration handler, here we just resync the logger
-        config.resyncLoggerToWorkspaces();
+        config.logger.syncChannelsToWorkspaceFolders();
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -166,7 +170,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately the change could be a global window setting)
         if (testCfg || (event && event.affectsConfiguration(EXTENSION_NAME))) {
-          for (const wkspUri of getWorkspaceFolderUris()) {
+          for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
             if (!testCfg) {
               config.reloadSettings(wkspUri);
               continue;

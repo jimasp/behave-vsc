@@ -5,7 +5,7 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, WkspError } from './helpers';
+import { cleanBehaveText, WkspError } from './common';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],

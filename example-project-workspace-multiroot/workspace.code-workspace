@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../example-project-workspace-2"
+		},
+		{
+			"path": "../example-project-workspace-simple"
+		},
+		{
+			"path": "../empty-folder-for-multiroot"
 		}
 	],
 	"settings": {

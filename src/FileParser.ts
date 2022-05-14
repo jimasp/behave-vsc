@@ -2,7 +2,10 @@ import * as vscode from 'vscode';
 import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
-import { countTestItemsInCollection, getAllTestItems, getIdForUri, getTestItem, getWorkspaceFolder, getWorkspaceFolderUris, isFeatureFile, isStepsFile, TestCounts, WkspError } from './helpers';
+import {
+  countTestItemsInCollection, getAllTestItems, getIdForUri, getTestItem,
+  getWorkspaceFolder, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError
+} from './common';
 import { parseStepsFile, StepDetail, Steps } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
@@ -53,7 +56,7 @@ export class FileParser {
     }
 
     const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/*.feature");
-    const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+    const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
 
     for (const uri of featureFiles) {
       if (cancelToken.isCancellationRequested)
@@ -81,7 +84,7 @@ export class FileParser {
     }
 
     const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/steps/**/*.py");
-    let stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
+    let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
     for (const uri of stepFiles) {
@@ -152,7 +155,7 @@ export class FileParser {
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
     let wkspGrandParent: vscode.TestItem | undefined;
     const wkspPath = getIdForUri(wkspSettings.uri);
-    if (getWorkspaceFolderUris().length > 1) {
+    if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
       wkspGrandParent = controller.items.get(wkspPath);
       if (!wkspGrandParent) {
         const wkspName = wkspSettings.name;
@@ -232,7 +235,7 @@ export class FileParser {
       ctrl.items.delete(item.id);
     }
 
-    for (const wkspUri of getWorkspaceFolderUris()) {
+    for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
       this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
     }
   }
@@ -281,7 +284,7 @@ export class FileParser {
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         console.log(`${callName}: features loaded for workspace ${wkspName}`);
         this._featuresLoadedForWorkspace[wkspPath] = true;
-        const anyWkspStillLoading = getWorkspaceFolderUris().filter(uri => !this._featuresLoadedForWorkspace[uri.path])
+        const anyWkspStillLoading = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._featuresLoadedForWorkspace[uri.path])
         if (anyWkspStillLoading.length === 0) {
           this._featuresLoadedForAllWorkspaces = true;
           console.log(`${callName}: features loaded for all workspaces`);

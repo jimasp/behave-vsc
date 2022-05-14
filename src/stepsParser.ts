@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { isStepsFile } from './helpers';
-import { getContentFromFilesystem } from './helpers';
+import { isStepsFile } from './common';
+import { getContentFromFilesystem } from './common';
 
 const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:"|')(.+)("|').*\).*$/i;
 const startRe = /^\s*(@step|@given|@when|@then).+/i;

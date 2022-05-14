@@ -9,7 +9,8 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorks
 import { getStepMatch } from '../../gotoStepHandler';
 import { Steps } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getWorkspaceFolderUris, getAllTestItems, getScenarioTests } from '../../helpers';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests } from '../../common';
+import { performance } from 'perf_hooks';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -116,9 +117,8 @@ function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 
 	const stepLines: string[] = [];
-	//const stepMap: Map<string, string[]> = new Map();
 	const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/*.feature");
-	const featureFileUris = await vscode.workspace.findFiles(pattern);
+	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
 		const doc = await vscode.workspace.openTextDocument(featFileUri);
@@ -138,7 +138,7 @@ async function assertAllStepsCanBeMatched(parsedSteps: Steps, wkspSettings: Work
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const match = getStepMatch(wkspSettings.uri, parsedSteps, line);
+				const match = getStepMatch(wkspSettings, parsedSteps, line);
 				assert(match, "match");
 			}
 		}
@@ -222,7 +222,7 @@ function assertInstances(instances: TestSupport) {
 }
 
 function getWorkspaceUri(wkspName: string) {
-	const uris = getWorkspaceFolderUris();
+	const uris = getUrisOfWkspFoldersWithFeatures();
 	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
 	assert(wkspUri, "wkspUri");
 	return wkspUri;
@@ -244,7 +244,7 @@ const configLoaded: { [wkspUriPath: string]: boolean } = buildConfigLoaded();
 function buildConfigLoaded() {
 	const cfgLoaded: { [wkspUriPath: string]: boolean } = {};
 
-	getWorkspaceFolderUris().forEach(wkspUri => {
+	getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
 		cfgLoaded[wkspUri.path] = false;
 	});
 
@@ -254,6 +254,8 @@ function buildConfigLoaded() {
 function allConfigsLoaded() {
 	return Object.values(configLoaded).every(loaded => loaded);
 }
+
+let timingInProgress = false;
 
 
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
@@ -272,10 +274,22 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	vscode.commands.executeCommand("testing.clearTestResults");
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension, wkspName);
+
+	// (to mitigate parallel run)
+	while (timingInProgress) {
+		await new Promise(t => setTimeout(t, 20));
+	}
+
+	const start = performance.now();
+	timingInProgress = true;
 	const instances = await extension.activate() as TestSupport;
 	assert.strictEqual(extension.isActive, true, wkspName);
 	assertInstances(instances);
 	instances.config.integrationTestRunAll = true;
+	const tookMs = performance.now() - start;
+	console.log(`activate call time: ${tookMs} ms`);
+	timingInProgress = false;
+	assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we are manually inserting a test config, so we need call it manually too
@@ -284,10 +298,12 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
 	configLoaded[wkspUri.path] = true;
 
-	// (to mitigate parallel run)
+	// (to mitigate parallel run) - TODO check if we still need this?
 	while (!allConfigsLoaded()) {
 		await new Promise(t => setTimeout(t, 20));
 	}
+
+
 
 	assert(await instances.parser.readyForRun(3000, consoleName));
 	const allWkspItems = await checkParseFilesCounts(wkspName, wkspUri, instances, getExpectedCounts);

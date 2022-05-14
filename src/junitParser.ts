@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { getContentFromFilesystem } from './helpers';
+import { getContentFromFilesystem } from './common';
 import { WIN_MAX_PATH } from './Configuration';
 
 const parser = new xml2js.Parser();

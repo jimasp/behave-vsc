@@ -135,6 +135,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 
 ---
 ## Known issues and limitations
+- Not internationalised. There shouldn't be any date/time issues, but character sets are untested. (If this affects you, you may wish to raise a PR.)
 - "Go to Step" context menu doesn't always work or match correctly and never will. This is because there are a lot of ways to specify step matching and parameters in behave - parse; re; cfparse, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder external to your features folder it won't find them). 
 - Test side bar refresh button is duplicated if more than one test extension is active e.g. pytest tests, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).

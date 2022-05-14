@@ -3,7 +3,10 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { Scenario, TestData, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
-import { countTestItems, getAllTestItems, getContentFromFilesystem, getIdForUri, getWorkspaceFolderUris, getWorkspaceSettingsForFile } from './helpers';
+import {
+  countTestItems, getAllTestItems, getContentFromFilesystem, getIdForUri,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
+} from './common';
 import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
 import { FileParser } from './FileParser';
@@ -195,7 +198,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         const winSettings = config.getWindowSettings();
 
         // run each workspace queue
-        for (const wkspUri of getWorkspaceFolderUris()) {
+        for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
           const wkspSettings = config.getWorkspaceSettings(wkspUri);
           const idMatch = getIdForUri(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));

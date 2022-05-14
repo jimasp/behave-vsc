@@ -40,9 +40,18 @@ async function runTestSuites() {
 
     console.log("starting test run...");
 
+    let launchArgs = ["example-project-workspace-simple"]
+    let extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
 
-    let launchArgs = ["example-project-workspace-1"]
-    let extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
+
+    launchArgs = ["example-project-workspace-1"]
+    extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

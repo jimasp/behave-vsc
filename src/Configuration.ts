@@ -1,6 +1,5 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getWorkspaceFolderUris } from './helpers';
 import { Logger } from './Logger';
 import { WorkspaceSettings, WindowSettings } from './WorkspaceSettings';
 
@@ -25,7 +24,6 @@ export interface Configuration {
   getWindowSettings(): WindowSettings;
   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
-  resyncLoggerToWorkspaces(): void;
   dispose(): void;
 }
 
@@ -41,18 +39,13 @@ class ExtensionConfiguration implements Configuration {
 
   private constructor() {
     ExtensionConfiguration._configuration = this;
-    this.logger = new Logger(getWorkspaceFolderUris());
+    this.logger = new Logger();
     this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
     console.log("Configuration singleton constructed (this should only fire once)");
   }
 
   public dispose() {
     this.logger.dispose();
-  }
-
-  public resyncLoggerToWorkspaces() {
-    this.logger.dispose();
-    this.logger = new Logger(getWorkspaceFolderUris());
   }
 
 
