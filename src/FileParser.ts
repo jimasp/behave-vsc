@@ -3,8 +3,8 @@ import config from "./Configuration";
 import { WorkspaceSettings } from "./WorkspaceSettings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, getIdForUri, getTestItem,
-  getWorkspaceFolder, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError
+  countTestItemsInCollection, getAllTestItems, getIdForUri, getWorkspaceFolder,
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError
 } from './common';
 import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
@@ -165,6 +165,9 @@ export class FileParser {
       }
     }
 
+    // (result will change per call, but this is pretty fast)
+    const allTestItems = getAllTestItems(wkspSettings.uri, controller.items);
+
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.
     // note that the id is based on the file path so a new node is created if the folder is renamed
@@ -178,7 +181,7 @@ export class FileParser {
       const folders = sfp.split("/").slice(0, -1);
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
-        const folderName = "\uD83D\uDCC1 " + folders[i];
+        const folderName = "\uD83D\uDCC1 " + folders[i]; // folder icon
         const folderId = `${getIdForUri(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)
@@ -187,8 +190,8 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderId);
 
-        if (!current) // TODO getTestItem - make more efficient
-          current = getTestItem(folderId, controller.items);
+        if (!current)
+          current = allTestItems.find(item => item.id === folderId);
 
         if (!current) {
           current = controller.createTestItem(folderId, folderName);

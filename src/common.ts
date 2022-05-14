@@ -190,12 +190,6 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
 }
 
 
-export const getTestItem = (id: string, collection: vscode.TestItemCollection): vscode.TestItem | undefined => {
-  const all = getAllTestItems(null, collection);
-  return all.find(item => item.id === id);
-}
-
-
 export const countTestItemsInCollection = (wkspUri: vscode.Uri | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
   const arr = getAllTestItems(wkspUri, items);
   return countTestItems(testData, arr);
