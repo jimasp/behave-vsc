@@ -26,7 +26,7 @@ export type TestSupport = {
   parser: FileParser,
   getSteps: () => StepMap,
   testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => Promise<void>
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
 
 
@@ -137,13 +137,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async () => {
+
+    // called when a user renames, adds or removes a workspace folder
+    // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
+    // process will start, this host process will terminate, and activate() will be called shortly after    
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
-        // note - the first time a new/unrecognised workspace gets added a new node host 
-        // process will start, this host process will terminate, and activate() will be called shortly after
-        //
+
         // most of the work will happen in the onDidChangeConfiguration handler, here we just resync the logger
         config.logger.syncChannelsToWorkspaceFolders();
+
+        const isRename = event.added.length === 0 && event.removed.length === 0;
+        if (isRename) {
+          // on a rename (via *.code-workspace) onDidChangeConfiguration will not be called, so we'll call the child function manually
+          await configurationChangedHandler(undefined, undefined, true);
+        }
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -153,7 +161,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     // called when there is a settings.json/*.vscode-workspace change, or when workspace folders are added/removed
     // (also called directly by integation tests with a testCfg)
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri) => {
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => {
 
       // for integration test runAllTestsAndAssertTheResults, 
       // only reload config on request (i.e. when testCfg supplied)
@@ -169,7 +177,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately the change could be a global window setting)
-        if (testCfg || (event && event.affectsConfiguration(EXTENSION_NAME))) {
+        if (testCfg || forceRefresh || (event && event.affectsConfiguration(EXTENSION_NAME))) {
           for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
             if (!testCfg) {
               config.reloadSettings(wkspUri);
@@ -285,9 +293,9 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     const path = uri.path.toLowerCase();
 
-    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child files    
-    // but we cannot determine if this is a file or folder deletion as:
-    //   (a) it has been deleted so we can't stat, and 
+    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
+    // files, but we cannot determine if this is a file or folder deletion as:
+    //   (a) it has been deleted so we can't stat it, and 
     //   (b) "." is valid in folder names so we can't determine by looking at the path
     // but we should ignore specific file extensions or paths we know we don't care about
     if (path.endsWith(".tmp")) // .tmp = vscode file history file

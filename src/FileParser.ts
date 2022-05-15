@@ -40,9 +40,9 @@ export class FileParser {
       }
     }
 
-
     return new Promise<boolean>(check);
   }
+
 
   private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
@@ -72,6 +72,7 @@ export class FileParser {
 
     return processed;
   }
+
 
   private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
@@ -103,7 +104,6 @@ export class FileParser {
   }
 
 
-
   async updateStepsFromStepsFile(wkspFullFeaturesPath: string, uri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(uri))
@@ -126,8 +126,6 @@ export class FileParser {
       console.log(`${caller}: no scenarios found in ${uri.path}`);
     }
   }
-
-
 
 
   async getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
@@ -165,8 +163,7 @@ export class FileParser {
       }
     }
 
-    // (result will change per call, but this is pretty fast)
-    const allTestItems = getAllTestItems(wkspSettings.uri, controller.items);
+
 
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.
@@ -190,8 +187,10 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderId);
 
-        if (!current)
+        if (!current) { // TODO: put getAllTestItems above loop (needs thorough testing of UI interactions of folder/file renames)
+          const allTestItems = getAllTestItems(wkspSettings.uri, controller.items);
           current = allTestItems.find(item => item.id === folderId);
+        }
 
         if (!current) {
           current = controller.createTestItem(folderId, folderName);
@@ -248,14 +247,9 @@ export class FileParser {
   async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
-    this._featuresLoadedForAllWorkspaces = false;
     const wkspPath = wkspUri.path;
+    this._featuresLoadedForAllWorkspaces = false;
     this._featuresLoadedForWorkspace[wkspPath] = false;
-    this._parseFilesCallCounts++;
-    const wkspName = getWorkspaceFolder(wkspUri).name;
-    const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
-    const wkspSettings = config.workspaceSettings[wkspUri.path];
-    let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
     // if caller cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
@@ -264,6 +258,13 @@ export class FileParser {
 
 
     try {
+
+
+      this._parseFilesCallCounts++;
+      const wkspName = getWorkspaceFolder(wkspUri).name;
+      const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
+      const wkspSettings = config.workspaceSettings[wkspUri.path];
+      let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
       console.log(`\n===== ${callName}: started =====`);
 
@@ -347,7 +348,6 @@ export class FileParser {
       `\n==================`
     );
   }
-
 
 
 }

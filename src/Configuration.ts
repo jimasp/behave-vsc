@@ -35,7 +35,6 @@ class ExtensionConfiguration implements Configuration {
   private _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private constructor() {
-    debugger;
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
     this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
@@ -129,4 +128,4 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
 declare const global: any;
 if (!global.config)
   global.config = ExtensionConfiguration.configuration;
-export const config = global.config;
+export const config: ExtensionConfiguration = global.config;
