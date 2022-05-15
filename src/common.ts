@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
+import { config, EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { TestData } from './TestFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';

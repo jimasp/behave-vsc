@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import config from "./Configuration";
+import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
@@ -24,10 +24,6 @@ export async function runScenario(async: boolean, wkspSettings: WorkspaceSetting
 
 async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
-
-  if (!runAllAsOne && !junitFileUri) {
-    throw new Error("junitFileUri not supplied");
-  }
 
   const wkspUri = wkspSettings.uri;
 
@@ -98,13 +94,17 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       return;
     }
 
+
     // because the run ends when all instances of this function have returned, we need to make sure 
     // that all test have been updated before we return (you can't update a test when the run has ended)
-    if (runAllAsOne)
+    if (runAllAsOne) {
       await updatesComplete;
-    else
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await parseAndUpdateTestResults(junitFileUri!, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
+    }
+    else {
+      if (!junitFileUri)
+        throw new Error("junitFileUri not supplied");
+      await parseAndUpdateTestResults(junitFileUri, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
+    }
 
   }
   catch (e: unknown) {

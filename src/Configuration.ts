@@ -11,10 +11,7 @@ export const MSPY_EXT = "ms-python.python";
 export const ERR_HIGHLIGHT = "\x1b \x1b \x1b \x1b";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
-declare global {
-  // eslint-disable-next-line no-var
-  var config: Configuration;
-}
+
 
 export interface Configuration {
   integrationTestRun: boolean;
@@ -30,7 +27,7 @@ export interface Configuration {
 
 // don't export this, use the interface
 class ExtensionConfiguration implements Configuration {
-  public readonly integrationTestRun = false;
+  public integrationTestRun = false;
   public readonly extTempFilesUri;
   public readonly logger: Logger;
   private static _configuration?: ExtensionConfiguration;
@@ -38,6 +35,7 @@ class ExtensionConfiguration implements Configuration {
   private _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private constructor() {
+    debugger;
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
     this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
@@ -127,5 +125,8 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
 }
 
 
-global.config = ExtensionConfiguration.configuration;
-export default global.config;
+// global = stop the constructor getting called twice in extension integration tests
+declare const global: any;
+if (!global.config)
+  global.config = ExtensionConfiguration.configuration;
+export const config = global.config;

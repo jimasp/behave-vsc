@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import config from "./Configuration";
+import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {

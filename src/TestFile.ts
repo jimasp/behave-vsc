@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { getContentFromFilesystem, getIdForUri, isFeatureFile, WkspError } from './common';
-import config from "./Configuration";
+import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 
 let generationCounter = 0;

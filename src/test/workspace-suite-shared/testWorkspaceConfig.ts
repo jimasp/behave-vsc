@@ -78,8 +78,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
 			default:
-				// eslint-disable-next-line no-debugger
-				debugger;
+				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
 		}
 	}
@@ -127,8 +126,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				response = <T><unknown>this.showConfigurationWarnings;
 				break;
 			default:
-				// eslint-disable-next-line no-debugger
-				debugger;
+				debugger; // eslint-disable-next-line no-debugger
 				throw new Error("inspect() missing case for section: " + section);
 		}
 
@@ -154,8 +152,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return {};
 				default:
-					// eslint-disable-next-line no-debugger
-					debugger;
+					debugger; // eslint-disable-next-line no-debugger
 					throw new Error("getExpectedEnvVarList() missing case for envVarList: " + this.envVarList);
 			}
 
@@ -171,8 +168,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return [];
 				default:
-					// eslint-disable-next-line no-debugger
-					debugger;
+					debugger; // eslint-disable-next-line no-debugger
 					throw new Error("getExpectedFastSkipList() missing case for fastSkipList: " + this.envVarList);
 			}
 		}
@@ -187,8 +183,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return [];
 				default:
-					// eslint-disable-next-line no-debugger
-					debugger;
+					debugger; // eslint-disable-next-line no-debugger
 					throw new Error("getExpectedMultiRootFolderIgnoreList() missing case for multiRootFolderIgnoreList: " + this.envVarList);
 			}
 		}
@@ -251,24 +246,21 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("showConfigurationWarnings"));
 
 			default:
-				// eslint-disable-next-line no-debugger
-				debugger;
+				debugger; // eslint-disable-next-line no-debugger
 				throw new Error("getExpected() missing case for section: " + section);
 		}
 	}
 
+
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	has(section: string): boolean {
-		throw new Error('has() function not implemented.');
+		throw new Error('has() method not implemented.');
 	}
 
 
-
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	update(section: string, value: never, configurationTarget?: boolean | vscode.ConfigurationTarget | null,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		overrideInLanguage?: boolean): Thenable<void> {
-		throw new Error('update() function not implemented.');
+	update(section: string, value: never, configurationTarget?: boolean | vscode.ConfigurationTarget | null, overrideInLanguage?: boolean): Thenable<void> {
+		throw new Error('update() method not implemented.');
 	}
 
 }
