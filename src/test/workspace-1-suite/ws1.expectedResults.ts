@@ -127,7 +127,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
 
     new TestResult({
       scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: 'behave_tests/some_tests/group1_features/basic.feature',
+      scenario_featureFileRelativePath: 'behave_tests/some tests/group1_features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       scenario_isOutline: false,
@@ -136,10 +136,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_id: '.../example-project-1/behave_tests/some tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       test_label: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
-      test_parent: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature',
-      test_uri: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature'
+      test_parent: '.../example-project-1/behave_tests/some tests/group1_features/basic.feature',
+      test_uri: '.../example-project-1/behave_tests/some tests/group1_features/basic.feature'
     }),
 
     new TestResult({
@@ -529,7 +529,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
 
     new TestResult({
       scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: 'behave_tests/some_tests/duplicate_fail.feature',
+      scenario_featureFileRelativePath: 'behave_tests/some tests/duplicate_fail.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -538,15 +538,15 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature/run a test',
+      test_id: '.../example-project-1/behave_tests/some tests/duplicate_fail.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature',
-      test_uri: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature'
+      test_parent: '.../example-project-1/behave_tests/some tests/duplicate_fail.feature',
+      test_uri: '.../example-project-1/behave_tests/some tests/duplicate_fail.feature'
     }),
 
     new TestResult({
       scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: 'behave_tests/some_tests/group2_features/envvars.feature',
+      scenario_featureFileRelativePath: 'behave_tests/some tests/group2_features/envvars.feature',
       scenario_featureName: 'EnvVars',
       scenario_getLabel: 'run an successful (if not from command line) envvars test',
       scenario_isOutline: false,
@@ -555,10 +555,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature/run an successful (if not from command line) envvars test',
+      test_id: '.../example-project-1/behave_tests/some tests/group2_features/envvars.feature/run an successful (if not from command line) envvars test',
       test_label: 'run an successful (if not from command line) envvars test',
-      test_parent: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature',
-      test_uri: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature'
+      test_parent: '.../example-project-1/behave_tests/some tests/group2_features/envvars.feature',
+      test_uri: '.../example-project-1/behave_tests/some tests/group2_features/envvars.feature'
     })
   ];
 
