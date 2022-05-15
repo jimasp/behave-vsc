@@ -3,8 +3,6 @@ import { config, EXTENSION_FRIENDLY_NAME, ERR_HIGHLIGHT } from './Configuration'
 import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 
 
-
-
 export class Logger {
 
   private channels: { [wkspUri: string]: vscode.OutputChannel } = {};

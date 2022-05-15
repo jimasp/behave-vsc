@@ -117,7 +117,10 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
 
   for (const folder of folders) {
-    if (config.globalSettings.multiRootFolderIgnoreList.includes(folder.name))
+    // note - we don't use folder.name here, as that is the 
+    // workspacefolder name (in *.code-workspace), not the folder name
+    const folderName = path.basename(folder.uri.fsPath);
+    if (config.globalSettings.multiRootFolderIgnoreList.includes(folderName))
       continue;
     if (findAFeatureFile(folder.uri.fsPath))
       workspaceFoldersWithFeatures.push(folder.uri);
