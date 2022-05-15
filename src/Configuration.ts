@@ -125,7 +125,8 @@ const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
 
 
 // global = stop the constructor getting called twice in extension integration tests
-declare const global: any;
+
+declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 if (!global.config)
   global.config = ExtensionConfiguration.configuration;
 export const config: ExtensionConfiguration = global.config;

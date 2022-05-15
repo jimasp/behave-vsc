@@ -126,7 +126,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				response = <T><unknown>this.showConfigurationWarnings;
 				break;
 			default:
-				debugger; // eslint-disable-next-line no-debugger
+				debugger; // eslint-disable-line no-debugger
 				throw new Error("inspect() missing case for section: " + section);
 		}
 
@@ -152,7 +152,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return {};
 				default:
-					debugger; // eslint-disable-next-line no-debugger
+					debugger; // eslint-disable-line no-debugger
 					throw new Error("getExpectedEnvVarList() missing case for envVarList: " + this.envVarList);
 			}
 
@@ -168,7 +168,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return [];
 				default:
-					debugger; // eslint-disable-next-line no-debugger
+					debugger; // eslint-disable-line no-debugger
 					throw new Error("getExpectedFastSkipList() missing case for fastSkipList: " + this.envVarList);
 			}
 		}
@@ -183,7 +183,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				case undefined:
 					return [];
 				default:
-					debugger; // eslint-disable-next-line no-debugger
+					debugger; // eslint-disable-line no-debugger
 					throw new Error("getExpectedMultiRootFolderIgnoreList() missing case for multiRootFolderIgnoreList: " + this.envVarList);
 			}
 		}
@@ -246,7 +246,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("showConfigurationWarnings"));
 
 			default:
-				debugger; // eslint-disable-next-line no-debugger
+				debugger; // eslint-disable-line no-debugger
 				throw new Error("getExpected() missing case for section: " + section);
 		}
 	}

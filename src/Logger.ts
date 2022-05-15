@@ -120,7 +120,7 @@ export class Logger {
     console.error(text);
 
     if (config.integrationTestRun)
-      debugger;
+      debugger; // eslint-disable-line no-debugger
 
     // fallback
     if (!this.channels || Object.keys(this.channels).length < 1)

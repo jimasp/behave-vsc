@@ -45,7 +45,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		// now match shortened expected result string:
 
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
-			debugger; // eslint-disable-next-line no-debugger	
+			debugger; // eslint-disable-line no-debugger	
 			if (actualResult.scenario_result) {
 				throw `test ids matched but result did not match expected result\n` +
 				`expectedResult:${JSON.stringify(expectedResult)}\n` +
@@ -141,7 +141,7 @@ async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: Wo
 			}
 		}
 		catch (e: unknown) {
-			debugger; // eslint-disable-next-line no-debugger
+			debugger; // eslint-disable-line no-debugger
 			if (e instanceof assert.AssertionError)
 				throw new Error(`getStepMatch() could not find match for step line: "${line}"`);
 			throw e;
