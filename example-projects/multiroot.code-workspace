@@ -6,19 +6,19 @@
 		},
 		{
 			"path": "./example-project-1",
-			"name": "project-1"
+			"name": "project 1"
 		},
 		{
 			"path": "./example-project-2",
-			"name": "project-2"
+			"name": "project 2"
 		},
 		{
 			"path": "./multiroot-empty-folder",
-			"name": "empty-folder"
+			"name": "empty folder"
 		},
 		{
 			"path": "./multiroot-ignored-project",
-			"name": "ignored-project"
+			"name": "ignored project",
 		},
 	],
 	"settings": {

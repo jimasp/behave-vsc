@@ -233,21 +233,21 @@ function getWorkspaceUri(wkspName: string) {
 
 
 
-const configLoaded: { [wkspUriPath: string]: boolean } = buildConfigLoaded();
+const configLoaded: { [wkspUriPath: string]: boolean } = {}; //buildConfigLoaded();
 
-function buildConfigLoaded() {
-	const cfgLoaded: { [wkspUriPath: string]: boolean } = {};
+// function buildConfigLoaded() {
+// 	const cfgLoaded: { [wkspUriPath: string]: boolean } = {};
 
-	getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
-		cfgLoaded[wkspUri.path] = false;
-	});
+// 	getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
+// 		cfgLoaded[wkspUri.path] = false;
+// 	});
 
-	return cfgLoaded
-}
+// 	return cfgLoaded
+// }
 
-function allConfigsLoaded() {
-	return Object.values(configLoaded).every(loaded => loaded);
-}
+// function allConfigsLoaded() {
+// 	return Object.values(configLoaded).every(loaded => loaded);
+// }
 
 let timingInProgress = false;
 
@@ -261,8 +261,11 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 	// NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
 	// function will run in parallel with itself 
-	// (but only one run instance for a given workspace, so wksp 1&2 will run in parallel, but not 1&1)
+	// (but as per the promises in that file, only one instance for a given workspace, 
+	// so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 	configLoaded[wkspUri.path] = false;
+	console.log(`${consoleName} configLoaded, setting false for:` + wkspUri.path);
+	await new Promise(t => setTimeout(t, 100));
 
 	const cancelToken = new vscode.CancellationTokenSource().token;
 	vscode.commands.executeCommand("testing.clearTestResults");
@@ -280,7 +283,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const tookMs = performance.now() - start;
 	console.log(`activate call time: ${tookMs} ms`);
 	timingInProgress = false;
-	assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)	
+	//assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)	
 	assert.strictEqual(extension.isActive, true, wkspName);
 	assertInstances(instances);
 	instances.config.integrationTestRun = true;
@@ -292,9 +295,17 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
 	configLoaded[wkspUri.path] = true;
 
-	// (to mitigate parallel run)
-	while (!allConfigsLoaded()) {
-		await new Promise(t => setTimeout(t, 20));
+
+	// (to mitigate multi-root parallel workspace run)
+	let calls = 0;
+	while (!Object.values(configLoaded).every(loaded => loaded)) {
+		Object.keys(configLoaded).forEach((k) => {
+			if (!configLoaded[k])
+				console.log(`${consoleName}: waiting for true, configLoaded[${k}] = ${configLoaded[k]}`);
+		});
+		if (++calls > 20)
+			throw new Error(`${consoleName}: timed out waiting for all configs to load`);
+		await new Promise(t => setTimeout(t, 100));
 	}
 
 	assert(await instances.parser.readyForRun(3000, consoleName));
