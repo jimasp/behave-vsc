@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
-import { WorkspaceSettings } from "./WorkspaceSettings";
+import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 

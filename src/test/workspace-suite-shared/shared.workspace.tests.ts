@@ -9,6 +9,8 @@ const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\
 const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '";
 const fastSkipList = "  @fast-skip-me,  @fast-skip-me-too, ";
 const fastSkipList2 = "@fast-skip-me,@fast-skip-me-too";
+const multiRootFolderIgnoreList = ",  multiroot-ignored-project ,  another-project, ";
+const multiRootFolderIgnoreList2 = "multiroot-ignored-project,another-project";
 
 
 export class SharedWorkspaceTests {
@@ -20,8 +22,8 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runAllAsOne: true, runParallel: false, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
+      runAllAsOne: true, runParallel: false, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
+      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined
     });
 
@@ -36,8 +38,8 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList2, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
+      runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList2,
+      envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined
     });
 
@@ -51,8 +53,8 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runAllAsOne: false, runParallel: false, runWorkspacesInParallel: true,
-      envVarList: envVarList2, fastSkipList: fastSkipList2, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
+      runAllAsOne: false, runParallel: false, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
+      envVarList: envVarList2, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true
     });
 
@@ -66,8 +68,8 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runAllAsOne: false, runParallel: true, runWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, wkspRelativeFeaturesPath: wkspRelativeFeaturesPath,
+      runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList2,
+      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
       alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
     });
 

@@ -107,6 +107,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 	- ***(b) restarting the watch tasks in terminal window, or***
 	- ***(c) restarting vscode.***
 - Have you remembered to disable the marketplace version of the extension?
+- If an exception is not bubbling, see [Error handling](#error-handling).
 - Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into).
 - Have you pulled the latest version of the source code?
 - Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install`?
@@ -144,11 +145,13 @@ If you have a custom fork and you want to distribute it to your team, you will w
 ### Disposables
 - Any disposable object should either be added to `context.subscriptions.push` or disposed in a `finally` block or in the `deactivate()`. (The most common disposables are event handlers, filesystemwatchers, and cancelllation token sources.)
 ### Error handling
-- Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a try/catch with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. Background _unawaited_ async functions/promises should also contain a catch and `config.logError`.
+- Most of the time, i.e. outside of entry point/non-awaited functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
+- Thrown errors with a type of `Error` (inc. `throw new WkspError`) will include the stack trace in the log. `throw "my error message"` will not.
+- Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.logError`.
+- Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
 - When adding a throw/logError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets logged once.
 - Any thrown errors are going to reach the user, so they should be things that either the user can act upon to fix, or exceptions like logic errors and stuff that is never supposed to happen that should be raised as issues in github. Diagnostics are provided via console.error/warn/log and can be viewed via Developer:Toggle developer tools, or in the debug console if debugging the extension itself.
-- Most of the time, i.e. outside of entry point functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
-- Thrown errors with a type of `Error` (inc. `throw new WkspError`) will include the stack trace in the log. `throw "my error message"` will not.
+
 ### Logging
 - Logging errors and warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
 - *Unless you are in an entry point function, handler or unawaited async function, then errors should be thrown, not logged*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets logged once (at the top of the stack).

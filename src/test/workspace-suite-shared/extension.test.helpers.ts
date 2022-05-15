@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { Configuration } from "../../Configuration";
-import { WorkspaceSettings } from "../../WorkspaceSettings";
+import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
@@ -77,12 +77,12 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration) {
 
-	const winSettings = config.getWindowSettings();
+	const winSettings = config.globalSettings;
 	assert.strictEqual(winSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"), wkspName);
-	assert.strictEqual(winSettings.runWorkspacesInParallel, testConfig.getExpected("runWorkspacesInParallel"), wkspName);
+	assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
 	assert.strictEqual(winSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"), wkspName);
 
-	const wkspSettings = config.getWorkspaceSettings(wkspUri);
+	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"), wkspName);
 	assert.deepStrictEqual(wkspSettings.fastSkipList, testConfig.getExpected("fastSkipList"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"), wkspName);
@@ -154,7 +154,8 @@ async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: Wo
 
 
 function standardisePath(path: string | undefined): string | undefined {
-	return path === undefined ? undefined : "..." + path.substring(path.indexOf("/example-project-workspace"));
+	const find = "/example-projects/";
+	return path === undefined ? undefined : "..." + path.substring(path.indexOf(find) + find.length - 1);
 }
 
 function standardiseResult(result: string | undefined): string | undefined {
@@ -275,16 +276,16 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const start = performance.now();
 	timingInProgress = true;
 	const instances = await extension.activate() as TestSupport;
-	assert.strictEqual(extension.isActive, true, wkspName);
-	assertInstances(instances);
-	instances.config.integrationTestRunAll = true;
 	const tookMs = performance.now() - start;
 	console.log(`activate call time: ${tookMs} ms`);
 	timingInProgress = false;
-	assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)
+	assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)	
+	assert.strictEqual(extension.isActive, true, wkspName);
+	assertInstances(instances);
+	instances.config.integrationTestRun = true;
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
-	// we are manually inserting a test config, so we need call it manually too
+	// we  we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
@@ -302,10 +303,10 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	// sanity check include length matches expected length
 	console.log(`${consoleName}: calling getAllTestItems`);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
-	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
-	// greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	console.log(`${consoleName}: test includes: ${include.length}, tests expected: ${expectedResults.length}`);
+	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
+	// greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
 	assert(include.length >= expectedResults.length, wkspName);
 
 
@@ -352,7 +353,6 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 
 		assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-
 		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testConfig);
 	});
 
@@ -366,7 +366,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	// (keep this at the end, as individual match asserts are more useful to get first)
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 
-	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.getWorkspaceSettings(wkspUri));
+	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.workspaceSettings[wkspUri.path]);
 }
 
 

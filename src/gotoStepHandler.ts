@@ -3,7 +3,7 @@ import config from "./Configuration";
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, WkspError } from './common';
 import { getStepMap } from './FileParser';
 import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
-import { WorkspaceSettings } from './WorkspaceSettings';
+import { WorkspaceSettings } from './settings';
 
 
 

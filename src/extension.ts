@@ -157,7 +157,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
       // for integration test runAllTestsAndAssertTheResults, 
       // only reload config on request (i.e. when testCfg supplied)
-      if (config.integrationTestRunAll && !testCfg)
+      if (config.integrationTestRun && !testCfg)
         return;
 
       config.logger.logInfoAllWksps("Settings change detected");
@@ -245,7 +245,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
-  const wkspSettings = config.getWorkspaceSettings(wkspUri);
+  const wkspSettings = config.workspaceSettings[wkspUri.path];
   const wkspFullFeaturesPath = wkspSettings.featuresUri.path;
   const pattern = new vscode.RelativePattern(wkspFullFeaturesPath, "**");
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);

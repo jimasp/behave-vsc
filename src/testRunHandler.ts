@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
-import { WorkspaceSettings } from "./WorkspaceSettings";
+import { WorkspaceSettings } from "./settings";
 import { Scenario, TestData, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
@@ -195,11 +195,11 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         }
 
         const wkspRunPromises: Promise<void>[] = [];
-        const winSettings = config.getWindowSettings();
+        const winSettings = config.globalSettings;
 
         // run each workspace queue
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-          const wkspSettings = config.getWorkspaceSettings(wkspUri);
+          const wkspSettings = config.workspaceSettings[wkspUri.path];
           const idMatch = getIdForUri(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
@@ -212,13 +212,13 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
               config.logger.show(wkspUri);
           }
 
-          if (debug || !winSettings.runWorkspacesInParallel) // limit to one debug session
+          if (debug || !winSettings.multiRootRunWorkspacesInParallel) // limit to one debug session
             await runWorkspaceQueue(request, wkspQueue, wkspSettings);
           else
             wkspRunPromises.push(runWorkspaceQueue(request, wkspQueue, wkspSettings));
         }
 
-        if (winSettings.runWorkspacesInParallel)
+        if (winSettings.multiRootRunWorkspacesInParallel)
           await Promise.all(wkspRunPromises);
 
         if (!debug)

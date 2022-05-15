@@ -22,10 +22,10 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-simple/{{featurePath}}/simple.feature/run a successful test',
+      test_id: '.../example-project-simple/{{featurePath}}/simple.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../example-project-workspace-simple/{{featurePath}}/simple.feature',
-      test_uri: '.../example-project-workspace-simple/{{featurePath}}/simple.feature'
+      test_parent: '.../example-project-simple/{{featurePath}}/simple.feature',
+      test_uri: '.../example-project-simple/{{featurePath}}/simple.feature'
     }),
 
     new TestResult({
@@ -39,10 +39,10 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-simple/{{featurePath}}/simple.feature/run a failing test',
+      test_id: '.../example-project-simple/{{featurePath}}/simple.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../example-project-workspace-simple/{{featurePath}}/simple.feature',
-      test_uri: '.../example-project-workspace-simple/{{featurePath}}/simple.feature'
+      test_parent: '.../example-project-simple/{{featurePath}}/simple.feature',
+      test_uri: '.../example-project-simple/{{featurePath}}/simple.feature'
     }),
 
     new TestResult({
@@ -56,16 +56,16 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-simple/{{featurePath}}/simple.feature/run a skipped test',
+      test_id: '.../example-project-simple/{{featurePath}}/simple.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../example-project-workspace-simple/{{featurePath}}/simple.feature',
-      test_uri: '.../example-project-workspace-simple/{{featurePath}}/simple.feature'
+      test_parent: '.../example-project-simple/{{featurePath}}/simple.feature',
+      test_uri: '.../example-project-simple/{{featurePath}}/simple.feature'
     }),
 
   ];
 
 
-  const wkspSettings = config.getWorkspaceSettings(wkspUri);
+  const wkspSettings = config.workspaceSettings[wkspUri.path];
   return applyTestConfiguration(debug, wkspSettings, expectedResults);
 }
 

@@ -101,8 +101,7 @@ export class Logger {
       run.appendOutput(text + "\n");
   };
 
-  logError = (error: unknown, run?: vscode.TestRun) => {
-
+  logError = (error: WkspError | unknown, run?: vscode.TestRun) => {
 
     let text: string;
     let wkspUri: vscode.Uri | undefined;
@@ -120,9 +119,10 @@ export class Logger {
     else
       text = `${error}`;
 
-
     console.error(text);
 
+    if (config.integrationTestRun)
+      debugger;
 
     // fallback
     if (!this.channels || Object.keys(this.channels).length < 1)

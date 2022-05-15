@@ -23,10 +23,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run a successful test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -39,10 +39,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run a slow test for async testing',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run a slow test for async testing',
       test_label: 'run a slow test for async testing',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -55,10 +55,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run another slow test for async testing',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run another slow test for async testing',
       test_label: 'run another slow test for async testing',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -71,10 +71,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run a failing test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -87,10 +87,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run another successful test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run another successful test',
       test_label: 'run another successful test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -103,10 +103,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run a test with a missing steps',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run a test with a missing steps',
       test_label: 'run a test with a missing steps',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -119,10 +119,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature/run a skipped test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/basic.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/basic.feature'
     }),
 
     new TestResult({
@@ -136,10 +136,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_id: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       test_label: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
-      test_parent: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature',
-      test_uri: '.../example-project-workspace-1/behave_tests/some_tests/group1_features/basic.feature'
+      test_parent: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature',
+      test_uri: '.../example-project-1/behave_tests/some_tests/group1_features/basic.feature'
     }),
 
     new TestResult({
@@ -153,10 +153,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/fastskip_feature.feature/fast skip by feature',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/fastskip_feature.feature/fast skip by feature',
       test_label: 'fast skip by feature',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/fastskip_feature.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/fastskip_feature.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/fastskip_feature.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/fastskip_feature.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -169,10 +169,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/skipped.feature/normal skip',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/skipped.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/skipped.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/skipped.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/skipped.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/skipped.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -185,10 +185,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/contains_regexchars.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/contains_regexchars.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/contains_regexchars.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/contains_regexchars.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -201,10 +201,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature/normal skip',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -217,10 +217,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature/don't skip and success",
+      test_id: ".../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature/don't skip and success",
       test_label: "don't skip and success",
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: true,
@@ -233,10 +233,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature/fast skip a successful test',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature/fast skip a successful test',
       test_label: 'fast skip a successful test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -249,10 +249,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature/don't skip and fail",
+      test_id: ".../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature/don't skip and fail",
       test_label: "don't skip and fail",
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: true,
@@ -265,10 +265,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature/fast skip a failing test',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature/fast skip a failing test',
       test_label: 'fast skip a failing test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/mixed_skip.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -281,10 +281,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group2_features/duplicate.feature/run a test',
+      test_id: '.../example-project-1/{{featurePath}}/group2_features/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group2_features/duplicate.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group2_features/duplicate.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group2_features/duplicate.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group2_features/duplicate.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -297,10 +297,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature/Use a table (success)',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/table.feature/Use a table (success)',
       test_label: 'Use a table (success)',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/table.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/table.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -313,10 +313,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature/Use a table (fail)',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/table.feature/Use a table (fail)',
       test_label: 'Use a table (fail)',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/table.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/table.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/table.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -329,10 +329,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature/run a successful textblock test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature/run a successful textblock test',
       test_label: 'run a successful textblock test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -345,10 +345,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature/run a failing textblock test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature/run a failing textblock test',
       test_label: 'run a failing textblock test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/textblock.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/textblock.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -361,10 +361,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success',
       test_label: 'Blenders Success',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -377,10 +377,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail',
       test_label: 'Blenders Fail',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -393,10 +393,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Skip',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Skip',
       test_label: 'Blenders Skip',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -409,10 +409,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail 2',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail 2',
       test_label: 'Blenders Fail 2',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: true,
@@ -425,10 +425,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fast Skip a Success',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fast Skip a Success',
       test_label: 'Blenders Fast Skip a Success',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -441,10 +441,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success 2',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success 2',
       test_label: 'Blenders Success 2',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: true,
@@ -457,10 +457,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fast Skip a Failure',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fast Skip a Failure',
       test_label: 'Blenders Fast Skip a Failure',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_mixed.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -473,10 +473,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/duplicate.feature/run a test',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/duplicate.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/duplicate.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/duplicate.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/duplicate.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -489,10 +489,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature/Blend Success',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature/Blend Success',
       test_label: 'Blend Success',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -505,10 +505,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature/Blend Success 2',
+      test_id: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature/Blend Success 2',
       test_label: 'Blend Success 2',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/group1_features/outline_success.feature'
+      test_parent: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/group1_features/outline_success.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -521,10 +521,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/{{featurePath}}/duplicate.feature/run a test',
+      test_id: '.../example-project-1/{{featurePath}}/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-1/{{featurePath}}/duplicate.feature',
-      test_uri: '.../example-project-workspace-1/{{featurePath}}/duplicate.feature',
+      test_parent: '.../example-project-1/{{featurePath}}/duplicate.feature',
+      test_uri: '.../example-project-1/{{featurePath}}/duplicate.feature',
     }),
 
     new TestResult({
@@ -538,10 +538,10 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature/run a test',
+      test_id: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature',
-      test_uri: '.../example-project-workspace-1/behave_tests/some_tests/duplicate_fail.feature'
+      test_parent: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature',
+      test_uri: '.../example-project-1/behave_tests/some_tests/duplicate_fail.feature'
     }),
 
     new TestResult({
@@ -555,14 +555,14 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../example-project-workspace-1/behave_tests/some_tests/group2_features/envvars.feature/run an successful (if not from command line) envvars test',
+      test_id: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature/run an successful (if not from command line) envvars test',
       test_label: 'run an successful (if not from command line) envvars test',
-      test_parent: '.../example-project-workspace-1/behave_tests/some_tests/group2_features/envvars.feature',
-      test_uri: '.../example-project-workspace-1/behave_tests/some_tests/group2_features/envvars.feature'
+      test_parent: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature',
+      test_uri: '.../example-project-1/behave_tests/some_tests/group2_features/envvars.feature'
     })
   ];
 
 
-  const wkspSettings = config.getWorkspaceSettings(wkspUri);
+  const wkspSettings = config.workspaceSettings[wkspUri.path];
   return applyTestConfiguration(debug, wkspSettings, expectedResults);
 }

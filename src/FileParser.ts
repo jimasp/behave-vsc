@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import config from "./Configuration";
-import { WorkspaceSettings } from "./WorkspaceSettings";
+import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getIdForUri, getWorkspaceFolder,
@@ -254,7 +254,7 @@ export class FileParser {
     this._parseFilesCallCounts++;
     const wkspName = getWorkspaceFolder(wkspUri).name;
     const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
-    const wkspSettings = config.getWorkspaceSettings(wkspUri);
+    const wkspSettings = config.workspaceSettings[wkspUri.path];
     let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
     // if caller cancels, pass it on to the internal token

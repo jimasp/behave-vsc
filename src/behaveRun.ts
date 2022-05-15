@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import config from "./Configuration";
-import { WorkspaceSettings } from "./WorkspaceSettings";
+import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { cleanBehaveText, WkspError } from './common';
@@ -126,7 +126,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
   // create the junitDirUri directory 
   // NOTE - we use "fs.mkdirSync" because "await vscode.workspace.fs.createDirectory" is not reliable atm, it causes watcher to 
-  // fail to pick up on first files created (intermittently observed with multi-root in example-project-workspace-1)
+  // fail to pick up on first files created (intermittently observed with multi-root in example-project-1)
   fs.mkdirSync(junitDirUri.fsPath, { recursive: true });
 
   const updateResult = async (uri: vscode.Uri) => {

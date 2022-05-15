@@ -1,21 +1,25 @@
 {
 	"folders": [
 		{
-			"path": "./example-project-workspace-simple"
+			"path": "./example-project-simple"
 		},
 		{
-			"path": "./example-project-workspace-1"
+			"path": "./example-project-1"
 		},
 		{
-			"path": "./example-project-workspace-2"
+			"path": "./example-project-2"
 		},
 		{
-			"path": "./empty-folder-for-multiroot-workspace"
+			"path": "./multiroot-empty-folder"
+		},
+		{
+			"path": "./multiroot-ignored-project"
 		},
 	],
 	"settings": {
 		"behave-vsc.alwaysShowOutput": true,
-		"behave-vsc.runWorkspacesInParallel": true,
-		"behave-vsc.showConfigurationWarnings": true
+		"behave-vsc.multiRootRunWorkspacesInParallel": true,
+		"behave-vsc.showConfigurationWarnings": true,
+		"behave-vsc.multiRootFolderIgnoreList": "multiroot-ignored-project",
 	}
 }

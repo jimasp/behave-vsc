@@ -3,7 +3,7 @@ import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace
 
 
 suite(`workspace-1-suite test run`, () => {
-	const wkspName = "example-project-workspace-1";
+	const wkspName = "example-project-1";
 	const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 

@@ -18,10 +18,9 @@
 
 ---
 ## Features
-
 - Debug or Run behave tests from the test workbench, or from inside a feature file.
+- Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarList`, etc.)
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to step"). You can also map a keybinding for this command if you wish (e.g. F12).
-- Run customisation via extension settings.
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -57,7 +56,7 @@ paths=behave_tests/features
 // settings.json file
 "behave-vsc.featuresPath": "behave_tests/features",
 ```
-- If you are using a multi-root workspace, then for each workspace that containst features, adjust the `settings.json` in each workspace.
+- If you are using a multi-root workspace with multiple projects that contain feature files, then see note below in [Extension settings](#extension-settings)
 - While behave only supports one "steps" folder, you can import steps from other folders via python (you should test this manually with behave first):
 ```  
   . features/  
@@ -75,11 +74,10 @@ paths=behave_tests/features
 
 ---
 ## Extension settings
-
-- This extension has various options to customise your test run via `settings.json`, e.g. feature path and `runParallel`. 
+- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarList`, etc.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- If you are using a multi-root workspace, then for each workspace that contains features, adjust the `settings.json` in each workspace as required.
-- For information on available options, go to the extension settings in vscode (click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
+- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up any default settings in your `*.code-workspace` file, then adjust the `settings.json` in each workspace folder as required. (`*.code-workspace` settings will not impact workspace folders that do not contain feature files.)
+- For information on available options, go to the extension settings in vscode (e.g. click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
 ---  
 ## How it works
@@ -97,26 +95,27 @@ paths=behave_tests/features
 - For each run, the equivalent behave command to run the test manually appears in the Behave VSC output window. (The _actual_ command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
 - The extension then parses the junit file output and updates the test result.
 - The behave output and any errors appear in the Behave VSC output window.
-- How the run works is controlled by you via extension settings in your `settings.json` file (e.g. `behave-vsc.runParallel` etc.)
+- How the run works is controlled by you via extension settings in your `settings.json` file (e.g. `runParallel` etc.)
 
 ### How debug works:
-
 - It dynamically builds a debug launch config and runs that. (This enables the `ms-python.python` extension to do the work of debugging.)
 - The extension then parses the junit file output and updates the test result.
+- Whether debug steps into external code is controlled by the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 - Error output is shown in the debug console window and/or Behave VSC window depending on the nature of the error.
 - To reduce noise when debugging, the behave command and behave std output is not shown when in debug. Run the test instead if you want this output.
-- Whether debug steps into external code is controlled by you via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` not your `launch.json`).
+
 
 
 ---
 ## Troubleshooting
-This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please check the [release notes](#release-notes) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
-- Does your project meet the [Project Requirements](#project-requirements) section above?
+This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please read through the [release notes](#release-notes) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
+- Does your project meet the [Project Requirements](#project-requirements) and have the [Required project directory structure](#required-project-directory-structure)?
 - If you have set the `featuresPath` in extension settings, make sure it matches the paths setting in your behave configuration file.
 - Have you tried _manually_ running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
 - Do you have runParallel turned on? Try turning it off. 
+- If extension startup is slow, and you have a large multi-root workspace then you can stop the extension from looking for features in (top-level) workspace folders on startup by using the setting `multiRootFolderIgnoreList`.
 (Also if you have removed extension settings from your workspace `.vscode/settings.json`, then do you still have any of the extension settings in your user settings json? 
 See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations) for user settings file locations.)
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
@@ -129,7 +128,7 @@ See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file
 - How can I see all effective settings for the extension? On starting vscode, look in the Behave VSC output window.
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vs code, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. This is determined by your OS and temp path environment variables, in code (nodejs) the directory is `os.tmpDir()/behave-vsc`. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not "pending") by default for tests that are not yet complete.)
+- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. This is determined by your OS and temp path environment variables, in code (nodejs) the directory is `os.tmpDir()/behave-vsc`. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not "pending") by default for tests that are not yet complete.)
 - Why parse junit files instead of behave json output? Running with `--junit` allows us to show plain behave output in the Behave VSC window. The performance is also a little better. Additionally junit output is a stable standard that is unlikely to change in future versions of behave, the json output results in messier code to match up to test queue items, and the json output is inconsistent for certain things like hook-errors.
 - When will this extension have a release version? When the code is stable. At the moment the code is subject to rewrites/refactoring.
 

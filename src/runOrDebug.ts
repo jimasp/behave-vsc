@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import { customAlphabet } from 'nanoid';
 import config, { WIN_MAX_PATH } from "./Configuration";
-import { WorkspaceSettings } from "./WorkspaceSettings";
+import { WorkspaceSettings } from "./settings";
 import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';
 import { QueueItem } from './extension';

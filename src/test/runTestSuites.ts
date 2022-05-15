@@ -44,7 +44,7 @@ async function runTestSuites() {
     let extensionTestsPath = "";
 
 
-    launchArgs = ["example-projects/example-project-workspace-simple"]
+    launchArgs = ["example-projects/example-project-simple"]
     extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
     await runTests({
       vscodeExecutablePath,
@@ -53,7 +53,7 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/example-project-workspace-1"]
+    launchArgs = ["example-projects/example-project-1"]
     extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
     await runTests({
       vscodeExecutablePath,
@@ -62,7 +62,7 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/example-project-workspace-2"]
+    launchArgs = ["example-projects/example-project-2"]
     extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
     await runTests({
       vscodeExecutablePath,

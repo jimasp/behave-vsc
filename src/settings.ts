@@ -1,32 +1,49 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
-import { Logger } from './Logger';
 import { EXTENSION_NAME } from './Configuration';
+import { Logger } from './Logger';
 
 
 export class WindowSettings {
   // class for package.json "window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace
   public alwaysShowOutput: boolean;
-  public runWorkspacesInParallel: boolean;
+  public multiRootFolderIgnoreList: string[] = [];
+  public multiRootRunWorkspacesInParallel: boolean;
   public showConfigurationWarnings: boolean;
+  public errors: string[] = [];
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
+    // note: undefined should never happen (or packages.json is wrong)
     const alwaysShowOutputCfg: boolean | undefined = winConfig.get("alwaysShowOutput");
     if (alwaysShowOutputCfg === undefined)
       throw "alwaysShowOutput is undefined";
-    const runWorkspacesInParallelCfg: boolean | undefined = winConfig.get("runWorkspacesInParallel");
-    if (runWorkspacesInParallelCfg === undefined)
-      throw "runWorkspacesInParallel is undefined";
+    const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
+    if (multiRootRunWorkspacesInParallelCfg === undefined)
+      throw "multiRootRunWorkspacesInParallel is undefined";
     const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
     if (showConfigurationWarningsCfg === undefined)
       throw "showConfigurationWarnings is undefined";
+    const multiRootFolderIgnoreListCfg: string | undefined = winConfig.get("multiRootFolderIgnoreList");
+    if (multiRootFolderIgnoreListCfg === undefined)
+      throw "ignoreWorkspaceFolder is undefined";
 
     this.alwaysShowOutput = alwaysShowOutputCfg;
-    this.runWorkspacesInParallel = runWorkspacesInParallelCfg;
+    this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.showConfigurationWarnings = showConfigurationWarningsCfg;
+
+
+    if (multiRootFolderIgnoreListCfg) {
+      try {
+        const wkspFolderIgnoreList = multiRootFolderIgnoreListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
+        this.multiRootFolderIgnoreList = wkspFolderIgnoreList.filter(s => s !== "");
+      }
+      catch {
+        this.errors.push("Invalid WorkspaceFolders setting ignored.");
+      }
+    }
   }
 }
 
@@ -47,12 +64,10 @@ export class WorkspaceSettings {
   public featuresUri: vscode.Uri;
   // internal
   private _errors: string[] = [];
-  private _logger: Logger;
 
 
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
-    this._logger = logger;
     this.uri = wkspUri;
     let fatal = false;
 
@@ -68,7 +83,7 @@ export class WorkspaceSettings {
       return (value as T);
     }
 
-
+    // note: undefined should never happen (or packages.json is wrong)
     const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
     if (envVarListCfg === undefined)
       throw "envVarList is undefined";
@@ -113,12 +128,12 @@ export class WorkspaceSettings {
           const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
           let invalid = false;
           skipList.forEach(s => {
-            s = s.trim(); if (s !== "" && !s.trim().startsWith("@"))
+            s = s.trim();
+            if (s !== "" && !s.startsWith("@"))
               invalid = true;
           });
           if (invalid)
             this._errors.push("Invalid FastSkipList setting ignored.");
-
           else
             this.fastSkipList = skipList.filter(s => s !== "");
         }
@@ -158,61 +173,77 @@ export class WorkspaceSettings {
       }
     }
 
-    this.logUserSettings(fatal, winSettings);
+    this.logUserSettings(logger, fatal, winSettings);
   }
 
 
-  async logUserSettings(fatal: boolean, winSettings: WindowSettings) {
+  logUserSettings(logger: Logger, fatal: boolean, winSettings: WindowSettings) {
 
-    const entries = Object.entries(this).sort();
-    const dic: { [name: string]: string; } = {};
+    let nonUserSettable: string[] = [];
 
-    // build json of user-settable properties        
-    const nonUser = ["name", "uri", "featuresUri"];
-    entries.forEach(([key, value]) => {
-      if (!key.startsWith("_") && !nonUser.includes(key)) {
-        const name = key === "workspaceRelativeFeaturesPath" ? "featuresPath" : key;
-        dic[name] = value;
+    // build output dict of user-settable properties for window settings
+    nonUserSettable = [];
+    const winSettingsDic: { [name: string]: string; } = {};
+    const winEntries = Object.entries(winSettings).sort()
+    winEntries.forEach(([key, value]) => {
+      if (!key.startsWith("_") && !nonUserSettable.includes(key)) {
+        winSettingsDic[key] = value;
       }
     });
 
     const wkspUris = getUrisOfWkspFoldersWithFeatures();
     if (wkspUris.length > 0 && this.uri === wkspUris[0])
-      this._logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettings, null, 2)}`);
+      logger.logInfoAllWksps(`\nglobal (window) settings:\n${JSON.stringify(winSettingsDic, null, 2)}`);
 
-    this._logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(dic, null, 2)}`, this.uri);
-    this._logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
+    // build output dict of user-settable properties for workspace settings 
+    nonUserSettable = ["name", "uri", "featuresUri"];
+    const wkspSettingsDic: { [name: string]: string; } = {};
+    const wkspEntries = Object.entries(this).sort();
+    wkspEntries.forEach(([key, value]) => {
+      if (!key.startsWith("_") && !nonUserSettable.includes(key)) {
+        const name = key === "workspaceRelativeFeaturesPath" ? "featuresPath" : key;
+        wkspSettingsDic[name] = value;
+      }
+    });
+
+    logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(wkspSettingsDic, null, 2)}`, this.uri);
+    logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
 
     if (winSettings.showConfigurationWarnings) {
 
       let warned = false;
-      this._logger.logInfo("\n", this.uri);
+      logger.logInfo("\n", this.uri);
 
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("WARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
+        logger.logWarn("WARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).", this.uri);
+        logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).", this.uri);
       }
 
       if (!this.runParallel && !this.runAllAsOne) {
         warned = true;
-        this._logger.logWarn("WARNING: runParallel and runAllAsOne are both disabled. This will give the slowest performance.", this.uri);
+        logger.logWarn("WARNING: runParallel and runAllAsOne are both disabled. This will give the slowest performance.", this.uri);
       }
 
       if (warned)
-        this._logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`, this.uri);
+        logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`, this.uri);
     }
 
-    if (this._errors && this._errors.length > 0) {
-      this._logger.logError(new WkspError(`${this._errors.join("\n")}`, this.uri));
-    }
+    if (winSettings.errors.length > 0)
+      logger.logError(new WkspError(winSettings.errors.join("\n"), this.uri));
+
+    if (this._errors.length > 0)
+      logger.logError(new WkspError(this._errors.join("\n"), this.uri));
+
 
     if (fatal)
       throw "fatal error due to invalid workspace setting, cannot continue. see previous error for more details.";
+
   }
 
 }
+

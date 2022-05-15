@@ -1,7 +1,8 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { getUrisOfWkspFoldersWithFeatures } from './common';
 import { Logger } from './Logger';
-import { WorkspaceSettings, WindowSettings } from './WorkspaceSettings';
+import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 
 export const EXTENSION_NAME = "behave-vsc";
 export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
@@ -15,13 +16,12 @@ declare global {
   var config: Configuration;
 }
 
-
 export interface Configuration {
-  integrationTestRunAll: boolean;
+  integrationTestRun: boolean;
   readonly extTempFilesUri: vscode.Uri;
   readonly logger: Logger;
-  getWorkspaceSettings(wkspUri: vscode.Uri): WorkspaceSettings;
-  getWindowSettings(): WindowSettings;
+  readonly workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings };
+  readonly globalSettings: WindowSettings;
   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
   getPythonExec(wkspUri: vscode.Uri): Promise<string>;
   dispose(): void;
@@ -30,12 +30,12 @@ export interface Configuration {
 
 // don't export this, use the interface
 class ExtensionConfiguration implements Configuration {
-  public integrationTestRunAll = false;
+  public readonly integrationTestRun = false;
   public readonly extTempFilesUri;
-  public logger: Logger;
+  public readonly logger: Logger;
   private static _configuration?: ExtensionConfiguration;
-  private windowSettings: WindowSettings | undefined = undefined;
-  private resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
+  private _windowSettings: WindowSettings | undefined = undefined;
+  private _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private constructor() {
     ExtensionConfiguration._configuration = this;
@@ -48,41 +48,41 @@ class ExtensionConfiguration implements Configuration {
     this.logger.dispose();
   }
 
-
   static get configuration() {
     if (ExtensionConfiguration._configuration)
       return ExtensionConfiguration._configuration;
-
     ExtensionConfiguration._configuration = new ExtensionConfiguration();
     return ExtensionConfiguration._configuration;
   }
 
   // called by onDidChangeConfiguration
   public reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
-
     if (testConfig) {
-      this.windowSettings = new WindowSettings(testConfig);
-      this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this.windowSettings, this.logger);
+      this._windowSettings = new WindowSettings(testConfig);
+      this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this._windowSettings, this.logger);
     }
     else {
-      this.windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
-      this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this.windowSettings, this.logger);
+      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this._windowSettings, this.logger);
     }
   }
 
-  public getWorkspaceSettings(wkspUri: vscode.Uri) {
-    const _windowSettings = this.getWindowSettings();
-    return this.resourceSettings[wkspUri.path]
-      ? this.resourceSettings[wkspUri.path]
-      : this.resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), _windowSettings, this.logger);
+  public get globalSettings(): WindowSettings {
+    return this._windowSettings
+      ? this._windowSettings
+      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
   }
 
-  public getWindowSettings() {
-    return this.windowSettings
-      ? this.windowSettings
-      : this.windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+  public get workspaceSettings(): { [wkspUriPath: string]: WorkspaceSettings } {
+    const winSettings = this.globalSettings;
+    getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
+      if (!this._resourceSettings[wkspUri.path]) {
+        this._resourceSettings[wkspUri.path] =
+          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), winSettings, this.logger);
+      }
+    })
+    return this._resourceSettings;
   }
 
   // note - this can be changed dynamically by the user, so don't store the result

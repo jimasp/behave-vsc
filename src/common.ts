@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import config, { EXTENSION_FRIENDLY_NAME } from "./Configuration";
 import { TestData } from './TestFile';
-import { WorkspaceSettings } from './WorkspaceSettings';
+import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -117,6 +117,8 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
 
   for (const folder of folders) {
+    if (config.globalSettings.multiRootFolderIgnoreList.includes(folder.name))
+      continue;
     if (findAFeatureFile(folder.uri.fsPath))
       workspaceFoldersWithFeatures.push(folder.uri);
   }
@@ -144,7 +146,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined):
 
 export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): WorkspaceSettings => {
   const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
-  return config.getWorkspaceSettings(wkspUri);
+  return config.workspaceSettings[wkspUri.path];
 }
 
 
