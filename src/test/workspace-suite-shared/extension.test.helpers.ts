@@ -231,27 +231,10 @@ function getWorkspaceUri(wkspName: string) {
 }
 
 
-
-
-const configLoaded: { [wkspUriPath: string]: boolean } = {}; //buildConfigLoaded();
-
-// function buildConfigLoaded() {
-// 	const cfgLoaded: { [wkspUriPath: string]: boolean } = {};
-
-// 	getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
-// 		cfgLoaded[wkspUri.path] = false;
-// 	});
-
-// 	return cfgLoaded
-// }
-
-// function allConfigsLoaded() {
-// 	return Object.values(configLoaded).every(loaded => loaded);
-// }
-
-let timingInProgress = false;
-
-
+// NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
+// function will run in parallel with itself 
+// (but as per the promises in that file, only one instance for a given workspace, 
+// so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
@@ -259,31 +242,15 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const consoleName = `runAllTestsAndAssertTheResults for ${wkspName}`;
 	const wkspUri = getWorkspaceUri(wkspName);
 
-	// NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
-	// function will run in parallel with itself 
-	// (but as per the promises in that file, only one instance for a given workspace, 
-	// so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
-	configLoaded[wkspUri.path] = false;
-	console.log(`${consoleName} configLoaded, setting false for:` + wkspUri.path);
-	await new Promise(t => setTimeout(t, 100));
-
 	const cancelToken = new vscode.CancellationTokenSource().token;
 	vscode.commands.executeCommand("testing.clearTestResults");
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension, wkspName);
 
-	// (to mitigate parallel run)
-	while (timingInProgress) {
-		await new Promise(t => setTimeout(t, 20));
-	}
-
 	const start = performance.now();
-	timingInProgress = true;
 	const instances = await extension.activate() as TestSupport;
 	const tookMs = performance.now() - start;
 	console.log(`activate call time: ${tookMs} ms`);
-	timingInProgress = false;
-	//assert(tookMs < 1); // (this assertion could fail if (a) you are debug-stepping through this section, or (b) on a slow/busy computer)	
 	assert.strictEqual(extension.isActive, true, wkspName);
 	assertInstances(instances);
 	instances.config.integrationTestRun = true;
@@ -293,20 +260,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
-	configLoaded[wkspUri.path] = true;
 
-
-	// (to mitigate multi-root parallel workspace run)
-	let calls = 0;
-	while (!Object.values(configLoaded).every(loaded => loaded)) {
-		Object.keys(configLoaded).forEach((k) => {
-			if (!configLoaded[k])
-				console.log(`${consoleName}: waiting for true, configLoaded[${k}] = ${configLoaded[k]}`);
-		});
-		if (++calls > 20)
-			throw new Error(`${consoleName}: timed out waiting for all configs to load`);
-		await new Promise(t => setTimeout(t, 100));
-	}
 
 	assert(await instances.parser.readyForRun(3000, consoleName));
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
