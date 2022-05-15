@@ -44,7 +44,7 @@ async function runTestSuites() {
     let extensionTestsPath = "";
 
 
-    launchArgs = ["example-projects/example-project-simple"]
+    launchArgs = ["example-projects/example project simple"]
     extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
     await runTests({
       vscodeExecutablePath,

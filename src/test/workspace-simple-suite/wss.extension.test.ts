@@ -6,7 +6,7 @@ import { runAllTestsAndAssertTheResults } from "../workspace-suite-shared/extens
 
 
 suite(`workspace-simple-suite test run`, () => {
-	const wkspName = "example-project-simple";
+	const wkspName = "example project simple";
 	const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
 	const multiRootFolderIgnoreList = "multiroot-ignored-project";
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);

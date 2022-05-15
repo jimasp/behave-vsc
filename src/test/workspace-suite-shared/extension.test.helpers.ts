@@ -154,9 +154,13 @@ async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: Wo
 
 
 function standardisePath(path: string | undefined): string | undefined {
+	if (!path)
+		return path;
+	path = decodeURI(path);
 	const find = "/example-projects/";
 	return path === undefined ? undefined : "..." + path.substring(path.indexOf(find) + find.length - 1);
 }
+
 
 function standardiseResult(result: string | undefined): string | undefined {
 	let res = result;

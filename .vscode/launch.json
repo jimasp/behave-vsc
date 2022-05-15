@@ -44,7 +44,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/example-project-simple",
+				"${workspaceFolder}/example-projects/example project simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -125,7 +125,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/example-project-simple",
+				"${workspaceFolder}/example-projects/example project simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/test/workspace-simple-suite/index"
 			],

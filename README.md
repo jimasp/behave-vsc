@@ -76,7 +76,7 @@ paths=behave_tests/features
 ## Extension settings
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarList`, etc.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up any default settings in your `*.code-workspace` file, then adjust the `settings.json` in each workspace folder as required. (`*.code-workspace` settings will not impact workspace folders that do not contain feature files.)
+- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up any default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder. 
 - For information on available options, go to the extension settings in vscode (e.g. click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
 
 ---  
