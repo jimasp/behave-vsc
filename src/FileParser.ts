@@ -10,6 +10,7 @@ import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
 import { performance } from 'perf_hooks';
 
+
 const stepMap: StepMap = new Map<string, StepDetail>();
 export const getStepMap = () => stepMap;
 export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
@@ -17,15 +18,15 @@ export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrC
 export class FileParser {
 
   private _parseFilesCallCounts = 0;
-  private _featuresLoadedForAllWorkspaces = false;
-  private _featuresLoadedForWorkspace: { [key: string]: boolean } = {};
+  private _featuresParsedForAllWorkspaces = false;
+  private _featuresParsedForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
 
   async readyForRun(timeout: number, caller: string) {
     const interval = 100;
 
     const check = (resolve: (value: boolean) => void) => {
-      if (this._featuresLoadedForAllWorkspaces) {
+      if (this._featuresParsedForAllWorkspaces) {
         console.log(`readyForRun (${caller}) - good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
@@ -55,7 +56,7 @@ export class FileParser {
       controller.items.delete(item.id);
     }
 
-    const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/*.feature");
+    const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
     const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
 
     for (const uri of featureFiles) {
@@ -84,14 +85,14 @@ export class FileParser {
       stepMap.delete(key);
     }
 
-    const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/steps/**/*.py");
+    const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
     let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
     for (const uri of stepFiles) {
       if (cancelToken.isCancellationRequested)
         break;
-      await this.updateStepsFromStepsFile(wkspSettings.featuresUri.path, uri, caller);
+      await this.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, caller);
       processed++;
     }
 
@@ -104,12 +105,12 @@ export class FileParser {
   }
 
 
-  async updateStepsFromStepsFile(wkspFullFeaturesPath: string, uri: vscode.Uri, caller: string) {
+  async updateStepsFromStepsFile(featuresUri: vscode.Uri, fileUri: vscode.Uri, caller: string) {
 
-    if (!isStepsFile(uri))
-      throw new Error(`${uri.path} is not a steps file`);
+    if (!isStepsFile(fileUri))
+      throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFile(wkspFullFeaturesPath, uri, stepMap, caller);
+    await parseStepsFile(featuresUri, fileUri, stepMap, caller);
   }
 
   async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
@@ -227,7 +228,7 @@ export class FileParser {
 
   async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
-    this._featuresLoadedForAllWorkspaces = false;
+    this._featuresParsedForAllWorkspaces = false;
 
     // this function is called e.g. when a workspace gets added/removed, so 
     // clear everything up-front so that we rebuild the top level nodes
@@ -248,8 +249,8 @@ export class FileParser {
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
     const wkspPath = wkspUri.path;
-    this._featuresLoadedForAllWorkspaces = false;
-    this._featuresLoadedForWorkspace[wkspPath] = false;
+    this._featuresParsedForAllWorkspaces = false;
+    this._featuresParsedForWorkspace[wkspPath] = false;
 
     // if caller cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
@@ -287,11 +288,14 @@ export class FileParser {
 
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         console.log(`${callName}: features loaded for workspace ${wkspName}`);
-        this._featuresLoadedForWorkspace[wkspPath] = true;
-        const anyWkspStillLoading = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._featuresLoadedForWorkspace[uri.path])
-        if (anyWkspStillLoading.length === 0) {
-          this._featuresLoadedForAllWorkspaces = true;
+        this._featuresParsedForWorkspace[wkspPath] = true;
+        const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._featuresParsedForWorkspace[uri.path])
+        if (wkspsStillParsingFeatures.length === 0) {
+          this._featuresParsedForAllWorkspaces = true;
           console.log(`${callName}: features loaded for all workspaces`);
+        }
+        else {
+          console.log(`${callName}: features not loaded for all workspaces, waiting on ${JSON.stringify(wkspsStillParsingFeatures)}`)
         }
       }
 
@@ -310,7 +314,7 @@ export class FileParser {
         if (featureFileCount === 0)
           throw `No feature files found in ${wkspSettings.featuresUri.fsPath}`;
         if (stepFileCount === 0)
-          throw `No step files found in ${wkspSettings.featuresUri.fsPath}/steps`;
+          throw `No step files found in ${vscode.Uri.joinPath(wkspSettings.featuresUri, "steps").fsPath}`;
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
@@ -330,6 +334,7 @@ export class FileParser {
       return null;
     }
     finally {
+      //this._featuresParsedForWorkspace[wkspPath] = true;
       cancellationHandler?.dispose();
     }
   }

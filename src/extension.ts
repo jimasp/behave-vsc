@@ -171,7 +171,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config.logger.logInfoAllWksps("Settings change detected");
 
       try {
-        cancelTestRun("configurationChangedHandler");
+        if (!testCfg)
+          cancelTestRun("configurationChangedHandler");
 
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
@@ -254,15 +255,14 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
   const wkspSettings = config.workspaceSettings[wkspUri.path];
-  const wkspFullFeaturesPath = wkspSettings.featuresUri.path;
-  const pattern = new vscode.RelativePattern(wkspFullFeaturesPath, "**");
+  const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`); // glob - don't path.join!
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = (uri: vscode.Uri) => {
     try {
 
       if (isStepsFile(uri)) {
-        parser.updateStepsFromStepsFile(wkspFullFeaturesPath, uri, "updater");
+        parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
         return;
       }
 
