@@ -115,7 +115,7 @@ function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 
 	const stepLines: string[] = [];
-	const pattern = new vscode.RelativePattern(wkspSettings.featuresUri.path, "**/*.feature");
+	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
@@ -230,10 +230,53 @@ function getWorkspaceUri(wkspName: string) {
 	return wkspUri;
 }
 
+//declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+//global.lock = "";
+let lock = "";
+
+// used to mitigate parallel workspace initialisation for multiroot parallel workspace testing
+// (this is rubbish, but good enough for here and adds logs to let us know what's happening)
+async function waitOnLock(consoleName: string, acquire: boolean) {
+
+	if (!acquire) {
+		console.log(`${consoleName}: waitOnLock releasing lock`);
+		lock = "";
+	}
+
+	if (!lock && acquire) {
+		lock = consoleName;
+		console.log(`${consoleName}: waitOnLock acquiring lock`);
+		return;
+	}
+
+	const start = performance.now()
+	for (let i = 0; i < 100; i++) {
+		if (!lock) {
+			break;
+		}
+		console.log(` waiting on ${lock}`);
+		await new Promise(t => setTimeout(t, 100));
+	}
+	console.log(` ${consoleName}: waitOnLock waited ${performance.now() - start} for lock`);
+
+	if (lock)
+		throw new Error(`${consoleName}: waitOnLock timed out waiting for all workspaces to initialise`);
+	else {
+		if (acquire) {
+			lock = consoleName;
+			console.log(`${consoleName}: waitOnLock acquiring lock`);
+		}
+	}
+
+	// // 1 sec pause to increase concurrency of unlocked code sections
+	// await new Promise(t => setTimeout(t, 1000));
+
+	console.log(`${consoleName}: waitOnLock no workspaces initialising, continuing...`);
+}
+
 
 // NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
-// function will run in parallel with itself 
-// (but as per the promises in that file, only one instance for a given workspace, 
+// function will run in parallel with itself (but as per the promises in that file, only one instance for a given workspace, 
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
@@ -242,8 +285,12 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const consoleName = `runAllTestsAndAssertTheResults for ${wkspName}`;
 	const wkspUri = getWorkspaceUri(wkspName);
 
+	await waitOnLock(consoleName, true);
+	console.log(`${consoleName} initialising`);
+
 	const cancelToken = new vscode.CancellationTokenSource().token;
-	vscode.commands.executeCommand("testing.clearTestResults");
+	await vscode.commands.executeCommand("testing.clearTestResults");
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension, wkspName);
 
@@ -261,42 +308,43 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
 
-
-	assert(await instances.parser.readyForRun(3000, consoleName));
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	const include = getScenarioTests(instances.testData, allWkspItems);
+
 	// sanity check include length matches expected length
 	console.log(`${consoleName}: calling getAllTestItems`);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	console.log(`${consoleName}: test includes: ${include.length}, tests expected: ${expectedResults.length}`);
-	// included tests (scenarios) and expected tests lengths should be equal, but we allow 
-	// greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
+	// included tests (scenarios) and expected tests lengths should be equal, but 
+	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
 	assert(include.length >= expectedResults.length, wkspName);
+	console.log(`${consoleName} initialised`);
 
-
-	// run behave tests
-
-	console.log("calling runHandler to run tests...")
+	// run behave tests - we kick this off inside the lock only to ensure that readyForRun() will 
+	// pass, i.e. no other parsing gets kicked off until it has started.
+	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
+	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
-	await vscode.commands.executeCommand("workbench.view.testing.focus");
-
-	// assert(await instances.parser.readyForRun(3000));
+	assert(await instances.parser.readyForRun(0, consoleName));
 	const resultsPromise = instances.runHandler(debug, runRequest, cancelToken);
+
+	await waitOnLock(consoleName, false);
+
+
 	if (debug) {
 		// timeout hack to show test ui during debug testing so we can see progress		
 		await new Promise(t => setTimeout(t, 1000));
 		await vscode.commands.executeCommand("workbench.view.testing.focus");
 	}
 	const results = await resultsPromise;
-	console.log("runHandler completed")
+	console.log(`${consoleName}: runHandler completed`);
 
+	// validate results
 
 	if (!results || results.length === 0)
-		throw new Error("no results returned from runHandler");
-
-
+		throw new Error(`${consoleName}: no results returned from runHandler`);
 
 	results.forEach(result => {
 
