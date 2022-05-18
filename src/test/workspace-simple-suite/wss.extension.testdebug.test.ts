@@ -10,6 +10,6 @@ suite(`workspace-simple-suite test debug run`, () => {
   const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(180000);
-}).timeout(600000);
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
+}).timeout(900000);
 

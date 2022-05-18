@@ -135,10 +135,11 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       if (matches.length === 0)
         return reject(`could not find any matching test items for junit file ${uri.path}`);
 
-      // one junit file is created per feature, so update all tests for this feature
+      // one junit file is created per feature (for non-parallel runs), so update all tests for this feature
       for (const match of matches) {
         await parseAndUpdateTestResults(match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         match.updated = true;
+        console.log(`updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`);
         updated++;
       }
       if (updated === map.length)

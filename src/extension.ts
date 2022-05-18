@@ -16,6 +16,8 @@ import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/te
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
+
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
@@ -55,7 +57,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(ctrl);
     context.subscriptions.push(vscode.Disposable.from(config));
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-      context.subscriptions.push(startWatchingWorkspace(wkspUri, ctrl, parser));
+      const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
+      wkspWatchers.set(wkspUri, watcher);
+      context.subscriptions.push(watcher);
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
@@ -141,17 +145,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // called when a user renames, adds or removes a workspace folder
     // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
 
-        // most of the work will happen in the onDidChangeConfiguration handler, here we just resync the logger
+        // most of the work will happen in the onDidChangeConfiguration handler, but 
+        // we need we just resync the logger first
         config.logger.syncChannelsToWorkspaceFolders();
 
-        const isRename = event.added.length === 0 && event.removed.length === 0;
-        if (isRename) {
-          // on a rename (via *.code-workspace) onDidChangeConfiguration will not be called, so we'll call the child function manually
-          await configurationChangedHandler(undefined, undefined, true);
-        }
+        // TOOD: investigate behaviour, starting with OS. onDidChangeConfiguration seems to sometimes fire on it's own 
+        // for changed workspace folders, and sometimes not? 
+        // it may vary per OS (linux vs windows), or may depend on *.code-workspace file contents, also may vary on 
+        // whether passed in event contains removed/added/renamed workspaces or a combination of all three factors.
+        // safest thing without further investigation is to potentially call it twice 
+        await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -177,20 +184,25 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
         // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
-        // (separately the change could be a global window setting)
+        // (separately, just note that the change could be a global window setting from *.code-workspace file)
         if (testCfg || forceRefresh || (event && event.affectsConfiguration(EXTENSION_NAME))) {
           for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
-            if (!testCfg) {
-              config.reloadSettings(wkspUri);
+            if (testCfg && testCfg.wkspUri === wkspUri) {
+              config.reloadSettings(wkspUri, testCfg.testConfig);
               continue;
             }
-            if (testCfg.wkspUri === wkspUri)
-              config.reloadSettings(wkspUri, testCfg.testConfig);
+            config.reloadSettings(wkspUri);
+            const oldWatcher = wkspWatchers.get(wkspUri);
+            if (oldWatcher)
+              oldWatcher.dispose();
+            const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
+            wkspWatchers.set(wkspUri, watcher);
+            context.subscriptions.push(watcher);
           }
         }
 
-        // this function is automatically called after onDidChangeWorkspaceFolders if a workspace is added or removed,
-        // so we need to reparse all test nodes to rebuild the top level test items after the configuration has been applied (above)
+        // when a workspace is added or removed, we need to reparse all test nodes to rebuild the top level test 
+        // items AFTER the configuration has been applied (above)
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
         if (testCfg)
           parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");

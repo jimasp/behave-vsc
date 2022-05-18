@@ -235,12 +235,13 @@ function getWorkspaceUri(wkspName: string) {
 let lock = "";
 
 // used to mitigate parallel workspace initialisation for multiroot parallel workspace testing
-// (this is rubbish, but good enough for here and adds logs to let us know what's happening)
+// (poor lock implementation, but works here, and more importantly adds logs to let us know what's happening)
 async function waitOnLock(consoleName: string, acquire: boolean) {
 
 	if (!acquire) {
 		console.log(`${consoleName}: waitOnLock releasing lock`);
 		lock = "";
+		return;
 	}
 
 	if (!lock && acquire) {
@@ -250,28 +251,24 @@ async function waitOnLock(consoleName: string, acquire: boolean) {
 	}
 
 	const start = performance.now()
-	for (let i = 0; i < 100; i++) {
-		if (!lock) {
+	for (let i = 0; i < 300; i++) { // (generous for the sake of debugging)
+		if (!lock)
 			break;
-		}
-		console.log(` waiting on ${lock}`);
-		await new Promise(t => setTimeout(t, 100));
+		console.log(`${consoleName}: waitOnLock waiting for ${lock} to release lock`);
+		await new Promise(t => setTimeout(t, 200));
 	}
-	console.log(` ${consoleName}: waitOnLock waited ${performance.now() - start} for lock`);
+	const waited = performance.now() - start;
 
-	if (lock)
-		throw new Error(`${consoleName}: waitOnLock timed out waiting for all workspaces to initialise`);
+	if (lock) {
+		throw new Error(`${consoleName}: waitOnLock timed out after ${waited} waiting for all workspaces to initialise`);
+	}
 	else {
 		if (acquire) {
 			lock = consoleName;
-			console.log(`${consoleName}: waitOnLock acquiring lock`);
+			console.log(`${consoleName}: waitOnLock acquired lock after ${waited}`);
 		}
 	}
 
-	// // 1 sec pause to increase concurrency of unlocked code sections
-	// await new Promise(t => setTimeout(t, 1000));
-
-	console.log(`${consoleName}: waitOnLock no workspaces initialising, continuing...`);
 }
 
 

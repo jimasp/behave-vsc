@@ -11,7 +11,7 @@ suite(`workspace-2-suite test run`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 	const multiRootFolderIgnoreList = "multiroot-ignored-project, another-project";
 
-	test("runDefault", async () => {
+	test("runDefault (runAll)", async () => {
 
 		const testConfig = new TestWorkspaceConfig({
 			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
@@ -22,12 +22,11 @@ suite(`workspace-2-suite test run`, () => {
 		console.log(`${testPre}: ${JSON.stringify(testConfig)}`);
 		await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getWs2ExpectedCounts, getWs2ExpectedResults);
 
-	}).timeout(60000);
+	}).timeout(300000);
 
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
-	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(60000);
-}).timeout(600000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(300000);
+	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(300000);
+}).timeout(900000);
 
 
 

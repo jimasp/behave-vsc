@@ -295,7 +295,7 @@ export class FileParser {
           console.log(`${callName}: features loaded for all workspaces`);
         }
         else {
-          console.log(`${callName}: features not loaded for all workspaces, waiting on ${JSON.stringify(wkspsStillParsingFeatures)}`)
+          console.log(`${callName}: features not loaded for all workspaces, waiting on ${wkspsStillParsingFeatures.map(w => w.path)}`)
         }
       }
 
