@@ -177,14 +177,18 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			switch (this.multiRootFolderIgnoreList) {
 				case ",  multiroot-ignored-project ,  another-project, ":
 					return ["multiroot-ignored-project", "another-project"];
+				case "multiroot-ignored-project, another-project":
+					return ["multiroot-ignored-project", "another-project"];
 				case "multiroot-ignored-project,another-project":
 					return ["multiroot-ignored-project", "another-project"];
+				case "multiroot-ignored-project":
+					return ["multiroot-ignored-project"];
 				case "":
 				case undefined:
 					return [];
 				default:
 					debugger; // eslint-disable-line no-debugger
-					throw new Error("getExpectedMultiRootFolderIgnoreList() missing case for multiRootFolderIgnoreList: " + this.envVarList);
+					throw new Error("getExpectedMultiRootFolderIgnoreList() missing case for multiRootFolderIgnoreList: " + this.multiRootFolderIgnoreList);
 			}
 		}
 
