@@ -75,10 +75,14 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration) {
 
-	const winSettings = config.globalSettings;
-	assert.strictEqual(winSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"), wkspName);
-	assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
-	assert.strictEqual(winSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"), wkspName);
+	// multiroot will read window settings from multiroot.code-workspace file, not config
+	if (!(global as any).multiRootTest) {
+		const winSettings = config.globalSettings;
+		assert.strictEqual(winSettings.alwaysShowOutput, testConfig.getExpected("alwaysShowOutput"), wkspName);
+		assert.strictEqual(winSettings.multiRootFolderIgnoreList, testConfig.getExpected("multiRootFolderIgnoreList"), wkspName);
+		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
+		assert.strictEqual(winSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"), wkspName);
+	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"), wkspName);
@@ -235,8 +239,11 @@ function getWorkspaceUri(wkspName: string) {
 let lock = "";
 
 // used to mitigate parallel workspace initialisation for multiroot parallel workspace testing
-// (poor lock implementation, but works here, and more importantly adds logs to let us know what's happening)
+// (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)
 async function waitOnLock(consoleName: string, acquire: boolean) {
+
+	if (!(global as any).multiRootTest)
+		return;
 
 	if (!acquire) {
 		console.log(`${consoleName}: waitOnLock releasing lock`);
@@ -273,7 +280,7 @@ async function waitOnLock(consoleName: string, acquire: boolean) {
 
 
 // NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
-// function will run in parallel with itself (but as per the promises in that file, only one instance for a given workspace, 
+// function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
@@ -305,13 +312,19 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
 	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
 
+	// parse and check counts
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
-	const include = getScenarioTests(instances.testData, allWkspItems);
+	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
+	assert(actualCounts !== null, "actualCounts !== null");
+	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getIdForUri(wkspUri)) !== undefined;
+	assertExpectedCounts(debug, wkspUri, wkspName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
+
+	// check all steps can be matched
+	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.workspaceSettings[wkspUri.path]);
 
 	// sanity check include length matches expected length
-	console.log(`${consoleName}: calling getAllTestItems`);
-	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
+	const include = getScenarioTests(instances.testData, allWkspItems);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	console.log(`${consoleName}: test includes: ${include.length}, tests expected: ${expectedResults.length}`);
 	// included tests (scenarios) and expected tests lengths should be equal, but 
@@ -319,8 +332,9 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assert(include.length >= expectedResults.length, wkspName);
 	console.log(`${consoleName} initialised`);
 
-	// run behave tests - we kick this off inside the lock only to ensure that readyForRun() will 
-	// pass, i.e. no other parsing gets kicked off until it has started.
+
+	// run behave tests - we kick the runHandler off inside the lock to ensure that readyForRun() will 
+	// pass, i.e. no other parsing gets kicked off until it has begun.
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
@@ -368,16 +382,8 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	});
 
 
-
-
-	assert(actualCounts !== null, "actualCounts !== null");
-	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getIdForUri(wkspUri)) !== undefined;
-	assertExpectedCounts(debug, wkspUri, wkspName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
-
-	// (keep this at the end, as individual match asserts are more useful to get first)
+	// (keep this below results.forEach, as individual match asserts are more useful to get first)
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
-
-	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.workspaceSettings[wkspUri.path]);
 }
 
 

@@ -7,7 +7,8 @@ import { Logger } from './Logger';
 
 export class WindowSettings {
   // class for package.json "window" settings 
-  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace
+  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
+  // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public alwaysShowOutput: boolean;
   public multiRootFolderIgnoreList: string[] = [];
   public multiRootRunWorkspacesInParallel: boolean;
@@ -16,19 +17,19 @@ export class WindowSettings {
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
-    // note: undefined should never happen (or packages.json is wrong)
+    // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
     const alwaysShowOutputCfg: boolean | undefined = winConfig.get("alwaysShowOutput");
     if (alwaysShowOutputCfg === undefined)
       throw "alwaysShowOutput is undefined";
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
-    const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
-    if (showConfigurationWarningsCfg === undefined)
-      throw "showConfigurationWarnings is undefined";
     const multiRootFolderIgnoreListCfg: string | undefined = winConfig.get("multiRootFolderIgnoreList");
     if (multiRootFolderIgnoreListCfg === undefined)
       throw "ignoreWorkspaceFolder is undefined";
+    const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
+    if (showConfigurationWarningsCfg === undefined)
+      throw "showConfigurationWarnings is undefined";
 
     this.alwaysShowOutput = alwaysShowOutputCfg;
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
@@ -78,12 +79,12 @@ export class WorkspaceSettings {
 
     // get the actual value in the file or return undefined, this is
     // for cases where we need to distinguish between an unset value and the default value
-    const getActualValue = <T>(name: string): T => {
+    const getActualWorkspaceFolderValue = <T>(name: string): T => {
       const value = wkspConfig.inspect(name)?.workspaceFolderValue;
       return (value as T);
     }
 
-    // note: undefined should never happen (or packages.json is wrong)
+    // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
     const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
     if (envVarListCfg === undefined)
       throw "envVarList is undefined";
@@ -104,7 +105,7 @@ export class WorkspaceSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    const runAllAsOneCfg: boolean | undefined = getActualValue("runAllAsOne");
+    const runAllAsOneCfg: boolean | undefined = getActualWorkspaceFolderValue("runAllAsOne");
     if (this.runParallel && runAllAsOneCfg === undefined)
       this.runAllAsOne = false;
     else
