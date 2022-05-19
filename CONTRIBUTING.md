@@ -48,7 +48,7 @@
 ---
 ### Terminology
 - The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the extension source code project.
-- The "source" environment refers to the instance of vscode that contains the behave-vsc source code.
+- The "source" environment refers to the instance of vscode that contains the Behave VSC source code.
 
 ---
 ### Debugging with the example projects
@@ -59,7 +59,7 @@
 5. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
 6. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
 7. Disable "raised/caught exceptions" if you have them enabled.
-8. Click the "Debug Extension" target (if "Debug Extension" is the current selection, you can just hit (`F5`) from anywhere).
+8. Click one of the "Debug Extension" targets, e.g. "Debug Extension - Workspace Simple" (if a "Debug Extension..." is the current selection, you can just hit (`F5`) from anywhere).
 9. Tips:
  	- You can relaunch the extension from the debug toolbar in the (source not host) vscode environment after changing extension code. 
 	 Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
@@ -68,13 +68,13 @@
 
 ## Debugging with your own host project
 - Remember to disable the extension.
-- Open `.vscode/launch.json` in the extension repo project and change the `args` setting containing `"${workspaceFolder}/../my-project"` to repoint it at your project path. 
-- Then it's the same steps as "Debugging the extension with the example projects"
+- Open `.vscode/launch.json` in the extension repo project and change the `args` setting that contains `"${workspaceFolder}/../my-project"` to repoint it at your project path. 
+- Then it's the same steps as above, just click "Debug Extension - MY PROJECT"
 
 ---
 ## Running integration tests
 Either:  
-- a. (`Ctrl+Shift+D`) and click the "Run Extension Test Suite" target (if "Extension Tests" is the current selection, you can just hit (`F5`) from anywhere)  
+- a. (`Ctrl+Shift+D`) and click one of the "Run Extension Test Suite" targets (if a "Run Extension Tests..." is the current selection, you can just hit (`F5`) from anywhere)  
 OR  
 - b. Close vscode and excecute `npm run test` from a command line.
 
@@ -94,7 +94,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ---
 ## Generating the extension installer manually (.vsix file)
-If you have a custom fork and you want to distribute it to your team, you will want to create your own .vsix file:
+If you have a customised fork and you want to distribute it to your team, you will want to create your own .vsix file:
 1. `npm install -g vsce` (installs latest version of packaging tool)
 2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`
 
@@ -135,7 +135,7 @@ If you have a custom fork and you want to distribute it to your team, you will w
 - Always consider multi-root workspaces, e.g. different workspace settings per workspace folder, output channels are per workspace folder, etc. and consider that workspaces folders may be added/removed by the user at run time.
 - Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`), Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). Encoding (use `utf8`). Consider that windows max path is 260 characters.
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- While the extension is not internationalised, you should consider timezones.
+- While the extension is not internationalised, `Date()` should generally be avoided and/or `Date().toISOString()` should be used if required for output.The `performance` library is used for timings.
 - Also see [General development notes](#general-development-notes) below.
 	
 ---

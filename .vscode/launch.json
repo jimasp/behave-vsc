@@ -6,6 +6,23 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Debug Extension - MY PROJECT",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/../myproject",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Debug Extension - Workspace 1",
 			"type": "extensionHost",
 			"request": "launch",
@@ -62,23 +79,6 @@
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/multiroot.code-workspace",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			],
-			"preLaunchTask": "${defaultBuildTask}",
-		},
-		{
-			"name": "Debug Extension - My Project",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"${workspaceFolder}/../myproject",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [

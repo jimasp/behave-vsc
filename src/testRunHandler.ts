@@ -10,6 +10,7 @@ import {
 import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
 import { FileParser } from './FileParser';
+import { performance } from 'perf_hooks';
 
 
 let internalCancelSource: vscode.CancellationTokenSource;
@@ -112,12 +113,12 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         const wkspPath = wkspSettings.uri.path;
         const asyncRunPromises: Promise<void>[] = [];
 
-        const start = Date.now();
+        const start = performance.now();
         if (!debug)
           config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
 
         const logComplete = () => {
-          const end = Date.now();
+          const end = performance.now();
           if (!debug) {
             config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
               wkspSettings.uri, run);
