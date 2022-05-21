@@ -81,15 +81,15 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     throw "No workspace folders found";
   }
 
-  // performance is critical here as: (a) we need it to be synchronous, (b) it is called during activate(),
-  // if you change this function, check the performance before and after your 
+  // performance is CRITICAL here as: (a) we need it to be synchronous, and (b) it is called during activate(),
+  // if you change this function, check performance before and after your 
   // changes (see console.log statement at the end of this function)
 
-  function findAFeatureFile(dir: string): boolean {
+  function findAFeatureFile(fullDirPath: string): boolean {
 
-    let files;
+    let entries;
     try {
-      files = fs.readdirSync(dir, { withFileTypes: true, encoding: "utf8" });
+      entries = fs.readdirSync(fullDirPath, { withFileTypes: true, encoding: "utf8" });
     }
     catch (e: any) { /* eslint-disable-line @typescript-eslint/no-explicit-any */
       if (e.code && e.code === "ENOENT") {
@@ -99,14 +99,14 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     }
 
     let found = false;
-    for (const file of files) {
-      if (file.isDirectory()) {
-        found = findAFeatureFile(path.join(dir, file.name));
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        found = findAFeatureFile(vscode.Uri.joinPath(vscode.Uri.file(fullDirPath), entry.name).fsPath);
         if (found)
           return true;
       }
       else {
-        if (file.name.endsWith(".feature")) {
+        if (entry.name.endsWith(".feature")) {
           found = true;
           return true;
         }
@@ -118,7 +118,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
   for (const folder of folders) {
     // note - we don't use folder.name here, as that is the 
-    // workspacefolder name (in *.code-workspace), not the folder name
+    // workspacefolder name (which can be set in *.code-workspace), not the folder name
     const folderName = path.basename(folder.uri.fsPath);
     if (config.globalSettings.multiRootFolderIgnoreList.includes(folderName))
       continue;
@@ -220,5 +220,31 @@ export const countTestItems = (testData: TestData, items: vscode.TestItem[]): Te
 
 export function cleanBehaveText(text: string) {
   return text.replaceAll("\x1b", "").replaceAll("[33m", "").replaceAll("[0m", "");
+}
+
+
+// custom function to replace vscode.workspace.findFiles() functionality as required
+// due to the glob intermittently not returning results on vscode startup in Windows OS for multiroot workspaces
+export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
+  extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
+
+  const entries = fs.readdirSync(directory.fsPath, { withFileTypes: true, encoding: "utf8" });
+  const results: vscode.Uri[] = [];
+
+  for (const entry of entries) {
+    if (cancelToken.isCancellationRequested)
+      return results;
+    const entryUri = vscode.Uri.joinPath(directory, entry.name);
+    if (entry.isDirectory()) {
+      results.push(...await findFiles(entryUri, matchSubDirectory, extension, cancelToken));
+    }
+    else {
+      if (entry.name.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
+        results.push(entryUri);
+      }
+    }
+  }
+
+  return results;
 }
 

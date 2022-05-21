@@ -9,7 +9,7 @@
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
-- Fixes are great. New features will be considered, but see [Design principles](#Design-Principles).
+- Fixes are great. New features will be considered, but see [Development guidelines](#Design-Principles).
 
 ---
 ### Development environment setup for extension development
@@ -121,10 +121,10 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Delete all breakpoints from both source and host environments if any of the following occur:
 	- If you don't hit a breakpoint that you're sure you should be hitting. This may be down to sourcemaps and breakpoints being out of sync (in this case, also consider doing a `git commit` and `git clean fdx`). 
 	- If `npm run test` fails on the command line due to a timeout.
-	- If the "Run Extension Test Suite" debug test fails due to a timeout.
+	- If a "Run Extension Test Suite..." test fails during debugging due to a timeout.
 
 ---
-## Design principles
+## Development guidelines
 - No reliance on other extensions except `ms-python.python`.
 - YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.) 
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
@@ -133,9 +133,11 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the outputted behave command manually. 
 - Always consider performance.
 - Always consider multi-root workspaces, e.g. different workspace settings per workspace folder, output channels are per workspace folder, etc. and consider that workspaces folders may be added/removed by the user at run time.
-- Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`), Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). Encoding (use `utf8`). Consider that windows max path is 260 characters.
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- While the extension is not internationalised, `Date()` should generally be avoided and/or `Date().toISOString()` should be used if required for output.The `performance` library is used for timings.
+- Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`). Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible (don't use `path.join` outside of integration tests). Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). Encoding (use `utf8`). Consider that windows max path is 260 characters.
+- While the extension is not internationalised, `Date()` should generally be avoided and/or `Date().toISOString()` can be used if required for user output. The `performance` library should be used for timings.
+- Look out for race conditions. You can have e.g. 3 workspaces running in parallel, and they could all be running parallel tests. (It's a good idea to do your coding/testing with a multiroot workspace, like the example one provided with this source code.)
+- Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names are unique ids, so you can be sure they are unique to the vscode instance as well as the workspace.
 - Also see [General development notes](#general-development-notes) below.
 	
 ---
@@ -172,16 +174,16 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
 ### Process
 - Generally speaking, you should not modify the example project workspaces in your PR _unless_ you are _adding_ new feature/steps files or _adding/improving_ existing tests. (Either way, any changes to the example project workspaces will require you to update the test code for expected results.)
-- Quickly review your code vs the project's [Design principles](#design-principles)
+- Quickly review your code vs the project's [Development guidelines](#design-principles)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
-- Automated tests (verify behave results):
+- Run automated tests (verify behave results):
 	- Close vscode and run `npm run test` 
 		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
 		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-- Manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum (unless something fails, this process should take you <5 mins):
+- Run manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum. (Unless something fails, this process should take you less than 5 mins):
 	1. commit your changes locally (because you are about to make file changes)
-	2. start debug on workspace 1, then	
+	2. start "Debug Extension - Workspace MultiRoot", then	in "project 1":
 	3. edit a group1 feature file, change the name of the feature and save it, then: 
 		- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
 		- check the test UI tree shows the renamed feature (you may need to reopen the node)
@@ -201,7 +203,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	12. go to a feature file, click "go to step defintion" and check at least some of them work
 	13. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
 	14. use git to undo any changes created in these manual tests
-	15. fire up the multi-root workspace and add/remove a workspace folder and check there are no errors and tests run as expected before/after.
+	15. Start "Debug Extension - Workspace MultiRoot" and add/remove a workspace folder and check there are no errors, and that tests run as expected before/after the add/remove.
 
 
 

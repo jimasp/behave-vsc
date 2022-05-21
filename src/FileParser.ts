@@ -4,7 +4,7 @@ import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getIdForUri, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError, findFiles
 } from './common';
 import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
@@ -44,7 +44,6 @@ export class FileParser {
     return new Promise<boolean>(check);
   }
 
-
   private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
@@ -57,8 +56,13 @@ export class FileParser {
       testData.delete(item);
     }
 
-    const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
-    const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
+    //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
+    //const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
+    const featuresPath = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeFeaturesPath);
+    const featureFiles = await findFiles(featuresPath, undefined, ".feature", cancelToken);
+
+    if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
+      throw `No feature files found in ${wkspSettings.featuresUri.fsPath}`;
 
     for (const uri of featureFiles) {
       if (cancelToken.isCancellationRequested)
@@ -86,9 +90,13 @@ export class FileParser {
       stepMap.delete(key);
     }
 
-    const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
-    let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
+    //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
+    //let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
+    let stepFiles = await findFiles(wkspSettings.featuresUri, "steps", ".py", cancelToken);
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
+
+    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
+      throw `No step files found in ${vscode.Uri.joinPath(wkspSettings.featuresUri, "steps").fsPath}`;
 
     for (const uri of stepFiles) {
       if (cancelToken.isCancellationRequested)
@@ -231,7 +239,7 @@ export class FileParser {
 
     this._featuresParsedForAllWorkspaces = false;
 
-    // this function is called e.g. when a workspace gets added/removed, so 
+    // this function is called e.g. when a workspace gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
     console.log("clearTestItemsAndParseFilesForAllWorkspaces - removing all test nodes/items for all workspaces");
     const items = getAllTestItems(null, ctrl.items);
@@ -313,10 +321,6 @@ export class FileParser {
       }
       else {
         console.log(`${callName}: complete`);
-        if (featureFileCount === 0)
-          throw `No feature files found in ${wkspSettings.featuresUri.fsPath}`;
-        if (stepFileCount === 0)
-          throw `No step files found in ${vscode.Uri.joinPath(wkspSettings.featuresUri, "steps").fsPath}`;
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }

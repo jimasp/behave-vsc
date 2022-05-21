@@ -98,7 +98,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     // because the run ends when all instances of this function have returned, we need to make sure 
     // that all test have been updated before we return (you can't update a test when the run has ended)
     if (runAllAsOne) {
+      console.log(`run ${run.name} - waiting for all junit results to update...`);
       await updatesComplete;
+      console.log(`run ${run.name} - all junit result updates complete`);
     }
     else {
       if (!junitFileUri)
@@ -131,6 +133,8 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
   const updateResult = async (uri: vscode.Uri) => {
     try {
+      console.log(`${run.name} - updateResult called for uri ${uri.path}`);
+
       const matches = map.filter(m => m.junitFileUri.path === uri.path);
       if (matches.length === 0)
         return reject(`could not find any matching test items for junit file ${uri.path}`);
@@ -139,7 +143,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       for (const match of matches) {
         await parseAndUpdateTestResults(match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         match.updated = true;
-        console.log(`updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`);
+        console.log(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`);
         updated++;
       }
       if (updated === map.length)

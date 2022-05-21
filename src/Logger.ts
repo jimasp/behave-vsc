@@ -119,7 +119,7 @@ export class Logger {
 
     console.error(text);
 
-    if (config.integrationTestRun)
+    if (config.integrationTestRun && !text.includes("Canceled") && !text.includes("Cancelled"))
       debugger; // eslint-disable-line no-debugger
 
     // fallback

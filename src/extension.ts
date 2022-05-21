@@ -47,8 +47,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const parser = new FileParser();
-
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
+    parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
+
     // any function contained in subscriptions.push() will execute immediately, 
     // as well as registering it for disposal on extension deactivation
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
@@ -150,7 +151,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       try {
 
         // most of the work will happen in the onDidChangeConfiguration handler, but 
-        // we need we just resync the logger first
+        // we need to resync the logger first
         config.logger.syncChannelsToWorkspaceFolders();
 
         // TOOD: investigate behaviour, starting with OS. onDidChangeConfiguration seems to sometimes fire on it's own 
@@ -166,8 +167,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    // called when there is a settings.json/*.vscode-workspace change, or when workspace folders are added/removed
-    // (also called directly by integation tests with a testCfg)
+    // called when there is a settings.json/*.vscode-workspace change, or sometimes when workspace folders are added/removed/renamed
+    // (also called directly by integration tests with a testCfg)
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => {
 
       // for integration test runAllTestsAndAssertTheResults, 
@@ -203,13 +204,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           }
         }
 
-        // when a workspace is added or removed, we need to reparse all test nodes to rebuild the top level test 
+        // when a workspace is added/removed/renamed, we need to reparse all test nodes to rebuild the top level test 
         // items AFTER the configuration has been applied (above)
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
         if (testCfg)
           parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");
         else
           parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
+
       }
       catch (e: unknown) {
         config.logger.logError(e);
@@ -269,7 +271,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
   const wkspSettings = config.workspaceSettings[wkspUri.path];
-  const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`); // glob - don't path.join!
+  const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = (uri: vscode.Uri) => {
@@ -329,7 +331,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   });
 
 
-  parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "startWatchingWorkspace");
+
 
   return watcher;
 }

@@ -297,7 +297,9 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension, wkspName);
+	assert(extension.isActive);
 
+	// activate extenson and get instances
 	const start = performance.now();
 	const instances = await extension.activate() as TestSupport;
 	const tookMs = performance.now() - start;
@@ -305,6 +307,8 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	assert.strictEqual(extension.isActive, true, wkspName);
 	assertInstances(instances);
 	instances.config.integrationTestRun = true;
+	// wait for initial parse to complete
+	//await instances.parser.readyForRun(5000, consoleName);
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we  we need call it manually to insert a test config
@@ -325,12 +329,13 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allWkspItems);
+	console.log(`${consoleName}: testData = ${JSON.stringify(instances.testData)}`);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
-	console.log(`${consoleName}: test includes: ${include.length}, tests expected: ${expectedResults.length}`);
+	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
 	// included tests (scenarios) and expected tests lengths should be equal, but 
 	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
-	assert(include.length >= expectedResults.length, wkspName);
-	console.log(`${consoleName} initialised`);
+	assert(include.length >= expectedResults.length, consoleName + ", (see counts above)");
+	console.log(`${consoleName}: initialised`);
 
 
 	// run behave tests - we kick the runHandler off inside the lock to ensure that readyForRun() will 
