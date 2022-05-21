@@ -54,6 +54,7 @@ export class FileParser {
     const items = getAllTestItems(wkspSettings.uri, controller.items);
     for (const item of items) {
       controller.items.delete(item.id);
+      testData.delete(item);
     }
 
     const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
@@ -236,6 +237,7 @@ export class FileParser {
     const items = getAllTestItems(null, ctrl.items);
     for (const item of items) {
       ctrl.items.delete(item.id);
+      testData.delete(item);
     }
 
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {

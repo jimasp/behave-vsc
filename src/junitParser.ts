@@ -99,8 +99,8 @@ function CreateParseResult(testCase: TestCase): ParseResult {
       if (!reasons)
         return;
       reasons.forEach(reason => {
-        let reasonBlock = reason.$.message + "\n";
-        reasonBlock += reason._.trim();
+        //let reasonBlock = `${reason.$.type}: ${reason.$.message}\n`;
+        const reasonBlock = reason._.trim();
         reasonBlocks.push(reasonBlock);
       });
     }
