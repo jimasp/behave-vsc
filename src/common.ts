@@ -228,18 +228,20 @@ export function cleanBehaveText(text: string) {
 export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
   extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
 
-  const entries = fs.readdirSync(directory.fsPath, { withFileTypes: true, encoding: "utf8" });
+  const entries = await vwfs.readDirectory(directory);
   const results: vscode.Uri[] = [];
 
   for (const entry of entries) {
     if (cancelToken.isCancellationRequested)
       return results;
-    const entryUri = vscode.Uri.joinPath(directory, entry.name);
-    if (entry.isDirectory()) {
+    const fileName = entry[0];
+    const fileType = entry[1];
+    const entryUri = vscode.Uri.joinPath(directory, fileName);
+    if (fileType === vscode.FileType.Directory) {
       results.push(...await findFiles(entryUri, matchSubDirectory, extension, cancelToken));
     }
     else {
-      if (entry.name.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
+      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
         results.push(entryUri);
       }
     }

@@ -33,10 +33,14 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
+    await vscode.workspace.fs.createDirectory(junitDirUri);
+    console.log(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
     });
   }
+
+
 
   let cp: ChildProcess;
 
@@ -126,10 +130,10 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
   let updated = 0;
 
-  // create the junitDirUri directory 
-  // NOTE - we use "fs.mkdirSync" because "await vscode.workspace.fs.createDirectory" is not reliable atm, it causes watcher to 
-  // fail to pick up on first files created (intermittently observed with multi-root in example-project-1)
-  fs.mkdirSync(junitDirUri.fsPath, { recursive: true });
+  // verify directory creation before watching
+  const exists = fs.existsSync(junitDirUri.fsPath);
+  if (!exists)
+    throw `directory ${junitDirUri.fsPath} does not exist`;
 
   const updateResult = async (uri: vscode.Uri) => {
     try {
@@ -161,6 +165,6 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   watcher.onDidCreate(uri => updateResult(uri));
   watcher.onDidChange(uri => updateResult(uri));
 
+  console.log(`${run.name} - watching junit directory ${junitDirUri}/**/*.xml}`);
   return watcher;
-
 }
