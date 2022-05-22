@@ -14,13 +14,11 @@ def step_inst(context):
 
 @given("we need envvars")
 def envvars(context):
-    some_var = os.environ.get("some_var")
-    some_var2 = os.environ.get("some_var2")
-    empty_var = os.environ.get("empty_var")
-    space_var = os.environ.get("space_var")
+    some_var = os.getenv("some_var")
+    some_var2 = os.getenv("some_var2")
+    space_var = os.getenv("space_var")
     assert some_var == "double qu\"oted"
     assert some_var2 == "single qu'oted"
-    assert empty_var == ""
     assert space_var == " "
     
 

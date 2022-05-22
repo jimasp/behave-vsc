@@ -290,14 +290,11 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	if (extInstances)
 		return extInstances;
 
-
-	await vscode.commands.executeCommand("testing.clearTestResults");
-	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension);
 	assert(extension.isActive);
 
-	// activate extension and get instances
+	// call activate() to get instances
 	const start = performance.now();
 	extInstances = await extension.activate() as TestSupport;
 	const tookMs = performance.now() - start;
@@ -309,6 +306,9 @@ async function getExtensionInstances(): Promise<TestSupport> {
 
 	// wait for any initial parse to complete
 	await extInstances.parser.readyForRun(5000, "getExtensionInstances");
+
+	await vscode.commands.executeCommand("testing.clearTestResults");
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	return extInstances;
 }
 

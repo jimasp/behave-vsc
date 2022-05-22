@@ -6,8 +6,8 @@ import { TestResult } from './expectedResults.helpers';
 import { ParseCounts } from '../../FileParser';
 
 
-const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ";
-const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '";
+const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'space_var': ' '  ";
+const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted','space_var': ' '";
 const fastSkipList = "  @fast-skip-me,  @fast-skip-me-too, ";
 const fastSkipList2 = "@fast-skip-me,@fast-skip-me-too";
 const multiRootFolderIgnoreList = ",  multiroot-ignored-project ,  another-project, ";

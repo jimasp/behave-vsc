@@ -177,7 +177,6 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Fixes are given priority over new functionality. Also, new functionality _must_ have tests.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
 - Generally speaking, you should only add files to, not modify, the example project workspaces in your PR.
-### Process
 - Quickly review your code vs the project's [Development guidelines](#development-guidelines)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
@@ -185,14 +184,15 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	- Close vscode and run `npm run test` 
 		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
 		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-- Run standard manual UI tests:
+### Further testing (optional, depending on your change)
+- Run basic manual UI tests:
 	a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
 	b. Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)	
 	c. Run a single test
 	d. Debug a single test
 	e. Run group 1 features
 	f. Run all tests and check that the run stop button works
-- Run more change-specific manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum. (Unless something fails, this process should take you less than 5 mins):
+- Run change-specific manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
 	1. commit your changes locally (because you are about to make file changes)
 	2. start "Debug Extension - Workspace MultiRoot", then	in "project 1":
 	3. edit a group1 feature file, change the name of the feature and save it, then: 

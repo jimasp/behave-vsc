@@ -14,7 +14,7 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\n(This will apply to all tests within the workspace, i.e. it cannot be varied per test.)\n",
+					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\nAn alternative to using a .env file, and specific to your behave tests. (This will apply to all tests within the workspace, i.e. it cannot be varied per test.)\n",
 					"scope": "resource"
 				},
 				"behave-vsc.fastSkipList": {

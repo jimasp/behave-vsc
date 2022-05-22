@@ -152,10 +152,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 		const getExpectedEnvVarList = (): { [name: string]: string } | undefined => {
 			switch (this.envVarList) {
-				case "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ":
-					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', empty_var: '', space_var: ' ' };
-				case "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '":
-					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', empty_var: '', space_var: ' ' };
+				case "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'space_var': ' '  ":
+					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', space_var: ' ' };
+				case "'some_var':'double qu\"oted','some_var2':'single qu\\'oted','space_var': ' '":
+					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', space_var: ' ' };
 				case "":
 				case undefined:
 					return {};

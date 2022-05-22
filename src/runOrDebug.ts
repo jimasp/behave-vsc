@@ -15,10 +15,17 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   cancelToken: vscode.CancellationToken): Promise<void> {
   try {
     const pythonExec = await config.getPythonExec(wkspSettings.uri);
-    const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${getFriendlyEnvVars(wkspSettings)}"${pythonExec}" -m behave`;
+    const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
+
+    let ps1 = "", ps2 = "";
+    if (friendlyEnvVars && os.platform() === "win32") {
+      ps1 = `powershell commands:\n`;
+      ps2 = "& ";
+    }
+
+    const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${getFriendlyEnvVars(wkspSettings)}${ps2}"${pythonExec}" -m behave`;
     const junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
     const args = ["--junit", "--junit-directory", junitDirUri.fsPath, "--capture", "--capture-stderr", "--logcapture"];
-
 
     await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitDirUri);
   }
@@ -32,13 +39,20 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
 export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, wkspSettings: WorkspaceSettings, run: vscode.TestRun,
   queueItem: QueueItem, cancelToken: vscode.CancellationToken): Promise<void> {
   try {
+    if (async && debug)
+      throw new Error("running async debug is not supported");
+
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
     const pythonExec = await config.getPythonExec(wkspSettings.uri);
     const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
+    const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
-    if (async && debug)
-      throw new Error("running async debug is not supported");
+    let ps1 = "", ps2 = "";
+    if (friendlyEnvVars && os.platform() === "win32") {
+      ps1 = `powershell commands:\n`;
+      ps2 = "& ";
+    }
 
     let junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
 
@@ -46,15 +60,14 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     // behave writes "skipped" into the feature file for any test not included in each behave execution.
     // this works fine when tests are run sequentially and we read the file just after the test is run, but
     // for async we need to use a different path for each scenario so we can determine which file contains the actual result for that scenario
-    if (async) {
+    if (async)
       junitDirUri = createJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
-    }
 
     const junitFileUri = getJunitFileUri(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
     const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName, "--junit", "--junit-directory", junitDirUri.fsPath];
 
-    const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
-      `${getFriendlyEnvVars(wkspSettings)}"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
+    const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n` +
+      `${friendlyEnvVars}${ps2}"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
 
     if (!debug && scenario.fastSkipTag) {
       config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`, wkspSettings.uri, run);
@@ -76,18 +89,13 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 }
 
 function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
-
   let envVars = "";
 
-  if (os.platform() === "win32")
-    envVars = "SET";
-
   Object.entries(wkspSettings.envVarList).forEach(envVar => {
-    const envVarStr = `${envVar[0]}="${envVar[1].replace('"', '\\"')}"`;
     if (os.platform() === "win32")
-      envVars += `${envVarStr} && `;
+      envVars += `$Env:${`${envVar[0]}="${envVar[1].replace('"', '""')}"`}\n`;
     else
-      envVars += `${envVarStr} `;
+      envVars += `${`${envVar[0]}="${envVar[1].replace('"', '\\"')}"`} `;
   });
 
   return envVars;
