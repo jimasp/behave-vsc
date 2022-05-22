@@ -219,7 +219,7 @@ After running automated tests, if you made a change that affects anything other 
   - L. go to a feature file, click "go to step defintion" and check at least some of them work
   - M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
   - O. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
-  - P. hopefully you commited your original changes at step A! if so, use git to undo the changes created by these manual tests, e.g. `git reset --hard` and `git clean -fd` to undo your changes.
+  - P. hopefully you commited your original changes at step A! if so, use git to undo the changes created by these manual tests, e.g. `git reset --hard` and `git clean -fd`.
 
 
 
