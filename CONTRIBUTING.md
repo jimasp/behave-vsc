@@ -184,37 +184,39 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	- Close vscode and run `npm run test` 
 		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
 		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-### Further testing (optional, depending on your change)
-- Run basic manual UI tests:
-	a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
-	b. Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)	
-	c. Run a single test
-	d. Debug a single test
-	e. Run group 1 features
-	f. Run all tests and check that the run stop button works
-- Run change-specific manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
-	1. commit your changes locally (because you are about to make file changes)
-	2. start "Debug Extension - Workspace MultiRoot", then	in "project 1":
-	3. edit a group1 feature file, change the name of the feature and save it, then: 
+### Further testing (optional, depending on your change)  
+  
+#### 1. Run basic manual UI tests:
+  - a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
+  - b. Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)	
+  - c. Run a single test
+  - d. Debug a single test
+  - e. Run group 1 features
+  - f. Run all tests and check that the run stop button works
+#### 2. Run change-specific manual UI tests   
+After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
+  - A. commit your changes locally (because you are about to make file changes)
+  - B. start "Debug Extension - Workspace MultiRoot", then	in "project 1":
+  - C. edit a group1 feature file, change the name of the feature and save it, then: 
 		- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
 		- check the test UI tree shows the renamed feature (you may need to reopen the node)
 		- check you can run the renamed feature from UI tree
-	4. edit a group1 outline feature file, change the name of a scenario and save it, then: 
+  - D. edit a group1 outline feature file, change the name of a scenario and save it, then: 
 		- check you can run the changed scenario from inside the feature file
 		- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
 		- check the test UI tree shows the renamed scenario (you may need to reopen the node)
-	5. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
-	6. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
+  - E. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
+  - F. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
-	7. rename a feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test ui
-	8. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from test ui tree
-	9. delete a feature file, check it gets removed from the test tree
-	10. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
-	11. copy a feature file, check it gets added to the test tree
-	12. go to a feature file, click "go to step defintion" and check at least some of them work
-	13. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
-	14. use git to undo any changes created in these manual tests
-	15. Start "Debug Extension - Workspace MultiRoot" and add/remove a workspace folder and check there are no errors, and that tests run as expected before/after the add/remove.
+  - G. rename a feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test ui
+  - H. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from test ui tree
+  - I. delete a feature file, check it gets removed from the test tree
+  - J. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
+  - K. copy a feature file, check it gets added to the test tree
+  - L. go to a feature file, click "go to step defintion" and check at least some of them work
+  - M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
+  - N. use git to undo any changes created in these manual tests
+  - O. Start "Debug Extension - Workspace MultiRoot" and add/remove a workspace folder and check there are no errors, and that tests run as expected before/after the add/remove.
 
 
 

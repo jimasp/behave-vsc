@@ -68,7 +68,7 @@
 				"behave-vsc.logDiagnostics": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nSet to true to log diagnostics in console, viewable via Toggle Developer Tools (or when debugging the extension itself). This is noisy, and will impact performance\n",
+					"description": "Default:false (disabled).\nSet to true to log diagnostics in console, viewable via vscode's 'Developer:Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small impact on performance\n",
 					"scope": "window"
 				}
 			}
