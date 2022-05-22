@@ -190,7 +190,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   - a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
   - b. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)	
   - c. clear all test results, Run a single test
-  - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test panel
+  - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
   - e. clear all test results, Run group 1 features, check that failed tests are failed, succesful tests are success, and skipped tests are skipped
   - f. clear all test results, Run all project 1 tests (from the project 1 node) and check that failed tests are failed, succesful tests are success, and skipped tests are skipped (but remember that fastskip tests will not be skipped if runAllAsOne is enabled)
   - f. clear all test results, Run all feature tests and check that the run stop button works
@@ -202,6 +202,7 @@ After running automated tests, if you made a change that affects anything other 
   - C. edit a group1 feature file, change the name of the feature and save it, then: 
 	- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
 	- check the test UI tree shows the renamed feature (you may need to reopen the node)
+	- check the old feature name no longer appears in the test UI tree
 	- check you can run the renamed feature from UI tree
   - D. edit a group1 outline feature file, change the name of a scenario and save it, then: 
 	- check you can run the changed scenario from inside the feature file
