@@ -18,12 +18,12 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
     const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
     let ps1 = "", ps2 = "";
-    if (friendlyEnvVars && os.platform() === "win32") {
+    if (os.platform() === "win32") {
       ps1 = `powershell commands:\n`;
       ps2 = "& ";
     }
 
-    const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${getFriendlyEnvVars(wkspSettings)}${ps2}"${pythonExec}" -m behave`;
+    const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${friendlyEnvVars}${ps2}"${pythonExec}" -m behave`;
     const junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
     const args = ["--junit", "--junit-directory", junitDirUri.fsPath, "--capture", "--capture-stderr", "--logcapture"];
 
@@ -49,7 +49,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
     let ps1 = "", ps2 = "";
-    if (friendlyEnvVars && os.platform() === "win32") {
+    if (os.platform() === "win32") {
       ps1 = `powershell commands:\n`;
       ps2 = "& ";
     }
