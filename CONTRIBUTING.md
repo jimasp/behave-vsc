@@ -218,6 +218,7 @@ After running automated tests, if you made a change that affects anything other 
   - M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
   - N. use git to undo any changes created in these manual tests
   - O. Start "Debug Extension - Workspace MultiRoot" and add/remove a workspace folder and check there are no errors, and that tests run as expected before/after the add/remove.
+  - P. git reset --hard to undo your changes
 
 
 
