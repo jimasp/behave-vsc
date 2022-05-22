@@ -196,7 +196,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   - f. clear all test results, Run all feature tests and check that the run stop button works
 #### 2. Run change-specific manual UI tests   
 After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
-  - A. commit your changes locally (because you are about to make file changes)
+  - A. **commit your changes** locally (because you are about to make file changes)
   - B. start "Debug Extension - Workspace MultiRoot", 
   - Then in "project 1":
   - C. edit a group1 feature file, change the name of the Feature: and save it, then: 
