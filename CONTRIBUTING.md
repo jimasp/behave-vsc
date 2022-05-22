@@ -200,13 +200,13 @@ After running automated tests, if you made a change that affects anything other 
   - B. start "Debug Extension - Workspace MultiRoot", 
   - Then in "project 1":
   - C. edit a group1 feature file, change the name of the feature and save it, then: 
-		- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
-		- check the test UI tree shows the renamed feature (you may need to reopen the node)
-		- check you can run the renamed feature from UI tree
+	- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
+	- check the test UI tree shows the renamed feature (you may need to reopen the node)
+	- check you can run the renamed feature from UI tree
   - D. edit a group1 outline feature file, change the name of a scenario and save it, then: 
-		- check you can run the changed scenario from inside the feature file
-		- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
-		- check the test UI tree shows the renamed scenario (you may need to reopen the node)
+	- check you can run the changed scenario from inside the feature file
+	- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
+	- check the test UI tree shows the renamed scenario (you may need to reopen the node)
   - E. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
   - F. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
