@@ -199,28 +199,27 @@ After running automated tests, if you made a change that affects anything other 
   - A. commit your changes locally (because you are about to make file changes)
   - B. start "Debug Extension - Workspace MultiRoot", 
   - Then in "project 1":
-  - C. edit a group1 feature file, change the name of the feature and save it, then: 
+  - C. edit a group1 feature file, change the name of the Feature: and save it, then: 
 	- check you can run the renamed feature from inside the feature file (first play button at top of feature file)
 	- check the test UI tree shows the renamed feature (you may need to reopen the node)
 	- check the old feature name no longer appears in the test UI tree
 	- check you can run the renamed feature from UI tree
-  - D. edit a group1 outline feature file, change the name of a scenario and save it, then: 
+  - D. edit a group1 outline feature file, change the name of an Scenario Outline: and save it, then: 
 	- check you can run the changed scenario from inside the feature file
 	- disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
 	- check the test UI tree shows the renamed scenario (you may need to reopen the node)
   - E. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
   - F. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file 
 	(the normal feature file that is open, not the diff view)
-  - G. rename a feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test ui
-  - H. rename a feature group folder (e.g. 'group1_features'), check the folder is not duplicated, check feature tests run from test ui tree
+  - G. rename the table.feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
+  - H. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
   - I. delete a feature file, check it gets removed from the test tree
   - J. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
   - K. copy a feature file, check it gets added to the test tree
   - L. go to a feature file, click "go to step defintion" and check at least some of them work
   - M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
-  - N. use git to undo any changes created in these manual tests
-  - O. Start "Debug Extension - Workspace MultiRoot" and add/remove a workspace folder and check there are no errors, and that tests run as expected before/after the add/remove.
-  - P. git reset --hard to undo your changes
+  - O. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
+  - P. use git to undo the changes created by these manual tests, e.g. git reset --hard to undo your changes
 
 
 
