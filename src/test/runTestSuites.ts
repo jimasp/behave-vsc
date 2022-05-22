@@ -44,32 +44,32 @@ async function runTestSuites() {
     let extensionTestsPath = "";
 
 
-    // launchArgs = ["example-projects/example project simple"]
-    // extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
-    // await runTests({
-    //   vscodeExecutablePath,
-    //   extensionDevelopmentPath,
-    //   extensionTestsPath,
-    //   launchArgsxxxxxxxxxxxxxxxx
-    // });
+    launchArgs = ["example-projects/example project simple"]
+    extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
 
-    // launchArgs = ["example-projects/example-project-1"]
-    // extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
-    // await runTests({
-    //   vscodeExecutablePath,
-    //   extensionDevelopmentPath,
-    //   extensionTestsPath,
-    //   launchArgs
-    // });
+    launchArgs = ["example-projects/example-project-1"]
+    extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
 
-    // launchArgs = ["example-projects/example-project-2"]
-    // extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
-    // await runTests({
-    //   vscodeExecutablePath,
-    //   extensionDevelopmentPath,
-    //   extensionTestsPath,
-    //   launchArgs
-    // });
+    launchArgs = ["example-projects/example-project-2"]
+    extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
 
     launchArgs = ["example-projects/multiroot.code-workspace"];
     extensionTestsPath = path.resolve(__dirname, './workspace-multiroot-suite/index');
