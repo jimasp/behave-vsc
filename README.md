@@ -20,7 +20,7 @@
 ## Features
 - Debug or Run behave tests from the test workbench, or from inside a feature file.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarList`, etc.)
-- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to step"). You can also map a keybinding for this command if you wish (e.g. F12).
+- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keybinding for this command if you wish (e.g. F12).
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
