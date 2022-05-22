@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
 import { getContentFromFilesystem } from './common';
+import { diagLog } from './Logger';
 
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -76,6 +77,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
     }
   }
 
-  console.log(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`);
+  diagLog(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`);
 };
 

@@ -16,13 +16,13 @@ suite(`workspace-simple-suite test run`, () => {
 		const testConfig = new TestWorkspaceConfig({
 			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
 			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
-			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
+			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: undefined
 		});
 
 		console.log(`${testPre}: ${JSON.stringify(testConfig)}`);
 		await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getWssExpectedCounts, getWssExpectedResults);
 
-	}).timeout(120000);
+	}).timeout(300000);
 
 	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
 	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);

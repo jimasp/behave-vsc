@@ -64,6 +64,12 @@
 					"default": true,
 					"description": "Default:true (enabled).\nSet to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings.\nFor multi-root workspaces, set this in your *.code-workspace file.\n",
 					"scope": "window"
+				},
+				"behave-vsc.logDiagnostics": {
+					"type": "boolean",
+					"default": false,
+					"description": "Default:false (disabled).\nSet to true to log diagnostics in console, viewable via Toggle Developer Tools (or when debugging the extension itself). This is noisy, and will impact performance\n",
+					"scope": "window"
 				}
 			}
 		},

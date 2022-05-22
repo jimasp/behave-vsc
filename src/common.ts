@@ -5,6 +5,7 @@ import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
 import * as fs from 'fs';
 import * as path from 'path';
+import { diagLog } from './Logger';
 const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -33,7 +34,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
-export function getIdForUri(uri: vscode.Uri) {
+export function getTestIdForUri(uri: vscode.Uri) {
   // uri.path and uri.fsPath currently seem to give inconsistent results on windows ("C:" vs "c:") 
   // (found when running integration tests vs debugging extension)
   // and we use the id for matching strings, so use toString() to provide consistent casing
@@ -41,7 +42,11 @@ export function getIdForUri(uri: vscode.Uri) {
 }
 
 
-export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
+export async function removeTempDirectory(cancelToken: vscode.CancellationToken) {
+  await removeDirectoryRecursivexx(config.extTempFilesUri, cancelToken);
+}
+
+export async function removeDirectoryRecursivexx(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
 
   try {
 
@@ -83,7 +88,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
   // performance is CRITICAL here as: (a) we need it to be synchronous, and (b) it is called during activate(),
   // if you change this function, check performance before and after your 
-  // changes (see console.log statement at the end of this function)
+  // changes (see diagLog statement at the end of this function)
 
   function findAFeatureFile(fullDirPath: string): boolean {
 
@@ -129,7 +134,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   if (workspaceFoldersWithFeatures.length === 0)
     throw new Error("No workspace folders contain a *.feature file"); // should never happen (because of package.json activationEvents)
 
-  console.log(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
+  diagLog(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   return workspaceFoldersWithFeatures;
@@ -184,7 +189,7 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
   // get all test items if wkspUri is null, or
   // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspUri === null || item.id.includes(getIdForUri(wkspUri))) {
+    if (wkspUri === null || item.id.includes(getTestIdForUri(wkspUri))) {
       items.push(item);
       if (item.children)
         items.push(...getAllTestItems(wkspUri, item.children));

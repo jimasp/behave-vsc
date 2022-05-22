@@ -50,7 +50,7 @@ async function runTestSuites() {
     //   vscodeExecutablePath,
     //   extensionDevelopmentPath,
     //   extensionTestsPath,
-    //   launchArgs
+    //   launchArgsxxxxxxxxxxxxxxxx
     // });
 
     // launchArgs = ["example-projects/example-project-1"]

@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { getContentFromFilesystem, getIdForUri, isFeatureFile, WkspError } from './common';
+import { getContentFromFilesystem, getTestIdForUri, isFeatureFile, WkspError } from './common';
 import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
+import { diagLog } from './Logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Feature | Scenario;
@@ -75,13 +76,13 @@ export class TestFile {
       const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       if (!item.uri)
         throw new WkspError(`no uri for item ${item.id}`, wkspSettings.uri);
-      const id = `${getIdForUri(item.uri)}/${data.getLabel()}`;
+      const id = `${getTestIdForUri(item.uri)}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
       tcase.range = range;
       parent.item.label = featureName;
       parent.children.push(tcase);
-      console.log(`created child test item scenario ${tcase.id} from ${featureFilePath}`);
+      diagLog(`created child test item scenario ${tcase.id} from ${featureFilePath}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {

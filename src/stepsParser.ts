@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { isStepsFile } from './common';
 import { getContentFromFilesystem } from './common';
+import { diagLog } from './Logger';
 
 //const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)("|').*\).*$/i;
 const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
@@ -88,13 +89,13 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
       const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
       const detail = new StepDetail(featuresUri.path, fileUri, range);
       if (steps.get(reKey))
-        console.log("replacing duplicate step re: " + reKey);
+        diagLog("replacing duplicate step re: " + reKey);
       steps.set(reKey, detail); // there can be only one (per workspace)
       fileSteps++;
     }
 
   }
 
-  console.log(`${caller}: parsed ${fileSteps} steps from ${fileUri.path}`);
+  diagLog(`${caller}: parsed ${fileSteps} steps from ${fileUri.path}`);
 
 }

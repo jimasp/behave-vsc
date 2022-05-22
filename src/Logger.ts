@@ -47,7 +47,7 @@ export class Logger {
 
   // log without a carriage return, used for behave output
   logInfoNoCR = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    console.log(text);
+    diagLog(text);
 
     this.channels[wkspUri.path].append(text);
     if (run)
@@ -55,7 +55,7 @@ export class Logger {
   };
 
   logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    console.log(text);
+    diagLog(text);
 
     this.channels[wkspUri.path].appendLine(text);
     if (run)
@@ -63,7 +63,7 @@ export class Logger {
   };
 
   logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
-    console.log(text);
+    diagLog(text);
 
     for (const wkspPath in this.channels) {
       this.channels[wkspPath].appendLine(text);
@@ -74,7 +74,7 @@ export class Logger {
   };
 
   logWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    console.warn(text);
+    diagLog(text, DiagLogType.warn);
 
     this.channels[wkspUri.path].appendLine(text);
     this.channels[wkspUri.path].show(true);
@@ -84,7 +84,7 @@ export class Logger {
   };
 
   logWarnAllWksps = (text: string, run?: vscode.TestRun) => {
-    console.warn(text);
+    diagLog(text, DiagLogType.warn);
 
     let first = true;
     for (const wkspPath in this.channels) {
@@ -117,7 +117,7 @@ export class Logger {
     else
       text = `${error}`;
 
-    console.error(text);
+    diagLog(text, DiagLogType.error);
 
     if (config.integrationTestRun && !text.includes("Canceled") && !text.includes("Cancelled"))
       debugger; // eslint-disable-line no-debugger
@@ -148,3 +148,23 @@ export class Logger {
   }
 }
 
+export enum DiagLogType {
+  "info", "warn", "error"
+}
+
+export const diagLog = (message: string, logType?: DiagLogType) => {
+  if (config && !config.globalSettings.logDiagnostics)
+    return;
+
+  switch (logType) {
+    case DiagLogType.error:
+      console.error(message);
+      break;
+    case DiagLogType.warn:
+      console.warn(message);
+      break;
+    default:
+      console.log(message);
+      break;
+  }
+}

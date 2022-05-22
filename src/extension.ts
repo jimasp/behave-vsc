@@ -6,13 +6,14 @@ import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Co
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeDirectoryRecursive, WkspError
+  isStepsFile, logExtensionVersion, removeTempDirectory, WkspError
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getStepMap, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
+import { diagLog, DiagLogType } from './Logger';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -22,7 +23,7 @@ export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
 export type TestSupport = {
-  runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, testRunStopButtonToken: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
@@ -43,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
   try {
 
-    console.log("activate called, node pid:" + process.pid);
+    diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const parser = new FileParser();
@@ -64,10 +65,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }
     context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
 
-    // TODO - rename cancelRemoveDirectoryRecursive token and function to reflect that they remove the temp folder
-    const cancelRemoveDirectoryRecursive = new vscode.CancellationTokenSource();
-    removeDirectoryRecursive(config.extTempFilesUri, cancelRemoveDirectoryRecursive.token);
-    const runHandler = testRunHandler(testData, ctrl, parser, cancelRemoveDirectoryRecursive);
+    const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
+    context.subscriptions.push(removeTempDirectoryCancelSource);
+    removeTempDirectory(removeTempDirectoryCancelSource.token);
+    const runHandler = testRunHandler(testData, ctrl, parser, removeTempDirectoryCancelSource);
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
@@ -118,7 +119,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           onDidSendMessage: (m) => {
             try {
               // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-              // console.log(JSON.stringify(m));
+
+              // diagLog(JSON.stringify(m));
 
               if (m.body?.reason === "exited" && m.body?.threadId) {
                 // mark threadExit for subsequent calls
@@ -319,7 +321,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     // log for extension developers in case we need to add another file type above
     if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      console.warn("detected deletion of unanticipated file type");
+      diagLog("detected deletion of unanticipated file type", DiagLogType.warn);
     }
 
     try {
@@ -329,9 +331,6 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       config.logger.logError(new WkspError(e, wkspUri));
     }
   });
-
-
-
 
   return watcher;
 }

@@ -16,7 +16,7 @@ suite(`workspace-2-suite test run`, () => {
 		const testConfig = new TestWorkspaceConfig({
 			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
 			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
-			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
+			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: undefined
 		});
 
 		console.log(`${testPre}: ${JSON.stringify(testConfig)}`);

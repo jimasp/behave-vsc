@@ -9,7 +9,7 @@
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
-- Fixes are great. New features will be considered, but see [Development guidelines](#Design-Principles).
+- Bug fixes are great. New features will be considered, but see [Development guidelines](#development-guidelines).
 
 ---
 ### Development environment setup for extension development
@@ -146,13 +146,17 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Configuration and logging is provided by the singleton `config`.
 ### Disposables
 - Any disposable object should either be added to `context.subscriptions.push` or disposed in a `finally` block or in the `deactivate()`. (The most common disposables are event handlers, filesystemwatchers, and cancelllation token sources.)
+### Diagnostics
+- Diagnostic logs are controlled via the extension setting `logDiagnostics` (this is enabled by default in the example projects and for most integration tests).
+- Diagnostics logs should be written via `diagLog()` and can be viewed in the debug console if debugging the extension itself, or otherwise via vscode command `Developer:Toggle developer tools`.
+- Diagnostics inside integration tests should use `console.log`.
 ### Error handling
 - Most of the time, i.e. outside of entry point/non-awaited functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
 - Thrown errors with a type of `Error` (inc. `throw new WkspError`) will include the stack trace in the log. `throw "my error message"` will not.
 - Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.logError`.
 - Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
 - When adding a throw/logError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets logged once.
-- Any thrown errors are going to reach the user, so they should be things that either the user can act upon to fix, or exceptions like logic errors and stuff that is never supposed to happen that should be raised as issues in github. Diagnostics are provided via console.error/warn/log and can be viewed via Developer:Toggle developer tools, or in the debug console if debugging the extension itself.
+- Any thrown errors are going to reach the user, so they should be things that either the user can act upon to fix, or exceptions like logic errors and stuff that is never supposed to happen that should be raised as issues in github. 
 
 ### Logging
 - Logging errors and warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
@@ -160,9 +164,9 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Logging warnings is done via `config.logger.logWarn`.
 - Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *Note - this should only be used where a workspace context does not make sense.*
 - Log to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
-- Log to the vscode test run output at the same time: specify the run parameter: `config.loger.logInfo("msg", wkspUri, run)`.
+- Log to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
-- Log only for extension developers (contributors) and users who want to see diagnostic output: `console.log("msg")`.
+- Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 
 
 
@@ -172,16 +176,23 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - PRs are unlikely to be accepted before release v1.0.0, but feel free to raise one if it helps to highlight an issue.
 - Fixes are given priority over new functionality. Also, new functionality _must_ have tests.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
+- Generally speaking, you should only add files to, not modify, the example project workspaces in your PR.
 ### Process
-- Generally speaking, you should not modify the example project workspaces in your PR _unless_ you are _adding_ new feature/steps files or _adding/improving_ existing tests. (Either way, any changes to the example project workspaces will require you to update the test code for expected results.)
-- Quickly review your code vs the project's [Development guidelines](#design-principles)
+- Quickly review your code vs the project's [Development guidelines](#development-guidelines)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `npm run lint` and fix any errors or warnings
 - Run automated tests (verify behave results):
 	- Close vscode and run `npm run test` 
 		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
 		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-- Run manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum. (Unless something fails, this process should take you less than 5 mins):
+- Run standard manual UI tests:
+	a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
+	b. Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)	
+	c. Run a single test
+	d. Debug a single test
+	e. Run group 1 features
+	f. Run all tests and check that the run stop button works
+- Run more change-specific manual UI tests. After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum. (Unless something fails, this process should take you less than 5 mins):
 	1. commit your changes locally (because you are about to make file changes)
 	2. start "Debug Extension - Workspace MultiRoot", then	in "project 1":
 	3. edit a group1 feature file, change the name of the feature and save it, then: 

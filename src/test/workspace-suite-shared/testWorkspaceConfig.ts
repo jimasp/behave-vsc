@@ -19,12 +19,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private runAllAsOne: boolean | undefined;
 	private runParallel: boolean | undefined;
 	private showConfigurationWarnings: boolean | undefined;
+	private logDiagnostics: boolean | undefined;
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
 		alwaysShowOutput, envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
 		multiRootFolderIgnoreList, multiRootRunWorkspacesInParallel,
-		runAllAsOne, runParallel, showConfigurationWarnings
+		runAllAsOne, runParallel, showConfigurationWarnings, logDiagnostics
 	}: {
 		alwaysShowOutput: boolean | undefined,
 		envVarList: string | undefined,
@@ -35,7 +36,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		multiRootRunWorkspacesInParallel: boolean | undefined,
 		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
-		showConfigurationWarnings: boolean | undefined
+		showConfigurationWarnings: boolean | undefined,
+		logDiagnostics: boolean | undefined
 	}) {
 		this.alwaysShowOutput = alwaysShowOutput;
 		this.envVarList = envVarList;
@@ -47,6 +49,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.multiRootFolderIgnoreList = multiRootFolderIgnoreList;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
 		this.showConfigurationWarnings = showConfigurationWarnings;
+		this.logDiagnostics = logDiagnostics;
 	}
 
 	get<T>(section: string): T {
@@ -55,7 +58,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		//		
 		// NOTE: for get, vscode will use the default in the package.json if there is 
 		// one, OR otherwise a default value for the type (e.g. bool = false, string = "", etc.)
-		// so we MUST mirror that behavior here and return defaults
+		// so we MUST mirror that behavior here
 		switch (section) {
 			case "alwaysShowOutput":
 				return <T><unknown>(this.alwaysShowOutput === undefined ? false : this.alwaysShowOutput);
@@ -77,6 +80,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
+			case "logDiagnostics":
+				return <T><unknown>(this.logDiagnostics === undefined ? false : this.logDiagnostics);
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
@@ -124,6 +129,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				break;
 			case "showConfigurationWarnings":
 				response = <T><unknown>this.showConfigurationWarnings;
+				break;
+			case "logDiagnostics":
+				response = <T><unknown>this.logDiagnostics;
 				break;
 			default:
 				debugger; // eslint-disable-line no-debugger
@@ -248,6 +256,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("runParallel"));
 			case "showConfigurationWarnings":
 				return <T><unknown>(this.get("showConfigurationWarnings"));
+			case "logDiagnostics":
+				return <T><unknown>(this.get("logDiagnostics"));
 
 			default:
 				debugger; // eslint-disable-line no-debugger

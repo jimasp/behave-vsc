@@ -2,17 +2,18 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 import { EXTENSION_NAME } from './Configuration';
-import { Logger } from './Logger';
+import { diagLog, Logger } from './Logger';
 
 
 export class WindowSettings {
   // class for package.json "window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
-  public alwaysShowOutput: boolean;
-  public multiRootFolderIgnoreList: string[] = [];
-  public multiRootRunWorkspacesInParallel: boolean;
-  public showConfigurationWarnings: boolean;
+  public readonly alwaysShowOutput: boolean;
+  public readonly multiRootFolderIgnoreList: string[] = [];
+  public readonly multiRootRunWorkspacesInParallel: boolean;
+  public readonly showConfigurationWarnings: boolean;
+  public readonly logDiagnostics: boolean;
   public errors: string[] = [];
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
@@ -30,11 +31,14 @@ export class WindowSettings {
     const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
     if (showConfigurationWarningsCfg === undefined)
       throw "showConfigurationWarnings is undefined";
+    const logDiagnosticsCfg: boolean | undefined = winConfig.get("logDiagnostics");
+    if (logDiagnosticsCfg === undefined)
+      throw "logDiagnostics is undefined";
 
     this.alwaysShowOutput = alwaysShowOutputCfg;
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.showConfigurationWarnings = showConfigurationWarningsCfg;
-
+    this.logDiagnostics = logDiagnosticsCfg;
 
     if (multiRootFolderIgnoreListCfg) {
       try {
@@ -163,7 +167,7 @@ export class WorkspaceSettings {
               throw null;
             }
             const value = matches[2].replace(escape, "'");
-            console.log(`${name}='${value}'`);
+            diagLog(`${name}='${value}'`);
             this.envVarList[name] = value;
           }
 

@@ -5,6 +5,7 @@ import { Configuration } from '../../Configuration';
 import { TestResult } from './expectedResults.helpers';
 import { ParseCounts } from '../../FileParser';
 
+
 const envVarList = "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'empty_var'  :'', 'space_var': ' '  ";
 const envVarList2 = "'some_var':'double qu\"oted','some_var2':'single qu\\'oted', 'empty_var':'', 'space_var': ' '";
 const fastSkipList = "  @fast-skip-me,  @fast-skip-me-too, ";
@@ -24,7 +25,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined
+      alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -40,7 +41,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList2,
       envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined
+      alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -55,7 +56,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
       envVarList: envVarList2, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true
+      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -70,7 +71,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true, multiRootFolderIgnoreList: multiRootFolderIgnoreList2,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined
+      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
 

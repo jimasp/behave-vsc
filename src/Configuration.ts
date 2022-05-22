@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures } from './common';
-import { Logger } from './Logger';
+import { diagLog, Logger } from './Logger';
 import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 
 export const EXTENSION_NAME = "behave-vsc";
@@ -38,7 +38,7 @@ class ExtensionConfiguration implements Configuration {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
     this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
-    console.log("Configuration singleton constructed (this should only fire once)");
+    diagLog("Configuration singleton constructed (this should only fire once)");
   }
 
   public dispose() {

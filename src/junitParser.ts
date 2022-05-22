@@ -4,6 +4,7 @@ import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem } from './common';
 import { WIN_MAX_PATH } from './Configuration';
+import { diagLog } from './Logger';
 
 const parser = new xml2js.Parser();
 
@@ -72,7 +73,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
 
   const rundiag = `test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`;
   run.appendOutput(rundiag);
-  console.log(rundiag);
+  diagLog(rundiag);
 }
 
 

@@ -9,7 +9,7 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorks
 import { getStepMatch } from '../../gotoStepHandler';
 import { StepMap } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getIdForUri } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getTestIdForUri } from '../../common';
 import { performance } from 'perf_hooks';
 
 
@@ -82,6 +82,7 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 		assert.deepStrictEqual(winSettings.multiRootFolderIgnoreList, testConfig.getExpected("multiRootFolderIgnoreList"), wkspName);
 		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
 		assert.strictEqual(winSettings.showConfigurationWarnings, testConfig.getExpected("showConfigurationWarnings"), wkspName);
+		assert.strictEqual(winSettings.logDiagnostics, testConfig.getExpected("logDiagnostics"), wkspName);
 	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
@@ -236,79 +237,96 @@ function getWorkspaceUri(wkspName: string) {
 
 //declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 //global.lock = "";
-let lock = "";
+let lockVal = "";
 
 // used to mitigate parallel workspace initialisation for multiroot parallel workspace testing
 // (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)
-async function waitOnLock(consoleName: string, acquire: boolean) {
+async function setLock(consoleName: string, acquireOrRelease: string) {
 
 	if (!(global as any).multiRootTest)
 		return;
 
-	if (!acquire) {
-		console.log(`${consoleName}: waitOnLock releasing lock`);
-		lock = "";
+	if (!["acquire", "release"].includes(acquireOrRelease))
+		throw "invalid value for acquire or release";
+
+	if (acquireOrRelease === "release") {
+		console.log(`${consoleName}: setLock releasing lock`);
+		lockVal = "";
 		return;
 	}
 
-	if (!lock && acquire) {
-		lock = consoleName;
-		console.log(`${consoleName}: waitOnLock acquiring lock`);
+	if (!lockVal && acquireOrRelease === "acquire") {
+		lockVal = consoleName;
+		console.log(`${consoleName}: setLock acquiring lock`);
 		return;
 	}
 
 	const start = performance.now()
 	for (let i = 0; i < 300; i++) { // (generous for the sake of debugging)
-		if (!lock)
+		if (!lockVal)
 			break;
-		console.log(`${consoleName}: waitOnLock waiting for ${lock} to release lock`);
+		console.log(`${consoleName}: setLock waiting for ${lockVal} to release lock`);
 		await new Promise(t => setTimeout(t, 200));
 	}
 	const waited = performance.now() - start;
 
-	if (lock) {
-		throw new Error(`${consoleName}: waitOnLock timed out after ${waited} waiting for all workspaces to initialise`);
+	if (lockVal) {
+		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for all workspaces to initialise`);
 	}
 	else {
-		if (acquire) {
-			lock = consoleName;
-			console.log(`${consoleName}: waitOnLock acquired lock after ${waited}`);
+		if (acquireOrRelease === "acquire") {
+			lockVal = consoleName;
+			console.log(`${consoleName}: setLock acquired lock after ${waited}`);
 		}
 	}
 
 }
 
 
+// activate only once for parallel (multiroot) calls and get the same instances
+let extInstances: TestSupport | undefined = undefined;
+async function getExtensionInstances(): Promise<TestSupport> {
+
+	if (extInstances)
+		return extInstances;
+
+
+	await vscode.commands.executeCommand("testing.clearTestResults");
+	await vscode.commands.executeCommand("workbench.view.testing.focus");
+	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
+	assert(extension);
+	assert(extension.isActive);
+
+	// activate extension and get instances
+	const start = performance.now();
+	extInstances = await extension.activate() as TestSupport;
+	const tookMs = performance.now() - start;
+	console.log(`activate call time: ${tookMs} ms`);
+	assert(tookMs < 5);
+	assert(extension.isActive);
+	assertInstances(extInstances);
+	extInstances.config.integrationTestRun = true;
+
+	// wait for any initial parse to complete
+	await extInstances.parser.readyForRun(5000, "getExtensionInstances");
+	return extInstances;
+}
+
+
 // NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
-export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
+export async function runAllTestsAndAssertTheResults(debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
-	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) => {
+	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wkspName}`;
 	const wkspUri = getWorkspaceUri(wkspName);
 
-	await waitOnLock(consoleName, true);
+	await setLock(consoleName, "acquire");
 	console.log(`${consoleName} initialising`);
 
-	const cancelToken = new vscode.CancellationTokenSource().token;
-	await vscode.commands.executeCommand("testing.clearTestResults");
-	await vscode.commands.executeCommand("workbench.view.testing.focus");
-	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
-	assert(extension, wkspName);
-	assert(extension.isActive);
-
-	// activate extenson and get instances
-	const start = performance.now();
-	const instances = await extension.activate() as TestSupport;
-	const tookMs = performance.now() - start;
-	console.log(`activate call time: ${tookMs} ms`);
-	assert.strictEqual(extension.isActive, true, wkspName);
-	assertInstances(instances);
-	instances.config.integrationTestRun = true;
-	// wait for initial parse to complete
-	//await instances.parser.readyForRun(5000, consoleName);
+	const instances = await getExtensionInstances();
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// we  we need call it manually to insert a test config
@@ -321,7 +339,7 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
 	assert(actualCounts !== null, "actualCounts !== null");
-	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getIdForUri(wkspUri)) !== undefined;
+	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getTestIdForUri(wkspUri)) !== undefined;
 	assertExpectedCounts(debug, wkspUri, wkspName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
 
 	// check all steps can be matched
@@ -344,9 +362,10 @@ export const runAllTestsAndAssertTheResults = async (debug: boolean, wkspName: s
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
 	assert(await instances.parser.readyForRun(0, consoleName));
-	const resultsPromise = instances.runHandler(debug, runRequest, cancelToken);
+	const fakeTestRunStopButtonToken = new vscode.CancellationTokenSource().token;
+	const resultsPromise = instances.runHandler(debug, runRequest, fakeTestRunStopButtonToken);
 
-	await waitOnLock(consoleName, false);
+	await setLock(consoleName, "release");
 
 
 	if (debug) {

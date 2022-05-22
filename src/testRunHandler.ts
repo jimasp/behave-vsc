@@ -4,15 +4,18 @@ import { WorkspaceSettings } from "./settings";
 import { Scenario, TestData, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, getIdForUri,
+  countTestItems, getAllTestItems, getContentFromFilesystem, getTestIdForUri,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
 } from './common';
 import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
 import { FileParser } from './FileParser';
 import { performance } from 'perf_hooks';
+import { diagLog, DiagLogType } from './Logger';
 
 
+// cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,
+// so cancelTestRun() does not affect subsequent runs
 let internalCancelSource: vscode.CancellationTokenSource;
 
 export function disposeCancelTestRunSource() {
@@ -22,16 +25,16 @@ export function disposeCancelTestRunSource() {
 
 export function cancelTestRun(cancelledBy: string) {
   if (internalCancelSource) {
-    console.log(`\n=== test run CANCELLED by ${cancelledBy} ===\n\n`);
+    diagLog(`\n=== test run CANCELLED by ${cancelledBy} ===\n\n`);
     internalCancelSource.cancel();
   }
 }
 
 // TODO refactor
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, parser: FileParser,
-  cancelRemoveDirectoryRecursiveSource: vscode.CancellationTokenSource) {
+  removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
-  return async (debug: boolean, request: vscode.TestRunRequest, runToken: vscode.CancellationToken) => {
+  return async (debug: boolean, request: vscode.TestRunRequest, testRunStopButtonToken: vscode.CancellationToken) => {
 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
@@ -39,12 +42,14 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     const ready = await parser.readyForRun(1000, "testRunHandler");
     if (!ready) {
       const msg = "cannot run tests while test items are still updating, please try again";
-      console.warn(msg);
+      diagLog(msg, DiagLogType.warn);
       vscode.window.showWarningMessage(msg);
       return;
     }
 
-    cancelRemoveDirectoryRecursiveSource.cancel();
+    // stop the temp directory removal function if it is still running
+    removeTempDirectoryCancelSource.cancel();
+
     internalCancelSource = new vscode.CancellationTokenSource();
     const combinedCancelSource = new vscode.CancellationTokenSource();
     const combinedToken = combinedCancelSource.token;
@@ -53,7 +58,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       combinedCancelSource.cancel();
     });
 
-    const runCancelHandler = runToken.onCancellationRequested(() => {
+    const runCancelHandler = testRunStopButtonToken.onCancellationRequested(() => {
       combinedCancelSource.cancel();
     });
 
@@ -89,11 +94,11 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
             await queueSelectedTestItems(gatherTestItems(test.children));
           }
 
-          if (test.uri && !coveredLines.has(getIdForUri(test.uri))) {
+          if (test.uri && !coveredLines.has(getTestIdForUri(test.uri))) {
             try {
               const lines = (await getContentFromFilesystem(test.uri)).split('\n');
               coveredLines.set(
-                getIdForUri(test.uri),
+                getTestIdForUri(test.uri),
                 lines.map((lineText, lineNo) =>
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -110,17 +115,16 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
       const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspQueue: QueueItem[], wkspSettings: WorkspaceSettings) => {
 
-        const wkspPath = wkspSettings.uri.path;
         const asyncRunPromises: Promise<void>[] = [];
 
         const start = performance.now();
         if (!debug)
-          config.logger.logInfo(`--- workspace ${wkspPath} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
+          config.logger.logInfo(`--- ${wkspSettings.name} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
 
         const logComplete = () => {
           const end = performance.now();
           if (!debug) {
-            config.logger.logInfo(`\n--- ${wkspPath} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
+            config.logger.logInfo(`\n--- ${wkspSettings.name} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
               wkspSettings.uri, run);
           }
         }
@@ -128,7 +132,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
         if (!allTestsForThisWkspIncluded) {
-          const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === wkspSettings.uri.path).length === 1;
+          const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getTestIdForUri(wkspSettings.uri)).length === 1;
 
           if (wkspGrandParentItemIncluded)
             allTestsForThisWkspIncluded = true;
@@ -157,7 +161,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
           if (!debug)
             run.appendOutput(runDiag);
-          console.log(runDiag);
+          diagLog(runDiag);
 
           if (combinedToken.isCancellationRequested) {
             updateRun(wkspQueueItem.test, coveredLines, run);
@@ -201,7 +205,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         // run each workspace queue
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
           const wkspSettings = config.workspaceSettings[wkspUri.path];
-          const idMatch = getIdForUri(wkspSettings.featuresUri);
+          const idMatch = getTestIdForUri(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
           if (wkspQueue.length === 0)
@@ -280,9 +284,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       run.end();
     }
     finally {
-      internalCancelSource.dispose();
-      debugCancelHandler.dispose();
-      runCancelHandler.dispose();
+      internalCancelSource?.dispose();
+      debugCancelHandler?.dispose();
+      runCancelHandler?.dispose();
     }
 
   };

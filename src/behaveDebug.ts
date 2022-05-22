@@ -3,6 +3,7 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
+import { diagLog } from './Logger';
 
 
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
@@ -16,7 +17,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
   try {
 
-    console.log(friendlyCmd); // log debug cmd for extension devs only
+    diagLog(friendlyCmd); // log debug cmd for extension devs only
 
     // remove stdout noise when debugging
     args.push("--no-summary", "--outfile", config.extTempFilesUri.fsPath + "debug.log");
@@ -36,9 +37,10 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
 
-    if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig))
-      throw new Error("unable to start debug session");
-
+    if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
+      diagLog("unable to start debug session, was debug stop button clicked?")
+      return;
+    }
 
     return await new Promise((resolve, reject) => {
       // debug stopped or completed    

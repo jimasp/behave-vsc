@@ -6,6 +6,7 @@ import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { cleanBehaveText, WkspError } from './common';
+import { diagLog } from './Logger';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
@@ -34,7 +35,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   if (runAllAsOne) {
     const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
     await vscode.workspace.fs.createDirectory(junitDirUri);
-    console.log(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`);
+    diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
     });
@@ -52,7 +53,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   try {
     const local_args = [...args];
     local_args.unshift("-m", "behave");
-    console.log(pythonExec, local_args.join(" "));
+    diagLog(`${pythonExec} ${local_args.join(" ")}`);
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: wkspSettings.envVarList };
     cp = spawn(pythonExec, local_args, options);
 
@@ -102,9 +103,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     // because the run ends when all instances of this function have returned, we need to make sure 
     // that all test have been updated before we return (you can't update a test when the run has ended)
     if (runAllAsOne) {
-      console.log(`run ${run.name} - waiting for all junit results to update...`);
+      diagLog(`run ${run.name} - waiting for all junit results to update...`);
       await updatesComplete;
-      console.log(`run ${run.name} - all junit result updates complete`);
+      diagLog(`run ${run.name} - all junit result updates complete`);
     }
     else {
       if (!junitFileUri)
@@ -137,7 +138,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
   const updateResult = async (uri: vscode.Uri) => {
     try {
-      console.log(`${run.name} - updateResult called for uri ${uri.path}`);
+      diagLog(`${run.name} - updateResult called for uri ${uri.path}`);
 
       const matches = map.filter(m => m.junitFileUri.path === uri.path);
       if (matches.length === 0)
@@ -147,7 +148,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       for (const match of matches) {
         await parseAndUpdateTestResults(match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         match.updated = true;
-        console.log(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`);
+        diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`);
         updated++;
       }
       if (updated === map.length)
@@ -165,6 +166,6 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   watcher.onDidCreate(uri => updateResult(uri));
   watcher.onDidChange(uri => updateResult(uri));
 
-  console.log(`${run.name} - watching junit directory ${junitDirUri}/**/*.xml}`);
+  diagLog(`${run.name} - watching junit directory ${junitDirUri}/**/*.xml}`);
   return watcher;
 }
