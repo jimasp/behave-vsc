@@ -77,8 +77,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     cp.stdout?.on('data', chunk => log(chunk.toString()));
 
     if (!async) {
-      config.logger.logInfo("\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
-      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
+      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
     }
 
     await new Promise((resolve) => cp.on('close', () =>
@@ -87,8 +86,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 
     if (asyncBuff.length > 0) {
-      config.logger.logInfo("\n---\nenv vars: " + JSON.stringify(wkspSettings.envVarList), wkspUri, run);
-      config.logger.logInfo(`${friendlyCmd}\n`, wkspUri, run);
+      config.logger.logInfo(`\n---\n${friendlyCmd}\n`, wkspUri, run);
       config.logger.logInfo(asyncBuff.join("").trim(), wkspUri, run);
       config.logger.logInfo("---", wkspUri, run);
     }

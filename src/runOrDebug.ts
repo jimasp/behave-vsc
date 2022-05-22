@@ -15,7 +15,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
   cancelToken: vscode.CancellationToken): Promise<void> {
   try {
     const pythonExec = await config.getPythonExec(wkspSettings.uri);
-    const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${pythonExec} -m behave`;
+    const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` + `${getFriendlyEnvVars(wkspSettings)}"${pythonExec}" -m behave`;
     const junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
     const args = ["--junit", "--junit-directory", junitDirUri.fsPath, "--capture", "--capture-stderr", "--logcapture"];
 
@@ -54,8 +54,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName, "--junit", "--junit-directory", junitDirUri.fsPath];
 
     const friendlyCmd = `cd "${wkspSettings.uri.path}"\n` +
-      `"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
-
+      `${getFriendlyEnvVars(wkspSettings)}"${pythonExec}" -m behave -i "${scenario.featureFileWorkspaceRelativePath}" -n "${escapedScenarioName}"`;
 
     if (!debug && scenario.fastSkipTag) {
       config.logger.logInfo(`Fast skipping '${scenario.featureFileWorkspaceRelativePath}' '${scenarioName}'`, wkspSettings.uri, run);
@@ -74,6 +73,24 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     throw new WkspError(e, wkspSettings.uri, run);
   }
 
+}
+
+function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
+
+  let envVars = "";
+
+  if (os.platform() === "win32")
+    envVars = "SET";
+
+  Object.entries(wkspSettings.envVarList).forEach(envVar => {
+    const envVarStr = `${envVar[0]}="${envVar[1].replace('"', '\\"')}"`;
+    if (os.platform() === "win32")
+      envVars += `${envVarStr} && `;
+    else
+      envVars += `${envVarStr} `;
+  });
+
+  return envVars;
 }
 
 function formatScenarioName(string: string, isOutline: boolean) {
