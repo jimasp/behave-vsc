@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
-import { config, EXTENSION_FRIENDLY_NAME } from "./Configuration";
+import { config, EXTENSION_FRIENDLY_NAME, EXTENSION_NAME } from "./Configuration";
 import { TestData } from './TestFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
 import * as fs from 'fs';
-import * as path from 'path';
 import { diagLog } from './Logger';
-import * as glob from 'glob';
 const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -82,15 +80,6 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
-  const folders = vscode.workspace.workspaceFolders;
-  if (!folders) {
-    throw "No workspace folders found";
-  }
-
-  interface Settings {
-    "behave-vsc.featuresPath": string,
-  }
-
   function hasTopLevelFeatureFolder(wkspUri: vscode.Uri) {
     const featureFileUri = vscode.Uri.joinPath(wkspUri, "features");
     if (fs.existsSync(featureFileUri.fsPath))
@@ -99,17 +88,9 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     return false;
   }
 
-  function hasSettingsFileWithFeaturesPath(wkspUri: vscode.Uri) {
-    const settingsFileUri = vscode.Uri.joinPath(wkspUri, ".vscode/settings.json");
-    if (!fs.existsSync(settingsFileUri.fsPath))
-      return false;
-
-    const contents = fs.readFileSync(settingsFileUri.fsPath, 'utf8');
-    const settings = JSON.parse(contents) as Settings;
-    if (settings["behave-vsc.featuresPath"])
-      return true;
-
-    return false;
+  const folders = vscode.workspace.workspaceFolders;
+  if (!folders) {
+    throw "No workspace folders found";
   }
 
   for (const folder of folders) {
@@ -118,11 +99,12 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
       continue;
     }
 
-    if (hasSettingsFileWithFeaturesPath(folder.uri))
+    const wkspConfig = vscode.workspace.getConfiguration(EXTENSION_NAME, folder.uri);
+    if (wkspConfig.get("featuresPath"))
       workspaceFoldersWithFeatures.push(folder.uri);
   }
 
-  diagLog(`findFirstFeatureFileRecursive took ${performance.now() - start}ms, ` +
+  diagLog(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0)
