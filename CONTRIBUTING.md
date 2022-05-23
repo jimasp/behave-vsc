@@ -106,15 +106,15 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	- ***(a) removing all breakpoints, or***
 	- ***(b) restarting the watch tasks in terminal window, or***
 	- ***(c) restarting vscode.***
+- If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
 - Have you remembered to disable the marketplace version of the extension?
 - If an exception is not bubbling, see [Error handling](#error-handling).
-- Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into).
+- Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into). 
 - Have you pulled the latest version of the source code?
 - Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install`?
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?	
 - If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
-- If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints.
 - If you get an error running "Debug Extension...", try setting a breakpoint at the start of the `activate()` function.
 - If you get an error running "Run Extension Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
 - If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue? 

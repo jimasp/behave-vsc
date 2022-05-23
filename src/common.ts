@@ -6,6 +6,7 @@ import { performance } from 'perf_hooks';
 import * as fs from 'fs';
 import * as path from 'path';
 import { diagLog } from './Logger';
+import * as glob from 'glob';
 const vwfs = vscode.workspace.fs;
 
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -72,12 +73,13 @@ export async function removeDirectoryRecursivexx(dirUri: vscode.Uri, cancelToken
 let workspaceFoldersWithFeatures: vscode.Uri[];
 
 
+// THIS FUNCTION MUST BE FAST AND MUST BE SYNCHRONOUS
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
-
-  const start = performance.now();
 
   if (!forceRefresh && workspaceFoldersWithFeatures)
     return workspaceFoldersWithFeatures;
+
+  const start = performance.now();
 
   workspaceFoldersWithFeatures = [];
 
@@ -86,38 +88,29 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     throw "No workspace folders found";
   }
 
-  // performance is CRITICAL here as: (a) we need it to be synchronous, and (b) it is called during activate(),
-  // if you change this function, check performance before and after your 
-  // changes (see diagLog statement at the end of this function)
+  interface Settings {
+    "behave-vsc.featuresPath": string,
+  }
 
-  function findAFeatureFile(fullDirPath: string): boolean {
+  function hasTopLevelFeatureFolder(wkspUri: vscode.Uri) {
+    const featureFileUri = vscode.Uri.joinPath(wkspUri, "features");
+    if (fs.existsSync(featureFileUri.fsPath))
+      return true;
 
-    let entries;
-    try {
-      entries = fs.readdirSync(fullDirPath, { withFileTypes: true, encoding: "utf8" });
-    }
-    catch (e: any) { /* eslint-disable-line @typescript-eslint/no-explicit-any */
-      if (e.code && e.code === "ENOENT") {
-        return false; // most likely a folder specified in the *.code-workspace file doesn't exist
-      }
-      throw e;
-    }
+    return false;
+  }
 
-    let found = false;
-    for (const entry of entries) {
-      if (entry.isDirectory()) {
-        found = findAFeatureFile(vscode.Uri.joinPath(vscode.Uri.file(fullDirPath), entry.name).fsPath);
-        if (found)
-          return true;
-      }
-      else {
-        if (entry.name.endsWith(".feature")) {
-          found = true;
-          return true;
-        }
-      }
-    }
-    return found;
+  function hasSettingsFileWithFeaturesPath(wkspUri: vscode.Uri) {
+    const settingsFileUri = vscode.Uri.joinPath(wkspUri, ".vscode/settings.json");
+    if (!fs.existsSync(settingsFileUri.fsPath))
+      return false;
+
+    const contents = fs.readFileSync(settingsFileUri.fsPath, 'utf8');
+    const settings = JSON.parse(contents) as Settings;
+    if (settings["behave-vsc.featuresPath"])
+      return true;
+
+    return false;
   }
 
 
@@ -127,15 +120,21 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     const folderName = path.basename(folder.uri.fsPath);
     if (config.globalSettings.multiRootFolderIgnoreList.includes(folderName))
       continue;
-    if (findAFeatureFile(folder.uri.fsPath))
+
+    if (hasTopLevelFeatureFolder(folder.uri)) {
+      workspaceFoldersWithFeatures.push(folder.uri);
+      continue;
+    }
+
+    if (hasSettingsFileWithFeaturesPath(folder.uri))
       workspaceFoldersWithFeatures.push(folder.uri);
   }
 
-  if (workspaceFoldersWithFeatures.length === 0)
-    throw new Error("No workspace folders contain a *.feature file"); // should never happen (because of package.json activationEvents)
-
-  diagLog(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
+  diagLog(`findFirstFeatureFileRecursive took ${performance.now() - start}ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
+
+  if (workspaceFoldersWithFeatures.length === 0)
+    throw new Error("No workspace folders contain a ./features folder or a settings.json that specifies behave-vsc.featuresPath");
 
   return workspaceFoldersWithFeatures;
 }
