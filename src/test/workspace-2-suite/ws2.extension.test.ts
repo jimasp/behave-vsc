@@ -9,12 +9,11 @@ suite(`workspace-2-suite test run`, () => {
 	const wkspName = "example-project-2";
 	const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
-	const multiRootFolderIgnoreList = "multiroot-ignored-project, another-project";
 
 	test("runDefault (runAll)", async () => {
 
 		const testConfig = new TestWorkspaceConfig({
-			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined, multiRootFolderIgnoreList: multiRootFolderIgnoreList,
+			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
 			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
 			alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: undefined
 		});

@@ -115,9 +115,6 @@ This a pre-release undergoing active development. If you used a previous version
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
 - Do you have runParallel turned on? Try turning it off. 
-- If extension startup is slow, and you have a large multi-root workspace then you can stop the extension from looking for features in (top-level) workspace folders on startup by using the setting `multiRootFolderIgnoreList`.
-(Also if you have removed extension settings from your workspace `.vscode/settings.json`, then do you still have any of the extension settings in your user settings json? 
-See [here](https://code.visualstudio.com/docs/getstarted/settings#_settings-file-locations) for user settings file locations.)
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Try temporarily disabling other extensions. 
 - Check if the problem is in [Known Issues](#known-issues-and-limitations)

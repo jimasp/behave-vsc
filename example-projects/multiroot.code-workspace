@@ -25,7 +25,6 @@
 		"behave-vsc.alwaysShowOutput": true,
 		"behave-vsc.multiRootRunWorkspacesInParallel": true,
 		"behave-vsc.showConfigurationWarnings": true,
-		"behave-vsc.multiRootFolderIgnoreList": "multiroot-ignored-project",
 		"behave-vsc.logDiagnostics": true
 	}
 }

@@ -41,12 +41,6 @@
 					"description": "Default:true (enabled).\nFor multi-root workspaces, when behave tests are run from multiple workspaces, run those tests at the same time.\nThis setting should be in your *.code-workspace file.\n",
 					"scope": "window"
 				},
-				"behave-vsc.multiRootFolderIgnoreList": {
-					"type": "string",
-					"default": "",
-					"description": "Optional (unquoted) case-sensitive csv list of top-level workspace folders that the extension should ignore in multiroot workspaces.\nExample: my workspace folder 1, my-workspace-folder2\nThis setting should be in your *.code-workspace file.\n",
-					"scope": "window"
-				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,

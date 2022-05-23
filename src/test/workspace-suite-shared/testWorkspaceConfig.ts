@@ -14,7 +14,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private fastSkipList: string | undefined;
 	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
-	private multiRootFolderIgnoreList: string | undefined;
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
 	private runAllAsOne: boolean | undefined;
 	private runParallel: boolean | undefined;
@@ -24,7 +23,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
 		alwaysShowOutput, envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
-		multiRootFolderIgnoreList, multiRootRunWorkspacesInParallel,
+		multiRootRunWorkspacesInParallel,
 		runAllAsOne, runParallel, showConfigurationWarnings, logDiagnostics
 	}: {
 		alwaysShowOutput: boolean | undefined,
@@ -32,7 +31,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		fastSkipList: string | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
-		multiRootFolderIgnoreList: string | undefined,
 		multiRootRunWorkspacesInParallel: boolean | undefined,
 		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
@@ -46,7 +44,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.justMyCode = justMyCode;
 		this.runAllAsOne = runAllAsOne;
 		this.runParallel = runParallel;
-		this.multiRootFolderIgnoreList = multiRootFolderIgnoreList;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
 		this.showConfigurationWarnings = showConfigurationWarnings;
 		this.logDiagnostics = logDiagnostics;
@@ -68,8 +65,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.fastSkipList === undefined ? "" : this.fastSkipList);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
-			case "multiRootFolderIgnoreList":
-				return <T><unknown>(this.multiRootFolderIgnoreList === undefined ? "" : this.multiRootFolderIgnoreList);
 			case "multiRootRunWorkspacesInParallel":
 				return <T><unknown>(this.multiRootRunWorkspacesInParallel === undefined ? true : this.multiRootRunWorkspacesInParallel);
 			case "justMyCode":
@@ -114,9 +109,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				break;
 			case "featuresPath":
 				response = <T><unknown>this.featuresPath;
-				break;
-			case "multiRootFolderIgnoreList":
-				response = <T><unknown>this.multiRootFolderIgnoreList;
 				break;
 			case "multiRootRunWorkspacesInParallel":
 				response = <T><unknown>this.multiRootRunWorkspacesInParallel;
@@ -181,25 +173,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			}
 		}
 
-		const getExpectedMultiRootFolderIgnoreList = (): string[] => {
-			switch (this.multiRootFolderIgnoreList) {
-				case ",  multiroot-ignored-project ,  another-project, ":
-					return ["multiroot-ignored-project", "another-project"];
-				case "multiroot-ignored-project, another-project":
-					return ["multiroot-ignored-project", "another-project"];
-				case "multiroot-ignored-project,another-project":
-					return ["multiroot-ignored-project", "another-project"];
-				case "multiroot-ignored-project":
-					return ["multiroot-ignored-project"];
-				case "":
-				case undefined:
-					return [];
-				default:
-					debugger; // eslint-disable-line no-debugger
-					throw new Error("getExpectedMultiRootFolderIgnoreList() missing case for multiRootFolderIgnoreList: " + this.multiRootFolderIgnoreList);
-			}
-		}
-
 		const getExpectedFeaturesPath = (): string => {
 			switch (this.featuresPath) {
 				case "":
@@ -246,8 +219,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedFullFeaturesFsPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
-			case "multiRootFolderIgnoreList":
-				return <T><unknown>getExpectedMultiRootFolderIgnoreList();
 			case "multiRootRunWorkspacesInParallel":
 				return <T><unknown>(this.get("multiRootRunWorkspacesInParallel"));
 			case "runAllAsOne":

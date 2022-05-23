@@ -10,7 +10,6 @@ export class WindowSettings {
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly alwaysShowOutput: boolean;
-  public readonly multiRootFolderIgnoreList: string[] = [];
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showConfigurationWarnings: boolean;
   public readonly logDiagnostics: boolean;
@@ -25,9 +24,6 @@ export class WindowSettings {
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
-    const multiRootFolderIgnoreListCfg: string | undefined = winConfig.get("multiRootFolderIgnoreList");
-    if (multiRootFolderIgnoreListCfg === undefined)
-      throw "ignoreWorkspaceFolder is undefined";
     const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
     if (showConfigurationWarningsCfg === undefined)
       throw "showConfigurationWarnings is undefined";
@@ -39,16 +35,6 @@ export class WindowSettings {
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.showConfigurationWarnings = showConfigurationWarningsCfg;
     this.logDiagnostics = logDiagnosticsCfg;
-
-    if (multiRootFolderIgnoreListCfg) {
-      try {
-        const wkspFolderIgnoreList = multiRootFolderIgnoreListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
-        this.multiRootFolderIgnoreList = wkspFolderIgnoreList.filter(s => s !== "");
-      }
-      catch {
-        this.errors.push("Invalid WorkspaceFolders setting ignored.");
-      }
-    }
   }
 }
 

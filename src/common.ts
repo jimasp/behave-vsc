@@ -80,7 +80,6 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     return workspaceFoldersWithFeatures;
 
   const start = performance.now();
-
   workspaceFoldersWithFeatures = [];
 
   const folders = vscode.workspace.workspaceFolders;
@@ -113,14 +112,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     return false;
   }
 
-
   for (const folder of folders) {
-    // note - we don't use folder.name here, as that is the 
-    // workspacefolder name (which can be set in *.code-workspace), not the folder name
-    const folderName = path.basename(folder.uri.fsPath);
-    if (config.globalSettings.multiRootFolderIgnoreList.includes(folderName))
-      continue;
-
     if (hasTopLevelFeatureFolder(folder.uri)) {
       workspaceFoldersWithFeatures.push(folder.uri);
       continue;
