@@ -80,7 +80,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
-  function hasTopLevelFeatureFolder(wkspUri: vscode.Uri) {
+  function hasTopLevelFeaturesFolder(wkspUri: vscode.Uri) {
     const featureFileUri = vscode.Uri.joinPath(wkspUri, "features");
     if (fs.existsSync(featureFileUri.fsPath))
       return true;
@@ -94,7 +94,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   }
 
   for (const folder of folders) {
-    if (hasTopLevelFeatureFolder(folder.uri)) {
+    if (hasTopLevelFeaturesFolder(folder.uri)) {
       workspaceFoldersWithFeatures.push(folder.uri);
       continue;
     }
