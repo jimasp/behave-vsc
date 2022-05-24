@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem } from './common';
-import { WIN_MAX_PATH } from './Configuration';
+import { EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
 import { diagLog } from './Logger';
 
 const parser = new xml2js.Parser();
@@ -87,7 +87,7 @@ function CreateParseResult(testCase: TestCase): ParseResult {
     return { status: status, duration: duration };
 
   if (status === "untested")
-    return { status: "Untested (see output in Behave VSC output window)", duration: duration };
+    return { status: `Untested (see output in ${EXTENSION_FRIENDLY_NAME} output window)`, duration: duration };
 
   if (status !== "failed")
     throw new Error("Unrecognised scenario status result:" + status);
@@ -172,11 +172,23 @@ export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: v
     result = await parseJunitFile(junitFileUri);
   }
   catch (e: unknown) {
-    if (cancelToken.isCancellationRequested &&
-      ((e as vscode.FileSystemError).code === "FileNotFound" || (e as vscode.FileSystemError).code === "EntryNotFound")) {
+    if (cancelToken.isCancellationRequested)
+      return;
+
+    try {
+      await vscode.workspace.fs.stat(junitFileUri);
+    }
+    catch {
+      const parseResult = {
+        status: `Expected JUnit file was not found.\nCheck for errors in the behave output in the ${EXTENSION_FRIENDLY_NAME} output window.`,
+        duration: 0
+      };
+      updateTest(run, parseResult, queueItem);
+      console.error(e);
       return;
     }
-    throw e;
+
+    throw `Unable to parse junit file ${junitFileUri.fsPath}`;
   }
 
   const fullFeatureName = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);

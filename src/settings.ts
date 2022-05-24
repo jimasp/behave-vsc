@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
+import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 import { EXTENSION_NAME } from './Configuration';
 import { diagLog, Logger } from './Logger';
 
@@ -13,7 +13,7 @@ export class WindowSettings {
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showConfigurationWarnings: boolean;
   public readonly logDiagnostics: boolean;
-  public errors: string[] = [];
+  public readonly errors: string[] = [];
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
@@ -43,36 +43,28 @@ export class WorkspaceSettings {
   // these apply to a single workspace 
 
   // user-settable
-  public envVarList: { [name: string]: string; } = {};
-  public fastSkipList: string[] = [];
-  public justMyCode: boolean;
-  public runAllAsOne: boolean;
-  public runParallel: boolean;
-  public workspaceRelativeFeaturesPath = "features";
+  public readonly envVarList: { [name: string]: string; } = {};
+  public readonly fastSkipList: string[] = [];
+  public readonly justMyCode: boolean;
+  public readonly runAllAsOne: boolean;
+  public readonly runParallel: boolean;
+  public readonly workspaceRelativeFeaturesPath: string;
   // convenience properties
-  public uri: vscode.Uri;
-  public name: string;
-  public featuresUri: vscode.Uri;
+  public readonly uri: vscode.Uri;
+  public readonly name: string;
+  public readonly featuresUri: vscode.Uri;
   // internal
-  private _errors: string[] = [];
+  private readonly _errors: string[] = [];
 
 
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
     this.uri = wkspUri;
     let fatal = false;
-
     const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
     if (!wsFolder)
       throw new Error("No workspace folder found for uri " + wkspUri.path);
     this.name = wsFolder.name;
-
-    // get the actual value in the file or return undefined, this is
-    // for cases where we need to distinguish between an unset value and the default value
-    const getActualWorkspaceFolderValue = <T>(name: string): T => {
-      const value = wkspConfig.inspect(name)?.workspaceFolderValue;
-      return (value as T);
-    }
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
     const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
@@ -95,17 +87,19 @@ export class WorkspaceSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    const runAllAsOneCfg: boolean | undefined = getActualWorkspaceFolderValue("runAllAsOne");
+    const runAllAsOneCfg: boolean | undefined = getActualWorkspaceSetting(wkspConfig, "runAllAsOne");
     if (this.runParallel && runAllAsOneCfg === undefined)
       this.runAllAsOne = false;
     else
       this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
 
-    if (featuresPathCfg)
-      this.workspaceRelativeFeaturesPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
+    this.workspaceRelativeFeaturesPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
+      // note - this error should never happen or some logic/hooks are wrong (or the user has actually deleted/moved the features path since loading).
+      // the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
+      // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
       this._errors.push(`FATAL ERROR: features path ${this.featuresUri.fsPath} not found.`);
       fatal = true;
     }
@@ -230,9 +224,9 @@ export class WorkspaceSettings {
     if (this._errors.length > 0)
       logger.logError(new WkspError(this._errors.join("\n"), this.uri));
 
-
+    // shouldn't get here for featurePath problems, see comment for featuresPath fatal error above
     if (fatal)
-      throw "fatal error due to invalid workspace setting, cannot continue. see previous error for more details.";
+      throw new WkspError(`Fatal error due to invalid workspace setting in workspace "${this.name}", cannot continue. See previous error for more details.`, this.uri);
 
   }
 

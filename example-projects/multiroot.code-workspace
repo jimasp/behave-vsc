@@ -13,12 +13,16 @@
 			"name": "project 2"
 		},
 		{
+			"path": "./multiroot-bad-features-path",
+			"name": "bad features path",
+		},
+		{
 			"path": "./multiroot-empty-folder",
 			"name": "empty folder"
 		},
 		{
-			"path": "./multiroot-ignored-project",
-			"name": "ignored project",
+			"path": "./multiroot-ignored",
+			"name": "ignored folder",
 		},
 	],
 	"settings": {

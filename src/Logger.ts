@@ -111,11 +111,14 @@ export class Logger {
         text = extErr.message;
       }
       else {
-        text = `${extErr.message}\n${extErr.stack}`;
+        text = extErr.message;
       }
+      if (config && config.globalSettings.logDiagnostics)
+        text += `\n${extErr.stack}`;
     }
-    else
+    else {
       text = `${error}`;
+    }
 
     diagLog(text, DiagLogType.error);
 

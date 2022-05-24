@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
+import { config, EXTENSION_NAME } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
@@ -23,7 +23,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     args.push("--no-summary", "--outfile", config.extTempFilesUri.fsPath + "debug.log");
 
     const debugLaunchConfig = {
-      name: "behave-vsc-debug",
+      name: `${EXTENSION_NAME}-debug`,
       console: "internalConsole",
       type: "python",
       cwd: wkspSettings.uri.fsPath,

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { Configuration } from "../../Configuration";
+import { Configuration, EXTENSION_FULL_NAME } from "../../Configuration";
 import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
@@ -289,7 +289,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	if (extInstances)
 		return extInstances;
 
-	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
+	const extension = vscode.extensions.getExtension(EXTENSION_FULL_NAME);
 	assert(extension);
 	assert(extension.isActive);
 

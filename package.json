@@ -25,8 +25,8 @@
 				},
 				"behave-vsc.featuresPath": {
 					"type": "string",
-					"default": "",
-					"description": "Optional setting for workspace-RELATIVE features subfolder.\nExample: mysubfolder/my_behave_tests\nIf empty, it will be set to features.\nIf not set to empty string or features, then this must tie up with the \"paths=\" setting in your behave configuration file.\n",
+					"default": "features",
+					"description": "Default:'features'.\nOptional setting for workspace-RELATIVE features subfolder.\nExample: mysubfolder/my_behave_tests\nIf not set to features, then this must tie up with the \"paths=\" setting in your behave configuration file.\n",
 					"scope": "resource"
 				},
 				"behave-vsc.justMyCode": {
@@ -62,7 +62,7 @@
 				"behave-vsc.logDiagnostics": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nSet to true to log diagnostics in console, viewable via vscode's 'Developer:Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small impact on performance\n",
+					"description": "Default:false (disabled).\nSet to true to enable stack traces on errors and log diagnostics in console, viewable via vscode's 'Developer:Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small impact on performance\n",
 					"scope": "window"
 				}
 			}

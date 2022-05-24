@@ -63,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       wkspWatchers.set(wkspUri, watcher);
       context.subscriptions.push(watcher);
     }
-    context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
+    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler));
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     context.subscriptions.push(removeTempDirectoryCancelSource);

@@ -14,10 +14,10 @@ export type TestCounts = { nodeCount: number, testCount: number };
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can use the workspace uri to log the error to the correct output window
 // - the error is only logged once 
-// - the top level catch can just config.logError(e)
+// - the top level catch can just call config.logError(e)
 export class WkspError extends Error {
   constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
-    const msg = (errorOrMsg instanceof Error ? (errorOrMsg.stack ? errorOrMsg.stack : errorOrMsg.message) : errorOrMsg as string);
+    const msg = (errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string);
     super(msg);
     Object.setPrototypeOf(this, WkspError.prototype);
   }
@@ -71,7 +71,16 @@ export async function removeDirectoryRecursivexx(dirUri: vscode.Uri, cancelToken
 let workspaceFoldersWithFeatures: vscode.Uri[];
 
 
-// THIS FUNCTION MUST BE FAST AND MUST BE SYNCHRONOUS
+
+// get the actual value in the file or return undefined, this is
+// for cases where we need to distinguish between an unset value and the default value
+export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfiguration, name: string): T => {
+  const value = wkspConfig.inspect(name)?.workspaceFolderValue;
+  return (value as T);
+}
+
+
+// THIS FUNCTION MUST BE FAST (< 10ms) 
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
   if (!forceRefresh && workspaceFoldersWithFeatures)
@@ -80,13 +89,33 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
-  function hasTopLevelFeaturesFolder(wkspUri: vscode.Uri) {
-    const featureFileUri = vscode.Uri.joinPath(wkspUri, "features");
-    if (fs.existsSync(featureFileUri.fsPath))
+  function hasFeaturesFolder(folder: vscode.WorkspaceFolder): boolean {
+
+    // default features path, no settings.json required
+    let featuresUri = vscode.Uri.joinPath(folder.uri, "features");
+
+    // try/catch with await vwfs.stat(uri) is much too slow atm
+    if (fs.existsSync(featuresUri.fsPath))
       return true;
+
+    // check if featuresPath specified in settings.json
+    // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found
+    const wkspConfig = vscode.workspace.getConfiguration(EXTENSION_NAME, folder.uri);
+    const featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
+    if (!featuresPath) {
+      return false; // probably a workspace with no behave requirements
+    }
+
+    featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath as string);
+    if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
+      return true;
+
+    vscode.window.showWarningMessage(`Specified features folder "${featuresUri.fsPath}" not found in workspace "${folder.name}".\n` +
+      "Behave VSC will ignore this workspace until this is corrected.");
 
     return false;
   }
+
 
   const folders = vscode.workspace.workspaceFolders;
   if (!folders) {
@@ -94,21 +123,22 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   }
 
   for (const folder of folders) {
-    if (hasTopLevelFeaturesFolder(folder.uri)) {
+    if (hasFeaturesFolder(folder)) {
       workspaceFoldersWithFeatures.push(folder.uri);
-      continue;
     }
-
-    const wkspConfig = vscode.workspace.getConfiguration(EXTENSION_NAME, folder.uri);
-    if (wkspConfig.get("featuresPath"))
-      workspaceFoldersWithFeatures.push(folder.uri);
   }
 
   diagLog(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
-  if (workspaceFoldersWithFeatures.length === 0)
-    throw new Error("No workspace folders contain a ./features folder or a settings.json that specifies behave-vsc.featuresPath");
+  if (workspaceFoldersWithFeatures.length === 0) {
+    if (folders.length === 1 && folders[0].name === EXTENSION_NAME)
+      throw `Please disable the marketplace ${EXTENSION_FRIENDLY_NAME} extension before beginning development!`;
+    else
+      throw `Extension was activated because a '.feature' file was found in a workspace folder, but ` +
+      `no workspace folders contain either a root 'features' folder or a settings.json that specifies '${EXTENSION_NAME}.featuresPath'.\n` +
+      `Please add a '${EXTENSION_NAME}.featuresPath' property to the workspace settings.json file and then restart vscode.`;
+  }
 
   return workspaceFoldersWithFeatures;
 }
@@ -120,7 +150,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined):
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
   const wkspUri = workspaceFolder ? workspaceFolder.uri : undefined;
   if (!wkspUri)
-    throw new Error("No workspace folder found for file uri " + fileorFolderUri.path);
+    throw "No workspace folder found for file uri " + fileorFolderUri.path;
   return wkspUri;
 }
 

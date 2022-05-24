@@ -22,6 +22,7 @@ export class FileParser {
   private _featuresParsedForAllWorkspaces = false;
   private _featuresParsedForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
+  private _errored = false;
 
   async readyForRun(timeout: number, caller: string) {
     const interval = 100;
@@ -239,6 +240,7 @@ export class FileParser {
   async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
     this._featuresParsedForAllWorkspaces = false;
+    this._errored = false;
 
     // this function is called e.g. when a workspace gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
@@ -253,6 +255,7 @@ export class FileParser {
       this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
     }
   }
+
 
   // NOTE - this is normally a BACKGROUND task
   // it should only be await-ed on user request, i.e. when called by the refreshHandler
@@ -275,7 +278,6 @@ export class FileParser {
       this._parseFilesCallCounts++;
       const wkspName = getWorkspaceFolder(wkspUri).name;
       const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
-      const wkspSettings = config.workspaceSettings[wkspUri.path];
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
       diagLog(`\n===== ${callName}: started =====`);
@@ -292,6 +294,7 @@ export class FileParser {
 
 
       this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
+      let wkspSettings: WorkspaceSettings = config.workspaceSettings[wkspUri.path];
 
       const start = performance.now();
       const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
@@ -336,8 +339,17 @@ export class FileParser {
       };
     }
     catch (e: unknown) {
-      // unawaited async func, log the error 
-      config.logger.logError(new WkspError(e, wkspUri));
+      // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
+      Object.keys(this._cancelTokenSources).forEach(k => {
+        this._cancelTokenSources[k].dispose();
+        delete this._cancelTokenSources[k];
+      });
+      // only log the first error (i.e. avoid logging the same error multiple times)
+      if (!this._errored) {
+        this._errored = true;
+        // this is an unawaited async func, must log the error 
+        config.logger.logError(e);
+      }
       return null;
     }
     finally {
