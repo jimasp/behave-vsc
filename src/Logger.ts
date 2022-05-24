@@ -45,6 +45,12 @@ export class Logger {
     this.channels[wkspUri.path].clear();
   };
 
+  clearAllWksps = () => {
+    for (const wkspPath in this.channels) {
+      this.channels[wkspPath].clear();
+    }
+  };
+
   // log without a carriage return, used for behave output
   logInfoNoCR = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text);

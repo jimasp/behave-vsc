@@ -13,7 +13,6 @@ export class WindowSettings {
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showConfigurationWarnings: boolean;
   public readonly logDiagnostics: boolean;
-  public readonly errors: string[] = [];
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
@@ -97,8 +96,9 @@ export class WorkspaceSettings {
     this.workspaceRelativeFeaturesPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
-      // note - this error should never happen or some logic/hooks are wrong (or the user has actually deleted/moved the features path since loading).
-      // the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
+      // note - this error should never happen or some logic/hooks are wrong 
+      // (or the user has actually deleted/moved the features path since loading)
+      // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
       // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
       this._errors.push(`FATAL ERROR: features path ${this.featuresUri.fsPath} not found.`);
       fatal = true;
@@ -206,7 +206,7 @@ export class WorkspaceSettings {
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: fastSkipList has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).", this.uri);
+        logger.logWarn("WARNING: fastSkipList has no effect when runAllAsOne is enabled and you run all tests at once.", this.uri);
       }
 
       if (!this.runParallel && !this.runAllAsOne) {
@@ -215,11 +215,8 @@ export class WorkspaceSettings {
       }
 
       if (warned)
-        logger.logInfo(`(You can turn off configuration warnings via the extension setting ${EXTENSION_NAME}.showConfigurationWarnings.)`, this.uri);
+        logger.logInfo(`(You can turn off configuration warnings via the extension setting '${EXTENSION_NAME}.showConfigurationWarnings'.)\n`, this.uri);
     }
-
-    if (winSettings.errors.length > 0)
-      logger.logError(new WkspError(winSettings.errors.join("\n"), this.uri));
 
     if (this._errors.length > 0)
       logger.logError(new WkspError(this._errors.join("\n"), this.uri));

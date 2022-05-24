@@ -95,23 +95,27 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     let featuresUri = vscode.Uri.joinPath(folder.uri, "features");
 
     // try/catch with await vwfs.stat(uri) is much too slow atm
-    if (fs.existsSync(featuresUri.fsPath))
-      return true;
+    const hasDefaultFeaturesFolder = fs.existsSync(featuresUri.fsPath);
 
     // check if featuresPath specified in settings.json
-    // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found
+    // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
     const wkspConfig = vscode.workspace.getConfiguration(EXTENSION_NAME, folder.uri);
     const featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
-    if (!featuresPath) {
+    if (!featuresPath && !hasDefaultFeaturesFolder) {
       return false; // probably a workspace with no behave requirements
     }
+
+    // default features folder and nothing specified in settings.json (or default specified)
+    if (hasDefaultFeaturesFolder && !featuresPath)
+      return true;
 
     featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath as string);
     if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
       return true;
 
-    vscode.window.showWarningMessage(`Specified features folder "${featuresUri.fsPath}" not found in workspace "${folder.name}".\n` +
-      "Behave VSC will ignore this workspace until this is corrected.");
+    // (we may not have a logger yet, and notification window is probably more appropriate for start up)
+    vscode.window.showWarningMessage(`Specified features path "${featuresPath}" not found in workspace "${folder.name}". ` +
+      `Behave VSC will ignore this workspace until this is corrected.`);
 
     return false;
   }

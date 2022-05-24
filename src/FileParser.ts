@@ -4,7 +4,7 @@ import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getTestIdForUri, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, WkspError, findFiles
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
 } from './common';
 import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './TestFile';
@@ -19,8 +19,8 @@ export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrC
 export class FileParser {
 
   private _parseFilesCallCounts = 0;
-  private _featuresParsedForAllWorkspaces = false;
-  private _featuresParsedForWorkspace: { [key: string]: boolean } = {};
+  private _finishedFeaturesParseForAllWorkspaces = false;
+  private _finishedFeaturesParseForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
 
@@ -28,7 +28,7 @@ export class FileParser {
     const interval = 100;
 
     const check = (resolve: (value: boolean) => void) => {
-      if (this._featuresParsedForAllWorkspaces) {
+      if (this._finishedFeaturesParseForAllWorkspaces) {
         diagLog(`readyForRun (${caller}) - good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
@@ -239,7 +239,7 @@ export class FileParser {
 
   async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
 
-    this._featuresParsedForAllWorkspaces = false;
+    this._finishedFeaturesParseForAllWorkspaces = false;
     this._errored = false;
 
     // this function is called e.g. when a workspace gets added/removed/renamed, so 
@@ -263,8 +263,8 @@ export class FileParser {
     callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
 
     const wkspPath = wkspUri.path;
-    this._featuresParsedForAllWorkspaces = false;
-    this._featuresParsedForWorkspace[wkspPath] = false;
+    this._finishedFeaturesParseForAllWorkspaces = false;
+    this._finishedFeaturesParseForWorkspace[wkspPath] = false;
 
     // if caller cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
@@ -294,7 +294,7 @@ export class FileParser {
 
 
       this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
-      let wkspSettings: WorkspaceSettings = config.workspaceSettings[wkspUri.path];
+      const wkspSettings: WorkspaceSettings = config.workspaceSettings[wkspUri.path];
 
       const start = performance.now();
       const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
@@ -302,10 +302,10 @@ export class FileParser {
 
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: features loaded for workspace ${wkspName}`);
-        this._featuresParsedForWorkspace[wkspPath] = true;
-        const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._featuresParsedForWorkspace[uri.path])
+        this._finishedFeaturesParseForWorkspace[wkspPath] = true;
+        const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedFeaturesParseForWorkspace[uri.path])
         if (wkspsStillParsingFeatures.length === 0) {
-          this._featuresParsedForAllWorkspaces = true;
+          this._finishedFeaturesParseForAllWorkspaces = true;
           diagLog(`${callName}: features loaded for all workspaces`);
         }
         else {
@@ -329,9 +329,6 @@ export class FileParser {
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
-      this._cancelTokenSources[wkspPath].dispose();
-      delete this._cancelTokenSources[wkspPath];
-
       const wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
       return {
         tests: testCounts, featureFileCountExcludingEmptyOrCommentedOut: featureFileCount,
@@ -341,6 +338,7 @@ export class FileParser {
     catch (e: unknown) {
       // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
       Object.keys(this._cancelTokenSources).forEach(k => {
+        this._cancelTokenSources[k].cancel();
         this._cancelTokenSources[k].dispose();
         delete this._cancelTokenSources[k];
       });
@@ -353,7 +351,9 @@ export class FileParser {
       return null;
     }
     finally {
-      //this._featuresParsedForWorkspace[wkspPath] = true;
+      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
+      this._cancelTokenSources[wkspPath].dispose();
+      delete this._cancelTokenSources[wkspPath];
       cancellationHandler?.dispose();
     }
   }

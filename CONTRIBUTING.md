@@ -151,8 +151,8 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Diagnostics logs should be written via `diagLog()` and can be viewed in the debug console if debugging the extension itself, or otherwise via vscode command `Developer:Toggle developer tools`.
 - Diagnostics inside integration tests should use `console.log`.
 ### Error handling
+- Stack traces will only appear if `logDiagnostics` is enabled.
 - Most of the time, i.e. outside of entry point/non-awaited functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
-- Thrown errors with a type of `Error` (inc. `throw new WkspError`) will include the stack trace in the log. `throw "my error message"` will not.
 - Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.logError`.
 - Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
 - When adding a throw/logError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets logged once.
