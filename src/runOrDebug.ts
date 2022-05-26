@@ -91,12 +91,13 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   let envVars = "";
 
-  Object.entries(wkspSettings.envVarList).forEach(envVar => {
+  for (const [name, value] of Object.entries(wkspSettings.envVarList)) {
+    const pair = `${name}="${value}"`;
     if (os.platform() === "win32")
-      envVars += `$Env:${`${envVar[0]}="${envVar[1].replace('"', '""')}"`}\n`;
+      envVars += `$Env:${pair}\n`;
     else
-      envVars += `${`${envVar[0]}="${envVar[1].replace('"', '\\"')}"`} `;
-  });
+      envVars += `${pair} `;
+  }
 
   return envVars;
 }

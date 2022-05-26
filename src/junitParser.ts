@@ -4,7 +4,7 @@ import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem } from './common';
 import { EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
-import { diagLog } from './Logger';
+import { diagLog, DiagLogType } from './Logger';
 
 const parser = new xml2js.Parser();
 
@@ -164,8 +164,18 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRela
 }
 
 
-export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, wkspRelativeFeaturesPath: string,
-  cancelToken: vscode.CancellationToken): Promise<void> {
+export async function parseAndUpdateTestResults(debug: boolean, junitFileUri: vscode.Uri | undefined, run: vscode.TestRun, queueItem: QueueItem,
+  wkspRelativeFeaturesPath: string, cancelToken: vscode.CancellationToken): Promise<void> {
+
+  if (!junitFileUri) {
+    const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+    const parseResult = {
+      status: `See errors in ${window}.`,
+      duration: 0
+    };
+    updateTest(run, parseResult, queueItem);
+    return;
+  }
 
   let result: parseJunitFileResult;
   try {
@@ -174,21 +184,10 @@ export async function parseAndUpdateTestResults(junitFileUri: vscode.Uri, run: v
   catch (e: unknown) {
     if (cancelToken.isCancellationRequested)
       return;
-
-    try {
-      await vscode.workspace.fs.stat(junitFileUri);
-    }
-    catch {
-      const parseResult = {
-        status: `Expected JUnit file was not found.\nCheck for errors in the behave output in the ${EXTENSION_FRIENDLY_NAME} output window.`,
-        duration: 0
-      };
-      updateTest(run, parseResult, queueItem);
-      console.error(e);
-      return;
-    }
-
-    throw `Unable to parse junit file ${junitFileUri.fsPath}`;
+    if (debug)
+      vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
+    diagLog(`Unable to parse junit file ${junitFileUri.fsPath}`, undefined, DiagLogType.error);
+    return;
   }
 
   const fullFeatureName = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);

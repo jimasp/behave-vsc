@@ -42,7 +42,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     const ready = await parser.readyForRun(1000, "testRunHandler");
     if (!ready) {
       const msg = "cannot run tests while test items are still updating, please try again";
-      diagLog(msg, DiagLogType.warn);
+      diagLog(msg, undefined, DiagLogType.warn);
       vscode.window.showWarningMessage(msg);
       return;
     }
@@ -161,7 +161,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
           if (!debug)
             run.appendOutput(runDiag);
-          diagLog(runDiag);
+          diagLog(runDiag, wkspSettings.uri);
 
           if (combinedToken.isCancellationRequested) {
             updateRun(wkspQueueItem.test, coveredLines, run);
@@ -280,7 +280,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      config.logger.showError(e, undefined);
       run.end();
     }
     finally {

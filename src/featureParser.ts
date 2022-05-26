@@ -77,6 +77,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
     }
   }
 
-  diagLog(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`);
+  diagLog(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`, wkspSettings.uri);
 };
 

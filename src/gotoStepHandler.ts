@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./Configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, WkspError } from './common';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile } from './common';
 import { getStepMap } from './FileParser';
 import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
 import { WorkspaceSettings } from './settings';
@@ -125,7 +125,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
   }
   catch (e: unknown) {
     const wkspUri = getWorkspaceUriForFile(eventUri);
-    config.logger.logError(new WkspError(e, wkspUri));
+    config.logger.showError(e, wkspUri);
   }
 
 }

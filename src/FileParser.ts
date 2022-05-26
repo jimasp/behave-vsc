@@ -346,7 +346,7 @@ export class FileParser {
       if (!this._errored) {
         this._errored = true;
         // this is an unawaited async func, must log the error 
-        config.logger.logError(e);
+        config.logger.showError(e, wkspUri);
       }
       return null;
     }

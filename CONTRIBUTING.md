@@ -111,7 +111,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - If an exception is not bubbling, see [Error handling](#error-handling).
 - Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into). 
 - Have you pulled the latest version of the source code?
-- Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install`?
+- Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install` if you just pulled?
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?	
 - If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
@@ -125,16 +125,17 @@ If you have a customised fork and you want to distribute it to your team, you wi
 
 ---
 ## Development guidelines
+- The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
 - No reliance on other extensions except `ms-python.python`.
 - YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.) 
-- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. 
-- Don't reinvent the wheel - leverage `vscode` methods (especially for paths), and if necessary standard node functions, to handle things wherever possible. 
-- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that are already in the `node_modules` folder if required.)
-- Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. The user should get the same results if they run the outputted behave command manually. 
+- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
+- Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions. 
+- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
 - Always consider performance.
-- Always consider multi-root workspaces, e.g. different workspace settings per workspace folder, output channels are per workspace folder, etc. and consider that workspaces folders may be added/removed by the user at run time.
+- Always consider multi-root workspaces, i.e. there can be different workspace settings per workspace folder, window settings can be changed in a `*.code-workspace` file, output channels are per workspace folder (to stop parallel test runs being merged and to make info and warnings contextual), workspaces folders may be added/removed by the user at run time requiring reload of the test tree, etc.
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- Always consider cross-platform, i.e. OS-independent drive/path separators (consider `C:\...` vs `/home/...`). Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible (don't use `path.join` outside of integration tests). Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). Encoding (use `utf8`). Consider that windows max path is 260 characters.
+- Always consider cross-platform, i.e. consider that windows max path is 259 characters, OS-independent drive/path separators (consider `C:\...` vs `/home/...`). Use `vscode` functionality like `uri.path` or `uri.fsPath`, `relativePattern`, etc. wherever possible (don't use `path.join` outside of integration tests). Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` itself for consistency, e.g. with `uri.path`.) Line-endings (use `\n` internally). 
+- Encoding (use `utf8`). 
 - While the extension is not internationalised, `Date()` should generally be avoided and/or `Date().toISOString()` can be used if required for user output. The `performance` library should be used for timings.
 - Look out for race conditions. You can have e.g. 3 workspaces running in parallel, and they could all be running parallel tests. (It's a good idea to do your coding/testing with a multiroot workspace, like the example one provided with this source code.)
 - Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names are unique ids, so you can be sure they are unique to the vscode instance as well as the workspace.
@@ -148,19 +149,22 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Any disposable object should either be added to `context.subscriptions.push` or disposed in a `finally` block or in the `deactivate()`. (The most common disposables are event handlers, filesystemwatchers, and cancelllation token sources.)
 ### Diagnostics
 - Diagnostic logs are controlled via the extension setting `logDiagnostics` (this is enabled by default in the example projects and for most integration tests).
-- Diagnostics logs should be written via `diagLog()` and can be viewed in the debug console if debugging the extension itself, or otherwise via vscode command `Developer:Toggle developer tools`.
-- Diagnostics inside integration tests should use `console.log`.
+- Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something _only_ to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
+- Diagnostics inside integration tests should simply use `console.log`.
 ### Error handling
 - Stack traces will only appear if `logDiagnostics` is enabled.
-- Most of the time, i.e. outside of entry point/non-awaited functions, you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
-- Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.logError`.
-- Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.logError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
-- When adding a throw/logError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets logged once.
-- Any thrown errors are going to reach the user, so they should be things that either the user can act upon to fix, or exceptions like logic errors and stuff that is never supposed to happen that should be raised as issues in github. 
+- `showError` should be used sparingly. Generally you should not use it outside of entry point/non-awaited functions, instead you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
+- Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.showError`.
+- Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github. 
+- Behave errors are not exceptions and should be handled, e.g. update test state to failed and failure message should refer user to Behave VSC output window.
+- Info and Warnings appear in the output window. Errors appear in a notification window. All of them will appear in console if `logDiagnostics` is enabled.
+- Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.showError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
+- When adding a throw/showError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
+
 
 ### Logging
-- Logging errors and warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
-- *Unless you are in an entry point function, handler or unawaited async function, then errors should be thrown, not logged*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets logged once (at the top of the stack).
+- Logging warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
+- *Unless you are in an entry point function, handler or unawaited async function, then generally errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
 - Logging warnings is done via `config.logger.logWarn`.
 - Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *Note - this should only be used where a workspace context does not make sense.*
 - Log to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.

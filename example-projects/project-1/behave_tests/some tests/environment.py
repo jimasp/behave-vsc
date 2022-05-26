@@ -3,6 +3,7 @@
 # pylint: disable=missing-class-docstring
 
 from behave import model
+import os
 
 def before_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
     if "normal_skip" in scenario.effective_tags:        

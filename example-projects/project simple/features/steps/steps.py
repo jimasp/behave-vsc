@@ -2,11 +2,8 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=unused-argument
-import time
 from behave import *
-
-from features.grouped.steps import outline_feature_steps, table_feature_steps
-
+import bad
 
 @given("we have behave installed")
 @given("we have (behave) installed")
@@ -18,12 +15,6 @@ def step_inst(context):
 @when('"we" implement a [{successful_or_failing}] test')
 def step_impl(context, successful_or_failing):
     assert successful_or_failing == "successful"
-
-
-@when("we implement a test that takes {secs} seconds")
-def step_slow(context, secs):
-    time.sleep(float(secs))
-    assert 1 == 1
 
 
 @then("we will see the result")

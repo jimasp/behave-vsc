@@ -1,17 +1,21 @@
 {
 	"folders": [
 		{
-			"path": "./example project simple",
+			"path": "./project simple",
 			"name": "project simple"
 		},
 		{
-			"path": "./example-project-1",
+			"path": "./project-1",
 			"name": "project 1"
 		},
 		{
-			"path": "./example-project-2",
+			"path": "./project-2",
 			"name": "project 2"
 		},
+		{
+			"path": "./multiroot-envvarlist-override",
+			"name": "envVarList override",
+		},		
 		{
 			"path": "./multiroot-bad-features-path",
 			"name": "bad features path",

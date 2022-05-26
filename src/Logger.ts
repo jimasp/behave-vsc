@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { config, EXTENSION_FRIENDLY_NAME, ERR_HIGHLIGHT } from './Configuration';
-import { getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
+import { config, EXTENSION_FRIENDLY_NAME } from './Configuration';
+import { getUrisOfWkspFoldersWithFeatures } from './common';
 
 
 export class Logger {
@@ -80,7 +80,7 @@ export class Logger {
   };
 
   logWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text, DiagLogType.warn);
+    diagLog(text, wkspUri, DiagLogType.warn);
 
     this.channels[wkspUri.path].appendLine(text);
     this.channels[wkspUri.path].show(true);
@@ -90,7 +90,7 @@ export class Logger {
   };
 
   logWarnAllWksps = (text: string, run?: vscode.TestRun) => {
-    diagLog(text, DiagLogType.warn);
+    diagLog(text, undefined, DiagLogType.warn);
 
     let first = true;
     for (const wkspPath in this.channels) {
@@ -105,53 +105,72 @@ export class Logger {
       run.appendOutput(text + "\n");
   };
 
-  logError = (error: WkspError | unknown, run?: vscode.TestRun) => {
+
+  showWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+    this._show(wkspUri, text, run, DiagLogType.warn);
+  }
+
+
+  showError = (error: unknown, wkspUri: vscode.Uri | undefined, run?: vscode.TestRun) => {
 
     let text: string;
-    let wkspUri: vscode.Uri | undefined;
-    const extErr: WkspError = (error as WkspError);
 
     if (error instanceof Error) {
-      if (error instanceof WkspError) {
-        wkspUri = extErr.wkspUri;
-        text = extErr.message;
-      }
-      else {
-        text = extErr.message;
-      }
-      if (config && config.globalSettings.logDiagnostics)
-        text += `\n${extErr.stack}`;
+      text = error.message;
+      if (config && config.globalSettings && config.globalSettings.logDiagnostics)
+        text += `\n${error.stack?.split("\n").slice(1).join("\n")}`;
     }
     else {
       text = `${error}`;
     }
 
-    diagLog(text, DiagLogType.error);
+    this._show(wkspUri, text, run, DiagLogType.error);
+  }
+
+
+  private _show = (wkspUri: vscode.Uri | undefined, text: string, run: vscode.TestRun | undefined, logType: DiagLogType) => {
+
+    if (wkspUri) {
+      // note - don't use config.workspaceSettings here (possible inifinite loop)
+      const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
+      if (wskpFolder) {
+        const wkspName = wskpFolder?.name;
+        text = `${wkspName} workspace ${text}`;
+      }
+    }
+
+    diagLog(text, wkspUri, logType);
+
+    if (wkspUri) {
+      this.channels[wkspUri.path].appendLine(text);
+    }
+    else {
+      for (const wkspPath in this.channels) {
+        this.channels[wkspPath].appendLine(text);
+      }
+    }
 
     if (config.integrationTestRun && !text.includes("Canceled") && !text.includes("Cancelled"))
       debugger; // eslint-disable-line no-debugger
 
-    // fallback
-    if (!this.channels || Object.keys(this.channels).length < 1)
-      vscode.window.showErrorMessage(text);
+    let winText = text;
+    if (winText.length > 512)
+      winText = text.substring(0, 512) + "...";
 
 
-    if (wkspUri) {
-      this.channels[wkspUri.path].appendLine("\n" + ERR_HIGHLIGHT);
-      this.channels[wkspUri.path].appendLine(text);
-      this.channels[wkspUri.path].appendLine(ERR_HIGHLIGHT);
-      this.channels[wkspUri.path].show(true);
-    }
-    else {
-      for (const wkspPath in this.channels) {
-        this.channels[wkspPath].appendLine("\n" + ERR_HIGHLIGHT);
-        this.channels[wkspPath].appendLine(text);
-        this.channels[wkspPath].appendLine(ERR_HIGHLIGHT);
-        this.channels[wkspPath].show(true);
-      }
+    switch (logType) {
+      case DiagLogType.info:
+        vscode.window.showInformationMessage(winText);
+        break;
+      case DiagLogType.warn:
+        vscode.window.showWarningMessage(winText);
+        break;
+      case DiagLogType.error:
+        vscode.window.showErrorMessage(winText);
+        break;
     }
 
-    vscode.debug.activeDebugConsole.appendLine(text);
+    //vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
       run.appendOutput(text + "\n");
   }
@@ -161,9 +180,12 @@ export enum DiagLogType {
   "info", "warn", "error"
 }
 
-export const diagLog = (message: string, logType?: DiagLogType) => {
+export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLogType) => {
   if (config && !config.globalSettings.logDiagnostics)
     return;
+
+  if (wkspUri)
+    message = `${wkspUri}: ${message}`;
 
   switch (logType) {
     case DiagLogType.error:

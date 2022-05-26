@@ -17,10 +17,12 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
   try {
 
-    diagLog(friendlyCmd); // log debug cmd for extension devs only
+    diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
 
     // remove stdout noise when debugging
     args.push("--no-summary", "--outfile", config.extTempFilesUri.fsPath + "debug.log");
+
+    const env = { ...process.env, ...wkspSettings.envVarList };
 
     const debugLaunchConfig = {
       name: `${EXTENSION_NAME}-debug`,
@@ -30,7 +32,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       request: 'launch',
       module: "behave",
       args: args,
-      env: wkspSettings.envVarList,
+      env: env,
       justMyCode: wkspSettings.justMyCode
     };
 
@@ -38,7 +40,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
 
     if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
-      diagLog("unable to start debug session, was debug stop button clicked?")
+      diagLog("unable to start debug session, was debug stop button clicked?", wkspSettings.uri)
       return;
     }
 
@@ -46,7 +48,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
+          await parseAndUpdateTestResults(true, junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
           resolve();
         }
         catch (e: unknown) {

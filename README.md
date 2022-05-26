@@ -1,17 +1,12 @@
 # Behave VSC 
 
-## Pre-release v0.2.0
+## Pre-release v0.3.0
 
+- This is a pre-release. On each update you should check the [Release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes.
 - A test runner (and debugger) for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API  
+- Tested on Linux and Windows
 - See [Troubleshooting](#troubleshooting) below if you have any problems
-
-### Tested with
-- behave 1.2.6
-- Python 3.9.7
-- Visual Studio Code 1.66.2
-- ms-python.python extension v2022.4.1
-- Ubuntu 21.10 / Windows 10
 
 ### Release notes
 - See [here](https://github.com/jimasp/behave-vsc/releases)

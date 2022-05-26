@@ -60,9 +60,9 @@ export class TestFile {
           if (err.includes("duplicate test item")) {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
-            err = err.replace(scen, `. Duplicate scenario: "${scen.slice(1)}".`);
+            err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
             // don't throw here, log it and carry on
-            config.logger.logError(new WkspError(err, wkspSettings.uri));
+            config.logger.showError(err, wkspSettings.uri);
           }
           else
             throw e;

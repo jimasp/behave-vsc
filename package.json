@@ -8,19 +8,19 @@
 				"behave-vsc.alwaysShowOutput": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nBy default the Behave VSC output window will only show if there is an error in this extension, or a configuration warning.\nSet true to show the Behave VSC output window on every test run.\nFor multi-root workspaces, set this in your *.code-workspace file.\n",
+					"description": "Default:false (disabled).\nBy default the Behave VSC output window will only show if there is a error/warning in the extension.\nSet true to show the Behave VSC output window on every test run.\nFor multi-root workspaces, set this in your *.code-workspace file.\n",
 					"scope": "window"
 				},
 				"behave-vsc.envVarList": {
-					"type": "string",
+					"type": "object",
 					"default": "",
-					"description": "Optional SINGLE-quoted csv list of environment variables to use when calling a behave command\nExample: 'var1': 'val1', 'var2': 'val2'\nAn alternative to using a .env file, and specific to your behave tests. (This will apply to all tests within the workspace, i.e. it cannot be varied per test.)\n",
+					"description": "Optional list of environment variable overrides to use when calling a behave command\nExample: { \"var1\": \"val1\", \"var2\": \"val2\" }'\n(This will apply to all tests within the workspace, i.e. it cannot be varied per test.)\n",
 					"scope": "resource"
 				},
 				"behave-vsc.fastSkipList": {
-					"type": "string",
+					"type": "array",
 					"default": "",
-					"description": "Optional csv list of fast skip tags that each start with @\nExample: @skip, @skipped\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, or when debugging.\nThe listed tags stop behave being called for features/scenarios marked with those tags.\nOnly useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.\n",
+					"description": "Optional list of fast skip tags that each start with @\nExample: [ @skip, @skipped ]\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, (or when debugging).\nThe listed tags stop behave being called for features/scenarios marked with those tags.\nOnly useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.\n",
 					"scope": "resource"
 				},
 				"behave-vsc.featuresPath": {
@@ -62,7 +62,7 @@
 				"behave-vsc.logDiagnostics": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled).\nSet to true to enable stack traces on errors and log diagnostics in console, viewable via vscode's 'Developer:Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small impact on performance\n",
+					"description": "Default:false (disabled).\nSet to true to enable stack traces on errors and log diagnostics in console, viewable via vscode command 'Developer: Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small performance impact.\n",
 					"scope": "window"
 				}
 			}
@@ -84,7 +84,7 @@
 		}
 	},
 	"description": "Debug and Run Behave tests from Sidebar or Feature file",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
 import { EXTENSION_NAME } from './Configuration';
-import { diagLog, Logger } from './Logger';
+import { Logger } from './Logger';
 
 
 export class WindowSettings {
@@ -42,7 +42,7 @@ export class WorkspaceSettings {
   // these apply to a single workspace 
 
   // user-settable
-  public readonly envVarList: { [name: string]: string; } = {};
+  public readonly envVarList: { [name: string]: string } = {};
   public readonly fastSkipList: string[] = [];
   public readonly justMyCode: boolean;
   public readonly runAllAsOne: boolean;
@@ -54,22 +54,22 @@ export class WorkspaceSettings {
   public readonly featuresUri: vscode.Uri;
   // internal
   private readonly _errors: string[] = [];
+  private readonly _fatalErrors: string[] = [];
 
 
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
     this.uri = wkspUri;
-    let fatal = false;
     const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
     if (!wsFolder)
       throw new Error("No workspace folder found for uri " + wkspUri.path);
     this.name = wsFolder.name;
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-    const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
+    const envVarListCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarList");
     if (envVarListCfg === undefined)
       throw "envVarList is undefined";
-    const fastSkipListCfg: string | undefined = wkspConfig.get("fastSkipList");
+    const fastSkipListCfg: string[] | undefined = wkspConfig.get("fastSkipList");
     if (fastSkipListCfg === undefined)
       throw "fastSkipList is undefined";
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
@@ -100,69 +100,47 @@ export class WorkspaceSettings {
       // (or the user has actually deleted/moved the features path since loading)
       // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
       // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
-      this._errors.push(`FATAL ERROR: features path ${this.featuresUri.fsPath} not found.`);
-      fatal = true;
+      this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 
     if (fastSkipListCfg) {
-      if (!fastSkipListCfg.includes("@") || fastSkipListCfg.length < 2) {
-        this._errors.push("Invalid FastSkipList setting ignored.");
-      }
-      else {
-        try {
-          const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
-          let invalid = false;
-          skipList.forEach(s => {
-            s = s.trim();
-            if (s !== "" && !s.startsWith("@"))
-              invalid = true;
-          });
-          if (invalid)
-            this._errors.push("Invalid FastSkipList setting ignored.");
-          else
-            this.fastSkipList = skipList.filter(s => s !== "");
+      const err = `Invalid FastSkipList setting ${JSON.stringify(fastSkipListCfg)} ignored. Format should be [ "@skip1", "@skip2" ]`;
+      for (const tag of fastSkipListCfg) {
+        if (!tag.startsWith("@")) {
+          this._errors.push(err);
+          break;
         }
-        catch {
-          this._errors.push("Invalid FastSkipList setting ignored.");
+        else {
+          this.fastSkipList.push(tag);
         }
       }
     }
 
     if (envVarListCfg) {
-      if (!envVarListCfg.includes(":") || !envVarListCfg.includes("'") || envVarListCfg.length < 7) {
-        this._errors.push("Invalid EnvVarList setting ignored.");
-      }
-      else {
-        try {
-          const re = /(?:\s*,?)(?:\s*')(.*?)(?:'\s*)(?::\s*')(.*?)(?:'\s*)/g;
-          const escape = "#^@";
-          const escaped = envVarListCfg.replace(/\\'/g, escape);
-
-          let matches;
-          while ((matches = re.exec(escaped))) {
-            if (matches.length !== 3)
-              throw null;
-            const name = matches[1].trim();
-            if (name.length === 0) {
-              throw null;
+      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored. Format should be { "name1": "value1", "name2": "value2" }`;
+      try {
+        for (const key in envVarListCfg) {
+          const value = envVarListCfg[key];
+          if (value) {
+            if (typeof value !== "string") {
+              this._errors.push(err);
+              break;
             }
-            const value = matches[2].replace(escape, "'");
-            diagLog(`${name}='${value}'`);
-            this.envVarList[name] = value;
+            this.envVarList[key] = value;
           }
-
         }
-        catch {
-          this._errors.push("Invalid EnvVarList setting ignored.");
-        }
+      }
+      catch {
+        this._errors.push(err);
       }
     }
 
-    this.logUserSettings(logger, fatal, winSettings);
+
+    this.logUserSettings(logger, winSettings);
   }
 
 
-  logUserSettings(logger: Logger, fatal: boolean, winSettings: WindowSettings) {
+  logUserSettings(logger: Logger, winSettings: WindowSettings) {
 
     let nonUserSettable: string[] = [];
 
@@ -219,10 +197,10 @@ export class WorkspaceSettings {
     }
 
     if (this._errors.length > 0)
-      logger.logError(new WkspError(this._errors.join("\n"), this.uri));
+      logger.showWarn(`settings error: ${this._errors.join("\n")}`, this.uri);
 
     // shouldn't get here for featurePath problems, see comment for featuresPath fatal error above
-    if (fatal)
+    if (this._fatalErrors.length > 0)
       throw new WkspError(`Fatal error due to invalid workspace setting in workspace "${this.name}", cannot continue. See previous error for more details.`, this.uri);
 
   }

@@ -5,6 +5,7 @@
 from behave import *
 import bad
 
-@given("we have a bad import")
+@given("we have a bad imprt")
 def step_inst(context):
     pass
+

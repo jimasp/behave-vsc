@@ -6,7 +6,7 @@ import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Co
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeTempDirectory, WkspError
+  isStepsFile, logExtensionVersion, removeTempDirectory
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
@@ -84,18 +84,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
+      let wkspSettings;
       try {
         if (!item)
           return;
 
         const data = testData.get(item);
         if (data instanceof TestFile) {
-          const wkspSettings = getWorkspaceSettingsForFile(item.uri);
+          wkspSettings = getWorkspaceSettingsForFile(item.uri);
           await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        const wkspUri = wkspSettings ? wkspSettings.uri : undefined;
+        config.logger.showError(e, wkspUri);
       }
     };
 
@@ -104,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.showError(e, undefined);
       }
     };
 
@@ -137,7 +139,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
               }
             }
             catch (e: unknown) {
-              config.logger.logError(e);
+              config.logger.showError(e, undefined);
             }
           },
         };
@@ -164,7 +166,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.showError(e, undefined);
       }
     }));
 
@@ -223,7 +225,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        config.logger.showError(e, undefined);
       }
     }
 
@@ -263,10 +265,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
   }
   catch (e: unknown) {
     if (config && config.logger) {
-      config.logger.logError(e);
+      config.logger.showError(e, undefined);
     }
     else {
-      // no logger, use vscode.window message
+      // no logger, use vscode.window.showErrorMessage directly
       const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
       vscode.window.showErrorMessage(text);
     }
@@ -297,7 +299,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     }
     catch (e: unknown) {
-      config.logger.logError(new WkspError(e, wkspUri));
+      config.logger.showError(e, wkspUri);
     }
   }
 
@@ -328,14 +330,14 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     // log for extension developers in case we need to add another file type above
     if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      diagLog("detected deletion of unanticipated file type", DiagLogType.warn);
+      diagLog("detected deletion of unanticipated file type", wkspUri, DiagLogType.warn);
     }
 
     try {
       parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
-      config.logger.logError(new WkspError(e, wkspUri));
+      config.logger.showError(e, wkspUri);
     }
   });
 
