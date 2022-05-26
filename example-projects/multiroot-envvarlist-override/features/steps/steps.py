@@ -5,9 +5,8 @@
 from behave import *
 import os
 
-@given("we have an envarlist PATH override")
+@given("we have an envarlist USER override")
 def step_inst(context):
-    assert(os.getenv("HOME") == "bob")
-    assert(os.getenv['PATH'] == 'path override')
-    pass
+    assert(os.getenv("USER") == "bob-163487")
+
 

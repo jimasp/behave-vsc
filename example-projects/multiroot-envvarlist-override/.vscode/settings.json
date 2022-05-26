@@ -1,4 +1,4 @@
 {
     "behave-vsc.logDiagnostics": true,
-    "behave-vsc.envVarList": { "PATH": "path override", "HOME": "bob" }
+    "behave-vsc.envVarList": { "USER": "bob-163487" } 
 }
