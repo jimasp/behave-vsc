@@ -4,10 +4,10 @@
 
 ---
 ### General
-- ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach Release v1.0.0 due to code volatility.*** You should also hold off forking before v1.0.0, or make sure to merge down updates.
+- ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach Release v1.0.0 due to code volatility.*** (You should also hold off forking before v1.0.0).
 - Before starting any development, please make sure to fully read through both the [README](README.md) and this document. It may save you some development pain and/or solve your issue.
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
-- If you want to contribute to the extension, read through everything below, then fork the repo, make your changes, and submit a pull request.
+- If you want to contribute to this extension, please read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
 - Bug fixes are great. New features will be considered, but see [Development guidelines](#development-guidelines).
 
@@ -44,7 +44,7 @@
 9. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
 	- `npm run test`
 10. If any of the tests fail, then double-check the steps above. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests) further down.
-11. Note - if at any point you perform a `git clean`, pull a new version of the source code, or switch branch, you will need to run `npm install` again.
+11. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 ---
 ### Terminology
 - The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the extension source code project.
@@ -85,7 +85,7 @@ OR
 3. Optionally add a breakpoint in e.g. `runAllTestsAndAssertTheResults`.
 4. Hit play or press `F5` to run the tests in a new window with your extension loaded.
 5. See the output of the test result in the debug console (in your original source environment, not the host environment).
-6. To debug `npm run test` itself (as opposed the test suite), see comment in `runTestSuites.ts`.  
+6. To debug `npm run test` itself (as opposed the test suite), see the comment in `runTestSuites.ts`.  
 If you want to add a test, they should go somewhere in `src/test`.    
   - The provided test runner will only consider files matching the name pattern `**.test.ts`.
   - You can create folders inside the `test` folder to structure your tests.
@@ -99,29 +99,6 @@ If you have a customised fork and you want to distribute it to your team, you wi
 2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the tests, if you've already run them you can just close vscode windows when they appear)
 
 
----
-## Troubleshooting
-- See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
-- ***Most extension development problems can be resolved by either:***
-	- ***(a) removing all breakpoints, or***
-	- ***(b) restarting the watch tasks in terminal window, or***
-	- ***(c) restarting vscode.***
-- If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
-- Have you remembered to disable the marketplace version of the extension?
-- If an exception is not bubbling, see [Error handling](#error-handling).
-- Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into). 
-- Have you pulled the latest version of the source code?
-- Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install` if you just pulled?
-- Does the issue occur with the example project workspaces, or just in your own project? What is different about your proect? 
-- Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fxd` and pull latest?	
-- If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
-- If you get an error running "Debug Extension...", try setting a breakpoint at the start of the `activate()` function.
-- If you get an error running "Run Extension Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
-- If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue? 
-- Delete all breakpoints from both source and host environments if any of the following occur:
-	- If you don't hit a breakpoint that you're sure you should be hitting. This may be down to sourcemaps and breakpoints being out of sync (in this case, also consider doing a `git commit` and `git clean fdx`). 
-	- If `npm run test` fails on the command line due to a timeout.
-	- If a "Run Extension Test Suite..." test fails during debugging due to a timeout.
 
 ---
 ## Development guidelines
@@ -172,7 +149,29 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 
-
+---
+## Troubleshooting
+- See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
+- ***Most extension development problems can be resolved by either:***
+	- ***(a) removing all breakpoints, or***
+	- ***(b) restarting the watch tasks in terminal window, or***
+	- ***(c) restarting vscode.***
+- Have you remembered to disable the marketplace version of the extension?	
+- If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
+- If an exception is not bubbling, see [Error handling](#error-handling).
+- Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into). 
+- Have you pulled the latest version of the source code?
+- Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install` if you just pulled?
+- Does the issue occur with the example project workspaces, or just in your own project? What is different about your project? 
+- Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fdx` and pull latest and `npm install`? Does it work without your changes?	
+- If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
+- If you get an error running "Debug Extension...", try setting a breakpoint at the start of the `activate()` function.
+- If you get an error running "Run Extension Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
+- If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue? 
+- Delete all breakpoints from both source and host environments if any of the following occur:
+	- If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case restart kill the watch task and then restart it with `Ctrl+Shift+B` - this will run `rimraf out/ dist/`). 
+	- If `npm run test` fails on the command line due to a timeout.
+	- If a "Run Extension Test Suite..." test fails during debugging due to a timeout.
 
 ---
 ## Before requesting a PR merge
