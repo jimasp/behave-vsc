@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFatalBehaveError, isFeatureFile,
   isStepsFile, logExtensionVersion, removeTempDirectory
 } from './common';
 import { StepMap } from './stepsParser';
@@ -14,6 +14,7 @@ import { getStepMap, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './Logger';
+import { setFatalBehaveDebugError } from './behaveDebug';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -113,6 +114,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     // onDidTerminateDebugSession doesn't provide reason for the stop,
     // so we need to check the reason from the debug adapter protocol
+    // secondary purpose is to set fatal debug error flag so we can mark tests as failed
     context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
       createDebugAdapterTracker() {
         let threadExit = false;
@@ -122,7 +124,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
             try {
               // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
 
-              // diagLog(JSON.stringify(m));
+              diagLog(JSON.stringify(m));
+
+              // isFatalBehaveError
+              const stderr = m.body?.category === "stderr";
+              if (stderr && isFatalBehaveError(m.body.output)) {
+                setFatalBehaveDebugError();
+                cancelTestRun("onDidSendMessage (fatal error)");
+                return;
+              }
 
               if (m.body?.reason === "exited" && m.body?.threadId) {
                 // mark threadExit for subsequent calls

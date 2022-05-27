@@ -6,6 +6,12 @@ import { QueueItem } from './extension';
 import { diagLog } from './Logger';
 
 
+let hadFatalBehaveError = false;
+export function setFatalBehaveDebugError() {
+  // fatal behave error (i.e. there will be no junit output)
+  hadFatalBehaveError = true;
+}
+
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
   args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<void> {
 
@@ -14,9 +20,9 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     await vscode.debug.stopDebugging();
   });
 
+  hadFatalBehaveError = false;
 
   try {
-
     diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
 
     // remove stdout noise when debugging
@@ -40,15 +46,17 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
 
     if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
-      diagLog("unable to start debug session, was debug stop button clicked?", wkspSettings.uri)
+      // TODO - we could check if it was clicked rather than log question
+      diagLog("unable to start debug session, was debug stop button clicked on previous session?", wkspSettings.uri)
       return;
     }
+
 
     return await new Promise((resolve, reject) => {
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(true, junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
+          await parseAndUpdateTestResults(true, hadFatalBehaveError, junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
           resolve();
         }
         catch (e: unknown) {

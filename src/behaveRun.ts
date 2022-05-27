@@ -5,8 +5,9 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, WkspError } from './common';
+import { cleanBehaveText, isFatalBehaveError, WkspError } from './common';
 import { diagLog } from './Logger';
+import { cancelTestRun } from './testRunHandler';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
@@ -27,9 +28,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
 
   const wkspUri = wkspSettings.uri;
-
-  if (!runAllAsOne && !junitFileUri)
-    throw new WkspError("junit file must be specified for single tests", wkspUri);
 
   // note - (via logic in runWorkspaceQueue) runAllAsOne will also be true here 
   // if the runAllAsOne setting is true and there is only one test in the entire workspace 
@@ -63,6 +61,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     const env = { ...process.env, ...wkspSettings.envVarList };
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: env };
     cp = spawn(pythonExec, local_args, options);
+    //cp = spawn("printenv", [], options);
 
     if (!cp.pid) {
       throw `unable to launch python or behave, command: ${pythonExec} ${local_args}\n` +
@@ -80,12 +79,13 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
         config.logger.logInfoNoCR(str, wkspUri);
     }
 
-    let fatal = false; // <--flag to stop us getting stuck waiting waiting for junit files if there is a behave error (for runAllAsOne)
+    let hadFatalBehaveError = false; // <--flag to stop us getting stuck waiting waiting for junit files if there is a behave error (for runAllAsOne)
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
-      if (str.startsWith("Traceback") || str.includes("/bin/python:")) {
-        fatal = true;
+      if (isFatalBehaveError(str)) {
+        // fatal behave error (i.e. there will be no junit output)
+        hadFatalBehaveError = true;
         config.logger.show(wkspUri);
       }
     });
@@ -114,9 +114,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 
     if (runAllAsOne) {
-      if (fatal) {
+      if (hadFatalBehaveError) {
         for (const queueItem of queue) {
-          await parseAndUpdateTestResults(false, undefined, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
+          await parseAndUpdateTestResults(false, hadFatalBehaveError, undefined, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         }
       }
       else {
@@ -128,11 +128,12 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       }
     }
     else {
+      if (hadFatalBehaveError)
+        cancelTestRun("fatal behave error");
       if (!junitFileUri)
-        throw new Error("junitFileUri not supplied");
-      await parseAndUpdateTestResults(false, junitFileUri, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
+        throw new Error("junitFileUri must be supplied for single test behave execution");
+      await parseAndUpdateTestResults(false, hadFatalBehaveError, junitFileUri, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
     }
-
   }
   catch (e: unknown) {
     throw new WkspError(e, wkspUri);
@@ -166,7 +167,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
       // one junit file is created per feature (for non-parallel runs), so update all tests for this feature
       for (const match of matches) {
-        await parseAndUpdateTestResults(false, match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
+        await parseAndUpdateTestResults(false, false, match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
         match.updated = true;
         diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
         updated++;

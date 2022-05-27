@@ -13,20 +13,20 @@
 			"name": "project 2"
 		},
 		{
-			"path": "./multiroot-envvarlist-override",
-			"name": "envVarList override",
-		},		
-		{
-			"path": "./multiroot-bad-features-path",
+			"path": "./multiroot bad features path",
 			"name": "bad features path",
 		},
 		{
-			"path": "./multiroot-empty-folder",
+			"path": "./multiroot empty folder",
 			"name": "empty folder"
 		},
 		{
-			"path": "./multiroot-ignored",
+			"path": "./multiroot ignored",
 			"name": "ignored folder",
+		},
+		{
+			"path": "./multiroot bad import",
+			"name": "bad import",
 		},
 	],
 	"settings": {

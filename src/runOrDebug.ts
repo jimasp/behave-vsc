@@ -25,7 +25,7 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
 
     const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${friendlyEnvVars}${ps2}"${pythonExec}" -m behave`;
     const junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
-    const args = ["--junit", "--junit-directory", junitDirUri.fsPath, "--capture", "--capture-stderr", "--logcapture"];
+    const args = ["--junit", "--junit-directory", junitDirUri.fsPath];
 
     await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitDirUri);
   }

@@ -3,6 +3,7 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=unused-argument
 from behave import *
+import bad
 
 @given("we have behave installed")
 @given("we have (behave) installed")

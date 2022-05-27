@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { getContentFromFilesystem } from './common';
+import { getContentFromFilesystem, WkspError } from './common';
 import { EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
 import { diagLog, DiagLogType } from './Logger';
 
@@ -164,10 +164,10 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRela
 }
 
 
-export async function parseAndUpdateTestResults(debug: boolean, junitFileUri: vscode.Uri | undefined, run: vscode.TestRun, queueItem: QueueItem,
-  wkspRelativeFeaturesPath: string, cancelToken: vscode.CancellationToken): Promise<void> {
+export async function parseAndUpdateTestResults(debug: boolean, fatalError: boolean, junitFileUri: vscode.Uri | undefined, run: vscode.TestRun,
+  queueItem: QueueItem, wkspRelativeFeaturesPath: string, cancelToken: vscode.CancellationToken): Promise<void> {
 
-  if (!junitFileUri) {
+  if (fatalError) {
     const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
     const parseResult = {
       status: `See errors in ${window}.`,
@@ -175,6 +175,10 @@ export async function parseAndUpdateTestResults(debug: boolean, junitFileUri: vs
     };
     updateTest(run, parseResult, queueItem);
     return;
+  }
+
+  if (!junitFileUri) {
+    throw "if not fatal error, then junitFileUri must be supplied";
   }
 
   let result: parseJunitFileResult;

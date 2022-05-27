@@ -7,10 +7,10 @@ suite(`workspace-1-suite test run`, () => {
 	const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspName, "/behave_tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "behave_tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
-	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "/behave_tests/some tests", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
-	test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspName, "/behave_tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
+	test("runAllAsOne", async () => await sharedWorkspaceTests.runAllAsOne(wkspName, "/behave tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "behave tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
+	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "/behave tests/some tests", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
+	test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspName, "/behave tests/some tests/", getWs1ExpectedCounts, getWs1ExpectedResults)).timeout(300000);
 
 }).timeout(900000);
 

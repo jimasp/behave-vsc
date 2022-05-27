@@ -20,7 +20,7 @@
 				"behave-vsc.fastSkipList": {
 					"type": "array",
 					"default": "",
-					"description": "Optional list of fast skip tags that each start with @\nExample: [ @skip, @skipped ]\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, (or when debugging).\nThe listed tags stop behave being called for features/scenarios marked with those tags.\nOnly useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.\n",
+					"description": "Optional list of fast skip tags that each start with @\nExample: [ \"@skip\", \"@skipped\" ]\nThis setting has no effect when you run all tests at once and runAllAsOne is enabled, (or when debugging).\nThe listed tags stop behave being called for features/scenarios marked with those tags.\nOnly useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.\n",
 					"scope": "resource"
 				},
 				"behave-vsc.featuresPath": {
