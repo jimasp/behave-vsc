@@ -14,7 +14,7 @@
 		},
 		{
 			"path": "./multiroot bad features path",
-			"name": "bad features path",
+			"name": "bad features path"
 		},
 		{
 			"path": "./multiroot empty folder",
@@ -22,12 +22,12 @@
 		},
 		{
 			"path": "./multiroot ignored",
-			"name": "ignored folder",
+			"name": "ignored folder"
 		},
 		{
 			"path": "./multiroot bad import",
-			"name": "bad import",
-		},
+			"name": "bad import"
+		}
 	],
 	"settings": {
 		"behave-vsc.alwaysShowOutput": true,

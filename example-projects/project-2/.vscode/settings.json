@@ -2,7 +2,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./non_behave_tests",
+        "./project 2 unit tests",
         "-p",
         "test_*.py"
     ],
