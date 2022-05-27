@@ -53,8 +53,8 @@ export class WorkspaceSettings {
   public readonly name: string;
   public readonly featuresUri: vscode.Uri;
   // internal
+  private readonly _warnings: string[] = [];
   private readonly _errors: string[] = [];
-  private readonly _fatalErrors: string[] = [];
 
 
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
@@ -100,38 +100,48 @@ export class WorkspaceSettings {
       // (or the user has actually deleted/moved the features path since loading)
       // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
       // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
-      this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
+      this._errors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 
     if (fastSkipListCfg) {
-      const err = `Invalid FastSkipList setting ${JSON.stringify(fastSkipListCfg)} ignored. Format should be [ "@skip1", "@skip2" ]`;
-      for (const tag of fastSkipListCfg) {
-        if (!tag.startsWith("@")) {
-          this._errors.push(err);
-          break;
-        }
-        else {
-          this.fastSkipList.push(tag);
+      const err = `Invalid FastSkipList setting ${JSON.stringify(fastSkipListCfg)} ignored, settings.json format should be [ "@skip1", "@skip2" ]`;
+      if (typeof fastSkipListCfg !== "object") {
+        this._warnings.push(err);
+      }
+      else {
+        for (const tag of fastSkipListCfg) {
+          if (!tag.startsWith("@")) {
+            this._warnings.push(err);
+            break;
+          }
+          else {
+            this.fastSkipList.push(tag);
+          }
         }
       }
     }
 
     if (envVarListCfg) {
-      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored. Format should be { "name1": "value1", "name2": "value2" }`;
+      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored, settings.json format should be { "name1": "value1", "name2": "value2" }`;
       try {
-        for (const key in envVarListCfg) {
-          const value = envVarListCfg[key];
-          if (value) {
-            if (typeof value !== "string") {
-              this._errors.push(err);
-              break;
+        if (typeof envVarListCfg !== "object") {
+          this._warnings.push(err);
+        }
+        else {
+          for (const key in envVarListCfg) {
+            const value = envVarListCfg[key];
+            if (value) {
+              if (typeof value !== "string") {
+                this._warnings.push(err);
+                break;
+              }
+              this.envVarList[key] = value;
             }
-            this.envVarList[key] = value;
           }
         }
       }
       catch {
-        this._errors.push(err);
+        this._warnings.push(err);
       }
     }
 
@@ -196,11 +206,11 @@ export class WorkspaceSettings {
         logger.logInfo(`(You can turn off configuration warnings via the extension setting '${EXTENSION_NAME}.showConfigurationWarnings'.)\n`, this.uri);
     }
 
-    if (this._errors.length > 0)
-      logger.showWarn(`settings error: ${this._errors.join("\n")}`, this.uri);
+    if (this._warnings.length > 0)
+      logger.showWarn(`settings - ${this._warnings.join("\n")}`, this.uri);
 
     // shouldn't get here for featurePath problems, see comment for featuresPath fatal error above
-    if (this._fatalErrors.length > 0)
+    if (this._errors.length > 0)
       throw new WkspError(`Fatal error due to invalid workspace setting in workspace "${this.name}", cannot continue. See previous error for more details.`, this.uri);
 
   }
