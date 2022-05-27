@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFatalBehaveError, isFeatureFile,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeTempDirectory
 } from './common';
 import { StepMap } from './stepsParser';
@@ -14,7 +14,7 @@ import { getStepMap, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './Logger';
-import { setFatalBehaveDebugError } from './behaveDebug';
+import { getDebugAdapterTrackerFactory } from './behaveDebug';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -70,6 +70,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(removeTempDirectoryCancelSource);
     removeTempDirectory(removeTempDirectoryCancelSource.token);
     const runHandler = testRunHandler(testData, ctrl, parser, removeTempDirectoryCancelSource);
+    context.subscriptions.push(getDebugAdapterTrackerFactory());
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
@@ -112,51 +113,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     };
 
 
-    // onDidTerminateDebugSession doesn't provide reason for the stop,
-    // so we need to check the reason from the debug adapter protocol
-    // secondary purpose is to set fatal debug error flag so we can mark tests as failed
-    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
-      createDebugAdapterTracker() {
-        let threadExit = false;
-
-        return {
-          onDidSendMessage: (m) => {
-            try {
-              // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-
-              diagLog(JSON.stringify(m));
-
-              // isFatalBehaveError
-              const stderr = m.body?.category === "stderr";
-              if (stderr && isFatalBehaveError(m.body.output)) {
-                setFatalBehaveDebugError();
-                cancelTestRun("onDidSendMessage (fatal error)");
-                return;
-              }
-
-              if (m.body?.reason === "exited" && m.body?.threadId) {
-                // mark threadExit for subsequent calls
-                threadExit = true;
-                return;
-              }
-
-              if (m.event === "exited") {
-                if (!threadExit) {
-                  // exit, but not a thread exit, so we need to set flag to 
-                  // stop the run, (most likely debug was stopped by user)
-                  cancelTestRun("onDidSendMessage (debug stop)");
-                }
-              }
-            }
-            catch (e: unknown) {
-              config.logger.showError(e, undefined);
-            }
-          },
-        };
-      }
-    }));
-
-
     // called when a user renames, adds or removes a workspace folder
     // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
@@ -168,11 +124,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // we need to resync the logger first
         config.logger.syncChannelsToWorkspaceFolders();
 
-        // TOOD: investigate behaviour, starting with OS. onDidChangeConfiguration seems to sometimes fire on it's own 
+        // TODO: investigate behaviour. onDidChangeConfiguration() seems to sometimes fire on it's own 
         // for changed workspace folders, and sometimes not? 
         // it may vary per OS (linux vs windows), or may depend on *.code-workspace file contents, also may vary on 
         // whether passed in event contains removed/added/renamed workspaces or a combination of all three factors.
-        // safest thing without further investigation is to potentially call it twice 
+        // safest thing without further investigation is to potentially call it twice (...parseFiles... methods will self-cancel anyway)
         await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
@@ -182,7 +138,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
 
     // called when there is a settings.json/*.vscode-workspace change, or sometimes when workspace folders are added/removed/renamed
-    // (also called directly by integration tests with a testCfg)
+    // (also called directly by onDidChangeWorkspaceFolders and by integration tests with a testCfg)
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
       forceFullRefresh?: boolean) => {
 

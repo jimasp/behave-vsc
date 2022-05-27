@@ -42,13 +42,12 @@ export function getTestIdForUri(uri: vscode.Uri) {
 
 
 export async function removeTempDirectory(cancelToken: vscode.CancellationToken) {
-  await removeDirectoryRecursivexx(config.extTempFilesUri, cancelToken);
+  await removeDirectoryRecursive(config.extTempFilesUri, cancelToken);
 }
 
-export async function removeDirectoryRecursivexx(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
+export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
 
   try {
-
     const children = await vwfs.readDirectory(dirUri);
 
     for (const [name,] of children) {
@@ -63,7 +62,6 @@ export async function removeDirectoryRecursivexx(dirUri: vscode.Uri, cancelToken
   }
   catch (e: unknown) {
     // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
-    // TODO: force a,b,c and check for specific error
   }
 }
 
@@ -263,6 +261,7 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
   return results;
 }
 
-export function isFatalBehaveError(stderrStr: string) {
-  return stderrStr.startsWith("Traceback") || stderrStr.includes("/bin/python:")
+
+export function showDebugWindow() {
+  vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }

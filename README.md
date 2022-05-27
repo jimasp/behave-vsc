@@ -13,7 +13,9 @@
 
 ---
 ## Features
-- Debug or Run behave tests from the test workbench, or from inside a feature file.
+- Debug or Run behave tests from the test side bar, or from inside a feature file.
+- Supports nested folders, such that you can run a nested folder on it's own.
+- Supports multiroot workspaces, including running tests from all workspaces in parallel.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarList`, etc.)
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keybinding for this command if you wish (e.g. F12).
 
@@ -30,7 +32,7 @@
 - [python](https://www.python.org/) 
 
 ### Required project directory structure
-- A single `features` folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires you have a "steps" folder.)
+- A single `features` (lowercase by default) folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires you have a "steps" folder.)
 - A behave-conformant directory structure, for example:
 ```  
   . features/  

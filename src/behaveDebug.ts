@@ -4,13 +4,52 @@ import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { diagLog } from './Logger';
+import { cancelTestRun } from './testRunHandler';
 
 
-let hadFatalBehaveError = false;
-export function setFatalBehaveDebugError() {
-  // fatal behave error (i.e. there will be no junit output)
-  hadFatalBehaveError = true;
+let debugNonZeroExitError = false;
+
+// onDidTerminateDebugSession doesn't provide reason for the stop,
+// so we need to check the reason from the debug adapter protocol
+// secondary purpose is to set fatal debug error flag so we can mark tests as failed
+export function getDebugAdapterTrackerFactory() {
+  return vscode.debug.registerDebugAdapterTrackerFactory('*', {
+    createDebugAdapterTracker() {
+      let threadExit = false;
+
+      return {
+        onDidSendMessage: (m) => {
+          try {
+            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
+
+            diagLog(JSON.stringify(m));
+
+            if (m.body?.reason === "exited" && m.body?.threadId) {
+              // mark threadExit for subsequent calls
+              threadExit = true;
+              return;
+            }
+
+            if (m.event === "exited") {
+              if (m.body?.exitCode !== 0) {
+                debugNonZeroExitError = true;
+              }
+              if (!threadExit) {
+                // exit, but not a thread exit, so we need to set flag to 
+                // stop the run, (most likely debug was stopped by user)
+                cancelTestRun("onDidSendMessage (debug stop)");
+              }
+            }
+          }
+          catch (e: unknown) {
+            config.logger.showError(e, undefined);
+          }
+        },
+      };
+    }
+  })
 }
+
 
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
   args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<void> {
@@ -20,13 +59,13 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     await vscode.debug.stopDebugging();
   });
 
-  hadFatalBehaveError = false;
+  debugNonZeroExitError = false;
 
   try {
     diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
 
     // remove stdout noise when debugging
-    args.push("--no-summary", "--outfile", config.extTempFilesUri.fsPath + "debug.log");
+    args.push("--no-summary", "--outfile", vscode.Uri.joinPath(config.extTempFilesUri, "debug.log").fsPath);
 
     const env = { ...process.env, ...wkspSettings.envVarList };
 
@@ -56,7 +95,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(true, hadFatalBehaveError, junitFileUri, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, cancelToken);
+          await parseAndUpdateTestResults(true, debugNonZeroExitError, wkspSettings, junitFileUri, run, queueItem, cancelToken);
           resolve();
         }
         catch (e: unknown) {

@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { getContentFromFilesystem, WkspError } from './common';
-import { EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
+import { getContentFromFilesystem, showDebugWindow } from './common';
+import { config, EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
 import { diagLog, DiagLogType } from './Logger';
+import { WorkspaceSettings } from './settings';
 
 const parser = new xml2js.Parser();
 
@@ -78,7 +79,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
 
 
 
-function CreateParseResult(testCase: TestCase): ParseResult {
+function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCase): ParseResult {
 
   const duration = testCase.$.time * 1000;
   const status = testCase.$.status;
@@ -86,8 +87,14 @@ function CreateParseResult(testCase: TestCase): ParseResult {
   if (status === "passed" || status === "skipped")
     return { status: status, duration: duration };
 
-  if (status === "untested")
-    return { status: `Untested (see output in ${EXTENSION_FRIENDLY_NAME} output window)`, duration: duration };
+  if (status === "untested") {
+    if (debug)
+      showDebugWindow();
+    else
+      config.logger.show(wkspUri);
+    const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+    return { status: `Untested (see output in ${window}`, duration: duration };
+  }
 
   if (status !== "failed")
     throw new Error("Unrecognised scenario status result:" + status);
@@ -164,11 +171,15 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRela
 }
 
 
-export async function parseAndUpdateTestResults(debug: boolean, fatalError: boolean, junitFileUri: vscode.Uri | undefined, run: vscode.TestRun,
-  queueItem: QueueItem, wkspRelativeFeaturesPath: string, cancelToken: vscode.CancellationToken): Promise<void> {
+export async function parseAndUpdateTestResults(debug: boolean, fatalError: boolean, wkspSettings: WorkspaceSettings, junitFileUri: vscode.Uri | undefined,
+  run: vscode.TestRun, queueItem: QueueItem, cancelToken: vscode.CancellationToken): Promise<void> {
 
   if (fatalError) {
     const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+    if (debug)
+      showDebugWindow();
+    else
+      config.logger.show(wkspSettings.uri);
     const parseResult = {
       status: `See errors in ${window}.`,
       duration: 0
@@ -189,12 +200,12 @@ export async function parseAndUpdateTestResults(debug: boolean, fatalError: bool
     if (cancelToken.isCancellationRequested)
       return;
     if (debug)
-      vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
+      showDebugWindow();
     diagLog(`Unable to parse junit file ${junitFileUri.fsPath}`, undefined, DiagLogType.error);
     return;
   }
 
-  const fullFeatureName = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);
+  const fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
   const queueItemResults = result.junitContents.testsuite.testcase.filter(tc =>
@@ -218,7 +229,7 @@ export async function parseAndUpdateTestResults(debug: boolean, fatalError: bool
     }
   }
 
-  const parseResult = CreateParseResult(queueItemResult);
+  const parseResult = CreateParseResult(debug, wkspSettings.uri, queueItemResult);
   updateTest(run, parseResult, queueItem);
 }
 

@@ -5,7 +5,7 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, isFatalBehaveError, WkspError } from './common';
+import { cleanBehaveText, WkspError } from './common';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
 
@@ -79,15 +79,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
         config.logger.logInfoNoCR(str, wkspUri);
     }
 
-    let hadFatalBehaveError = false; // <--flag to stop us getting stuck waiting waiting for junit files if there is a behave error (for runAllAsOne)
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
-      if (isFatalBehaveError(str)) {
-        // fatal behave error (i.e. there will be no junit output)
-        hadFatalBehaveError = true;
-        config.logger.show(wkspUri);
-      }
     });
     cp.stdout?.on('data', chunk => {
       const str = chunk.toString();
@@ -97,6 +91,14 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     if (!async) {
       config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
     }
+
+    let behaveError = false;
+    cp.on('exit', function (code) {
+      if (code !== 0) {
+        behaveError = true;
+        config.logger.show(wkspUri);
+      }
+    });
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
@@ -114,9 +116,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 
     if (runAllAsOne) {
-      if (hadFatalBehaveError) {
+      if (behaveError) {
         for (const queueItem of queue) {
-          await parseAndUpdateTestResults(false, hadFatalBehaveError, undefined, run, queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
+          await parseAndUpdateTestResults(false, behaveError, wkspSettings, undefined, run, queueItem, runToken);
         }
       }
       else {
@@ -128,11 +130,11 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       }
     }
     else {
-      if (hadFatalBehaveError)
+      if (behaveError)
         cancelTestRun("fatal behave error");
       if (!junitFileUri)
         throw new Error("junitFileUri must be supplied for single test behave execution");
-      await parseAndUpdateTestResults(false, hadFatalBehaveError, junitFileUri, run, queue[0], wkspSettings.workspaceRelativeFeaturesPath, runToken);
+      await parseAndUpdateTestResults(false, behaveError, wkspSettings, junitFileUri, run, queue[0], runToken);
     }
   }
   catch (e: unknown) {
@@ -167,7 +169,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
       // one junit file is created per feature (for non-parallel runs), so update all tests for this feature
       for (const match of matches) {
-        await parseAndUpdateTestResults(false, false, match.junitFileUri, run, match.queueItem, wkspSettings.workspaceRelativeFeaturesPath, runToken);
+        await parseAndUpdateTestResults(false, false, wkspSettings, match.junitFileUri, run, match.queueItem, runToken);
         match.updated = true;
         diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
         updated++;
