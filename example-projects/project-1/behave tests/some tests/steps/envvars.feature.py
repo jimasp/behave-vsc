@@ -11,9 +11,9 @@ def envvars(context):
     some_var = os.getenv("some_var")
     some_var2 = os.getenv("some_var2")
     space_var = os.getenv("space_var")
-    HOME = os.getenv("HOME")
+    USER = os.getenv("USER")
     assert some_var == 'double qu"oted'
     assert some_var2 == "single qu'oted"
     assert space_var == " "
-    assert HOME == "bob-163487"
+    assert USER == "bob-163487"
     

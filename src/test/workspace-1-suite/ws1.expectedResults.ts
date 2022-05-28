@@ -6,7 +6,7 @@ import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/ex
 
 export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
   const testCount = getWs1ExpectedResults(debug, wkspUri, config).length;
-  return { tests: { nodeCount: 51, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 16, stepFiles: 3, stepMappings: 15 };
+  return { tests: { nodeCount: 53, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 17, stepFiles: 5, stepMappings: 17 };
 }
 
 export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] {
@@ -559,7 +559,25 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_label: 'run an successful envvars test',
       test_parent: '.../project-1/behave tests/some tests/group2_features/envvars.feature',
       test_uri: '.../project-1/behave tests/some tests/group2_features/envvars.feature'
-    })
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/step_exception.feature',
+      scenario_featureName: 'Bad step',
+      scenario_getLabel: 'step with exception should show failure message',
+      scenario_isOutline: false,
+      scenario_result: 'Failing step: When we have a step that raises an exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
+      scenario_scenarioName: 'step with exception should show failure message',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project-1/behave tests/some tests/group2_features/step_exception.feature/step with exception should show failure message',
+      test_label: 'step with exception should show failure message',
+      test_parent: '.../project-1/behave tests/some tests/group2_features/step_exception.feature',
+      test_uri: '.../project-1/behave tests/some tests/group2_features/step_exception.feature'
+    }),
+
   ];
 
 
