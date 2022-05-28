@@ -211,11 +211,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           if (wkspQueue.length === 0)
             continue;
 
-          if (!debug) {
+          if (!debug)
             config.logger.clear(wkspUri);
-            if (winSettings.alwaysShowOutput)
-              config.logger.show(wkspUri);
-          }
 
           if (debug || !winSettings.multiRootRunWorkspacesInParallel) // limit to one debug session
             await runWorkspaceQueue(request, wkspQueue, wkspSettings);

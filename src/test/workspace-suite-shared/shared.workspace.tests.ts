@@ -23,7 +23,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: true, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
+      justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -39,7 +39,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: true, showConfigurationWarnings: undefined, logDiagnostics: true
+      justMyCode: true, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -54,7 +54,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList2, fastSkipList: fastSkipList2, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: true, logDiagnostics: true
+      justMyCode: undefined, showConfigurationWarnings: true, logDiagnostics: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -69,7 +69,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      alwaysShowOutput: undefined, justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
+      justMyCode: undefined, showConfigurationWarnings: undefined, logDiagnostics: true
     });
 
 

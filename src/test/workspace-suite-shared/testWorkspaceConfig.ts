@@ -9,7 +9,6 @@ export class TestWorkspaceConfigWithWkspUri {
 // used in extension code to allow us to dynamically inject a workspace configuration
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
-	private alwaysShowOutput: boolean | undefined;
 	private envVarList: string | undefined;
 	private fastSkipList: string | undefined;
 	private featuresPath: string | undefined;
@@ -22,11 +21,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
-		alwaysShowOutput, envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
+		envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
 		runAllAsOne, runParallel, showConfigurationWarnings, logDiagnostics
 	}: {
-		alwaysShowOutput: boolean | undefined,
 		envVarList: string | undefined,
 		fastSkipList: string | undefined,
 		featuresPath: string | undefined,
@@ -37,7 +35,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		showConfigurationWarnings: boolean | undefined,
 		logDiagnostics: boolean | undefined
 	}) {
-		this.alwaysShowOutput = alwaysShowOutput;
 		this.envVarList = envVarList;
 		this.fastSkipList = fastSkipList;
 		this.featuresPath = featuresPath;
@@ -57,8 +54,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// one, OR otherwise a default value for the type (e.g. bool = false, string = "", etc.)
 		// so we MUST mirror that behavior here
 		switch (section) {
-			case "alwaysShowOutput":
-				return <T><unknown>(this.alwaysShowOutput === undefined ? false : this.alwaysShowOutput);
 			case "envVarList":
 				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
 			case "fastSkipList":
@@ -95,9 +90,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for all user-settable settings in settings.json or *.code-workspace
 		let response;
 		switch (section) {
-			case "alwaysShowOutput":
-				response = <T><unknown>this.alwaysShowOutput;
-				break;
 			case "envVarList":
 				response = <T><unknown>this.envVarList;
 				break;
@@ -205,8 +197,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
-			case "alwaysShowOutput":
-				return <T><unknown>(this.get("alwaysShowOutput"));
 			case "envVarList":
 				return <T><unknown>getExpectedEnvVarList();
 			case "fastSkipList":

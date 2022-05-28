@@ -30,7 +30,6 @@
 		}
 	],
 	"settings": {
-		"behave-vsc.alwaysShowOutput": true,
 		"behave-vsc.multiRootRunWorkspacesInParallel": true,
 		"behave-vsc.showConfigurationWarnings": true,
 		"behave-vsc.logDiagnostics": true

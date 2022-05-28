@@ -9,7 +9,6 @@ export class WindowSettings {
   // class for package.json "window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
-  public readonly alwaysShowOutput: boolean;
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showConfigurationWarnings: boolean;
   public readonly logDiagnostics: boolean;
@@ -17,9 +16,6 @@ export class WindowSettings {
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-    const alwaysShowOutputCfg: boolean | undefined = winConfig.get("alwaysShowOutput");
-    if (alwaysShowOutputCfg === undefined)
-      throw "alwaysShowOutput is undefined";
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
@@ -30,7 +26,6 @@ export class WindowSettings {
     if (logDiagnosticsCfg === undefined)
       throw "logDiagnostics is undefined";
 
-    this.alwaysShowOutput = alwaysShowOutputCfg;
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.showConfigurationWarnings = showConfigurationWarningsCfg;
     this.logDiagnostics = logDiagnosticsCfg;
