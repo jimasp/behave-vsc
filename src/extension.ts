@@ -201,22 +201,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    const updateNodeForDocument = async (e: vscode.TextDocument) => {
-      const wkspSettings = getWorkspaceSettingsForFile(e.uri);
-      const item = await parser.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, testData, ctrl, e.uri, "updateNodeForDocument");
-      if (item) {
-        item.testFile.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, e.uri.path,
-          ctrl, e.getText(), item.testItem, "updateNodeForDocument");
-      }
-    }
-
-    // for any open .feature documents on startup
-    // TODO - review if we still need this?
-    const docs = vscode.workspace.textDocuments.filter(d => d.uri.scheme === "file" && d.uri.path.toLowerCase().endsWith(".feature"));
-    for (const doc of docs) {
-      await updateNodeForDocument(doc);
-    }
-
     return {
       // return instances to support integration testing
       runHandler: runHandler,

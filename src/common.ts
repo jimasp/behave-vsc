@@ -152,7 +152,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined):
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
   const wkspUri = workspaceFolder ? workspaceFolder.uri : undefined;
   if (!wkspUri)
-    throw "No workspace folder found for file uri " + fileorFolderUri.path;
+    throw "No workspace folder found for file " + fileorFolderUri.fsPath;
   return wkspUri;
 }
 

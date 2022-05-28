@@ -16,6 +16,11 @@ def step_inst(context):
 def step_impl(context, successful_or_failing):
     assert successful_or_failing == "successful"
 
+    
+@when("we have a step that raises an exception")
+def step_impl(context):
+    raise Exception("testing a step exception")    
+
 
 @when("we implement a test that takes {secs} seconds")
 def step_slow(context, secs):

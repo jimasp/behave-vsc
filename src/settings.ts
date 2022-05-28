@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, WkspError } from './common';
+import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
 import { EXTENSION_NAME } from './Configuration';
 import { Logger } from './Logger';
 
@@ -55,9 +55,7 @@ export class WorkspaceSettings {
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
     this.uri = wkspUri;
-    const wsFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
-    if (!wsFolder)
-      throw new Error("No workspace folder found for uri " + wkspUri.path);
+    const wsFolder = getWorkspaceFolder(wkspUri);
     this.name = wsFolder.name;
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
