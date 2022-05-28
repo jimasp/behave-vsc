@@ -5,15 +5,18 @@ import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
+import { isBehaveExecutionError } from './common';
 
 
-let debugNonZeroExitError = false;
+let behaveError = false;
 
-// onDidTerminateDebugSession doesn't provide reason for the stop,
+// onDidTerminateDebugSession doesn't provide a reason for the termination,
 // so we need to check the reason from the debug adapter protocol
-// secondary purpose is to set fatal debug error flag so we can mark tests as failed
+// secondary purpose is to set behaveError flag so we can mark test as failed
 export function getDebugAdapterTrackerFactory() {
   return vscode.debug.registerDebugAdapterTrackerFactory('*', {
+
+    // this function will get called for each debug session
     createDebugAdapterTracker() {
       let threadExit = false;
 
@@ -24,6 +27,13 @@ export function getDebugAdapterTrackerFactory() {
 
             diagLog(JSON.stringify(m));
 
+            const stderr = m.body?.category === "stderr";
+            if (stderr && isBehaveExecutionError(m.body.output)) {
+              behaveError = true;
+              cancelTestRun("onDidSendMessage (behave error)");
+              return;
+            }
+
             if (m.body?.reason === "exited" && m.body?.threadId) {
               // mark threadExit for subsequent calls
               threadExit = true;
@@ -31,12 +41,9 @@ export function getDebugAdapterTrackerFactory() {
             }
 
             if (m.event === "exited") {
-              if (m.body?.exitCode !== 0) {
-                debugNonZeroExitError = true;
-              }
               if (!threadExit) {
-                // exit, but not a thread exit, so we need to set flag to 
-                // stop the run, (most likely debug was stopped by user)
+                // exit, but not a thread exit, so we need to stop the run
+                // (most likely debug was stopped by user)
                 cancelTestRun("onDidSendMessage (debug stop)");
               }
             }
@@ -59,7 +66,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     await vscode.debug.stopDebugging();
   });
 
-  debugNonZeroExitError = false;
+  behaveError = false;
 
   try {
     diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
@@ -81,12 +88,10 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       justMyCode: wkspSettings.justMyCode
     };
 
-
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
 
     if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
-      // TODO - we could check if it was clicked rather than log question
-      diagLog("unable to start debug session, was debug stop button clicked on previous session?", wkspSettings.uri)
+      diagLog("unable to start debug session, was debug stop button clicked?", wkspSettings.uri);
       return;
     }
 
@@ -95,7 +100,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(true, debugNonZeroExitError, wkspSettings, junitFileUri, run, queueItem, cancelToken);
+          await parseAndUpdateTestResults(true, behaveError, wkspSettings, junitFileUri, run, queueItem, cancelToken);
           resolve();
         }
         catch (e: unknown) {
@@ -104,7 +109,6 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
         finally {
           terminateEvent.dispose();
         }
-
       });
     });
 

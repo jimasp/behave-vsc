@@ -14,8 +14,8 @@
 ---
 ## Features
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
-- Run or Debug all tests, a nested folder, or just a single feature or scenario.
-- Supports multiroot workspaces, including running tests from all workspaces in parallel.
+- Select to run/debug all tests, a nested folder, or just a single feature or scenario.
+- Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarList`, etc.)
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keybinding for this command if you wish (e.g. F12).
 

@@ -5,7 +5,7 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, WkspError } from './common';
+import { cleanBehaveText, isBehaveExecutionError, WkspError } from './common';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
 
@@ -29,8 +29,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
   const wkspUri = wkspSettings.uri;
 
-  // note - (via logic in runWorkspaceQueue) runAllAsOne will also be true here 
-  // if the runAllAsOne setting is true and there is only one test in the entire workspace 
+  // note - (via logic in runWorkspaceQueue) runAllAsOne will also be true 
+  // here if the runAllAsOne workspace setting is true and there is only a single test in the entire workspace 
 
   // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI, 
   // so we set up a watcher so we can update results as they come in, i.e. as the test files are updated on disk
@@ -64,7 +64,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     //cp = spawn("printenv", [], options);
 
     if (!cp.pid) {
-      throw `unable to launch python or behave, command: ${pythonExec} ${local_args}\n` +
+      throw `unable to launch python or behave, command: ${pythonExec} ${local_args.join(" ")}\n` +
       `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wkspSettings.envVarList)}`;
     }
 
@@ -79,9 +79,15 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
         config.logger.logInfoNoCR(str, wkspUri);
     }
 
+    let behaveError = false;
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
+      if (isBehaveExecutionError(str)) {
+        // fatal behave error (i.e. there will be no junit output)
+        behaveError = true;
+        config.logger.show(wkspUri);
+      }
     });
     cp.stdout?.on('data', chunk => {
       const str = chunk.toString();
@@ -92,13 +98,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
     }
 
-    let behaveError = false;
-    cp.on('exit', function (code) {
-      if (code !== 0) {
-        behaveError = true;
-        config.logger.show(wkspUri);
-      }
-    });
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 

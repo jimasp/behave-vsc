@@ -262,6 +262,17 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 }
 
 
+// we can't distinguish behave execution errors by exit code
+// a normal assertion failure gives an exit code of 1, but so do lots of other issues
+// so we need to check the stderr message.
+// we do this so that we know whether we can expect junit files to 
+// be created (just an assertion failure) or stop the run and mark tests as failed in the UI
+export function isBehaveExecutionError(stderrStr: string) {
+  if (stderrStr.startsWith("Traceback"))
+    return true;
+  return false;
+}
+
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }
