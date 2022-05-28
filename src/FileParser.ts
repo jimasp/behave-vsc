@@ -363,12 +363,13 @@ export class FileParser {
     // show diag times for extension developers
     diagLog(
       `---` +
-      `\n${callName} completed.` +
+      `\nPERFORMANCE: ${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${stepMap.size} stepMatches took ${stepsTime + featTime}ms. ` +
       `\nBreakdown: features ${featTime}ms, steps ${stepsTime}ms.` +
       `\nIgnore times if: (a) during vscode startup/integration testing (contention), or (b) there are active breakpoints, or (c) when another test extension is also refreshing.` +
       `\nFor a more representative time, disable active breakpoints and other test extensions, then click the test refresh button a few times.` +
+      `\n(Note that multiple workspaces run in parallel, so you should consider the longest parseFile time as the total time.)` +
       `\n==================`
     );
   }

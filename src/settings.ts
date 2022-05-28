@@ -182,12 +182,12 @@ export class WorkspaceSettings {
 
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: runParallel is overridden by runAllAsOne when you run all tests at once.", this.uri);
+        logger.logWarn("WARNING: runParallel is overridden by runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)", this.uri);
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: fastSkipList has no effect when runAllAsOne is enabled and you run all tests at once.", this.uri);
+        logger.logWarn("WARNING: fastSkipList has no effect when runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)", this.uri);
       }
 
       if (!this.runParallel && !this.runAllAsOne) {
@@ -196,7 +196,7 @@ export class WorkspaceSettings {
       }
 
       if (warned)
-        logger.logInfo(`(You can turn off configuration warnings via the extension setting '${EXTENSION_NAME}.showConfigurationWarnings'.)\n`, this.uri);
+        logger.logInfo(`(If you are happy with your settings, can turn off configuration warnings via the extension setting '${EXTENSION_NAME}.showConfigurationWarnings'.)\n`, this.uri);
     }
 
     if (this._warnings.length > 0)

@@ -61,7 +61,7 @@ paths=behave_tests/features
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarList`, etc.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up any default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder. 
-- For more information on available options, go to the extension settings in vscode (e.g. click the cog next to Behave VSC in the extensions side bar and then choose "Extension Settings" from the context menu).
+- For more information on available options, go to the extension settings in vscode.
 
 ---  
 ## How it works
@@ -77,17 +77,15 @@ paths=behave_tests/features
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
 - For each run, the _equivalent_ behave command to run the test manually appears in the Behave VSC output window. (The _actual_ command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
-- The extension then parses the junit file output and updates the test result.
-- The behave output and any errors appear in the Behave VSC output window. Assertion failures are also shown in the test run detail in the feature file view.
-- How the run works is controlled by you via extension settings in your `settings.json` file (e.g. `runParallel` etc.)
+- The behave process is spawned, and behave output is written to the Behave VSC output window for the associated workspace. 
+- The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+- You can adjust the run behaviour via extension settings in your `settings.json` file (e.g. `runParallel` etc.)
 
 ### How debug works:
-- It dynamically builds a debug launch config and runs that. (This enables the `ms-python.python` extension to do the work of debugging.)
-- The extension then parses the junit file output and updates the test result.
-- Whether debug steps into external code is controlled by the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
-- Error output is shown in the debug console window and/or Behave VSC window depending on the nature of the error.
-- To reduce noise when debugging, the behave command and behave std output is not shown when in debug. Run the test instead if you want this output.
-
+- It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
+- You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` _not_ your `launch.json`).
+- Behave error output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
+- The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
 
 ---
@@ -109,7 +107,7 @@ This a pre-release undergoing active development. If you used a previous version
 - How can I see all effective settings for the extension? On starting vscode, look in the Behave VSC output window.
 - Why am I not seeing any exceptions while debugging? Do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - How do I clear test results? This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. This is determined by your OS and temp path environment variables, in code (nodejs) the directory is `os.tmpDir()/behave-vsc`. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not "pending") by default for tests that are not yet complete.)
+- Where is the behave junit output stored? In a temp folder that is deleted (recycled) each time the extension is started. The path is determined by your OS and temp path environment variables, in code (Node.js) the directory is `os.tmpDir()/behave-vsc`. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not "pending") by default for tests that are not yet complete.)
 - When will this extension have a release version? When the code is stable. At the moment the code is subject to rewrites/refactoring.
 
 ---
@@ -117,9 +115,9 @@ This a pre-release undergoing active development. If you used a previous version
 - Not internationalised. There shouldn't be any date/time issues, but character sets are untested. (If this affects you, you may wish to raise a pull request.)
 - "Go to Step" context menu doesn't always match correctly (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder it won't find them). 
-- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extensions authors to update their code (this extension has applied the fix).
-- Parallel test runs add up durations, making the test run look like it took longer than it actually did. Debug test runs also currently have invalid times.
-- Running debug against _multiple_ test targets at once starts a fresh debug session for each test (because a separate behave process is run for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
+- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extension authors to update their code (this extension has applied the fix).
+- vscode always adds up test durations. For parallel runs this means the parent test node reports a longer time than the test run actually took.
+- Running debug against _multiple_ test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
 
 ---
 ## Contributing

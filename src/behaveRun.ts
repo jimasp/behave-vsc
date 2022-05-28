@@ -8,6 +8,7 @@ import { QueueItem } from './extension';
 import { cleanBehaveText, isBehaveExecutionError, WkspError } from './common';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
+import { performance } from 'perf_hooks';
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
@@ -24,24 +25,31 @@ export async function runScenario(async: boolean, wkspSettings: WorkspaceSetting
 }
 
 
+// note - (via logic in runWorkspaceQueue) runAllAsOne will also be true here if the runAllAsOne
+// workspace setting is true and there is only a single test in the entire workspace 
 async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
 
   const wkspUri = wkspSettings.uri;
-
-  // note - (via logic in runWorkspaceQueue) runAllAsOne will also be true 
-  // here if the runAllAsOne workspace setting is true and there is only a single test in the entire workspace 
 
   // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI, 
   // so we set up a watcher so we can update results as they come in, i.e. as the test files are updated on disk
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
-    const map = await getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
+
+    // the multifolder fileSystemWatcher used by vscode (nsfw) occasionally has issues watching just-created directories (on linux)
+    // whereas creating the folder to watch in two steps (i.e. not mkdirp) seems to fix the problem 
+    // (this seems to be caused by some kind of race-condition as waiting also fixes the issue)
+    const subDir = junitDirUri.path.split("/").pop();
+    if (!subDir)
+      throw "unable to determine subdirectory name for junit directory";
+    const junitRunDirUri = vscode.Uri.file(junitDirUri.path.replace(subDir, ""));
+    await vscode.workspace.fs.createDirectory(junitRunDirUri);
     await vscode.workspace.fs.createDirectory(junitDirUri);
-    diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`, wkspUri);
+
     updatesComplete = new Promise(function (resolve, reject) {
-      watcher = startWatchingJunitFolder(resolve, reject, map, run, wkspSettings, junitDirUri, runToken);
+      watcher = startWatchingJunitFolder(resolve, reject, queue, run, wkspSettings, junitDirUri, runToken);
     });
   }
 
@@ -60,6 +68,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     diagLog(`${pythonExec} ${local_args.join(" ")}`, wkspUri);
     const env = { ...process.env, ...wkspSettings.envVarList };
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: env };
+    const start = performance.now();
     cp = spawn(pythonExec, local_args, options);
     //cp = spawn("printenv", [], options);
 
@@ -76,16 +85,16 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       if (async)
         asyncBuff.push(str);
       else
-        config.logger.logInfoNoCR(str, wkspUri);
+        config.logger.logInfoNoLF(str, wkspUri);
     }
 
-    let behaveError = false;
+    let behaveExecutionError = false;
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
       if (isBehaveExecutionError(str)) {
         // fatal behave error (i.e. there will be no junit output)
-        behaveError = true;
+        behaveExecutionError = true;
         config.logger.show(wkspUri);
       }
     });
@@ -115,9 +124,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 
     if (runAllAsOne) {
-      if (behaveError) {
+      if (behaveExecutionError) {
         for (const queueItem of queue) {
-          await parseAndUpdateTestResults(false, behaveError, wkspSettings, undefined, run, queueItem, runToken);
+          await parseAndUpdateTestResults(false, behaveExecutionError, wkspSettings, undefined, run, queueItem, runToken);
         }
       }
       else {
@@ -129,11 +138,14 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       }
     }
     else {
-      if (behaveError)
-        cancelTestRun("fatal behave error");
       if (!junitFileUri)
         throw new Error("junitFileUri must be supplied for single test behave execution");
-      await parseAndUpdateTestResults(false, behaveError, wkspSettings, junitFileUri, run, queue[0], runToken);
+      let actualDuration;
+      if (!async) // parallel test durations would be misleading as there is contention, so for those we use behave's duration
+        actualDuration = performance.now() - start;
+      await parseAndUpdateTestResults(false, behaveExecutionError, wkspSettings, junitFileUri, run, queue[0], runToken, actualDuration);
+      if (behaveExecutionError)
+        cancelTestRun("runBehave (behave execution error)");
     }
   }
   catch (e: unknown) {
@@ -148,15 +160,11 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 
 function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (value: unknown) => void,
-  map: { queueItem: QueueItem; junitFileUri: vscode.Uri; updated: boolean }[], run: vscode.TestRun, wkspSettings: WorkspaceSettings,
+  queue: QueueItem[], run: vscode.TestRun, wkspSettings: WorkspaceSettings,
   junitDirUri: vscode.Uri, runToken: vscode.CancellationToken): vscode.FileSystemWatcher {
 
   let updated = 0;
-
-  // verify directory exists before watching
-  const exists = fs.existsSync(junitDirUri.fsPath);
-  if (!exists)
-    throw `directory ${junitDirUri.fsPath} does not exist`;
+  const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
 
   const updateResult = async (uri: vscode.Uri) => {
     try {

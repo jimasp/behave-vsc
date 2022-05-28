@@ -51,14 +51,6 @@ export class Logger {
     }
   };
 
-  // log without a carriage return, used for behave output
-  logInfoNoCR = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text);
-
-    this.channels[wkspUri.path].append(text);
-    if (run)
-      run.appendOutput(text);
-  };
 
   logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text);
@@ -66,6 +58,15 @@ export class Logger {
     this.channels[wkspUri.path].appendLine(text);
     if (run)
       run.appendOutput(text + "\n");
+  };
+
+  // log info without a line feed (used for logging behave output)
+  logInfoNoLF = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+    diagLog(text);
+
+    this.channels[wkspUri.path].append(text);
+    if (run)
+      run.appendOutput(text);
   };
 
   logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
@@ -89,29 +90,13 @@ export class Logger {
       run.appendOutput(text + "\n");
   };
 
-  logWarnAllWksps = (text: string, run?: vscode.TestRun) => {
-    diagLog(text, undefined, DiagLogType.warn);
-
-    let first = true;
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].appendLine(text);
-      if (first) {
-        this.channels[wkspPath].show(true);
-        first = false;
-      }
-    }
-
-    if (run)
-      run.appendOutput(text + "\n");
-  };
-
 
   showWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    this._show(wkspUri, text, run, DiagLogType.warn);
+    this._show(text, wkspUri, run, DiagLogType.warn);
   }
 
 
-  showError = (error: unknown, wkspUri: vscode.Uri | undefined, run?: vscode.TestRun) => {
+  showError = (error: unknown, wkspUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
 
     let text: string;
 
@@ -124,11 +109,11 @@ export class Logger {
       text = `${error}`;
     }
 
-    this._show(wkspUri, text, run, DiagLogType.error);
+    this._show(text, wkspUri, run, DiagLogType.error);
   }
 
 
-  private _show = (wkspUri: vscode.Uri | undefined, text: string, run: vscode.TestRun | undefined, logType: DiagLogType) => {
+  private _show = (text: string, wkspUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
 
     if (wkspUri) {
       // note - don't use config.workspaceSettings here (possible inifinite loop)

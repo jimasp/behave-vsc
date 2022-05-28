@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { getContentFromFilesystem, showDebugWindow } from './common';
+import { getContentFromFilesystem, showDebugWindow, WkspError } from './common';
 import { config, EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
-import { diagLog, DiagLogType } from './Logger';
+import { diagLog } from './Logger';
 import { WorkspaceSettings } from './settings';
 
-const parser = new xml2js.Parser();
+export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
 interface JunitContents {
   testsuite: TestSuite
@@ -79,10 +79,13 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
 
 
 
-function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCase): ParseResult {
+function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCase, actualDuration?: number): ParseResult {
 
-  const duration = testCase.$.time * 1000;
+  let duration = testCase.$.time * 1000;
   const status = testCase.$.status;
+
+  if (actualDuration)
+    duration = actualDuration;
 
   if (status === "passed" || status === "skipped")
     return { status: status, duration: duration };
@@ -121,7 +124,7 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
   if (reasonBlocks.length === 0)
     throw new Error("Failed test has no failure or error message");
 
-  // remove any error text we don't need in the ui context
+  // remove any error text we don't need in the UI
   let errText = "";
   reasonBlocks.forEach(reason => {
     const lines = reason.split("\n");
@@ -134,7 +137,6 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
   errText = errText.trim();
 
   return { status: errText, duration: duration };
-
 }
 
 
@@ -163,7 +165,7 @@ export function getJunitFileUri(queueItem: QueueItem, wkspRelativeFeaturesPath: 
 }
 
 
-export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri) {
+export function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri) {
   return queue.map(qi => {
     const junitFileUri = getJunitFileUri(qi, wkspRelativeFeaturesPath, junitDirUri);
     return { queueItem: qi, junitFileUri: junitFileUri, updated: false };
@@ -171,50 +173,45 @@ export async function getJunitFileUriToQueueItemMap(queue: QueueItem[], wkspRela
 }
 
 
-export async function parseAndUpdateTestResults(debug: boolean, fatalError: boolean, wkspSettings: WorkspaceSettings, junitFileUri: vscode.Uri | undefined,
-  run: vscode.TestRun, queueItem: QueueItem, cancelToken: vscode.CancellationToken): Promise<void> {
+export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionError: boolean, wkspSettings: WorkspaceSettings,
+  junitFileUri: vscode.Uri | undefined, run: vscode.TestRun, queueItem: QueueItem, cancelToken: vscode.CancellationToken,
+  actualDuration?: number): Promise<void> {
 
-  if (fatalError) {
+  if (behaveExecutionError) {
     const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+
     if (debug)
       showDebugWindow();
     else
       config.logger.show(wkspSettings.uri);
+
     const parseResult = {
       status: `See errors in ${window}.`,
-      duration: 0
+      duration: actualDuration ? actualDuration : 0
     };
+
     updateTest(run, parseResult, queueItem);
     return;
   }
 
-  if (!junitFileUri) {
-    throw "if not fatal error, then junitFileUri must be supplied";
-  }
-
-  let result: parseJunitFileResult;
-  try {
-    result = await parseJunitFile(junitFileUri);
-  }
-  catch (e: unknown) {
-    if (cancelToken.isCancellationRequested)
-      return;
-    if (debug)
-      showDebugWindow();
-    diagLog(`Unable to parse junit file ${junitFileUri.fsPath}`, undefined, DiagLogType.error);
+  if (cancelToken.isCancellationRequested)
     return;
+
+  if (!junitFileUri) {
+    throw new WkspError("junitFileUri must be supplied if behaveExecutionError is false", wkspSettings.uri);
   }
 
+  const junitContents = await getJunitFileContents(wkspSettings.uri, junitFileUri);
   const fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
-  const queueItemResults = result.junitContents.testsuite.testcase.filter(tc =>
+  const queueItemResults = junitContents.testsuite.testcase.filter(tc =>
     tc.$.classname === className && (tc.$.name === scenarioName || tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName)
   );
 
   if (!queueItemResults) {
     throw `could not match queueItem to result, matching with $.classname=${className}, $.name=${queueItem.scenario.scenarioName} ` +
-    `in file ${result.fsPath}`;
+    `in file ${junitFileUri.fsPath}`;
   }
 
   let queueItemResult = queueItemResults[0];
@@ -229,15 +226,33 @@ export async function parseAndUpdateTestResults(debug: boolean, fatalError: bool
     }
   }
 
-  const parseResult = CreateParseResult(debug, wkspSettings.uri, queueItemResult);
+  const parseResult = CreateParseResult(debug, wkspSettings.uri, queueItemResult, actualDuration);
   updateTest(run, parseResult, queueItem);
 }
 
-export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
-async function parseJunitFile(junitFileUri: vscode.Uri): Promise<parseJunitFileResult> {
-  const junitXml = await getContentFromFilesystem(junitFileUri);
-  const contents: JunitContents = await parser.parseStringPromise(junitXml);
-  return { junitContents: contents, fsPath: junitFileUri.fsPath };
+async function getJunitFileContents(wkspUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<JunitContents> {
+
+  let junitXml: string;
+  try {
+    junitXml = await getContentFromFilesystem(junitFileUri);
+  }
+  catch {
+    throw new WkspError(`Unable to read junit file ${junitFileUri.fsPath}`, wkspUri);
+  }
+
+  const parser = new xml2js.Parser();
+  let junitContents: JunitContents;
+  try {
+    junitContents = await parser.parseStringPromise(junitXml);
+  }
+  catch {
+    throw new WkspError(`Unable to parse junit file ${junitFileUri.fsPath}`, wkspUri);
+  }
+
+  return junitContents;
 }
+
+
+
 

@@ -6,13 +6,14 @@ import { QueueItem } from './extension';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
 import { isBehaveExecutionError } from './common';
+import { performance } from 'perf_hooks';
 
 
-let behaveError = false;
+let behaveExecutionError = false;
 
 // onDidTerminateDebugSession doesn't provide a reason for the termination,
 // so we need to check the reason from the debug adapter protocol
-// secondary purpose is to set behaveError flag so we can mark test as failed
+// secondary purpose is to set behaveExecutionError flag so we can mark test as failed
 export function getDebugAdapterTrackerFactory() {
   return vscode.debug.registerDebugAdapterTrackerFactory('*', {
 
@@ -29,8 +30,8 @@ export function getDebugAdapterTrackerFactory() {
 
             const stderr = m.body?.category === "stderr";
             if (stderr && isBehaveExecutionError(m.body.output)) {
-              behaveError = true;
-              cancelTestRun("onDidSendMessage (behave error)");
+              behaveExecutionError = true;
+              cancelTestRun("onDidSendMessage (behave execution error)");
               return;
             }
 
@@ -66,7 +67,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     await vscode.debug.stopDebugging();
   });
 
-  behaveError = false;
+  behaveExecutionError = false;
 
   try {
     diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
@@ -89,6 +90,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     };
 
     const wkspFolder = vscode.workspace.getWorkspaceFolder(wkspSettings.uri);
+    const start = performance.now();
 
     if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
       diagLog("unable to start debug session, was debug stop button clicked?", wkspSettings.uri);
@@ -100,7 +102,8 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          await parseAndUpdateTestResults(true, behaveError, wkspSettings, junitFileUri, run, queueItem, cancelToken);
+          const debugDuration = performance.now() - start;
+          await parseAndUpdateTestResults(true, behaveExecutionError, wkspSettings, junitFileUri, run, queueItem, cancelToken, debugDuration);
           resolve();
         }
         catch (e: unknown) {

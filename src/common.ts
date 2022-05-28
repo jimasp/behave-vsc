@@ -13,8 +13,9 @@ export type TestCounts = { nodeCount: number, testCount: number };
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can use the workspace name in the notification window
-// - the error is only displayed once 
-// - the top-level catch can simply call config.logError(e)
+// - the logger can log to the specific workspace output window
+// - the error is only logged/displayed once 
+// - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
 export class WkspError extends Error {
   constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
     const msg = (errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string);
@@ -130,7 +131,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     }
   }
 
-  diagLog(`getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
+  diagLog(`PERFORMANCE: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0) {
