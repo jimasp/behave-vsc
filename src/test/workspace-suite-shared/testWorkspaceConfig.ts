@@ -9,8 +9,8 @@ export class TestWorkspaceConfigWithWkspUri {
 // used in extension code to allow us to dynamically inject a workspace configuration
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
-	private envVarList: string | undefined;
-	private fastSkipList: string | undefined;
+	private envVarList: { [name: string]: string } | undefined;
+	private fastSkipList: string[] | undefined;
 	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
@@ -25,8 +25,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		multiRootRunWorkspacesInParallel,
 		runAllAsOne, runParallel, showConfigurationWarnings, logDiagnostics
 	}: {
-		envVarList: string | undefined,
-		fastSkipList: string | undefined,
+		envVarList: { [name: string]: string } | undefined,
+		fastSkipList: string[] | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
 		multiRootRunWorkspacesInParallel: boolean | undefined,
@@ -50,14 +50,16 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 		// switch for all user-settable settings in settings.json or *.code-workspace
 		//		
-		// NOTE: for get, vscode will use the default in the package.json if there is 
-		// one, OR otherwise a default value for the type (e.g. bool = false, string = "", etc.)
-		// so we MUST mirror that behavior here
+		// NOTE: FOR WorkspaceConfiguration.get(), VSCODE WILL ASSIGN IN PREFERENCE:
+		// 1. the actual value if one is set in settings.json/*.code-worspace (this could be e.g. an empty string)
+		// 2. the default in the package.json (if there is one) 
+		// 3. the default value for the type (e.g. bool = false, string = "", dict = {}, array = [])
+		// SO WE MUST MIRROR THAT BEHAVIOR HERE
 		switch (section) {
 			case "envVarList":
-				return <T><unknown>(this.envVarList === undefined ? "" : this.envVarList);
+				return <T><unknown>(this.envVarList === undefined ? {} : this.envVarList);
 			case "fastSkipList":
-				return <T><unknown>(this.fastSkipList === undefined ? "" : this.fastSkipList);
+				return <T><unknown>(this.fastSkipList === undefined ? [] : this.fastSkipList);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
 			case "multiRootRunWorkspacesInParallel":
@@ -133,38 +135,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	getExpected<T>(section: string, wkspUri?: vscode.Uri): T | undefined {
 
-
-		const getExpectedEnvVarList = (): { [name: string]: string } | undefined => {
-			switch (this.envVarList) {
-				case "  'some_var' : 'double qu\"oted',  'some_var2':  'single qu\\'oted', 'space_var': ' '  ":
-					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', space_var: ' ' };
-				case "'some_var':'double qu\"oted','some_var2':'single qu\\'oted','space_var': ' '":
-					return { some_var: 'double qu"oted', some_var2: 'single qu\'oted', space_var: ' ' };
-				case "":
-				case undefined:
-					return {};
-				default:
-					debugger; // eslint-disable-line no-debugger
-					throw new Error("getExpectedEnvVarList() missing case for envVarList: " + this.envVarList);
-			}
-
-		}
-
-		const getExpectedFastSkipList = (): string[] => {
-			switch (this.fastSkipList) {
-				case "  @fast-skip-me,  @fast-skip-me-too, ":
-					return ["@fast-skip-me", "@fast-skip-me-too"];
-				case "@fast-skip-me,@fast-skip-me-too":
-					return ["@fast-skip-me", "@fast-skip-me-too"];
-				case "":
-				case undefined:
-					return [];
-				default:
-					debugger; // eslint-disable-line no-debugger
-					throw new Error("getExpectedFastSkipList() missing case for fastSkipList: " + this.envVarList);
-			}
-		}
-
 		const getExpectedFeaturesPath = (): string => {
 			switch (this.featuresPath) {
 				case "":
@@ -198,9 +168,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
 			case "envVarList":
-				return <T><unknown>getExpectedEnvVarList();
+				return <T><unknown>this.get("envVarList");
 			case "fastSkipList":
-				return <T><unknown>getExpectedFastSkipList();
+				return <T><unknown>this.get("fastSkipList");
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
 			case "featuresUri.path":

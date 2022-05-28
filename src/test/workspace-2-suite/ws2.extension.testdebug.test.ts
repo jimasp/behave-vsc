@@ -6,10 +6,10 @@ import { SharedWorkspaceTests } from "../workspace-suite-shared/shared.workspace
 // sessions (which is not supported) when running the multi-root tests 
 
 suite(`workspace-2-suite test debug run`, () => {
-  const wkspName = "example-project-2";
-  const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
+  const folderName = "project-2";
+  const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(wkspName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(300000);
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName, "", getWs2ExpectedCounts, getWs2ExpectedResults)).timeout(300000);
 }).timeout(900000);
 

@@ -10,10 +10,6 @@ Feature: Simple
       When we implement a failing test
       Then we will see the result     
 
-   Scenario: run a bad import test
-      Given we have a bad import    
-
    @normal_skip
    Scenario: run a skipped test
       Given we have behave installed
-      

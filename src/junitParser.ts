@@ -178,19 +178,7 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
   actualDuration?: number): Promise<void> {
 
   if (behaveExecutionError) {
-    const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
-
-    if (debug)
-      showDebugWindow();
-    else
-      config.logger.show(wkspSettings.uri);
-
-    const parseResult = {
-      status: `See errors in ${window}.`,
-      duration: actualDuration ? actualDuration : 0
-    };
-
-    updateTest(run, parseResult, queueItem);
+    handleNoJunitFile(debug, wkspSettings.uri, run, queueItem, actualDuration);
     return;
   }
 
@@ -201,7 +189,24 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
     throw new WkspError("junitFileUri must be supplied if behaveExecutionError is false", wkspSettings.uri);
   }
 
-  const junitContents = await getJunitFileContents(wkspSettings.uri, junitFileUri);
+  let junitXml: string;
+  try {
+    junitXml = await getContentFromFilesystem(junitFileUri);
+  }
+  catch {
+    handleNoJunitFile(debug, wkspSettings.uri, run, queueItem, actualDuration);
+    return;
+  }
+
+  const parser = new xml2js.Parser();
+  let junitContents: JunitContents;
+  try {
+    junitContents = await parser.parseStringPromise(junitXml);
+  }
+  catch {
+    throw new WkspError(`Unable to parse junit file ${junitFileUri.fsPath}`, wkspSettings.uri);
+  }
+
   const fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
@@ -231,28 +236,20 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
 }
 
 
-async function getJunitFileContents(wkspUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<JunitContents> {
+function handleNoJunitFile(debug: boolean, wkspUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, actualDuration?: number) {
+  const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+  const parseResult = { status: `Check output in ${window}.`, duration: actualDuration ? actualDuration : 0 };
+  updateTest(run, parseResult, queueItem);
 
-  let junitXml: string;
-  try {
-    junitXml = await getContentFromFilesystem(junitFileUri);
-  }
-  catch {
-    throw new WkspError(`Unable to read junit file ${junitFileUri.fsPath}`, wkspUri);
-  }
+  if (config.integrationTestRun)
+    debugger; // eslint-disable-line no-debugger
 
-  const parser = new xml2js.Parser();
-  let junitContents: JunitContents;
-  try {
-    junitContents = await parser.parseStringPromise(junitXml);
-  }
-  catch {
-    throw new WkspError(`Unable to parse junit file ${junitFileUri.fsPath}`, wkspUri);
-  }
+  if (debug)
+    showDebugWindow();
+  else
+    config.logger.show(wkspUri);
 
-  return junitContents;
+  return;
 }
-
-
 
 

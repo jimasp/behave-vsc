@@ -115,15 +115,6 @@ export class Logger {
 
   private _show = (text: string, wkspUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
 
-    if (wkspUri) {
-      // note - don't use config.workspaceSettings here (possible inifinite loop)
-      const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
-      if (wskpFolder) {
-        const wkspName = wskpFolder?.name;
-        text = `${wkspName} workspace ${text}`;
-      }
-    }
-
     diagLog(text, wkspUri, logType);
 
     if (wkspUri) {
@@ -138,10 +129,19 @@ export class Logger {
     if (config.integrationTestRun && !text.includes("Canceled") && !text.includes("Cancelled"))
       debugger; // eslint-disable-line no-debugger
 
+
     let winText = text;
+    if (wkspUri) {
+      // note - don't use config.workspaceSettings here (possible inifinite loop)
+      const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
+      if (wskpFolder) {
+        const wkspName = wskpFolder?.name;
+        winText = `${wkspName} workspace: ${text}`;
+      }
+    }
+
     if (winText.length > 512)
       winText = text.substring(0, 512) + "...";
-
 
     switch (logType) {
       case DiagLogType.info:

@@ -49,7 +49,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     const junitRunDirUri = vscode.Uri.file(junitDirUri.path.replace(subDir, ""));
     await vscode.workspace.fs.createDirectory(junitRunDirUri);
     await vscode.workspace.fs.createDirectory(junitDirUri);
-
+    diagLog(`created junit directory ${junitDirUri.path}`, wkspUri);
     updatesComplete = new Promise(function (resolve, reject) {
       watcher = startWatchingJunitFolder(resolve, reject, queue, run, wkspSettings, junitDirUri, runToken);
     });

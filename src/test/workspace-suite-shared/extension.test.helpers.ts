@@ -203,15 +203,17 @@ function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: str
 	const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
 	assert(actualCounts.featureFileCountExcludingEmptyOrCommentedOut == expectedCounts.featureFileCountExcludingEmptyOrCommentedOut, wkspName);
-	assert(actualCounts.tests.testCount == expectedCounts.tests.testCount, wkspName);
+	assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
 
 	assert(actualCounts.stepFiles === expectedCounts.stepFiles, wkspName);
 	assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
 
-	if (hasMuliRootWkspNode)
-		assert(actualCounts.tests.nodeCount == expectedCounts.tests.nodeCount + 1, wkspName);
-	else
-		assert(actualCounts.tests.nodeCount == expectedCounts.tests.nodeCount, wkspName);
+	if (hasMuliRootWkspNode) {
+		assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName);
+	}
+	else {
+		assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName);
+	}
 }
 
 
@@ -314,12 +316,12 @@ async function getExtensionInstances(): Promise<TestSupport> {
 // NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
-export async function runAllTestsAndAssertTheResults(debug: boolean, wkspName: string, testConfig: TestWorkspaceConfig,
+export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
 
-	const consoleName = `runAllTestsAndAssertTheResults for ${wkspName}`;
-	const wkspUri = getWorkspaceUri(wkspName);
+	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
+	const wkspUri = getWorkspaceUri(wskpFileSystemFolderName);
 
 	await setLock(consoleName, "acquire");
 	console.log(`${consoleName} initialising`);
@@ -330,15 +332,14 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wkspName: s
 	// we  we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
-	assertWorkspaceSettingsAsExpected(wkspName, wkspUri, testConfig, instances.config);
+	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig, instances.config);
 
-	// parse and check counts
+	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "checkParseFileCounts");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
 	assert(actualCounts !== null, "actualCounts !== null");
 	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getTestIdForUri(wkspUri)) !== undefined;
-	assertExpectedCounts(debug, wkspUri, wkspName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
 
 	// check all steps can be matched
 	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.workspaceSettings[wkspUri.path]);
@@ -403,8 +404,8 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wkspName: s
 		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testConfig);
 	});
 
-
-	// (keep this below results.forEach, as individual match asserts are more useful to get first)
+	// (keep these below results.forEach, as individual match asserts are more useful to get first)
+	assertExpectedCounts(debug, wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

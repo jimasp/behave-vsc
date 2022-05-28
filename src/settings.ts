@@ -86,7 +86,10 @@ export class WorkspaceSettings {
       this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
 
-    this.workspaceRelativeFeaturesPath = featuresPathCfg.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
+    this.workspaceRelativeFeaturesPath = featuresPathCfg.replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
+    // vscode will not substitute a default if an empty string is specified in settings.json
+    if (!this.workspaceRelativeFeaturesPath)
+      this.workspaceRelativeFeaturesPath = "features";
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
       // note - this error should never happen or some logic/hooks are wrong 
@@ -97,25 +100,30 @@ export class WorkspaceSettings {
     }
 
     if (fastSkipListCfg) {
-      const err = `Invalid FastSkipList setting ${JSON.stringify(fastSkipListCfg)} ignored, settings.json format should be [ "@skip1", "@skip2" ]`;
-      if (typeof fastSkipListCfg !== "object") {
-        this._warnings.push(err);
-      }
-      else {
-        for (const tag of fastSkipListCfg) {
-          if (!tag.startsWith("@")) {
-            this._warnings.push(err);
-            break;
-          }
-          else {
-            this.fastSkipList.push(tag);
+      const err = `Invalid FastSkipList setting ${JSON.stringify(fastSkipListCfg)} will be ignored. Property format in settings.json should be [ "@skip1", "@skip2" ]`;
+      try {
+        if (typeof fastSkipListCfg !== "object") {
+          this._warnings.push(err);
+        }
+        else {
+          for (const tag of fastSkipListCfg) {
+            if (!tag.startsWith("@")) {
+              this._warnings.push(err);
+              break;
+            }
+            else {
+              this.fastSkipList.push(tag);
+            }
           }
         }
+      }
+      catch {
+        this._warnings.push(err);
       }
     }
 
     if (envVarListCfg) {
-      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored, settings.json format should be { "name1": "value1", "name2": "value2" }`;
+      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored. Property format in settings.json should be { "name1": "value1", "name2": "value2" }`;
       try {
         if (typeof envVarListCfg !== "object") {
           this._warnings.push(err);
@@ -200,7 +208,7 @@ export class WorkspaceSettings {
     }
 
     if (this._warnings.length > 0)
-      logger.showWarn(`settings - ${this._warnings.join("\n")}`, this.uri);
+      logger.showWarn(`${this._warnings.join("\n")}`, this.uri);
 
     // shouldn't get here for featurePath problems, see comment for featuresPath fatal error above
     if (this._errors.length > 0)

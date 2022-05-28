@@ -6,8 +6,8 @@ import { runAllTestsAndAssertTheResults } from "../workspace-suite-shared/extens
 
 
 suite(`workspace-simple-suite test run`, () => {
-	const wkspName = "example project simple";
-	const testPre = `runHandler should return expected results for "${wkspName}" with configuration:`;
+	const folderName = "project simple";
+	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runDefault (runAll)", async () => {
@@ -19,12 +19,12 @@ suite(`workspace-simple-suite test run`, () => {
 		});
 
 		console.log(`${testPre}: ${JSON.stringify(testConfig)}`);
-		await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getWssExpectedCounts, getWssExpectedResults);
+		await runAllTestsAndAssertTheResults(false, folderName, testConfig, getWssExpectedCounts, getWssExpectedResults);
 
 	}).timeout(300000);
 
-	test("runParallel", async () => await sharedWorkspaceTests.runParallel(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
-	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(wkspName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
+	test("runParallel", async () => await sharedWorkspaceTests.runParallel(folderName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
+	test("runOneByOne", async () => await sharedWorkspaceTests.runOneByOne(folderName, "", getWssExpectedCounts, getWssExpectedResults)).timeout(300000);
 }).timeout(900000);
 
 
