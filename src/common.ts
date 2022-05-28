@@ -235,8 +235,8 @@ export function cleanBehaveText(text: string) {
 
 
 // custom function to replace vscode.workspace.findFiles() functionality as required
-// due to the glob intermittently not returning results on vscode startup in Windows OS for multiroot workspaces
-// TODO: retest to see if this is still required after recent changes
+// due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
+// TODO: retest via 'npm run test' on windows and see if this is still required after recent changes
 export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
   extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
 

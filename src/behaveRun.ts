@@ -39,8 +39,10 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   if (runAllAsOne) {
 
     // the multifolder fileSystemWatcher used by vscode (nsfw) occasionally has issues watching just-created directories (on linux)
-    // whereas creating the folder to watch in two steps (i.e. not mkdirp) seems to fix the problem 
-    // (this seems to be caused by some kind of race-condition as waiting also fixes the issue)
+    // whereas creating the folder to watch in two steps (i.e. not mkdirp) seems to fix the problem,
+    // this seems to be caused by some kind of race-condition between nsfw and linux fs, as waiting before creating the watcher also fixes the issue.
+    // (if you modify this code then in linux, debug the multi-root project and 
+    // set all projects to runAllAsOne and check that no test UI nodes are stuck spinning)
     const subDir = junitDirUri.path.split("/").pop();
     if (!subDir)
       throw "unable to determine subdirectory name for junit directory";
