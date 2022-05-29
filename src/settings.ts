@@ -182,7 +182,7 @@ export class WorkspaceSettings {
 
     logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(wkspSettingsDic, null, 2)}`, this.uri);
     logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
-    logger.logInfo(`junitDirectory: ${config.extensionTempFilesUri.fsPath}`, this.uri);
+    logger.logInfo(`junitTempPath: ${config.extensionTempFilesUri.fsPath}`, this.uri);
 
     if (winSettings.showSettingsWarnings) {
 

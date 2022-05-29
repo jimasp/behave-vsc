@@ -47,8 +47,8 @@
 11. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 ---
 ### Terminology
-- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the extension source code project.
 - The "source" environment refers to the instance of vscode that contains the Behave VSC source code.
+- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the source environment.
 
 ---
 ### Debugging with the example projects
@@ -187,7 +187,8 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	- Close vscode and run `npm run test` 
 		- if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
 		- if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-### Further testing (optional, depending on your change)  
+
+### Further testing (depending on your change)  
   
 #### 1. Run basic manual UI tests:
   - a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
@@ -197,6 +198,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   - e. clear all test results, Run group 1 features, check that failed tests are failed, succesful tests are success, and skipped tests are skipped
   - f. clear all test results, Run all project 1 tests (from the project 1 node) and check that failed tests are failed, succesful tests are success, and skipped tests are skipped (but remember that fastskip tests will not be skipped if runAllAsOne is enabled)
   - f. clear all test results, Run all feature tests and check that the run stop button works
+  
 #### 2. Run change-specific manual UI tests   
 After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
   - A. **commit your changes** locally (because you are about to make file changes)
@@ -223,6 +225,3 @@ After running automated tests, if you made a change that affects anything other 
   - M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
   - O. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
   - P. hopefully you commited your original changes at step A! if so, use git to undo the changes created by these manual tests, e.g. `git reset --hard` and `git clean -fd`.
-
-
-
