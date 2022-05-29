@@ -42,8 +42,8 @@ export function getTestIdForUri(uri: vscode.Uri) {
 }
 
 
-export async function removeTempDirectory(cancelToken: vscode.CancellationToken) {
-  await removeDirectoryRecursive(config.extTempFilesUri, cancelToken);
+export async function removeExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
+  await removeDirectoryRecursive(config.extensionTempFilesUri, cancelToken);
 }
 
 export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {

@@ -336,6 +336,8 @@ export class FileParser {
       };
     }
     catch (e: unknown) {
+      // unawaited async func, must log the error 
+
       // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
       Object.keys(this._cancelTokenSources).forEach(k => {
         this._cancelTokenSources[k].cancel();
@@ -345,7 +347,6 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        // this is an unawaited async func, must log the error 
         config.logger.showError(e, wkspUri);
       }
       return null;

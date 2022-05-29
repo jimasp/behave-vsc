@@ -6,7 +6,7 @@ import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Co
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeTempDirectory
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
@@ -68,7 +68,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     context.subscriptions.push(removeTempDirectoryCancelSource);
-    removeTempDirectory(removeTempDirectoryCancelSource.token);
+    removeExtensionTempDirectory(removeTempDirectoryCancelSource.token);
     const runHandler = testRunHandler(testData, ctrl, parser, removeTempDirectoryCancelSource);
     context.subscriptions.push(getDebugAdapterTrackerFactory());
 
@@ -98,6 +98,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         }
       }
       catch (e: unknown) {
+        // entry point function (handler) - show error
         const wkspUri = wkspSettings ? wkspSettings.uri : undefined;
         config.logger.showError(e, wkspUri);
       }
@@ -108,6 +109,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
+        // entry point function (handler) - show error        
         config.logger.showError(e, undefined);
       }
     };
@@ -132,6 +134,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
+        // entry point function (handler) - show error        
         config.logger.showError(e, undefined);
       }
     }));
@@ -191,6 +194,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
       catch (e: unknown) {
+        // entry point function (handler) - show error        
         config.logger.showError(e, undefined);
       }
     }
@@ -214,6 +218,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
   }
   catch (e: unknown) {
+    // entry point function (handler) - show error    
     if (config && config.logger) {
       config.logger.showError(e, undefined);
     }
@@ -249,6 +254,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     }
     catch (e: unknown) {
+      // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
     }
   }
@@ -287,6 +293,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
+      // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
     }
   });

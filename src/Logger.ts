@@ -52,6 +52,18 @@ export class Logger {
   };
 
 
+  logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
+    diagLog(text);
+
+    for (const wkspPath in this.channels) {
+      this.channels[wkspPath].appendLine(text);
+    }
+
+    if (run)
+      run.appendOutput(text + "\n");
+  };
+
+
   logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text);
 
@@ -69,18 +81,8 @@ export class Logger {
       run.appendOutput(text);
   };
 
-  logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
-    diagLog(text);
-
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].appendLine(text);
-    }
-
-    if (run)
-      run.appendOutput(text + "\n");
-  };
-
-  logWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+  // used by settings.ts 
+  logSettingsWarning = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text, wkspUri, DiagLogType.warn);
 
     this.channels[wkspUri.path].appendLine(text);

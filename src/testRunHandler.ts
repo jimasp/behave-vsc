@@ -105,8 +105,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
                   lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
                 )
               );
-            } catch {
-              // ignored
+            }
+            catch {
+              // ignore for now
             }
           }
         }
@@ -115,78 +116,84 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
       const runWorkspaceQueue = async (request: vscode.TestRunRequest, wkspQueue: QueueItem[], wkspSettings: WorkspaceSettings) => {
 
-        const asyncRunPromises: Promise<void>[] = [];
+        try {
+          const asyncRunPromises: Promise<void>[] = [];
 
-        const start = performance.now();
-        if (!debug)
-          config.logger.logInfo(`--- ${wkspSettings.name} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
-
-        const logComplete = () => {
-          const end = performance.now();
-          if (!debug) {
-            config.logger.logInfo(`\n--- ${wkspSettings.name} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
-              wkspSettings.uri, run);
-          }
-        }
-
-        let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
-
-        if (!allTestsForThisWkspIncluded) {
-          const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getTestIdForUri(wkspSettings.uri)).length === 1;
-
-          if (wkspGrandParentItemIncluded)
-            allTestsForThisWkspIncluded = true;
-          else {
-            const allWkspItems = getAllTestItems(wkspSettings.uri, ctrl.items);
-            const wkspTestCount = countTestItems(testData, allWkspItems).testCount;
-            allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
-          }
-        }
-
-
-        if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
-          wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
-          await runBehaveAll(wkspSettings, run, wkspQueue, combinedToken);
-          for (const qi of wkspQueue) {
-            updateRun(qi.test, coveredLines, run);
-          }
-          logComplete();
-          return;
-        }
-
-
-
-        for (const wkspQueueItem of wkspQueue) {
-
-          const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
+          const start = performance.now();
           if (!debug)
-            run.appendOutput(runDiag);
-          diagLog(runDiag, wkspSettings.uri);
+            config.logger.logInfo(`--- ${wkspSettings.name} tests started for run ${run.name} @${new Date().toISOString()} ---\n`, wkspSettings.uri, run);
 
-          if (combinedToken.isCancellationRequested) {
-            updateRun(wkspQueueItem.test, coveredLines, run);
+          const logComplete = () => {
+            const end = performance.now();
+            if (!debug) {
+              config.logger.logInfo(`\n--- ${wkspSettings.name} tests completed for run ${run.name} @${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
+                wkspSettings.uri, run);
+            }
           }
-          else {
-            run.started(wkspQueueItem.test);
-            if (!wkspSettings.runParallel || debug) {
-              await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, combinedToken);
+
+          let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+
+          if (!allTestsForThisWkspIncluded) {
+            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getTestIdForUri(wkspSettings.uri)).length === 1;
+
+            if (wkspGrandParentItemIncluded)
+              allTestsForThisWkspIncluded = true;
+            else {
+              const allWkspItems = getAllTestItems(wkspSettings.uri, ctrl.items);
+              const wkspTestCount = countTestItems(testData, allWkspItems).testCount;
+              allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
+            }
+          }
+
+
+          if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
+            wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
+            await runBehaveAll(wkspSettings, run, wkspQueue, combinedToken);
+            for (const qi of wkspQueue) {
+              updateRun(qi.test, coveredLines, run);
+            }
+            logComplete();
+            return;
+          }
+
+
+
+          for (const wkspQueueItem of wkspQueue) {
+
+            const runDiag = `Running ${wkspQueueItem.test.id} for run ${run.name}\r\n`;
+            if (!debug)
+              run.appendOutput(runDiag);
+            diagLog(runDiag, wkspSettings.uri);
+
+            if (combinedToken.isCancellationRequested) {
               updateRun(wkspQueueItem.test, coveredLines, run);
             }
             else {
-              // async run (parallel)
-              const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, combinedToken).then((errText) => {
+              run.started(wkspQueueItem.test);
+              if (!wkspSettings.runParallel || debug) {
+                await runOrDebugBehaveScenario(debug, false, wkspSettings, run, wkspQueueItem, combinedToken);
                 updateRun(wkspQueueItem.test, coveredLines, run);
-                return errText;
-              });
-              asyncRunPromises.push(promise);
+              }
+              else {
+                // async run (parallel)
+                const promise = runOrDebugBehaveScenario(false, true, wkspSettings, run, wkspQueueItem, combinedToken).then((errText) => {
+                  updateRun(wkspQueueItem.test, coveredLines, run);
+                  return errText;
+                });
+                asyncRunPromises.push(promise);
+              }
             }
           }
+
+          // either we're done (non-async run), or we have promises to await
+          await Promise.all(asyncRunPromises);
+
+          logComplete();
         }
-
-        // either we're done (non-async run), or we have promises to await
-        await Promise.all(asyncRunPromises);
-
-        logComplete();
+        catch (e: unknown) {
+          // unawaited (if multiRootRunWorkspacesInParallel) async function - show error
+          config.logger.showError(e, wkspSettings.uri, run);
+        }
       };
 
 
@@ -277,8 +284,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     }
     catch (e: unknown) {
-      config.logger.showError(e, undefined);
+      // entry point (handler) - log error
       run.end();
+      config.logger.showError(e, undefined);
     }
     finally {
       internalCancelSource?.dispose();

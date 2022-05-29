@@ -61,7 +61,7 @@ export class TestFile {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
-            // don't throw here, log it and carry on
+            // don't throw here, show it and carry on
             config.logger.showError(err, wkspSettings.uri);
           }
           else

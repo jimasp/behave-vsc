@@ -14,12 +14,12 @@ export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com
 
 export interface Configuration {
   integrationTestRun: boolean;
-  readonly extTempFilesUri: vscode.Uri;
+  readonly extensionTempFilesUri: vscode.Uri;
   readonly logger: Logger;
   readonly workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings };
   readonly globalSettings: WindowSettings;
   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
-  getPythonExec(wkspUri: vscode.Uri): Promise<string>;
+  getPythonExecutable(wkspUri: vscode.Uri): Promise<string>;
   dispose(): void;
 }
 
@@ -27,7 +27,7 @@ export interface Configuration {
 // don't export this, use the interface
 class ExtensionConfiguration implements Configuration {
   public integrationTestRun = false;
-  public readonly extTempFilesUri;
+  public readonly extensionTempFilesUri;
   public readonly logger: Logger;
   private static _configuration?: ExtensionConfiguration;
   private _windowSettings: WindowSettings | undefined = undefined;
@@ -36,7 +36,7 @@ class ExtensionConfiguration implements Configuration {
   private constructor() {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
-    this.extTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
+    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
     diagLog("Configuration singleton constructed (this should only fire once)");
   }
 
@@ -82,46 +82,30 @@ class ExtensionConfiguration implements Configuration {
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
-  public getPythonExec = async (wkspUri: vscode.Uri): Promise<string> => {
-    return await getPythonExecutable(this.logger, wkspUri);
-  }
+  getPythonExecutable = async (scope: vscode.Uri) => {
+    const pyext = vscode.extensions.getExtension(MSPY_EXT);
 
-}
+    if (!pyext)
+      throw (EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT);
 
-
-const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
-
-  const pyext = vscode.extensions.getExtension(MSPY_EXT);
-
-
-  if (!pyext) {
-    const msg = EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT;
-    logger.showError(msg, undefined);
-    return undefined;
-  }
-
-  if (!pyext.isActive) {
-    await pyext?.activate();
     if (!pyext.isActive) {
-      const msg = EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT;
-      logger.showError(msg, undefined);
-      return undefined;
+      await pyext?.activate();
+      if (!pyext.isActive)
+        throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT);
     }
+
+    const pythonExec = await pyext?.exports.settings.getExecutionDetails(scope).execCommand[0];
+    if (!pythonExec)
+      throw (EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT);
+
+    return pythonExec;
   }
 
-  const pythonExec = await pyext?.exports.settings.getExecutionDetails(scope).execCommand[0];
-  if (!pythonExec) {
-    const msg = EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT;
-    logger.showError(msg, undefined);
-    return undefined;
-  }
-
-  return pythonExec;
 }
+
 
 
 // global = stop the constructor getting called twice in extension integration tests
-
 declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 if (!global.config)
   global.config = ExtensionConfiguration.configuration;

@@ -76,14 +76,14 @@ paths=behave_tests/features
 - When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:  
 `python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
-- For each run, the _equivalent_ behave command to run the test manually appears in the Behave VSC output window. (The _actual_ command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
+- For each run, the _equivalent_ behave command to run the test manually appears in the Behave VSC output window. (The *actual* command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
 - The behave process is spawned, and behave output is written to the Behave VSC output window for the associated workspace. 
 - The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 - You can adjust the run behaviour via extension settings in your `settings.json` file (e.g. `runParallel` etc.)
 
 ### How debug works:
 - It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
-- You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` _not_ your `launch.json`).
+- You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 - Behave error output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 - The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
@@ -93,7 +93,7 @@ paths=behave_tests/features
 This a pre-release undergoing active development. If you used a previous version of this extension, but you have issues with the latest version, then please read through the [release notes](#release-notes) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). Otherwise:
 - Does your project meet the [Project Requirements](#project-requirements) and have the [Required project directory structure](#required-project-directory-structure)?
 - If you have set the `featuresPath` in extension settings, make sure it matches the paths setting in your behave configuration file.
-- Have you tried _manually_ running the behave command that is logged in the Behave VSC output window?
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
 - Do you have runParallel turned on? Try turning it off. 
@@ -115,9 +115,9 @@ This a pre-release undergoing active development. If you used a previous version
 - Not internationalised. There shouldn't be any date/time issues, but character sets are untested. (If this affects you, you may wish to raise a pull request.)
 - "Go to Step" context menu doesn't always match correctly (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder it won't find them). 
-- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires _other_ test extension authors to update their code (this extension has applied the fix).
+- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires *other* test extension authors to update their code (this extension has applied the fix).
 - vscode always adds up test durations. For parallel runs this means the parent test node reports a longer time than the test run actually took.
-- Running debug against _multiple_ test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
+- Running debug against *multiple* test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
 
 ---
 ## Contributing

@@ -50,6 +50,7 @@ export function getDebugAdapterTrackerFactory() {
             }
           }
           catch (e: unknown) {
+            // entry point function (handler) - show error
             config.logger.showError(e, undefined);
           }
         },
@@ -73,7 +74,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     diagLog(friendlyCmd, wkspSettings.uri); // log debug cmd for extension devs only
 
     // remove stdout noise when debugging
-    args.push("--no-summary", "--outfile", vscode.Uri.joinPath(config.extTempFilesUri, "debug.log").fsPath);
+    args.push("--no-summary", "--outfile", vscode.Uri.joinPath(config.extensionTempFilesUri, "debug.log").fsPath);
 
     const env = { ...process.env, ...wkspSettings.envVarList };
 

@@ -126,26 +126,26 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Any disposable object should either be added to `context.subscriptions.push` or disposed in a `finally` block or in the `deactivate()`. (The most common disposables are event handlers, filesystemwatchers, and cancelllation token sources.)
 ### Diagnostics
 - Diagnostic logs are controlled via the extension setting `logDiagnostics` (this is enabled by default in the example projects and for most integration tests).
-- Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something _only_ to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
+- Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 ### Error handling
 - Stack traces will only appear if `logDiagnostics` is enabled.
-- `showError` should be used sparingly. Generally you should not use it outside of entry point/non-awaited functions, instead you want to use either `throw new WkspError(...)` if there is a workspace uri available to the function, or otherwise via `throw "mymessage"`. This will then get logged further up the stack by the entrypoint function.
-- Background (i.e. unawaited) async functions/promises should always contain a `try/catch` with a `config.showError`.
+- The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
+- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
+- If you are adding a `throw` or `showError`, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
+- Entry point (event handlers/hooks) and background tasks (i.e. unawaited async functions/promises) should always contain a `try/catch` with a `config.showError`. Examples are `activate`,`deactivate` and any function called `...Handler` or `onDid...`, or just `on...` (e.g. `onCancellationRequested`). These are the top-level functions and so they need catches. 
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github. 
-- Behave errors are not exceptions and should be handled, e.g. update test state to failed and failure message should refer user to Behave VSC output window.
-- Info and Warnings appear in the output window. Errors appear in a notification window. All of them will appear in console if `logDiagnostics` is enabled.
-- Any entry point functions/event handlers/hooks such as `activate`,`deactivate`, `onDidChangeConfiguration`, `onCancellationRequested`, `testRunHandler`, `OnDidChange` inside a filesystemwatcher, etc. should always have a `try/catch` with a `config.showError`. These are the top-level functions and so they need catches in order to log errors to the output window. 
-- When adding a throw/showError, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
+- Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
+- Info appears in the output window. Warnings and Errors appear in the output window and the notification window. All of them will appear in console if `logDiagnostics` is enabled.
+
 
 
 ### Logging
-- Logging warnings will cause the Behave VSC output window to be shown when logged, logging info will not.
-- *Unless you are in an entry point function, handler or unawaited async function, then generally errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
-- Logging warnings is done via `config.logger.logWarn`.
-- Log to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *Note - this should only be used where a workspace context does not make sense.*
-- Log to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
-- Log to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
+- You should `throw` for errors (see [Error handling](#error_handling)), and `showWarn` for warnings. This will log the error/warning and open a notification window to alert the user.
+- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
+- Log info to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *This should only be used where a workspace context does not make sense.*
+- Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 
@@ -177,7 +177,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 ## Before requesting a PR merge
 ### General
 - PRs are unlikely to be accepted before release v1.0.0, but feel free to raise one if it helps to highlight an issue.
-- Fixes are given priority over new functionality. Also, new functionality _must_ have tests.
+- Fixes are given priority over new functionality. Also, new functionality *must* have tests.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
 - Generally speaking, you should only add files to, not modify, the example project workspaces in your PR.
 - Quickly review your code vs the project's [Development guidelines](#development-guidelines)
@@ -198,7 +198,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   - f. clear all test results, Run all project 1 tests (from the project 1 node) and check that failed tests are failed, succesful tests are success, and skipped tests are skipped (but remember that fastskip tests will not be skipped if runAllAsOne is enabled)
   - f. clear all test results, Run all feature tests and check that the run stop button works
 #### 2. Run change-specific manual UI tests   
-After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the _affected areas_. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
+After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
   - A. **commit your changes** locally (because you are about to make file changes)
   - B. start "Debug Extension - Workspace MultiRoot", 
   - Then in "project 1":

@@ -13,25 +13,21 @@ import { WkspError } from './common';
 
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
   cancelToken: vscode.CancellationToken): Promise<void> {
-  try {
-    const pythonExec = await config.getPythonExec(wkspSettings.uri);
-    const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
-    let ps1 = "", ps2 = "";
-    if (os.platform() === "win32") {
-      ps1 = `powershell commands:\n`;
-      ps2 = "& ";
-    }
+  const pythonExec = await config.getPythonExecutable(wkspSettings.uri);
+  const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
-    const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${friendlyEnvVars}${ps2}"${pythonExec}" -m behave`;
-    const junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
-    const args = ["--junit", "--junit-directory", junitDirUri.fsPath];
-
-    await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitDirUri);
+  let ps1 = "", ps2 = "";
+  if (os.platform() === "win32") {
+    ps1 = `powershell commands:\n`;
+    ps2 = "& ";
   }
-  catch (e: unknown) {
-    throw new WkspError(e, wkspSettings.uri, run);
-  }
+
+  const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${friendlyEnvVars}${ps2}"${pythonExec}" -m behave`;
+  const junitDirUri = getJunitWkspRunDirUri(run.name, wkspSettings.name);
+  const args = ["--junit", "--junit-directory", junitDirUri.fsPath];
+
+  await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitDirUri);
 }
 
 
@@ -44,7 +40,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
-    const pythonExec = await config.getPythonExec(wkspSettings.uri);
+    const pythonExec = await config.getPythonExecutable(wkspSettings.uri);
     const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
     const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
@@ -54,14 +50,13 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
       ps2 = "& ";
     }
 
-    let junitDirUri = vscode.Uri.file(`${config.extTempFilesUri.fsPath}/${run.name}/${wkspSettings.name}`);
-
+    let junitDirUri = getJunitWkspRunDirUri(run.name, wkspSettings.name);
     // a junit xml file is per feature, so when each scenario is run separately the same file is updated several times.
     // behave writes "skipped" into the feature file for any test not included in each behave execution.
     // this works fine when tests are run sequentially and we read the file just after the test is run, but
     // for async we need to use a different path for each scenario so we can determine which file contains the actual result for that scenario
     if (async)
-      junitDirUri = createJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
+      junitDirUri = getJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
 
     const junitFileUri = getJunitFileUri(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
     const args = ["-i", scenario.featureFileWorkspaceRelativePath, "-n", escapedScenarioName, "--junit", "--junit-directory", junitDirUri.fsPath];
@@ -83,6 +78,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     }
   }
   catch (e: unknown) {
+    // unawaited (if runParallel) async func, must log the error 
     throw new WkspError(e, wkspSettings.uri, run);
   }
 
@@ -111,8 +107,13 @@ function formatScenarioName(string: string, isOutline: boolean) {
   return "^" + escapeRegEx + "$";
 }
 
+function getJunitWkspRunDirUri(runName: string | undefined, wkspName: string): vscode.Uri {
+  if (!runName)
+    throw "runName is undefined";
+  return vscode.Uri.joinPath(config.extensionTempFilesUri, "junit", runName, wkspName);
+}
 
-function createJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
+function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
 
   const escape = "#^@";
   const nidSuffix = "_" + customAlphabet("1234567890abcdef", 5)();
@@ -150,3 +151,5 @@ function createJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFea
 
   return scenJunitDirUri;
 }
+
+

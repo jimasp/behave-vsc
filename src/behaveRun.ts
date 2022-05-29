@@ -150,9 +150,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
         cancelTestRun("runBehave (behave execution error)");
     }
   }
-  catch (e: unknown) {
-    throw new WkspError(e, wkspUri);
-  }
   finally {
     watcher?.dispose();
     cancellationHandler.dispose();
@@ -187,6 +184,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
         resolve("");
     }
     catch (e: unknown) {
+      // entry point function (handler) - show error   
       config.logger.showError(e, wkspSettings.uri);
       reject(e);
     }

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
-import { EXTENSION_NAME } from './Configuration';
+import { config, EXTENSION_NAME } from './Configuration';
 import { Logger } from './Logger';
 
 
@@ -182,6 +182,7 @@ export class WorkspaceSettings {
 
     logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(wkspSettingsDic, null, 2)}`, this.uri);
     logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
+    logger.logInfo(`junitDirectory: ${config.extensionTempFilesUri}`, this.uri);
 
     if (winSettings.showConfigurationWarnings) {
 
@@ -190,17 +191,17 @@ export class WorkspaceSettings {
 
       if (this.runParallel && this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: runParallel is overridden by runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)", this.uri);
+        logger.logSettingsWarning("WARNING: runParallel is overridden by runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)", this.uri);
       }
 
       if (this.fastSkipList.length > 0 && this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: fastSkipList has no effect when runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)", this.uri);
+        logger.logSettingsWarning("WARNING: fastSkipList has no effect when runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)", this.uri);
       }
 
       if (!this.runParallel && !this.runAllAsOne) {
         warned = true;
-        logger.logWarn("WARNING: runParallel and runAllAsOne are both disabled. This will give the slowest performance.", this.uri);
+        logger.logSettingsWarning("WARNING: runParallel and runAllAsOne are both disabled. This will give the slowest performance.", this.uri);
       }
 
       if (warned)

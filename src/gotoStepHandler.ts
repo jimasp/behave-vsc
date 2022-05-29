@@ -84,8 +84,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
 
     if (!eventUri || !eventUri.path.endsWith(".feature")) {
       // this should never happen - controlled by package.json editor/context
-      vscode.window.showErrorMessage(`Go to step definition must be used from a feature file, uri was: ${eventUri}`);
-      return;
+      throw `Go to step definition must be used from a feature file, uri was: ${eventUri}`;
     }
 
     const activeEditor = vscode.window.activeTextEditor;
@@ -117,13 +116,13 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
     const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(stepMatch.uri.path));
     const editor = await vscode.window.showTextDocument(doc, { preview: false });
     if (!editor) {
-      vscode.window.showErrorMessage("Could not open editor for file:" + stepMatch.uri.fsPath);
-      return;
+      throw `Could not open editor for file:${stepMatch.uri.fsPath}`;
     }
     editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
     editor.revealRange(stepMatch.range, vscode.TextEditorRevealType.InCenter);
   }
   catch (e: unknown) {
+    // entry point function (handler) - show error  
     const wkspUri = getWorkspaceUriForFile(eventUri);
     config.logger.showError(e, wkspUri);
   }
