@@ -90,7 +90,7 @@ function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   let envVars = "";
 
   for (const [name, value] of Object.entries(wkspSettings.envVarList)) {
-    const pair = `${name}="${value}"`;
+    const pair = `${name}="${value.replace('"', '\\"')}"`;
     if (os.platform() === "win32")
       envVars += `$Env:${pair}\n`;
     else
