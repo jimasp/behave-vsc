@@ -61,7 +61,7 @@ export function getDebugAdapterTrackerFactory() {
 
 
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
-  args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri: vscode.Uri): Promise<void> {
+  args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitFileUri: vscode.Uri): Promise<void> {
 
   // handle test run stop 
   const cancellationHandler = cancelToken.onCancellationRequested(async () => {

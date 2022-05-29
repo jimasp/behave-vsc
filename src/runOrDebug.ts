@@ -71,7 +71,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     }
 
     if (debug) {
-      await debugScenario(wkspSettings, run, queueItem, args, cancelToken, friendlyCmd, junitDirUri, junitFileUri);
+      await debugScenario(wkspSettings, run, queueItem, args, cancelToken, friendlyCmd, junitFileUri);
     }
     else {
       await runScenario(async, wkspSettings, pythonExec, run, queueItem, args, cancelToken, friendlyCmd, junitDirUri, junitFileUri);
