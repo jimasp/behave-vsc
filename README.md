@@ -63,9 +63,6 @@ paths=behave_tests/features
   "behave-vsc.featuresPath": "behave_tests/features" 
 }
 ```
-
-- If you are using a multi-root workspace with multiple projects that contain feature files, then you can set a default `featuresPath` for all workspaces in your `*.code-workspace` file.
-
 ---
 
 ## Extension settings

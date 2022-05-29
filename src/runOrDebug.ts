@@ -8,6 +8,7 @@ import { debugScenario } from './behaveDebug';
 import { QueueItem } from './extension';
 import { getJunitFileUri, updateTest } from './junitParser';
 import { WkspError } from './common';
+import { cancelTestRun } from './testRunHandler';
 
 
 
@@ -78,6 +79,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     }
   }
   catch (e: unknown) {
+    cancelTestRun("runOrDebugBehaveScenario");
     // unawaited (if runParallel) async func, must log the error 
     throw new WkspError(e, wkspSettings.uri, run);
   }

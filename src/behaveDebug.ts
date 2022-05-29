@@ -50,6 +50,7 @@ export function getDebugAdapterTrackerFactory() {
             }
           }
           catch (e: unknown) {
+            cancelTestRun("onDidSendMessage (error)");
             // entry point function (handler) - show error
             config.logger.showError(e, undefined);
           }

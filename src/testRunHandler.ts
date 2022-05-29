@@ -4,7 +4,7 @@ import { WorkspaceSettings } from "./settings";
 import { Scenario, TestData, TestFile } from './TestFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, getTestIdForUri,
+  countTestItems, getAllTestItems, getContentFromFilesystem, getUriMatchString,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
 } from './common';
 import { customAlphabet } from 'nanoid';
@@ -94,11 +94,11 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
             await queueSelectedTestItems(gatherTestItems(test.children));
           }
 
-          if (test.uri && !coveredLines.has(getTestIdForUri(test.uri))) {
+          if (test.uri && !coveredLines.has(getUriMatchString(test.uri))) {
             try {
               const lines = (await getContentFromFilesystem(test.uri)).split('\n');
               coveredLines.set(
-                getTestIdForUri(test.uri),
+                getUriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -134,7 +134,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
           if (!allTestsForThisWkspIncluded) {
-            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getTestIdForUri(wkspSettings.uri)).length === 1;
+            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getUriMatchString(wkspSettings.uri)).length === 1;
 
             if (wkspGrandParentItemIncluded)
               allTestsForThisWkspIncluded = true;
@@ -191,6 +191,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           logComplete();
         }
         catch (e: unknown) {
+          cancelTestRun("runWorkspaceQueue");
           // unawaited (if multiRootRunWorkspacesInParallel) async function - show error
           config.logger.showError(e, wkspSettings.uri, run);
         }
@@ -212,7 +213,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         // run each workspace queue
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
           const wkspSettings = config.workspaceSettings[wkspUri.path];
-          const idMatch = getTestIdForUri(wkspSettings.featuresUri);
+          const idMatch = getUriMatchString(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
           if (wkspQueue.length === 0)

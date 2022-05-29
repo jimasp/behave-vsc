@@ -34,10 +34,10 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
-export function getTestIdForUri(uri: vscode.Uri) {
-  // uri.path and uri.fsPath currently seem to give inconsistent results on windows ("C:" vs "c:") 
-  // (found when running integration tests vs debugging extension)
-  // and we use the id for matching strings, so use toString() to provide consistent casing
+// this function is here to highlight why uri.toString() is needed:
+// uri.path and uri.fsPath give inconsistent casing on windows ("C:" vs "c:") 
+// so for matching one uri to another we need to use toString() to provide consistent casing
+export function getUriMatchString(uri: vscode.Uri) {
   return uri.toString();
 }
 
@@ -195,7 +195,7 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
   // get all test items if wkspUri is null, or
   // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspUri === null || item.id.includes(getTestIdForUri(wkspUri))) {
+    if (wkspUri === null || item.id.includes(getUriMatchString(wkspUri))) {
       items.push(item);
       if (item.children)
         items.push(...getAllTestItems(wkspUri, item.children));

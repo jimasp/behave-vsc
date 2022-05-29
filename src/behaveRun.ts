@@ -4,7 +4,7 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, isBehaveExecutionError } from './common';
+import { cleanBehaveText, getUriMatchString, isBehaveExecutionError } from './common';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';
@@ -168,9 +168,9 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       diagLog(`${run.name} - updateResult called for uri ${uri.path}`, wkspSettings.uri);
 
-      const matches = map.filter(m => m.junitFileUri.path === uri.path);
+      const matches = map.filter(m => getUriMatchString(m.junitFileUri) === getUriMatchString(uri));
       if (matches.length === 0)
-        return reject(`could not find any matching test items for junit file ${uri.path}`);
+        throw `could not find any matching test items for junit file ${uri.fsPath}`;
 
       // one junit file is created per feature (for non-parallel runs), so update all tests for this feature
       for (const match of matches) {
@@ -184,6 +184,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
     catch (e: unknown) {
       // entry point function (handler) - show error   
+      cancelTestRun("startWatchingJunitFolder (error)");
       config.logger.showError(e, wkspSettings.uri);
       reject(e);
     }

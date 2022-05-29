@@ -3,7 +3,7 @@ import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, getTestIdForUri, getWorkspaceFolder,
+  countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
 } from './common';
 import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
@@ -156,7 +156,7 @@ export class FileParser {
     if (featureName === null)
       return undefined;
 
-    const testItem = controller.createTestItem(getTestIdForUri(uri), featureName, uri);
+    const testItem = controller.createTestItem(getUriMatchString(uri), featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
     const testFile = new TestFile();
@@ -164,12 +164,12 @@ export class FileParser {
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
     let wkspGrandParent: vscode.TestItem | undefined;
-    const wkspPath = getTestIdForUri(wkspSettings.uri);
+    const wkspTestItemId = getUriMatchString(wkspSettings.uri);
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-      wkspGrandParent = controller.items.get(wkspPath);
+      wkspGrandParent = controller.items.get(wkspTestItemId);
       if (!wkspGrandParent) {
         const wkspName = wkspSettings.name;
-        wkspGrandParent = controller.createTestItem(wkspPath, wkspName);
+        wkspGrandParent = controller.createTestItem(wkspTestItemId, wkspName);
         wkspGrandParent.canResolveChildren = true;
         controller.items.add(wkspGrandParent);
       }
@@ -191,21 +191,21 @@ export class FileParser {
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
         const folderName = "\uD83D\uDCC1 " + folders[i]; // folder icon
-        const folderId = `${getTestIdForUri(wkspSettings.featuresUri)}/${path}`;
+        const folderTestItemId = `${getUriMatchString(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)
           parent = wkspGrandParent;
 
         if (parent)
-          current = parent.children.get(folderId);
+          current = parent.children.get(folderTestItemId);
 
         if (!current) { // TODO: put getAllTestItems above loop (needs thorough testing of UI interactions of folder/file renames)
           const allTestItems = getAllTestItems(wkspSettings.uri, controller.items);
-          current = allTestItems.find(item => item.id === folderId);
+          current = allTestItems.find(item => item.id === folderTestItemId);
         }
 
         if (!current) {
-          current = controller.createTestItem(folderId, folderName);
+          current = controller.createTestItem(folderTestItemId, folderName);
           current.canResolveChildren = true;
           controller.items.add(current);
         }
