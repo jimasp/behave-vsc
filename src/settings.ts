@@ -10,7 +10,7 @@ export class WindowSettings {
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
-  public readonly showConfigurationWarnings: boolean;
+  public readonly showSettingsWarnings: boolean;
   public readonly logDiagnostics: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
@@ -19,15 +19,15 @@ export class WindowSettings {
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
-    const showConfigurationWarningsCfg: boolean | undefined = winConfig.get("showConfigurationWarnings");
-    if (showConfigurationWarningsCfg === undefined)
-      throw "showConfigurationWarnings is undefined";
+    const showSettingsWarningsCfg: boolean | undefined = winConfig.get("showSettingsWarnings");
+    if (showSettingsWarningsCfg === undefined)
+      throw "showSettingsWarnings is undefined";
     const logDiagnosticsCfg: boolean | undefined = winConfig.get("logDiagnostics");
     if (logDiagnosticsCfg === undefined)
       throw "logDiagnostics is undefined";
 
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
-    this.showConfigurationWarnings = showConfigurationWarningsCfg;
+    this.showSettingsWarnings = showSettingsWarningsCfg;
     this.logDiagnostics = logDiagnosticsCfg;
   }
 }
@@ -182,9 +182,9 @@ export class WorkspaceSettings {
 
     logger.logInfo(`\n${this.name} (resource) settings:\n${JSON.stringify(wkspSettingsDic, null, 2)}`, this.uri);
     logger.logInfo(`fullFeaturesPath: ${this.featuresUri.fsPath}`, this.uri);
-    logger.logInfo(`junitDirectory: ${config.extensionTempFilesUri}`, this.uri);
+    logger.logInfo(`junitDirectory: ${config.extensionTempFilesUri.fsPath}`, this.uri);
 
-    if (winSettings.showConfigurationWarnings) {
+    if (winSettings.showSettingsWarnings) {
 
       let warned = false;
       logger.logInfo("\n", this.uri);
@@ -205,7 +205,7 @@ export class WorkspaceSettings {
       }
 
       if (warned)
-        logger.logInfo(`(If you are happy with your settings, can turn off configuration warnings via the extension setting '${EXTENSION_NAME}.showConfigurationWarnings'.)\n`, this.uri);
+        logger.logInfo(`(If you are happy with your settings, can turn off these warningsvia the extension setting '${EXTENSION_NAME}.showSettingsWarnings'.)\n`, this.uri);
     }
 
     if (this._warnings.length > 0)

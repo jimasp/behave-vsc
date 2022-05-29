@@ -16,14 +16,14 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
 	private runAllAsOne: boolean | undefined;
 	private runParallel: boolean | undefined;
-	private showConfigurationWarnings: boolean | undefined;
+	private showSettingsWarnings: boolean | undefined;
 	private logDiagnostics: boolean | undefined;
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
 		envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
-		runAllAsOne, runParallel, showConfigurationWarnings, logDiagnostics
+		runAllAsOne, runParallel, showSettingsWarnings, logDiagnostics
 	}: {
 		envVarList: { [name: string]: string } | undefined,
 		fastSkipList: string[] | undefined,
@@ -32,7 +32,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		multiRootRunWorkspacesInParallel: boolean | undefined,
 		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
-		showConfigurationWarnings: boolean | undefined,
+		showSettingsWarnings: boolean | undefined,
 		logDiagnostics: boolean | undefined
 	}) {
 		this.envVarList = envVarList;
@@ -42,7 +42,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runAllAsOne = runAllAsOne;
 		this.runParallel = runParallel;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
-		this.showConfigurationWarnings = showConfigurationWarnings;
+		this.showSettingsWarnings = showSettingsWarnings;
 		this.logDiagnostics = logDiagnostics;
 	}
 
@@ -70,8 +70,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
-			case "showConfigurationWarnings":
-				return <T><unknown>(this.showConfigurationWarnings === undefined ? true : this.showConfigurationWarnings);
+			case "showSettingsWarnings":
+				return <T><unknown>(this.showSettingsWarnings === undefined ? true : this.showSettingsWarnings);
 			case "logDiagnostics":
 				return <T><unknown>(this.logDiagnostics === undefined ? false : this.logDiagnostics);
 			default:
@@ -113,8 +113,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "runParallel":
 				response = <T><unknown>this.runParallel;
 				break;
-			case "showConfigurationWarnings":
-				response = <T><unknown>this.showConfigurationWarnings;
+			case "showSettingsWarnings":
+				response = <T><unknown>this.showSettingsWarnings;
 				break;
 			case "logDiagnostics":
 				response = <T><unknown>this.logDiagnostics;
@@ -185,8 +185,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(getExpectedRunAllAsOne());
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
-			case "showConfigurationWarnings":
-				return <T><unknown>(this.get("showConfigurationWarnings"));
+			case "showSettingsWarnings":
+				return <T><unknown>(this.get("showSettingsWarnings"));
 			case "logDiagnostics":
 				return <T><unknown>(this.get("logDiagnostics"));
 

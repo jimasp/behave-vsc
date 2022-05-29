@@ -26,7 +26,7 @@ export function getDebugAdapterTrackerFactory() {
           try {
             // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
 
-            diagLog(JSON.stringify(m));
+            // diagLog(JSON.stringify(m));
 
             const stderr = m.body?.category === "stderr";
             if (stderr && isBehaveExecutionError(m.body.output)) {

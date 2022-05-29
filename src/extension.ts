@@ -160,9 +160,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         if (!affected && !forceFullRefresh && !testCfg)
           return;
 
-
-        config.logger.clearAllWksps();
-        cancelTestRun("configurationChangedHandler");
+        if (!testCfg) {
+          config.logger.clearAllWksps();
+          cancelTestRun("configurationChangedHandler");
+        }
 
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {

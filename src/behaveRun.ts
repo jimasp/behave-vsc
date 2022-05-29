@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, isBehaveExecutionError, WkspError } from './common';
+import { cleanBehaveText, isBehaveExecutionError } from './common';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';

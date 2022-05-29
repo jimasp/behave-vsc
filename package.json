@@ -47,7 +47,7 @@
 					"description": "Default:false (disabled).\nRun tests in async mode.\nThis setting has no effect when you are running all tests at once and runAllAsOne is enabled.\nLeave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated).\nIf you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel.\nNote that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes. It depends on a lot of factors, for example, slow tests are likely to run faster because they can execute at the same time, but fast tests might be slower due to the overhead.\n",
 					"scope": "resource"
 				},
-				"behave-vsc.showConfigurationWarnings": {
+				"behave-vsc.showSettingsWarnings": {
 					"type": "boolean",
 					"default": true,
 					"description": "Default:true (enabled).\nSet to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings.\nFor multi-root workspaces, set this in your *.code-workspace file.\n",

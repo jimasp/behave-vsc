@@ -22,6 +22,6 @@
     "behave-vsc.justMyCode": true,
     "behave-vsc.runAllAsOne": true,
     "behave-vsc.runParallel": false,
-    "behave-vsc.showConfigurationWarnings": true,
+    "behave-vsc.showSettingsWarnings": true,
     "behave-vsc.logDiagnostics": true
 }
