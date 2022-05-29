@@ -90,11 +90,11 @@ function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   let envVars = "";
 
   for (const [name, value] of Object.entries(wkspSettings.envVarList)) {
-    const pair = `${name}="${value.replace('"', '\\"')}"`;
+
     if (os.platform() === "win32")
-      envVars += `$Env:${pair}\n`;
+      envVars += `$Env:${`${name}="${value.replace('"', '""')}"`}\n`;
     else
-      envVars += `${pair} `;
+      envVars += `${name}="${value.replace('"', '\\"')}" `;
   }
 
   return envVars;
@@ -143,7 +143,7 @@ function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeatur
   // see if shortening the scenario folder name could fix the path length issue
   // (+1 because the suffix includes "_" and if the scenarioFolderName starts or ends with "_" it gets removed below)  
   if (filePathDiff >= scenarioFolderName.length + nidSuffix.length + 1)
-    throw `windows max path exceeded while trying to build path to junit file: ${junitFileUri.fsPath}`;
+    throw `windows max path exceeded while trying to build path to junit file: ${junitFileUri.fsPath} `;
 
   // shorten it and rebuild scenJunitDirUri from junitDirUri
   scenarioFolderName = scenarioFolderName.slice(0, scenarioFolderName.length - filePathDiff - nidSuffix.length);
