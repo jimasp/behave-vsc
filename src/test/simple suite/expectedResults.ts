@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../Configuration";
 import { ParseCounts } from '../../FileParser';
-import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
+import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getWssExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
-  const testCount = getWssExpectedResults(debug, wkspUri, config).length;
+export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+  const testCount = getExpectedResults(debug, wkspUri, config).length;
   return { tests: { nodeCount: 4, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 1, stepFiles: 1, stepMappings: 6 };
 }
 
-export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -22,10 +22,10 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project simple/{{featurePath}}/simple.feature/run a successful test',
+      test_id: '.../simple/{{featurePath}}/simple.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../project simple/{{featurePath}}/simple.feature',
-      test_uri: '.../project simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/{{featurePath}}/simple.feature',
+      test_uri: '.../simple/{{featurePath}}/simple.feature'
     }),
 
     new TestResult({
@@ -39,10 +39,10 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project simple/{{featurePath}}/simple.feature/run a failing test',
+      test_id: '.../simple/{{featurePath}}/simple.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../project simple/{{featurePath}}/simple.feature',
-      test_uri: '.../project simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/{{featurePath}}/simple.feature',
+      test_uri: '.../simple/{{featurePath}}/simple.feature'
     }),
 
     new TestResult({
@@ -56,10 +56,10 @@ export const getWssExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project simple/{{featurePath}}/simple.feature/run a skipped test',
+      test_id: '.../simple/{{featurePath}}/simple.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../project simple/{{featurePath}}/simple.feature',
-      test_uri: '.../project simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/{{featurePath}}/simple.feature',
+      test_uri: '.../simple/{{featurePath}}/simple.feature'
     }),
 
   ];

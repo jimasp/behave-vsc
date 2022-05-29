@@ -12,7 +12,7 @@ import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { getStepMap, FileParser } from './FileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
-import { TestWorkspaceConfigWithWkspUri } from './test/workspace-suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './Logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 

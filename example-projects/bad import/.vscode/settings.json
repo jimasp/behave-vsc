@@ -1,0 +1,4 @@
+{
+    "behave-vsc.logDiagnostics": true,
+    "behave-vsc.runParallel": true
+}

@@ -44,8 +44,8 @@ async function runTestSuites() {
     let extensionTestsPath = "";
 
 
-    launchArgs = ["example-projects/example project simple"]
-    extensionTestsPath = path.resolve(__dirname, './workspace-simple-suite/index');
+    launchArgs = ["example-projects/simple"]
+    extensionTestsPath = path.resolve(__dirname, './simple suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -53,8 +53,8 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/example-project-1"]
-    extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
+    launchArgs = ["example-projects/project 1"]
+    extensionTestsPath = path.resolve(__dirname, './project 1 suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -62,8 +62,8 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/example-project-2"]
-    extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
+    launchArgs = ["example-projects/project 2"]
+    extensionTestsPath = path.resolve(__dirname, './project 2 suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -72,7 +72,7 @@ async function runTestSuites() {
     });
 
     launchArgs = ["example-projects/multiroot.code-workspace"];
-    extensionTestsPath = path.resolve(__dirname, './workspace-multiroot-suite/index');
+    extensionTestsPath = path.resolve(__dirname, './multiroot suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

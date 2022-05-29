@@ -44,14 +44,16 @@
   .       +-- storage_tests/  
   .       |      +-- *.feature  
 ```
-- If your features folder is not called "features", or is not in the workspace root, then you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. Example:
+- If your features folder is not called "features", or is not in the workspace root, then you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. This is a relative path to your project folder. Example:
 ```
-// behave.ini file
+# behave.ini file
 [behave]
 paths=behave_tests/features 
 
 // settings.json file
-"behave-vsc.featuresPath": "behave_tests/features",
+{ 
+  "behave-vsc.featuresPath": "behave_tests/features" 
+}
 ```
 - If you are using a multi-root workspace with multiple projects that contain feature files, then see note below in [Extension settings](#extension-settings)
 
@@ -60,7 +62,7 @@ paths=behave_tests/features
 ## Extension settings
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarList`, etc.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up any default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder. 
+- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder. 
 - For more information on available options, go to the extension settings in vscode.
 
 ---  
@@ -78,14 +80,14 @@ paths=behave_tests/features
 
 - For each run, the _equivalent_ behave command to run the test manually appears in the Behave VSC output window. (The *actual* command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
 - The behave process is spawned, and behave output is written to the Behave VSC output window for the associated workspace. 
-- The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+- The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 - You can adjust the run behaviour via extension settings in your `settings.json` file (e.g. `runParallel` etc.)
 
 ### How debug works:
 - It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
 - You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 - Behave error output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
-- The extension parses the junit file output and updates the test result in the UI, and assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+- The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
 
 ---

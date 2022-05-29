@@ -228,7 +228,7 @@ function assertInstances(instances: TestSupport) {
 	assert(instances.configurationChangedHandler);
 }
 
-function getWorkspaceUri(wkspName: string) {
+function getTestWorkspaceUri(wkspName: string) {
 	const uris = getUrisOfWkspFoldersWithFeatures();
 	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
 	assert(wkspUri, "wkspUri");
@@ -313,7 +313,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 }
 
 
-// NOTE: when workspace-multiroot-suite/index.ts is run (in order to test parallel workspace runs) this
+// NOTE: when workspace-multiroot suite/index.ts is run (in order to test parallel workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string, testConfig: TestWorkspaceConfig,
@@ -321,7 +321,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
-	const wkspUri = getWorkspaceUri(wskpFileSystemFolderName);
+	const wkspUri = getTestWorkspaceUri(wskpFileSystemFolderName);
 
 	await setLock(consoleName, "acquire");
 	console.log(`${consoleName} initialising`);

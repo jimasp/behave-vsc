@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../Configuration";
 import { ParseCounts } from '../../FileParser';
-import { TestResult, applyTestConfiguration } from "../workspace-suite-shared/expectedResults.helpers";
+import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getWs2ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
-  const testCount = getWs2ExpectedResults(debug, wkspUri, config).length;
+export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+  const testCount = getExpectedResults(debug, wkspUri, config).length;
   return { tests: { nodeCount: 80, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 18, stepFiles: 4, stepMappings: 31 };
 }
 
-export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -22,10 +22,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run a successful test',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -39,10 +39,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run a slow test for async testing',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run a slow test for async testing',
       test_label: 'run a slow test for async testing',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -56,10 +56,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run another slow test for async testing',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run another slow test for async testing',
       test_label: 'run another slow test for async testing',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -73,10 +73,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run a failing test',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -90,10 +90,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run another successful test',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run another successful test',
       test_label: 'run another successful test',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -107,10 +107,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run a test with a missing steps',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run a test with a missing steps',
       test_label: 'run a test with a missing steps',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
@@ -124,10 +124,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/basic.feature/run a skipped test',
+      test_id: '.../project 2/{{featurePath}}/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../project-2/{{featurePath}}/basic.feature',
-      test_uri: '.../project-2/{{featurePath}}/basic.feature'
+      test_parent: '.../project 2/{{featurePath}}/basic.feature',
+      test_uri: '.../project 2/{{featurePath}}/basic.feature'
     }),
 
 
@@ -142,10 +142,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      test_id: '.../project 2/{{featurePath}}/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../project-2/{{featurePath}}/contains_regexchars.feature',
-      test_uri: '.../project-2/{{featurePath}}/contains_regexchars.feature'
+      test_parent: '.../project 2/{{featurePath}}/contains_regexchars.feature',
+      test_uri: '.../project 2/{{featurePath}}/contains_regexchars.feature'
     }),
 
     new TestResult({
@@ -159,10 +159,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/mixed_skip.feature/normal skip',
+      test_id: '.../project 2/{{featurePath}}/mixed_skip.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../project-2/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project-2/{{featurePath}}/mixed_skip.feature'
+      test_parent: '.../project 2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../project 2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -175,10 +175,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../project-2/{{featurePath}}/mixed_skip.feature/don't skip and success",
+      test_id: ".../project 2/{{featurePath}}/mixed_skip.feature/don't skip and success",
       test_label: "don't skip and success",
-      test_parent: '.../project-2/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project-2/{{featurePath}}/mixed_skip.feature'
+      test_parent: '.../project 2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../project 2/{{featurePath}}/mixed_skip.feature'
     }),
 
     new TestResult({
@@ -192,10 +192,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/mixed_skip.feature/fast skip a successful test',
+      test_id: '.../project 2/{{featurePath}}/mixed_skip.feature/fast skip a successful test',
       test_label: 'fast skip a successful test',
-      test_parent: '.../project-2/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project-2/{{featurePath}}/mixed_skip.feature'
+      test_parent: '.../project 2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../project 2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: false,
@@ -208,10 +208,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../project-2/{{featurePath}}/mixed_skip.feature/don't skip and fail",
+      test_id: ".../project 2/{{featurePath}}/mixed_skip.feature/don't skip and fail",
       test_label: "don't skip and fail",
-      test_parent: '.../project-2/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project-2/{{featurePath}}/mixed_skip.feature'
+      test_parent: '.../project 2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../project 2/{{featurePath}}/mixed_skip.feature'
     }),
     new TestResult({
       scenario_fastSkipTag: true,
@@ -224,10 +224,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/mixed_skip.feature/fast skip a failing test',
+      test_id: '.../project 2/{{featurePath}}/mixed_skip.feature/fast skip a failing test',
       test_label: 'fast skip a failing test',
-      test_parent: '.../project-2/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project-2/{{featurePath}}/mixed_skip.feature'
+      test_parent: '.../project 2/{{featurePath}}/mixed_skip.feature',
+      test_uri: '.../project 2/{{featurePath}}/mixed_skip.feature'
     }),
 
     new TestResult({
@@ -241,10 +241,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/skipped.feature/normal skip',
+      test_id: '.../project 2/{{featurePath}}/skipped.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../project-2/{{featurePath}}/skipped.feature',
-      test_uri: '.../project-2/{{featurePath}}/skipped.feature'
+      test_parent: '.../project 2/{{featurePath}}/skipped.feature',
+      test_uri: '.../project 2/{{featurePath}}/skipped.feature'
     }),
 
 
@@ -259,10 +259,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/duplicate.feature/run a test',
+      test_id: '.../project 2/{{featurePath}}/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project-2/{{featurePath}}/duplicate.feature',
-      test_uri: '.../project-2/{{featurePath}}/duplicate.feature'
+      test_parent: '.../project 2/{{featurePath}}/duplicate.feature',
+      test_uri: '.../project 2/{{featurePath}}/duplicate.feature'
     }),
 
     new TestResult({
@@ -276,10 +276,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/fastskip_feature.feature/fast skip by feature',
+      test_id: '.../project 2/{{featurePath}}/fastskip_feature.feature/fast skip by feature',
       test_label: 'fast skip by feature',
-      test_parent: '.../project-2/{{featurePath}}/fastskip_feature.feature',
-      test_uri: '.../project-2/{{featurePath}}/fastskip_feature.feature'
+      test_parent: '.../project 2/{{featurePath}}/fastskip_feature.feature',
+      test_uri: '.../project 2/{{featurePath}}/fastskip_feature.feature'
     }),
 
     new TestResult({
@@ -293,10 +293,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/duplicate.feature/run a test',
+      test_id: '.../project 2/{{featurePath}}/grouped/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project-2/{{featurePath}}/grouped/duplicate.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/duplicate.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/duplicate.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/duplicate.feature'
     }),
 
     new TestResult({
@@ -310,10 +310,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success',
       test_label: 'Blenders Success',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -327,10 +327,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail',
       test_label: 'Blenders Fail',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -344,10 +344,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail 2',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail 2',
       test_label: 'Blenders Fail 2',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -361,10 +361,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Failure',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Failure',
       test_label: 'Blenders Fast Skip a Failure',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -378,10 +378,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Success',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Success',
       test_label: 'Blenders Fast Skip a Success',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -395,10 +395,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Skip',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Skip',
       test_label: 'Blenders Skip',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -412,10 +412,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success 2',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success 2',
       test_label: 'Blenders Success 2',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -429,10 +429,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_success.feature/Blend Success',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_success.feature/Blend Success',
       test_label: 'Blend Success',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_success.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_success.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_success.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_success.feature'
     }),
 
     new TestResult({
@@ -446,10 +446,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/outline_success.feature/Blend Success 2',
+      test_id: '.../project 2/{{featurePath}}/grouped/outline_success.feature/Blend Success 2',
       test_label: 'Blend Success 2',
-      test_parent: '.../project-2/{{featurePath}}/grouped/outline_success.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/outline_success.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/outline_success.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/outline_success.feature'
     }),
 
     new TestResult({
@@ -463,10 +463,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/table.feature/Use a table (fail)',
+      test_id: '.../project 2/{{featurePath}}/grouped/table.feature/Use a table (fail)',
       test_label: 'Use a table (fail)',
-      test_parent: '.../project-2/{{featurePath}}/grouped/table.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/table.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/table.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/table.feature'
     }),
 
     new TestResult({
@@ -480,10 +480,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/table.feature/Use a table (success)',
+      test_id: '.../project 2/{{featurePath}}/grouped/table.feature/Use a table (success)',
       test_label: 'Use a table (success)',
-      test_parent: '.../project-2/{{featurePath}}/grouped/table.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/table.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/table.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/table.feature'
     }),
 
     new TestResult({
@@ -497,10 +497,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/textblock.feature/run a failing textblock test',
+      test_id: '.../project 2/{{featurePath}}/grouped/textblock.feature/run a failing textblock test',
       test_label: 'run a failing textblock test',
-      test_parent: '.../project-2/{{featurePath}}/grouped/textblock.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/textblock.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/textblock.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/textblock.feature'
     }),
 
     new TestResult({
@@ -514,10 +514,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/grouped/textblock.feature/run a successful textblock test',
+      test_id: '.../project 2/{{featurePath}}/grouped/textblock.feature/run a successful textblock test',
       test_label: 'run a successful textblock test',
-      test_parent: '.../project-2/{{featurePath}}/grouped/textblock.feature',
-      test_uri: '.../project-2/{{featurePath}}/grouped/textblock.feature'
+      test_parent: '.../project 2/{{featurePath}}/grouped/textblock.feature',
+      test_uri: '.../project 2/{{featurePath}}/grouped/textblock.feature'
     }),
 
     new TestResult({
@@ -531,10 +531,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error',
       test_label: 'create a before hook-error',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -548,10 +548,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/normal skip',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/normal skip',
       test_label: 'normal skip',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -565,10 +565,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/skip a before hook-error',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/skip a before hook-error',
       test_label: 'skip a before hook-error',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -582,10 +582,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error again',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error again',
       test_label: 'create a before hook-error again',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -599,10 +599,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error',
       test_label: 'create an after hook-error',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -616,10 +616,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/another normal skip',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/another normal skip',
       test_label: 'another normal skip',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -633,10 +633,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/skip an after hook-error',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/skip an after hook-error',
       test_label: 'skip an after hook-error',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -650,10 +650,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error again',
+      test_id: '.../project 2/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error again',
       test_label: 'create an after hook-error again',
-      test_parent: '.../project-2/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project-2/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project 2/{{featurePath}}/feature_with_hook_error.feature',
+      test_uri: '.../project 2/{{featurePath}}/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -667,10 +667,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/simple step',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/simple step',
       test_label: 'simple step',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -684,10 +684,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/simple step with more text',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/simple step with more text',
       test_label: 'simple step with more text',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -701,10 +701,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/a cased step',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/a cased step',
       test_label: 'a cased step',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -718,10 +718,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/param step',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/param step',
       test_label: 'param step',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -735,10 +735,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/param step with more text',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/param step with more text',
       test_label: 'param step with more text',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -752,10 +752,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/two param step no1',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/two param step no1',
       test_label: 'two param step no1',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -769,10 +769,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/two param step no2',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/two param step no2',
       test_label: 'two param step no2',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -786,10 +786,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/step with param',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/step with param',
       test_label: 'step with param',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -803,10 +803,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/step without custom flag type',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/step without custom flag type',
       test_label: 'step without custom flag type',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -820,10 +820,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/step with custom flag type present',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/step with custom flag type present',
       test_label: 'step with custom flag type present',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -837,10 +837,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/yet another step',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/yet another step',
       test_label: 'yet another step',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -854,10 +854,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/"yet" "another" step double quoted',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/"yet" "another" step double quoted',
       test_label: '"yet" "another" step double quoted',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -871,10 +871,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../project-2/{{featurePath}}/goto_step.feature/'yet' 'another' step single quoted",
+      test_id: ".../project 2/{{featurePath}}/goto_step.feature/'yet' 'another' step single quoted",
       test_label: "'yet' 'another' step single quoted",
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -888,10 +888,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/wrapped step 1',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/wrapped step 1',
       test_label: 'wrapped step 1',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -905,10 +905,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/wrapped step 2',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/wrapped step 2',
       test_label: 'wrapped step 2',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature',
     }),
 
     new TestResult({
@@ -922,10 +922,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/{{featurePath}}/goto_step.feature/wrapped step 3',
+      test_id: '.../project 2/{{featurePath}}/goto_step.feature/wrapped step 3',
       test_label: 'wrapped step 3',
-      test_parent: '.../project-2/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project-2/{{featurePath}}/goto_step.feature'
+      test_parent: '.../project 2/{{featurePath}}/goto_step.feature',
+      test_uri: '.../project 2/{{featurePath}}/goto_step.feature'
     }),
 
     new TestResult({
@@ -939,10 +939,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/features/nested/nested1.faildupe.feature/run a test',
+      test_id: '.../project 2/features/nested/nested1.faildupe.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project-2/features/nested/nested1.faildupe.feature',
-      test_uri: '.../project-2/features/nested/nested1.faildupe.feature'
+      test_parent: '.../project 2/features/nested/nested1.faildupe.feature',
+      test_uri: '.../project 2/features/nested/nested1.faildupe.feature'
     }),
 
     new TestResult({
@@ -956,10 +956,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/features/nested/nested/nested/nested3.sucessdupe.feature/run a test',
+      test_id: '.../project 2/features/nested/nested/nested/nested3.sucessdupe.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project-2/features/nested/nested/nested/nested3.sucessdupe.feature',
-      test_uri: '.../project-2/features/nested/nested/nested/nested3.sucessdupe.feature'
+      test_parent: '.../project 2/features/nested/nested/nested/nested3.sucessdupe.feature',
+      test_uri: '.../project 2/features/nested/nested/nested/nested3.sucessdupe.feature'
     }),
 
     new TestResult({
@@ -973,10 +973,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/features/nested/nested/nested2.successdupe.feature/run a test',
+      test_id: '.../project 2/features/nested/nested/nested2.successdupe.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project-2/features/nested/nested/nested2.successdupe.feature',
-      test_uri: '.../project-2/features/nested/nested/nested2.successdupe.feature'
+      test_parent: '.../project 2/features/nested/nested/nested2.successdupe.feature',
+      test_uri: '.../project 2/features/nested/nested/nested2.successdupe.feature'
     }),
 
     new TestResult({
@@ -990,10 +990,10 @@ export const getWs2ExpectedResults = (debug: boolean, wkspUri: vscode.Uri, confi
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project-2/features/step_exception.feature/step with exception should show failure message',
+      test_id: '.../project 2/features/step_exception.feature/step with exception should show failure message',
       test_label: 'step with exception should show failure message',
-      test_parent: '.../project-2/features/step_exception.feature',
-      test_uri: '.../project-2/features/step_exception.feature'
+      test_parent: '.../project 2/features/step_exception.feature',
+      test_uri: '.../project 2/features/step_exception.feature'
     }),
 
   ];

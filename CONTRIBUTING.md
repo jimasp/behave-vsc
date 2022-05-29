@@ -5,7 +5,7 @@
 ---
 ### General
 - ***This extension is currently in pre-release. Feel free to raise an issue, but pull requests are unlikely to be accepted until we reach Release v1.0.0 due to code volatility.*** (You should also hold off forking before v1.0.0).
-- Before starting any development, please make sure to fully read through both the [README](README.md) and this document. It may save you some development pain and/or solve your issue.
+- Before starting any development, please make sure to *fully read through both the [README](README.md) and this document*. It may save you some development pain and/or solve your issue.
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to this extension, please read through everything below, then fork the repo, make your changes, and submit a pull request.
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
@@ -93,14 +93,6 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 
 ---
-## Generating the extension installer manually (.vsix file)
-If you have a customised fork and you want to distribute it to your team, you will want to create your own .vsix file:
-1. `npm install -g vsce` (installs latest version of packaging tool)
-2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the tests, if you've already run them you can just close vscode windows when they appear)
-
-
-
----
 ## Development guidelines
 - The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
 - No reliance on other extensions except `ms-python.python`.
@@ -172,6 +164,14 @@ If you have a customised fork and you want to distribute it to your team, you wi
 	- If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case restart kill the watch task and then restart it with `Ctrl+Shift+B` - this will run `rimraf out/ dist/`). 
 	- If `npm run test` fails on the command line due to a timeout.
 	- If a "Run Extension Test Suite..." test fails during debugging due to a timeout.
+
+
+---
+## Generating the extension installer manually (.vsix file)
+If you have a customised fork and you want to distribute it to your team, you will want to create your own .vsix file:
+1. `npm install -g vsce` (installs latest version of packaging tool)
+2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the tests, if you've already run them you can just close vscode windows when they appear)
+
 
 ---
 ## Before requesting a PR merge
