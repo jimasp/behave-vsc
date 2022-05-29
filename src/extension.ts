@@ -121,16 +121,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
-
-        // most of the work will happen in the onDidChangeConfiguration handler, but 
-        // we need to resync the logger first
-        config.logger.syncChannelsToWorkspaceFolders();
-
-        // TODO: investigate behaviour. onDidChangeConfiguration() seems to sometimes fire on it's own 
-        // for changed workspace folders, and sometimes not? 
-        // it may vary per OS (linux vs windows), or may depend on *.code-workspace file contents, also may vary on 
-        // whether passed in event contains removed/added/renamed workspaces or a combination of all three factors.
-        // safest thing without further investigation is to potentially call it twice (...parseFiles... methods will self-cancel anyway)
         await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
@@ -140,8 +130,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    // called when there is a settings.json/*.vscode-workspace change, or sometimes when workspace folders are added/removed/renamed
-    // (also called directly by onDidChangeWorkspaceFolders and by integration tests with a testCfg)
+    // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
+    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg)
+    // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
+    // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
       forceFullRefresh?: boolean) => {
 
@@ -152,8 +144,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
       try {
 
-        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but 
-        // we don't want that behaviour because we want to distinguish between runAllAsOne being set and being absent from 
+        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want 
+        // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
         const affected = event && event.affectsConfiguration(EXTENSION_NAME);
@@ -164,6 +156,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           config.logger.clearAllWksps();
           cancelTestRun("configurationChangedHandler");
         }
+
+        // changing featuresPath in settings.json/*.vscode-workspace to a valid path, or adding/removing/renaming workspaces
+        // will not only change the set of workspaces we are watching, but also the output channels
+        config.logger.syncChannelsToWorkspaceFolders();
 
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
@@ -190,7 +186,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           return;
         }
 
-        // we don't know which workspace was affected (see big comment above), so just reparse all workspaces
+        // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes to rebuild the top level nodes)
         parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
