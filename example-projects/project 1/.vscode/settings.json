@@ -12,7 +12,7 @@
         "some_var": "double qu\"oted",
         "some_var2": "single qu'oted",
         "space_var": " ",
-        "USER": "bob-163487",
+        "USERNAME": "bob-163487",
     },
     "behave-vsc.fastSkipList": [
         "@fast-skip-me",
