@@ -15,6 +15,7 @@ import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './tes
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './Logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
+import { performance } from 'perf_hooks';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -45,6 +46,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
   try {
 
+    const start = performance.now();
     diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
@@ -201,6 +203,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       await configurationChangedHandler(event);
     }));
 
+    diagLog(`PERFORMANCE: activate took  ${performance.now() - start}ms`);
 
     return {
       // return instances to support integration testing

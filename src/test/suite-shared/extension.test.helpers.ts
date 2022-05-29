@@ -299,7 +299,13 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	extInstances = await extension.activate() as TestSupport;
 	const tookMs = performance.now() - start;
 	console.log(`activate call time: ${tookMs} ms`);
+
+	// unless there is a breakpoint in activate, then activate should take < 1ms on most machines as it is uncontested at this point, 
+	// (i.e. it may be considerably slower than this during normal vscode startup contention when vscode is loading itself and other extensions)
+	// but if it goes over 5ms here and there is no breakpoint in activate, then we've messed something up
+	// (for a more realistic contested startup time, filter the debug console log by "performance:" in this source environment and look for "activate"
 	assert(tookMs < 5);
+
 	assert(extension.isActive);
 	assertInstances(extInstances);
 	extInstances.config.integrationTestRun = true;
