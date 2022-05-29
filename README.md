@@ -112,12 +112,14 @@ This a pre-release undergoing active development. If you used a previous version
 
 ---
 ## Known issues and limitations
-- Not internationalised. There shouldn't be any date/time issues, but character sets are untested. (If this affects you, you may wish to raise a pull request.)
+- Not internationalised. There shouldn't be any datetime issues, but character sets are untested. (If this affects you, you may wish to raise a pull request.)
+- There is currently a bug in vscode when you hit "Run Tests" button (or equivalent command) that causes: (a) skipped tests not to update when there are multiple test extensions active, and (b) the test run not to end/update results in a multi-root project when there are multiple test extensions active. If you come across this issue, you should run tests from inside the test side bar, i.e. run a parent node rather than using the "Run Tests" button.
+- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires *other* test extension authors to update their code (this extension has applied the fix).
 - "Go to Step" context menu doesn't always match correctly (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly. 
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder it won't find them). 
-- Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires *other* test extension authors to update their code (this extension has applied the fix).
 - vscode always adds up test durations. For parallel runs this means the parent test node reports a longer time than the test run actually took.
 - Running debug against *multiple* test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
+
 
 ---
 ## Contributing
