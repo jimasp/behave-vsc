@@ -71,7 +71,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: env };
     const start = performance.now();
     cp = spawn(pythonExec, local_args, options);
-    //cp = spawn("printenv", [], options);
 
     if (!cp.pid) {
       throw `unable to launch python or behave, command: ${pythonExec} ${local_args.join(" ")}\n` +
