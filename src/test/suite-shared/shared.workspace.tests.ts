@@ -6,7 +6,7 @@ import { TestResult } from './expectedResults.helpers';
 import { ParseCounts } from '../../FileParser';
 
 
-const envVarList = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USER": "bob-163487" };
+const envVarList = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
 const fastSkipList = ["@fast-skip-me", "@fast-skip-me-too"];
 
 
