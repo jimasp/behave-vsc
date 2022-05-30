@@ -7,56 +7,56 @@
 			"properties": {
 				"behave-vsc.envVarList": {
 					"type": "object",
-					"default": "",
+					"default": {},
 					"description": "Optional list of environment variable overrides to use when calling a behave command. Example: { \"var1\": \"val1\", \"var2\": \"val2\" }. This will apply to all tests within the workspace, i.e. it cannot be varied per test.",
 					"scope": "resource"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "array",
-					"default": "",
+					"default": [],
 					"description": "Optional list of fast skip tags that each start with @. Example: [ \"@skip\", \"@skipped\" ]. This setting has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging). The listed tags stop behave being called for features/scenarios marked with those tags. Only useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.",
 					"scope": "resource"
 				},
 				"behave-vsc.featuresPath": {
 					"type": "string",
 					"default": "features",
-					"description": "Default:\"features\". Optional setting for workspace-RELATIVE features subfolder. Example: mysubfolder/my_behave_tests. If not set to \"features\", then this must tie up with the \"paths=\" setting in your behave configuration file.",
+					"description": "Optional setting for workspace-RELATIVE features subfolder. Example: \"mysubfolder/my_behave_tests\". If not set to \"features\", then this must tie up with the \"paths=\" setting in your behave configuration file.",
 					"scope": "resource"
 				},
 				"behave-vsc.justMyCode": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default:true (enabled). Controls whether to step into external code when debugging a behave test.",
+					"description": "If false, then the debugger will step into external code when debugging a behave test.",
 					"scope": "resource"
 				},
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default:true (enabled). For multi-root workspaces, when behave tests are run from multiple workspaces, run both sets of tests at the same time. This setting should be in your *.code-workspace file.",
+					"description": "For multi-root workspaces only. If true, and behave tests are run from more than one workspace, then behave tests from those workspaces are run at the same time. This setting should be in your *.code-workspace file.",
 					"scope": "window"
 				},
 				"behave-vsc.runAllAsOne": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default:true (enabled). When running all tests, use a single 'python -m behave'. Recommended to keep this enabled unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests. Note that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation.",
+					"description": "If true, then a single \"python -m behave\" will be used when running all tests. Recommended to keep this enabled (true) unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests. Note that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation.",
 					"scope": "resource"
 				},
 				"behave-vsc.runParallel": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled). Run tests in async mode. This setting has no effect when you are running all tests at once and runAllAsOne is enabled. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel. Note that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes.",
+					"description": "If true, then tests are run in async mode. This setting has no effect when runAllAsOne is true and you are running all tests at once. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel. Note that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes.",
 					"scope": "resource"
 				},
 				"behave-vsc.showSettingsWarnings": {
 					"type": "boolean",
 					"default": true,
-					"description": "Default:true (enabled). Set to false to stop the Behave VSC output window being displayed (and outputting warnings) when there are warnings about configuration settings. For multi-root workspaces, you may wish to set this in your *.code-workspace file.",
+					"description": "If true, the Behave VSC output window outputs warnings about configuration settings. For multi-root workspaces, you may wish to set this in your *.code-workspace file.",
 					"scope": "window"
 				},
 				"behave-vsc.logDiagnostics": {
 					"type": "boolean",
 					"default": false,
-					"description": "Default:false (disabled). Set to true to enable stack traces on errors and log diagnostics in console. The console output is viewable via the vscode command 'Developer: Toggle Developer Tools' (or when debugging the extension itself). This is noisy, and may have a small performance impact.",
+					"description": "If true, then errors will have stack traces and diagnostics will be logged in console. The console output is viewable via the vscode command 'Developer: Toggle Developer Tools' (or when debugging the extension itself). Diagnostic logs are noisy, and may have a small performance impact.",
 					"scope": "window"
 				}
 			}

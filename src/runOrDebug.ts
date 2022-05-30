@@ -15,7 +15,7 @@ import { cancelTestRun } from './testRunHandler';
 export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
   cancelToken: vscode.CancellationToken): Promise<void> {
 
-  const pythonExec = await config.getPythonExecutable(wkspSettings.uri);
+  const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
   const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
   let ps1 = "", ps2 = "";
@@ -41,7 +41,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
-    const pythonExec = await config.getPythonExecutable(wkspSettings.uri);
+    const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
     const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
     const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 

@@ -19,7 +19,7 @@ export interface Configuration {
   readonly workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings };
   readonly globalSettings: WindowSettings;
   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
-  getPythonExecutable(wkspUri: vscode.Uri): Promise<string>;
+  getPythonExecutable(wkspUri: vscode.Uri, wkspName: string): Promise<string>;
   dispose(): void;
 }
 
@@ -82,7 +82,7 @@ class ExtensionConfiguration implements Configuration {
   }
 
   // note - this can be changed dynamically by the user, so don't store the result
-  getPythonExecutable = async (scope: vscode.Uri) => {
+  getPythonExecutable = async (wkspUri: vscode.Uri, wkspName: string) => {
     const pyext = vscode.extensions.getExtension(MSPY_EXT);
 
     if (!pyext)
@@ -94,9 +94,9 @@ class ExtensionConfiguration implements Configuration {
         throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT);
     }
 
-    const pythonExec = await pyext?.exports.settings.getExecutionDetails(scope).execCommand[0];
+    const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
     if (!pythonExec)
-      throw (EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT);
+      throw (`${EXTENSION_FRIENDLY_NAME} failed to obtain python executable for ${wkspName} workspace from ${MSPY_EXT}`);
 
     return pythonExec;
   }
