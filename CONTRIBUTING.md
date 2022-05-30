@@ -176,7 +176,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 - If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
 - If an exception is not bubbling, see [Error handling](#error-handling).
 - Is the problem actually in another extension (if debugging, check the file path of the file you have you stepped into).
-- Have you pulled the latest version of the source code?
+- Have you pulled the latest version of the source code? and if so, have you run a `git clean -fdx` and `npm install`? (make sure you commit/stash any changes first)
 - Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install` if you just pulled?
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fdx` and pull latest and `npm install`? Does it work without your changes?
@@ -213,6 +213,8 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Generally speaking, you should only add files to, not modify, the example project workspaces in your PR.
 - Quickly review your code vs the project's [Development guidelines](#development-guidelines)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
+- `git add .` and `git commit -m` your changes if required
+- consider if you need to clean up for a valid test run (e.g. check the output of `git clean -fdn`)
 - `npm run lint` and fix any errors or warnings
 - Run automated tests (verify behave results):
   - Close vscode and run `npm run test`
@@ -224,7 +226,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   
 #### 1. Run basic manual UI tests
 
-- a. start "Debug Extension - Workspace MultiRoot", then in "project 1":
+- a. start "Debug Extension - MultiRoot", then in "project 1":
 - b. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
 - c. clear all test results, Run a single test
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
@@ -236,27 +238,28 @@ If you have a customised fork and you want to distribute it to your team, you wi
 
 After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
 
-- A. **commit your changes** locally (because you are about to make file changes)
-- B. start "Debug Extension - Workspace MultiRoot",
+- A. **`git add .` and `git commit -m` your changes**
+- B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
+- C. start "Debug Extension - MultiRoot"
 - Then in "project 1":
-- C. edit a group1 feature file, change the name of the Feature: and save it, then:
+- D. edit a group1 feature file, change the name of the Feature: and save it, then:
   - check you can run the renamed feature from inside the feature file (first play button at top of feature file)
   - check the test UI tree shows the renamed feature (you may need to reopen the node)
   - check the old feature name no longer appears in the test UI tree
   - check you can run the renamed feature from UI tree
-- D. edit a group1 outline feature file, change the name of an Scenario Outline: and save it, then:
+- E. edit a group1 outline feature file, change the name of an Scenario Outline: and save it, then:
   - check you can run the changed scenario from inside the feature file
   - disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
   - check the test UI tree shows the renamed scenario (you may need to reopen the node)
-- E. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
-- F. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file
+- F. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
+- G. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file
  (the normal feature file that is open, not the diff view)
-- G. rename the table.feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
-- H. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
-- I. delete a feature file, check it gets removed from the test tree
-- J. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
-- K. copy a feature file, check it gets added to the test tree
-- L. go to a feature file, click "go to step defintion" and check at least some of them work
-- M. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
-- O. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
-- P. hopefully you commited your original changes at step A! if so, use git to undo the changes created by these manual tests, e.g. `git reset --hard` and `git clean -fd`.
+- H. rename the table.feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
+- I. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
+- K. delete a feature file, check it gets removed from the test tree
+- L. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
+- M. copy a feature file, check it gets added to the test tree
+- N. go to a feature file, click "go to step defintion" and check at least some of them work
+- O. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
+- P. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
+- Q. assuming you committed at step A, use e.g. `git reset --hard` to undo the file changes created by these manual tests.
