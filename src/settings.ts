@@ -11,7 +11,7 @@ export class WindowSettings {
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showSettingsWarnings: boolean;
-  public readonly logDiagnostics: boolean;
+  public readonly xRay: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
@@ -22,13 +22,13 @@ export class WindowSettings {
     const showSettingsWarningsCfg: boolean | undefined = winConfig.get("showSettingsWarnings");
     if (showSettingsWarningsCfg === undefined)
       throw "showSettingsWarnings is undefined";
-    const logDiagnosticsCfg: boolean | undefined = winConfig.get("logDiagnostics");
-    if (logDiagnosticsCfg === undefined)
-      throw "logDiagnostics is undefined";
+    const xRayCfg: boolean | undefined = winConfig.get("xRay");
+    if (xRayCfg === undefined)
+      throw "xRay is undefined";
 
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.showSettingsWarnings = showSettingsWarningsCfg;
-    this.logDiagnostics = logDiagnosticsCfg;
+    this.xRay = xRayCfg;
   }
 }
 

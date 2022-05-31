@@ -17,13 +17,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private runAllAsOne: boolean | undefined;
 	private runParallel: boolean | undefined;
 	private showSettingsWarnings: boolean | undefined;
-	private logDiagnostics: boolean | undefined;
+	private xRay: boolean | undefined;
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
 		envVarList, fastSkipList, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
-		runAllAsOne, runParallel, showSettingsWarnings, logDiagnostics
+		runAllAsOne, runParallel, showSettingsWarnings, xRay
 	}: {
 		envVarList: { [name: string]: string } | undefined,
 		fastSkipList: string[] | undefined,
@@ -33,7 +33,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
 		showSettingsWarnings: boolean | undefined,
-		logDiagnostics: boolean | undefined
+		xRay: boolean | undefined
 	}) {
 		this.envVarList = envVarList;
 		this.fastSkipList = fastSkipList;
@@ -43,7 +43,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runParallel = runParallel;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
 		this.showSettingsWarnings = showSettingsWarnings;
-		this.logDiagnostics = logDiagnostics;
+		this.xRay = xRay;
 	}
 
 	get<T>(section: string): T {
@@ -72,8 +72,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			case "showSettingsWarnings":
 				return <T><unknown>(this.showSettingsWarnings === undefined ? true : this.showSettingsWarnings);
-			case "logDiagnostics":
-				return <T><unknown>(this.logDiagnostics === undefined ? false : this.logDiagnostics);
+			case "xRay":
+				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
@@ -116,8 +116,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "showSettingsWarnings":
 				response = <T><unknown>this.showSettingsWarnings;
 				break;
-			case "logDiagnostics":
-				response = <T><unknown>this.logDiagnostics;
+			case "xRay":
+				response = <T><unknown>this.xRay;
 				break;
 			default:
 				debugger; // eslint-disable-line no-debugger
@@ -187,8 +187,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("runParallel"));
 			case "showSettingsWarnings":
 				return <T><unknown>(this.get("showSettingsWarnings"));
-			case "logDiagnostics":
-				return <T><unknown>(this.get("logDiagnostics"));
+			case "xRay":
+				return <T><unknown>(this.get("xRay"));
 
 			default:
 				debugger; // eslint-disable-line no-debugger

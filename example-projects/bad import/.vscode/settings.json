@@ -1,4 +1,4 @@
 {
-    "behave-vsc.logDiagnostics": true,
+    "behave-vsc.xRay": true,
     "behave-vsc.runParallel": true
 }

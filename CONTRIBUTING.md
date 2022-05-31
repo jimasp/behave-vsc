@@ -138,13 +138,13 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ### Diagnostics
 
-- Diagnostic logs are controlled via the extension setting `logDiagnostics` (this is enabled by default in the example projects and for most integration tests).
+- Diagnostic logs are controlled via the extension setting `xRay` (this is enabled by default in the example projects and for most integration tests).
 - Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 
 ### Error handling
 
-- Stack traces will only appear if `logDiagnostics` is enabled.
+- Stack traces will only appear if `xRay` is enabled.
 - The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
 - If you are adding a `throw` or `showError`, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
@@ -152,7 +152,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 - Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github.
 - Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
-- Info appears in the output window. Warnings and Errors appear in the output window and the notification window. All of them will appear in console if `logDiagnostics` is enabled.
+- Info appears in the output window. Warnings and Errors appear in the output window and the notification window. All of them will appear in console if `xRay` is enabled.
 
 ### Logging
 

@@ -6,58 +6,63 @@
 			"title": "behave-vsc",
 			"properties": {
 				"behave-vsc.envVarList": {
+					"scope": "resource",
 					"type": "object",
-					"default": {},
-					"description": "Optional list of environment variable overrides to use when calling a behave command. Example: { \"var1\": \"val1\", \"var2\": \"val2\" }. This will apply to all tests within the workspace, i.e. it cannot be varied per test.",
-					"scope": "resource"
+					"markdownDescription": "Optional key-value pairs of environment variable *overrides* to use when calling a behave command. This will apply to all behave tests within the workspace.",
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"behave-vsc.fastSkipList": {
+					"scope": "resource",
 					"type": "array",
-					"default": [],
-					"description": "Optional list of fast skip tags that each start with @. Example: [ \"@skip\", \"@skipped\" ]. This setting has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging). The listed tags stop behave being called for features/scenarios marked with those tags. Only useful if you have a lot of tests tagged to skip and either/both (a) runAllAsOne is disabled, or (b) you have grouped your tests into subfolders and run a folder.",
-					"scope": "resource"
+					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).",
+					"items": {
+						"type": "string",
+						"pattern": "@.+"
+					}
 				},
 				"behave-vsc.featuresPath": {
+					"scope": "resource",
 					"type": "string",
-					"default": "features",
-					"description": "Optional setting for workspace-RELATIVE features subfolder. Example: \"mysubfolder/my_behave_tests\". If not set to \"features\", then this must tie up with the \"paths=\" setting in your behave configuration file.",
-					"scope": "resource"
+					"markdownDescription": "Optional *workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
+					"default": "features"
 				},
 				"behave-vsc.justMyCode": {
+					"scope": "resource",
 					"type": "boolean",
-					"default": true,
-					"description": "If false, then the debugger will step into external code when debugging a behave test.",
-					"scope": "resource"
+					"markdownDescription": "If set to false (disabled), the debugger will step into external code when debugging a behave test.",
+					"default": true
 				},
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
+					"scope": "window",
 					"type": "boolean",
-					"default": true,
-					"description": "For multi-root workspaces only. If true, and behave tests are run from more than one workspace, then behave tests from those workspaces are run at the same time. This setting should be in your *.code-workspace file.",
-					"scope": "window"
+					"markdownDescription": "For multi-root workspaces only. If enabled, then when behave tests are run from more than one workspace, behave tests from those workspaces are run at the same time. This setting should be in your `*.code-workspace` file.",
+					"default": true
 				},
 				"behave-vsc.runAllAsOne": {
+					"scope": "resource",
 					"type": "boolean",
-					"default": true,
-					"description": "If true, then a single \"python -m behave\" will be used when running all tests. Recommended to keep this enabled (true) unless either/both (a) you can enable runParallel or (b) you are using fastSkipList with a lot of tests. Note that running running a sub-selection of tests vs one-shot run all may give different results, i.e. highlight issues with test isolation.",
-					"scope": "resource"
+					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable runParallel. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
+					"default": true
 				},
 				"behave-vsc.runParallel": {
+					"scope": "resource",
 					"type": "boolean",
-					"default": false,
-					"description": "If true, then tests are run in async mode. This setting has no effect when runAllAsOne is true and you are running all tests at once. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you can enable this setting, you may also wish to disable runAllAsOne so that running all tests (not just selected/grouped tests) will use runParallel. Note that behave itself does not have in-built parallel testing - enabling this setting will create multiple behave instances, so in the case of running all tests, it may or may not be faster due to the overhead of starting multiple processes.",
-					"scope": "resource"
+					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable runAllAsOne so running all tests (not just selected/grouped tests) will use runParallel.",
+					"default": false
 				},
 				"behave-vsc.showSettingsWarnings": {
+					"scope": "window",
 					"type": "boolean",
-					"default": true,
-					"description": "If true, the Behave VSC output window outputs warnings about configuration settings. For multi-root workspaces, you may wish to set this in your *.code-workspace file.",
-					"scope": "window"
+					"markdownDescription": "Specifies whether the Behave VSC output window displays warnings about configuration settings. For multi-root workspaces, you may wish to set this in your `*.code-workspace` file.",
+					"default": true
 				},
-				"behave-vsc.logDiagnostics": {
+				"behave-vsc.xRay": {
+					"scope": "window",
 					"type": "boolean",
-					"default": false,
-					"description": "If true, then errors will have stack traces and diagnostics will be logged in console. The console output is viewable via the vscode command 'Developer: Toggle Developer Tools' (or when debugging the extension itself). Diagnostic logs are noisy, and may have a small performance impact.",
-					"scope": "window"
+					"markdownDescription": "Specifies whether errors have stack traces and diagnostics are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools` (or in debug console when debugging the extension itself). Diagnostic logs are noisy, and may have a small performance impact.",
+					"default": false
 				}
 			}
 		},

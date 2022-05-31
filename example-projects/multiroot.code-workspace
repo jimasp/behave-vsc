@@ -28,6 +28,6 @@
 	"settings": {
 		"behave-vsc.multiRootRunWorkspacesInParallel": true,
 		"behave-vsc.showSettingsWarnings": true,
-		"behave-vsc.logDiagnostics": true
+		"behave-vsc.xRay": true
 	}
 }

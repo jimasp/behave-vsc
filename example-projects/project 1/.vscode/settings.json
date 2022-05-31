@@ -23,5 +23,5 @@
     "behave-vsc.runAllAsOne": true,
     "behave-vsc.runParallel": false,
     "behave-vsc.showSettingsWarnings": true,
-    "behave-vsc.logDiagnostics": true
+    "behave-vsc.xRay": true
 }

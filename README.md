@@ -120,7 +120,8 @@ paths=behave_tests/features
 ### Otherwise
 
 - Does your project meet the [Project Requirements](#project-requirements) and have the [Required project directory structure](#required-project-directory-structure)?
-- If you have set the `featuresPath` in extension settings, make sure it matches the paths setting in your behave configuration file.
+- If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
+- Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
@@ -130,7 +131,7 @@ paths=behave_tests/features
 - Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in vscode, or in [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - Try temporarily disabling other extensions.
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues). github [issues](https://github.com/jimasp/behave-vsc/issues).
-- The extension is only tested with a couple of example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, also check whether the same issue occurs with the example project workspaces.)
+- The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
 
 ---
 

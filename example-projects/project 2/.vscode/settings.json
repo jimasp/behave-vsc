@@ -14,5 +14,5 @@
     "behave-vsc.featuresPath": "",
     "behave-vsc.runParallel": true,
     "behave-vsc.runAllAsOne": false,
-    "behave-vsc.logDiagnostics": true
+    "behave-vsc.xRay": true
 }

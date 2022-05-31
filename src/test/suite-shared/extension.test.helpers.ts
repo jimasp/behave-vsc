@@ -80,7 +80,7 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 		const winSettings = config.globalSettings;
 		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
 		assert.strictEqual(winSettings.showSettingsWarnings, testConfig.getExpected("showSettingsWarnings"), wkspName);
-		assert.strictEqual(winSettings.logDiagnostics, testConfig.getExpected("logDiagnostics"), wkspName);
+		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), wkspName);
 	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];

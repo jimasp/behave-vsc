@@ -104,7 +104,7 @@ export class Logger {
 
     if (error instanceof Error) {
       text = error.message;
-      if (config && config.globalSettings && config.globalSettings.logDiagnostics)
+      if (config && config.globalSettings && config.globalSettings.xRay)
         text += `\n${error.stack?.split("\n").slice(1).join("\n")}`;
     }
     else {
@@ -168,7 +168,7 @@ export enum DiagLogType {
 }
 
 export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (config && !config.globalSettings.logDiagnostics)
+  if (config && !config.globalSettings.xRay)
     return;
 
   if (wkspUri)

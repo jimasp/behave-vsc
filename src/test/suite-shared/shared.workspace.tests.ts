@@ -22,7 +22,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, showSettingsWarnings: undefined, logDiagnostics: true
+      justMyCode: undefined, showSettingsWarnings: undefined, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -38,7 +38,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: true, showSettingsWarnings: undefined, logDiagnostics: true
+      justMyCode: true, showSettingsWarnings: undefined, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -53,7 +53,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, showSettingsWarnings: true, logDiagnostics: true
+      justMyCode: undefined, showSettingsWarnings: true, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -68,7 +68,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, showSettingsWarnings: undefined, logDiagnostics: true
+      justMyCode: undefined, showSettingsWarnings: undefined, xRay: true
     });
 
 
