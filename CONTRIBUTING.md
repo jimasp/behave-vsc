@@ -181,13 +181,13 @@ If you want to add a test, they should go somewhere in `src/test`.
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fdx` and pull latest and `npm install`? Does it work without your changes?
 - If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
-- If you get an error running "Debug...", try setting a breakpoint at the start of the `activate()` function.
-- If you get an error running "Run Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
+- If you get an error running a "Debug: ..." target, try setting a breakpoint at the start of the `activate()` function.
+- If you get an error running a "Run Test Suite: ..." target, try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
 - If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
 - Delete all breakpoints from both source and host environments if any of the following occur:
   - If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case restart kill the watch task and then restart it with `Ctrl+Shift+B` - this will run `rimraf out/ dist/`).
   - If `npm run test` fails on the command line due to a timeout.
-  - If a "Run Test Suite..." test fails during debugging due to a timeout.
+  - If a "Run Test Suite: ..." test fails during debugging due to a timeout.
 
 ---
 
@@ -227,20 +227,18 @@ If you have a customised fork and you want to distribute it to your team, you wi
 #### 1. Run basic manual UI tests
 
 - a. start "Debug - MultiRoot", then in "project 1":
-- b. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
-- c. clear all test results, Run a single test
+- b. clear all test results, Run a single test
+- c. clear all test results, Run all feature tests and check that the run stop button works
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- e. clear all test results, Run group 1 features, check that failed tests are failed, succesful tests are success, and skipped tests are skipped
-- f. clear all test results, Run all project 1 tests (from the project 1 node) and check that failed tests are failed, succesful tests are success, and skipped tests are skipped (but remember that fastskip tests will not be skipped if runAllAsOne is enabled)
-- f. clear all test results, Run all feature tests and check that the run stop button works
-  
+- e. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
+
 #### 2. Run change-specific manual UI tests
 
-After running automated tests, if you made a change that affects anything other than behave test results then you'll want to run some manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
+After running automated tests and the manual UI tests in (1) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
 
 - A. **`git add .` and `git commit -m` your changes**
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
-- C. start "Debug - MultiRoot workspace"
+- C. start "Debug: MultiRoot workspace"
 - Then in "project 1":
 - D. edit a group1 feature file, change the name of the Feature: and save it, then:
   - check you can run the renamed feature from inside the feature file (first play button at top of feature file)
