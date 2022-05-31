@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config, EXTENSION_FRIENDLY_NAME, EXTENSION_NAME } from "./Configuration";
-import { TestData } from './TestFile';
+import { Scenario, TestData } from './TestFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
 import { diagLog } from './Logger';
@@ -215,7 +215,7 @@ export const countTestItemsInCollection = (wkspUri: vscode.Uri | null, testData:
 export const getScenarioTests = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
   const scenarios = items.filter(item => {
     const data = testData.get(item);
-    if (data && data.constructor.name === "Scenario")
+    if (data && (data as Scenario).scenarioName)
       return true;
   });
   return scenarios;

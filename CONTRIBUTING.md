@@ -65,11 +65,11 @@
 1. Set up your development environment as above.
 2. Make sure you have disabled the marketplace version of the extension.
 3. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
-4. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway , but you should do it if it's your first ever debug).
+4. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
 5. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
 6. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
 7. Disable "raised/caught exceptions" if you have them enabled.
-8. Click one of the "Debug Extension" targets, e.g. "Debug Extension - Workspace Simple" (if a "Debug Extension..." is the current selection, you can just hit (`F5`) from anywhere).
+8. Click one of the "Debug" targets, e.g. "Debug: Simple workspace" (if a "Debug..." is the current selection, you can just hit (`F5`) from anywhere).
 9. Tips:
     - You can relaunch the extension from the debug toolbar in the (source not host) vscode environment after changing extension code. Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
     - If for some reason you need to have "uncaught exceptions" enabled in the (source, not host) vscode environment, note that you may need to hit play multiple times in the extension vscode environment to continue if it hits external code.
@@ -78,7 +78,7 @@
 
 - Remember to disable the extension.
 - Open `.vscode/launch.json` in the extension repo project and change the `args` setting that contains `"${workspaceFolder}/../my-project"` to repoint it at your project path.
-- Then it's the same steps as above, just click "Debug Extension - MY PROJECT"
+- Then it's the same steps as above, just click "Debug - MY WORKSPACE"
 
 ---
 
@@ -86,7 +86,7 @@
 
 Either:
 
-- a. (`Ctrl+Shift+D`) and click one of the "Run Extension Test Suite" targets (if a "Run Extension Tests..." is the current selection, you can just hit (`F5`) from anywhere)
+- a. (`Ctrl+Shift+D`) and click one of the "Run Test Suite" targets (if a "Run Tests..." is the current selection, you can just hit (`F5`) from anywhere)
 OR  
 - b. Close vscode and excecute `npm run test` from a command line.
 
@@ -95,7 +95,7 @@ OR
 ## Debugging integration tests
 
 1. Optional - hit (`Ctrl+Shift+B`) to build and kick off a watch.
-2. Open the debug viewlet (`Ctrl+Shift+D`) and from the launch configuration dropdown pick `Run Extension Test Suite`.
+2. Open the debug viewlet (`Ctrl+Shift+D`) and from the launch configuration dropdown pick `Run Test Suite: Simple workspace`.
 3. Optionally add a breakpoint in e.g. `runAllTestsAndAssertTheResults`.
 4. Hit play or press `F5` to run the tests in a new window with your extension loaded.
 5. See the output of the test result in the debug console (in your original source environment, not the host environment).
@@ -181,13 +181,13 @@ If you want to add a test, they should go somewhere in `src/test`.
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
 - Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fdx` and pull latest and `npm install`? Does it work without your changes?
 - If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
-- If you get an error running "Debug Extension...", try setting a breakpoint at the start of the `activate()` function.
-- If you get an error running "Run Extension Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
+- If you get an error running "Debug...", try setting a breakpoint at the start of the `activate()` function.
+- If you get an error running "Run Test Suite...", try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
 - If you don't hit either above function breakpoint, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
 - Delete all breakpoints from both source and host environments if any of the following occur:
   - If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case restart kill the watch task and then restart it with `Ctrl+Shift+B` - this will run `rimraf out/ dist/`).
   - If `npm run test` fails on the command line due to a timeout.
-  - If a "Run Extension Test Suite..." test fails during debugging due to a timeout.
+  - If a "Run Test Suite..." test fails during debugging due to a timeout.
 
 ---
 
@@ -226,7 +226,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   
 #### 1. Run basic manual UI tests
 
-- a. start "Debug Extension - MultiRoot", then in "project 1":
+- a. start "Debug - MultiRoot", then in "project 1":
 - b. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
 - c. clear all test results, Run a single test
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
@@ -240,7 +240,7 @@ After running automated tests, if you made a change that affects anything other 
 
 - A. **`git add .` and `git commit -m` your changes**
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
-- C. start "Debug Extension - MultiRoot"
+- C. start "Debug - MultiRoot workspace"
 - Then in "project 1":
 - D. edit a group1 feature file, change the name of the Feature: and save it, then:
   - check you can run the renamed feature from inside the feature file (first play button at top of feature file)

@@ -6,11 +6,11 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Debug Extension: MY PROJECT",
+			"name": "Debug: MY WORKSPACE",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/../mesh-to-cloud",
+				"${workspaceFolder}/../my-project",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -23,7 +23,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug Extension: Simple",
+			"name": "Debug: Simple workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -40,7 +40,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug Extension: Project 1",
+			"name": "Debug: Project 1 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -57,7 +57,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug Extension: Project 2",
+			"name": "Debug: Project 2 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -74,7 +74,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug Extension: Bad Import",
+			"name": "Debug: Bad Import workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -91,7 +91,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug Extension: MultiRoot",
+			"name": "Debug: MultiRoot workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -108,7 +108,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Run Extension Test Suite: Project 1",
+			"name": "Run Test Suite: Project 1 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -123,7 +123,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Extension Test Suite: Project 2",
+			"name": "Run Test Suite: Project 2 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -138,7 +138,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Extension Test Suite: Simple",
+			"name": "Run Test Suite: Simple workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -153,7 +153,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Extension Test Suite: MultiRoot",
+			"name": "Run Test Suite: MultiRoot workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
