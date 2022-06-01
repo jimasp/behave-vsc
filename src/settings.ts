@@ -107,6 +107,10 @@ export class WorkspaceSettings {
         }
         else {
           for (const tag of fastSkipListCfg) {
+            if (typeof tag !== "string") {
+              this._warnings.push(err);
+              break;
+            }
             if (!tag.startsWith("@")) {
               this._warnings.push(err);
               break;
@@ -123,16 +127,20 @@ export class WorkspaceSettings {
     }
 
     if (envVarListCfg) {
-      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored. Property format in settings.json should be { "name1": "value1", "name2": "value2" }`;
+      const err = `Invalid EnvVarList setting ${JSON.stringify(envVarListCfg)} ignored. Property format in settings.json should be { "stringvar": "value1", "numvar": 2 }`;
       try {
         if (typeof envVarListCfg !== "object") {
           this._warnings.push(err);
         }
         else {
           for (const key in envVarListCfg) {
+            if (key.includes("=")) {
+              this._warnings.push(err);
+              break;
+            }
             const value = envVarListCfg[key];
             if (value) {
-              if (typeof value !== "string") {
+              if (typeof value !== "string" && typeof value !== "number") {
                 this._warnings.push(err);
                 break;
               }

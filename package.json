@@ -10,7 +10,10 @@
 					"type": "object",
 					"markdownDescription": "Optional key-value pairs of environment variable *overrides* to use when calling a behave command. This will apply to all behave tests within the workspace.",
 					"additionalProperties": {
-						"type": "string"
+						"type": [
+							"string",
+							"number"
+						]
 					}
 				},
 				"behave-vsc.fastSkipList": {

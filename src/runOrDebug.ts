@@ -92,9 +92,9 @@ function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   for (const [name, value] of Object.entries(wkspSettings.envVarList)) {
 
     if (os.platform() === "win32")
-      envVars += `$Env:${`${name}="${value.replace('"', '""')}"`}\n`;
+      envVars += typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replace('"', '""')}"`}\n`;
     else
-      envVars += `${name}="${value.replace('"', '\\"')}" `;
+      envVars += typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replace('"', '\\"')}" `;
   }
 
   return envVars;
