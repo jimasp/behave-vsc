@@ -131,7 +131,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     }
   }
 
-  diagLog(`PERFORMANCE: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start}ms, ` +
+  diagLog(`perf info: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0) {
