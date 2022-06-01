@@ -2,7 +2,7 @@
 
 ## Pre-release v0.3.0
 
-- This is a pre-release. On each update please make sure to check the release notes for breaking changes.
+- This is a pre-release. On each update please make sure to check the release notes for any breaking changes.
 - A test runner (and debugger) for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API  
 - Tested on Linux and Windows
