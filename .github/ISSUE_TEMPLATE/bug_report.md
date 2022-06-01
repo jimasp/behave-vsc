@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**Before posting an issue, please make sure you read through the [Troubleshooting](https://github.com/jimasp/behave-vsc/blob/main/README.md#troubleshooting) section of the readme**
+NOTE: before posting an issue, please make sure you read through the Troubleshooting section of the readme: https://github.com/jimasp/behave-vsc/blob/main/README.md#troubleshooting
 
 **Describe the bug**
 A clear and concise description of what the bug is.
