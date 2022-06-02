@@ -5,12 +5,12 @@
 			"name": "simple"
 		},
 		{
-			"path": "./project 1",
-			"name": "project 1"
+			"path": "./project A",
+			"name": "project A"
 		},
 		{
-			"path": "./project 2",
-			"name": "project 2"
+			"path": "./project B",
+			"name": "project B"
 		},
 		{
 			"path": "./multiroot bad features path",

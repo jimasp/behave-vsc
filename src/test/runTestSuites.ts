@@ -53,8 +53,8 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/project 1"]
-    extensionTestsPath = path.resolve(__dirname, './project 1 suite/index');
+    launchArgs = ["example-projects/project A"]
+    extensionTestsPath = path.resolve(__dirname, './project A suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -62,8 +62,8 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/project 2"]
-    extensionTestsPath = path.resolve(__dirname, './project 2 suite/index');
+    launchArgs = ["example-projects/project B"]
+    extensionTestsPath = path.resolve(__dirname, './project B suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

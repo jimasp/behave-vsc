@@ -5,8 +5,8 @@ import { TestWorkspaceConfig } from "../suite-shared/testWorkspaceConfig";
 import { runAllTestsAndAssertTheResults } from "../suite-shared/extension.test.helpers";
 
 
-suite(`project 2 suite`, () => {
-	const folderName = "project 2";
+suite(`project B suite`, () => {
+	const folderName = "project B";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 

@@ -78,7 +78,8 @@
 
 - Remember to disable the extension.
 - Open `.vscode/launch.json` in the extension repo project and change the `args` setting that contains `"${workspaceFolder}/../my-project"` to repoint it at your project path.
-- Then it's the same steps as above, just click "Debug - MY WORKSPACE"
+- Then it's the same steps as above, just click "Debug - MY workspace"
+- You probably want to enable `behave-vsc.xRay` in your settings.json so you get diagnostic logs in debug console
 
 ---
 
@@ -138,13 +139,13 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ### Diagnostics
 
-- Diagnostic logs are controlled via the extension setting `xRay` (this is enabled by default in the example projects and for most integration tests).
+- Diagnostic logs are controlled via the extension setting `behave-vsc.xRay` (this is enabled by default in the example projects and for most integration tests).
 - Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 
 ### Error handling
 
-- Stack traces will only appear if `xRay` is enabled.
+- Stack traces will only appear if `behave-vsc.xRay` is enabled.
 - The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
 - If you are adding a `throw` or `showError`, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
@@ -179,7 +180,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 - Have you pulled the latest version of the source code? and if so, have you run a `git clean -fdx` and `npm install`? (make sure you commit/stash any changes first)
 - Have you followed all the steps in [Development environment setup for extension development](#development-environment-setup-for-extension-development), including `npm install` if you just pulled?
 - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
-- Have you made any changes yourself? If so, can you e.g. stash/backup your changes and do a `git clean -fdx` and pull latest and `npm install`? Does it work without your changes?
+- Have you made any changes yourself? Does e.g. a fresh clone work without your changes?
 - If extension integration tests get stuck while running debug tests, disable all breakpoints in the host vscode environment.
 - If you get an error running a "Debug: ..." target, try setting a breakpoint at the start of the `activate()` function.
 - If you get an error running a "Run Test Suite: ..." target, try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
@@ -226,7 +227,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
   
 #### 1. Run basic manual UI tests
 
-- a. start "Debug - MultiRoot", then in "project 1":
+- a. start "Debug - MultiRoot", then in "project A":
 - b. clear all test results, Run a single test
 - c. clear all test results, Run all feature tests and check that the run stop button works
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
@@ -239,7 +240,7 @@ After running automated tests and the manual UI tests in (1) above, then if you 
 - A. **`git add .` and `git commit -m` your changes**
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - C. start "Debug: MultiRoot workspace"
-- Then in "project 1":
+- Then in "project A":
 - D. edit a group1 feature file, change the name of the Feature: and save it, then:
   - check you can run the renamed feature from inside the feature file (first play button at top of feature file)
   - check the test UI tree shows the renamed feature (you may need to reopen the node)

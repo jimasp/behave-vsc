@@ -156,16 +156,19 @@ export class WorkspaceSettings {
     }
 
 
-    if (this.fastSkipTags.length === 0) {
-      const warning = tryDeprecatedFastSkipList(this, wkspConfig);
-      if (warning)
-        this._warnings.push(warning);
-    }
+    if (!config.integrationTestRun) {
+      // TODO remove deprecated
+      if (this.fastSkipTags.length === 0) {
+        const warning = tryDeprecatedFastSkipList(this, wkspConfig);
+        if (warning)
+          this._warnings.push(warning);
+      }
 
-    if (Object.keys(this.envVarOverrides).length === 0) {
-      const warning = tryDeprecatedEnvVarList(this, wkspConfig);
-      if (warning)
-        this._warnings.push(warning);
+      if (Object.keys(this.envVarOverrides).length === 0) {
+        const warning = tryDeprecatedEnvVarList(this, wkspConfig);
+        if (warning)
+          this._warnings.push(warning);
+      }
     }
 
     if (this.runParallel && this.runAllAsOne)

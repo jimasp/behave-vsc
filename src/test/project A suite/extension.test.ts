@@ -2,8 +2,8 @@ import { getWs1ExpectedCounts, getWs1ExpectedResults } from "./expectedResults";
 import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 
 
-suite(`project 1 suite`, () => {
-	const folderName = "project 1";
+suite(`project A suite`, () => {
+	const folderName = "project A";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
