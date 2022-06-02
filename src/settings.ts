@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { EXTENSION_NAME, getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
-import { config } from './Configuration';
-import { Logger } from './Logger';
+import { config } from './configuration';
+import { Logger } from './logger';
 
 
 export class WindowSettings {
@@ -38,7 +38,7 @@ export class WorkspaceSettings {
 
   // user-settable
   public envVarOverrides: { [name: string]: string } = {}; // TODO - make readonly when deprecated setting is removed
-  public fastSkipStrings: string[] = []; // TODO - make readonly when deprecated setting is removed
+  public fastSkipTags: string[] = []; // TODO - make readonly when deprecated setting is removed
   public readonly justMyCode: boolean;
   public readonly runAllAsOne: boolean;
   public readonly runParallel: boolean;
@@ -62,9 +62,9 @@ export class WorkspaceSettings {
     const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
     if (envVarOverridesCfg === undefined)
       throw "envVarOverrides is undefined";
-    const fastSkipStringsCfg: string[] | undefined = wkspConfig.get("fastSkipStrings");
-    if (fastSkipStringsCfg === undefined)
-      throw "fastSkipStrings is undefined";
+    const fastSkipTagsCfg: string[] | undefined = wkspConfig.get("fastSkipTags");
+    if (fastSkipTagsCfg === undefined)
+      throw "fastSkipTags is undefined";
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
@@ -99,24 +99,24 @@ export class WorkspaceSettings {
       this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 
-    if (fastSkipStringsCfg) {
-      const err = `Invalid fastSkipStrings setting ${JSON.stringify(fastSkipStringsCfg)} will be ignored. Property format in settings.json should be [ "@skip1", "@skip2" ]`;
+    if (fastSkipTagsCfg) {
+      const err = `Invalid fastSkipTags setting ${JSON.stringify(fastSkipTagsCfg)} will be ignored.`;
       try {
-        if (typeof fastSkipStringsCfg !== "object") {
+        if (typeof fastSkipTagsCfg !== "object") {
           this._warnings.push(err);
         }
         else {
-          for (const tag of fastSkipStringsCfg) {
+          for (const tag of fastSkipTagsCfg) {
             if (typeof tag !== "string") {
-              this._warnings.push(err);
+              this._warnings.push(`${err} ${tag} is not a string.`);
               break;
             }
             if (!tag.startsWith("@")) {
-              this._warnings.push(err);
+              this._warnings.push(`${err} ${tag} does not start with @`);
               break;
             }
             else {
-              this.fastSkipStrings.push(tag);
+              this.fastSkipTags.push(tag);
             }
           }
         }
@@ -127,24 +127,25 @@ export class WorkspaceSettings {
     }
 
     if (envVarOverridesCfg) {
-      const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored. Property format in settings.json should be { "stringvar": "value1", "numvar": 2 }`;
+      const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
       try {
         if (typeof envVarOverridesCfg !== "object") {
           this._warnings.push(err);
         }
         else {
-          for (const key in envVarOverridesCfg) {
-            if (key.includes("=")) {
-              this._warnings.push(err);
+          for (const name in envVarOverridesCfg) {
+            // just check for "=" typo
+            if (name.includes("=")) {
+              this._warnings.push(`${err} ${name} must not contain =`);
               break;
             }
-            const value = envVarOverridesCfg[key];
+            const value = envVarOverridesCfg[name];
             if (value) {
               if (typeof value !== "string") {
-                this._warnings.push(err);
+                this._warnings.push(`${err} ${value} is not a string`);
                 break;
               }
-              this.envVarOverrides[key] = value;
+              this.envVarOverrides[name] = value;
             }
           }
         }
@@ -155,7 +156,7 @@ export class WorkspaceSettings {
     }
 
 
-    if (this.fastSkipStrings.length === 0) {
+    if (this.fastSkipTags.length === 0) {
       const warning = tryDeprecatedFastSkipList(this, wkspConfig);
       if (warning)
         this._warnings.push(warning);
@@ -170,8 +171,8 @@ export class WorkspaceSettings {
     if (this.runParallel && this.runAllAsOne)
       this._warnings.push(`${EXTENSION_NAME}.runParallel is overridden by ${EXTENSION_NAME}.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
 
-    if (this.fastSkipStrings.length > 0 && this.runAllAsOne)
-      this._warnings.push(`${EXTENSION_NAME}.fastSkipStrings has no effect when ${EXTENSION_NAME}.runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)`);
+    if (this.fastSkipTags.length > 0 && this.runAllAsOne)
+      this._warnings.push(`${EXTENSION_NAME}.fastSkipTags has no effect when ${EXTENSION_NAME}.runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)`);
 
     if (!this.runParallel && !this.runAllAsOne)
       this._warnings.push(`${EXTENSION_NAME}.runParallel and ${EXTENSION_NAME}.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
@@ -249,13 +250,13 @@ function tryDeprecatedFastSkipList(wkspSettings: WorkspaceSettings, wkspConfig: 
       skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
       if (invalid)
         return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
-      wkspSettings.fastSkipStrings = skipList.filter(s => s !== "");
+      wkspSettings.fastSkipTags = skipList.filter(s => s !== "");
     }
     catch {
       return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
     }
 
-    return `${EXTENSION_NAME}.fastSkipList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.fastSkipStrings instead.`;
+    return `${EXTENSION_NAME}.fastSkipList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.fastSkipTags instead.`;
   }
 
 }

@@ -15,9 +15,9 @@
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipStrings instead.",
-					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipStrings#` instead.",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipStrings instead."
+					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead.",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipTags#` instead.",
+					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead."
 				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
@@ -27,7 +27,7 @@
 						"type": "string"
 					}
 				},
-				"behave-vsc.fastSkipStrings": {
+				"behave-vsc.fastSkipTags": {
 					"scope": "resource",
 					"type": "array",
 					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and `#behave-vsc.runAllAsOne#` is enabled (or when debugging).",

@@ -10,7 +10,7 @@ export class TestWorkspaceConfigWithWkspUri {
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private envVarOverrides: { [name: string]: string } | undefined;
-	private fastSkipStrings: string[] | undefined;
+	private fastSkipTags: string[] | undefined;
 	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
@@ -21,12 +21,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
-		envVarOverrides, fastSkipStrings, featuresPath: featuresPath, justMyCode,
+		envVarOverrides, fastSkipTags, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
 		runAllAsOne, runParallel, showSettingsWarnings, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
-		fastSkipStrings: string[] | undefined,
+		fastSkipTags: string[] | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
 		multiRootRunWorkspacesInParallel: boolean | undefined,
@@ -36,7 +36,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		xRay: boolean | undefined
 	}) {
 		this.envVarOverrides = envVarOverrides;
-		this.fastSkipStrings = fastSkipStrings;
+		this.fastSkipTags = fastSkipTags;
 		this.featuresPath = featuresPath;
 		this.justMyCode = justMyCode;
 		this.runAllAsOne = runAllAsOne;
@@ -58,8 +58,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
-			case "fastSkipStrings":
-				return <T><unknown>(this.fastSkipStrings === undefined ? [] : this.fastSkipStrings);
+			case "fastSkipTags":
+				return <T><unknown>(this.fastSkipTags === undefined ? [] : this.fastSkipTags);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
 			case "multiRootRunWorkspacesInParallel":
@@ -95,8 +95,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "envVarOverrides":
 				response = <T><unknown>this.envVarOverrides;
 				break;
-			case "fastSkipStrings":
-				response = <T><unknown>this.fastSkipStrings;
+			case "fastSkipTags":
+				response = <T><unknown>this.fastSkipTags;
 				break;
 			case "justMyCode":
 				response = <T><unknown>this.justMyCode;
@@ -169,8 +169,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
-			case "fastSkipStrings":
-				return <T><unknown>this.get("fastSkipStrings");
+			case "fastSkipTags":
+				return <T><unknown>this.get("fastSkipTags");
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
 			case "featuresUri.path":

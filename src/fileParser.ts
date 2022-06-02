@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
@@ -7,9 +7,9 @@ import {
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
 } from './common';
 import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
-import { TestData, TestFile } from './TestFile';
+import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 
 
 const stepMap: StepMap = new Map<string, StepDetail>();

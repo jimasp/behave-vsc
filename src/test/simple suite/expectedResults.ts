@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { Configuration } from "../../Configuration";
-import { ParseCounts } from '../../FileParser';
+import { Configuration } from "../../configuration";
+import { ParseCounts } from "../../fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {

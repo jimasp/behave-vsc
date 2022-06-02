@@ -3,8 +3,8 @@ import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
 import { EXTENSION_FRIENDLY_NAME, getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
-import { config } from './Configuration';
-import { diagLog } from './Logger';
+import { config } from './configuration';
+import { diagLog } from './logger';
 import { WorkspaceSettings } from './settings';
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };

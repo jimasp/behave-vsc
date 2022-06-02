@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures, EXTENSION_NAME, EXTENSION_FRIENDLY_NAME } from './common';
-import { diagLog, Logger } from './Logger';
+import { diagLog, Logger } from './logger';
 import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 
 export interface Configuration {

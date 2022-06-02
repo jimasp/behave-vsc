@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { config } from './Configuration';
+import { config } from './configuration';
 import { EXTENSION_FRIENDLY_NAME, getUrisOfWkspFoldersWithFeatures } from './common';
 
 

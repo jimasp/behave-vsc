@@ -14,7 +14,7 @@
         "space_var": " ",
         "USERNAME": "bob-163487",
     },
-    "behave-vsc.fastSkipStrings": [
+    "behave-vsc.fastSkipTags": [
         "@fast-skip-me",
         "@fast-skip-me-too"
     ],

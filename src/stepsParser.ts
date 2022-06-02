@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { isStepsFile } from './common';
 import { getContentFromFilesystem } from './common';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 
 //const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)("|').*\).*$/i;
 const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;

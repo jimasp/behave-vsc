@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
 import { getContentFromFilesystem } from './common';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -45,7 +45,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
         fastSkipScenario = true;
       }
       else {
-        wkspSettings.fastSkipStrings.forEach(skipStr => {
+        wkspSettings.fastSkipTags.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipScenario = true;
           }
@@ -68,7 +68,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
       onFeatureName(range);
 
       if (lineNo > 0) {
-        wkspSettings.fastSkipStrings.forEach(skipStr => {
+        wkspSettings.fastSkipTags.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipFeature = true;
           }

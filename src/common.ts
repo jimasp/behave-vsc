@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
-import { Scenario, TestData } from './TestFile';
+import { config } from "./configuration";
+import { Scenario, TestData } from './testFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 import * as fs from 'fs';
 
 const vwfs = vscode.workspace.fs;
@@ -30,12 +30,10 @@ export class WkspError extends Error {
 
 
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
-  let extensionVersion = context.extension.packageJSON.version;
-  if (extensionVersion.startsWith("0")) {
-    extensionVersion += " pre-release";
-  }
+  const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
-  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${extensionVersion}`);
+  const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
+  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${outputVersion}`);
   config.logger.logInfoAllWksps(`Release notes: ${releaseNotesUrl}`);
 }
 

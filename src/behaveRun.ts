@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { cleanBehaveText, getUriMatchString, isBehaveExecutionError } from './common';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';
 
@@ -92,6 +92,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
+      // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
+      // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle later
       if (isBehaveExecutionError(str)) {
         // fatal behave error (i.e. there will be no junit output)
         behaveExecutionError = true;
@@ -118,13 +120,14 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
     if (runToken.isCancellationRequested) {
       config.logger.logInfo(`\n-- TEST RUN ${run.name} CANCELLED --`, wkspUri, run);
-      // the test run will have been terminated, so we cannot update the test status                  
+      // the test run will have been terminated, so we cannot update the test result                  
       return;
     }
 
 
     if (runAllAsOne) {
       if (behaveExecutionError) {
+        // in the case of runAllAsOne having an execution error, fail all the tests
         for (const queueItem of queue) {
           await parseAndUpdateTestResults(false, behaveExecutionError, wkspSettings, undefined, run, queueItem, runToken);
         }

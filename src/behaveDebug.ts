@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { diagLog } from './Logger';
+import { diagLog } from './logger';
 import { cancelTestRun } from './testRunHandler';
 import { EXTENSION_NAME, isBehaveExecutionError } from './common';
 import { performance } from 'perf_hooks';
@@ -28,6 +28,8 @@ export function getDebugAdapterTrackerFactory() {
 
             // diagLog(JSON.stringify(m));
 
+            // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
+            // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle in parseAndUpdateTestResults         
             const stderr = m.body?.category === "stderr";
             if (stderr && isBehaveExecutionError(m.body.output)) {
               behaveExecutionError = true;
@@ -104,8 +106,11 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       // debug stopped or completed    
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
-          const debugDuration = performance.now() - start;
-          await parseAndUpdateTestResults(true, behaveExecutionError, wkspSettings, junitFileUri, run, queueItem, cancelToken, debugDuration);
+          if (!cancelToken.isCancellationRequested) {
+            // the test run will have been terminated, so we cannot update the test result             
+            const debugDuration = performance.now() - start;
+            await parseAndUpdateTestResults(true, behaveExecutionError, wkspSettings, junitFileUri, run, queueItem, cancelToken, debugDuration);
+          }
           resolve();
         }
         catch (e: unknown) {

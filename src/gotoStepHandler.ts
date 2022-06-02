@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile } from './common';
-import { getStepMap } from './FileParser';
+import { getStepMap } from './fileParser';
 import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
 import { WorkspaceSettings } from './settings';
 

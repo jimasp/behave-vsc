@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { Scenario, TestData, TestFile } from './TestFile';
+import { Scenario, TestData, TestFile } from './testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, getUriMatchString,
@@ -9,9 +9,9 @@ import {
 } from './common';
 import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
-import { FileParser } from './FileParser';
+import { FileParser } from './fileParser';
 import { performance } from 'perf_hooks';
-import { diagLog, DiagLogType } from './Logger';
+import { diagLog, DiagLogType } from './logger';
 
 
 // cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,

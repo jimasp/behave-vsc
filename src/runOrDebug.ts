@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import { customAlphabet } from 'nanoid';
-import { config } from "./Configuration";
+import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';

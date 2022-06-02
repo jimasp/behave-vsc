@@ -8,7 +8,7 @@
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
-    "behave-vsc.fastSkipStrings": [
+    "behave-vsc.fastSkipTags": [
         "@fast-skip-me, @fast-skip-me-too"
     ],
     "behave-vsc.featuresPath": "",
