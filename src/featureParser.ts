@@ -45,7 +45,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
         fastSkipScenario = true;
       }
       else {
-        wkspSettings.fastSkipList.forEach(skipStr => {
+        wkspSettings.fastSkipStrings.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipScenario = true;
           }
@@ -68,7 +68,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFile
       onFeatureName(range);
 
       if (lineNo > 0) {
-        wkspSettings.fastSkipList.forEach(skipStr => {
+        wkspSettings.fastSkipStrings.forEach(skipStr => {
           if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipFeature = true;
           }

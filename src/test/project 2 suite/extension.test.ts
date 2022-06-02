@@ -14,7 +14,7 @@ suite(`project 2 suite`, () => {
 
 		const testConfig = new TestWorkspaceConfig({
 			runAllAsOne: undefined, runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
-			envVarList: undefined, fastSkipList: undefined, featuresPath: undefined,
+			envVarOverrides: undefined, fastSkipStrings: undefined, featuresPath: undefined,
 			justMyCode: undefined, showSettingsWarnings: undefined, xRay: undefined
 		});
 

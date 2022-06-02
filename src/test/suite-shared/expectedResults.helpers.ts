@@ -59,7 +59,7 @@ function applyFeaturesPath(expectedResults: TestResult[], wkspSettings: Workspac
 
 function applyFastSkipReplacements(expectedResults: TestResult[], debug: boolean, wkspSettings: WorkspaceSettings) {
 
-  const fastSkipSet = wkspSettings.fastSkipList.length > 0;
+  const fastSkipSet = wkspSettings.fastSkipStrings.length > 0;
   const fastSkipActive = fastSkipSet && !debug && !wkspSettings.runAllAsOne;
 
   if (!fastSkipSet) {

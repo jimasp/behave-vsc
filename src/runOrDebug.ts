@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import { customAlphabet } from 'nanoid';
-import { config, WIN_MAX_PATH } from "./Configuration";
+import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';
 import { QueueItem } from './extension';
 import { getJunitFileUri, updateTest } from './junitParser';
-import { WkspError } from './common';
+import { WIN_MAX_PATH, WkspError } from './common';
 import { cancelTestRun } from './testRunHandler';
 
 
@@ -89,7 +89,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   let envVars = "";
 
-  for (const [name, value] of Object.entries(wkspSettings.envVarList)) {
+  for (const [name, value] of Object.entries(wkspSettings.envVarOverrides)) {
 
     if (os.platform() === "win32")
       envVars += typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replace('"', '""')}"`}\n`;

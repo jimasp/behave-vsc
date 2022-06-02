@@ -67,14 +67,14 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     const local_args = [...args];
     local_args.unshift("-m", "behave");
     diagLog(`${pythonExec} ${local_args.join(" ")}`, wkspUri);
-    const env = { ...process.env, ...wkspSettings.envVarList };
+    const env = { ...process.env, ...wkspSettings.envVarOverrides };
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: env };
     const start = performance.now();
     cp = spawn(pythonExec, local_args, options);
 
     if (!cp.pid) {
       throw `unable to launch python or behave, command: ${pythonExec} ${local_args.join(" ")}\n` +
-      `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wkspSettings.envVarList)}`;
+      `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wkspSettings.envVarOverrides)}`;
     }
 
     const asyncBuff: string[] = [];

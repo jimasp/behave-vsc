@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { config, EXTENSION_FRIENDLY_NAME, EXTENSION_NAME } from "./Configuration";
+import { config } from "./Configuration";
 import { Scenario, TestData } from './TestFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
@@ -9,6 +9,10 @@ import * as fs from 'fs';
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
 
+export const EXTENSION_NAME = "behave-vsc";
+export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
+export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
+export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
@@ -26,11 +30,13 @@ export class WkspError extends Error {
 
 
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
-  let version: string = context.extension.packageJSON.version;
-  if (version.startsWith("0")) {
-    version += " pre-release";
+  let extensionVersion = context.extension.packageJSON.version;
+  if (extensionVersion.startsWith("0")) {
+    extensionVersion += " pre-release";
   }
-  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${version}`);
+  const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
+  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${extensionVersion}`);
+  config.logger.logInfoAllWksps(`Release notes: ${releaseNotesUrl}`);
 }
 
 
@@ -138,9 +144,9 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     if (folders.length === 1 && folders[0].name === EXTENSION_NAME)
       throw `Please disable the marketplace ${EXTENSION_FRIENDLY_NAME} extension before beginning development!`;
     else
-      throw `Extension was activated because a '.feature' file was found in a workspace folder, but ` +
-      `no workspace folders contain either a root 'features' folder or a settings.json that specifies '${EXTENSION_NAME}.featuresPath'.\n` +
-      `Please add a '${EXTENSION_NAME}.featuresPath' property to the workspace settings.json file and then restart vscode.`;
+      throw `Extension was activated because a '*.feature' file was found in a workspace folder, but ` +
+      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid '${EXTENSION_NAME}.featuresPath'.\n` +
+      `Please add a valid '${EXTENSION_NAME}.featuresPath' property to your workspace settings.json file and then restart vscode.`;
   }
 
   return workspaceFoldersWithFeatures;

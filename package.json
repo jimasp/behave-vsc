@@ -6,20 +6,31 @@
 			"title": "behave-vsc",
 			"properties": {
 				"behave-vsc.envVarList": {
-					"scope": "resource",
-					"type": "object",
-					"markdownDescription": "Optional key-value pairs of environment variable *overrides* to use when calling a behave command. This will apply to all behave tests within the workspace.",
-					"additionalProperties": {
-						"type": [
-							"string",
-							"number"
-						]
-					}
+					"type": "string",
+					"default": "",
+					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead.",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead.",
+					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead."
 				},
 				"behave-vsc.fastSkipList": {
+					"type": "string",
+					"default": "",
+					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipStrings instead.",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipStrings#` instead.",
+					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipStrings instead."
+				},
+				"behave-vsc.envVarOverrides": {
+					"scope": "resource",
+					"type": "object",
+					"markdownDescription": "Optional key-value pairs of environment variable overrides to use when calling a behave command. This will apply to all behave tests within the workspace.",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"behave-vsc.fastSkipStrings": {
 					"scope": "resource",
 					"type": "array",
-					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and runAllAsOne is enabled (or when debugging).",
+					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and `#behave-vsc.runAllAsOne#` is enabled (or when debugging).",
 					"items": {
 						"type": "string",
 						"pattern": "@.+"
@@ -28,7 +39,7 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "Optional *workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
+					"markdownDescription": "*workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
 					"default": "features"
 				},
 				"behave-vsc.justMyCode": {
@@ -46,13 +57,13 @@
 				"behave-vsc.runAllAsOne": {
 					"scope": "resource",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable runParallel. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
+					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable `#behave-vsc.runParallel#`. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
 					"default": true
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable runAllAsOne so running all tests (not just selected/grouped tests) will use runParallel.",
+					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable `#behave-vsc.runAllAsOne#` so running all tests (not just selected/grouped tests) will use runParallel.",
 					"default": false
 				},
 				"behave-vsc.showSettingsWarnings": {
@@ -64,7 +75,7 @@
 				"behave-vsc.xRay": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether errors have stack traces and diagnostics are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools` (or in debug console when debugging the extension itself). Diagnostic logs are noisy, and may have a small performance impact.",
+					"markdownDescription": "Specifies whether extension errors have stack traces and diagnostics are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools`. Diagnostic logs are noisy, and may have a small performance impact.",
 					"default": false
 				}
 			}

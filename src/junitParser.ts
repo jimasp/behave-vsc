@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { getContentFromFilesystem, showDebugWindow, WkspError } from './common';
-import { config, EXTENSION_FRIENDLY_NAME, WIN_MAX_PATH } from './Configuration';
+import { EXTENSION_FRIENDLY_NAME, getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
+import { config } from './Configuration';
 import { diagLog } from './Logger';
 import { WorkspaceSettings } from './settings';
 

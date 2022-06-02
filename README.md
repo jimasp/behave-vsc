@@ -19,7 +19,7 @@
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode.
-- Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarList`, etc.)
+- Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keybinding for this command if you wish (e.g. F12).
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
@@ -68,7 +68,7 @@ paths=behave_tests/features
 
 ## Extension settings
 
-- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarList`, etc.
+- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
 - For more information on available options, go to the extension settings in vscode.

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { Configuration, EXTENSION_FULL_NAME } from "../../Configuration";
+import { Configuration } from "../../Configuration";
 import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
@@ -9,7 +9,7 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorks
 import { getStepMatch } from '../../gotoStepHandler';
 import { StepMap } from '../../stepsParser';
 import { ParseCounts } from '../../FileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
 
 
@@ -84,8 +84,8 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
-	assert.deepStrictEqual(wkspSettings.envVarList, testConfig.getExpected("envVarList"), wkspName);
-	assert.deepStrictEqual(wkspSettings.fastSkipList, testConfig.getExpected("fastSkipList"), wkspName);
+	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
+	assert.deepStrictEqual(wkspSettings.fastSkipStrings, testConfig.getExpected("fastSkipStrings"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"), wkspName);
 	assert.strictEqual(wkspSettings.featuresUri.path, testConfig.getExpected("featuresUri.path", wkspUri), wkspName);
 	assert.strictEqual(wkspSettings.featuresUri.fsPath, testConfig.getExpected("featuresUri.fsPath", wkspUri), wkspName);

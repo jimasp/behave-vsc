@@ -1,16 +1,8 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getUrisOfWkspFoldersWithFeatures } from './common';
+import { getUrisOfWkspFoldersWithFeatures, EXTENSION_NAME, EXTENSION_FRIENDLY_NAME } from './common';
 import { diagLog, Logger } from './Logger';
 import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
-
-export const EXTENSION_NAME = "behave-vsc";
-export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
-export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
-export const MSPY_EXT = "ms-python.python";
-export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
-
-
 
 export interface Configuration {
   integrationTestRun: boolean;
@@ -83,20 +75,21 @@ class ExtensionConfiguration implements Configuration {
 
   // note - this can be changed dynamically by the user, so don't store the result
   getPythonExecutable = async (wkspUri: vscode.Uri, wkspName: string) => {
-    const pyext = vscode.extensions.getExtension(MSPY_EXT);
+    const msPyExt = "ms-python.python";
+    const pyext = vscode.extensions.getExtension(msPyExt);
 
     if (!pyext)
-      throw (EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT);
+      throw (EXTENSION_FRIENDLY_NAME + " could not find required dependency " + msPyExt);
 
     if (!pyext.isActive) {
       await pyext?.activate();
       if (!pyext.isActive)
-        throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT);
+        throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + msPyExt);
     }
 
     const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
     if (!pythonExec)
-      throw (`${EXTENSION_FRIENDLY_NAME} failed to obtain python executable for ${wkspName} workspace from ${MSPY_EXT}`);
+      throw (`${EXTENSION_FRIENDLY_NAME} failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
 
     return pythonExec;
   }

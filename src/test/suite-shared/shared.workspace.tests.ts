@@ -6,8 +6,8 @@ import { TestResult } from './expectedResults.helpers';
 import { ParseCounts } from '../../FileParser';
 
 
-const envVarList = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
-const fastSkipList = ["@fast-skip-me", "@fast-skip-me-too"];
+const envVarOverrides = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
+const fastSkipStrings = ["@fast-skip-me", "@fast-skip-me-too"];
 
 
 
@@ -21,7 +21,7 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: true, runParallel: false, multiRootRunWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides, fastSkipStrings: fastSkipStrings, featuresPath: wkspRelativeFeaturesPath,
       justMyCode: undefined, showSettingsWarnings: undefined, xRay: true
     });
 
@@ -37,7 +37,7 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides, fastSkipStrings: fastSkipStrings, featuresPath: wkspRelativeFeaturesPath,
       justMyCode: true, showSettingsWarnings: undefined, xRay: true
     });
 
@@ -52,7 +52,7 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: false, multiRootRunWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides, fastSkipStrings: fastSkipStrings, featuresPath: wkspRelativeFeaturesPath,
       justMyCode: undefined, showSettingsWarnings: true, xRay: true
     });
 
@@ -67,7 +67,7 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runAllAsOne: false, runParallel: true, multiRootRunWorkspacesInParallel: true,
-      envVarList: envVarList, fastSkipList: fastSkipList, featuresPath: wkspRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides, fastSkipStrings: fastSkipStrings, featuresPath: wkspRelativeFeaturesPath,
       justMyCode: undefined, showSettingsWarnings: undefined, xRay: true
     });
 

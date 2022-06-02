@@ -2,9 +2,11 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import { config, Configuration, EXTENSION_FULL_NAME, EXTENSION_NAME } from "./Configuration";
+import { config, Configuration } from "./Configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './TestFile';
 import {
+  EXTENSION_FULL_NAME,
+  EXTENSION_NAME,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory
 } from './common';

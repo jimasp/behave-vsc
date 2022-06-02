@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { config, EXTENSION_NAME } from "./Configuration";
+import { config } from "./Configuration";
 import { WorkspaceSettings } from "./settings";
 import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { diagLog } from './Logger';
 import { cancelTestRun } from './testRunHandler';
-import { isBehaveExecutionError } from './common';
+import { EXTENSION_NAME, isBehaveExecutionError } from './common';
 import { performance } from 'perf_hooks';
 
 
@@ -77,7 +77,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     // remove stdout noise when debugging
     args.push("--no-summary", "--outfile", vscode.Uri.joinPath(config.extensionTempFilesUri, "debug.log").fsPath);
 
-    const env = { ...process.env, ...wkspSettings.envVarList };
+    const env = { ...process.env, ...wkspSettings.envVarOverrides };
 
     const debugLaunchConfig = {
       name: `${EXTENSION_NAME}-debug`,
