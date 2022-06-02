@@ -174,8 +174,8 @@ export class WorkspaceSettings {
     if (this.runParallel && this.runAllAsOne)
       this._warnings.push(`${EXTENSION_NAME}.runParallel is overridden by ${EXTENSION_NAME}.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
 
-    if (this.fastSkipTags.length > 0 && this.runAllAsOne)
-      this._warnings.push(`${EXTENSION_NAME}.fastSkipTags has no effect when ${EXTENSION_NAME}.runAllAsOne is enabled and you run all tests at once. (This may or may not be your desired set up.)`);
+    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to ${EXTENSION_NAME}.fastSkipTags when deprecated settings removed
+      this._warnings.push(`fast skip has no effect whenever you run all tests at once and ${EXTENSION_NAME}.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
 
     if (!this.runParallel && !this.runAllAsOne)
       this._warnings.push(`${EXTENSION_NAME}.runParallel and ${EXTENSION_NAME}.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
@@ -224,7 +224,7 @@ export class WorkspaceSettings {
 
       if (this._warnings.length > 0) {
         logger.logSettingsWarning(`\n${this._warnings.map(warn => "WARNING: " + warn).join("\n")}`, this.uri);
-        logger.logInfo(`If you are happy with your settings, can disable these warnings via the extension ` +
+        logger.logInfo(`If you are happy with your settings, you can disable these warnings via the extension ` +
           `setting '${EXTENSION_NAME}.showSettingsWarnings'.\n`, this.uri);
       }
     }
