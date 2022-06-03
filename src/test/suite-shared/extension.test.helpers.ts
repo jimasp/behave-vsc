@@ -139,7 +139,7 @@ async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: Wo
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const match = getStepMatch(wkspSettings, parsedSteps, line);
+				const match = getStepMatch(wkspSettings.featuresUri.path, parsedSteps, line);
 				assert(match, "match");
 			}
 		}

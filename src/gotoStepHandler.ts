@@ -3,11 +3,10 @@ import { config } from "./configuration";
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile } from './common';
 import { getStepMap } from './fileParser';
 import { parseRepWildcard, StepDetail, StepMap } from "./stepsParser";
-import { WorkspaceSettings } from './settings';
 
 
 
-export function getStepMatch(wkspSettings: WorkspaceSettings, stepMap: StepMap, stepLine: string): StepDetail | undefined {
+export function getStepMatch(featuresUriPath: string, stepMap: StepMap, stepLine: string): StepDetail | undefined {
 
   if (stepLine.endsWith(":")) // table
     stepLine = stepLine.slice(0, -1);
@@ -18,9 +17,9 @@ export function getStepMatch(wkspSettings: WorkspaceSettings, stepMap: StepMap, 
     return;
   const stepText = stMatches[3].trim();
 
-
-  let wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
-  wkspSteps = new Map([...stepMap].map(([k, v]) => [k.replace(wkspSettings.featuresUri.path + ":", ""), v]));
+  // filter matches to the workspace that raised the click event
+  let wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(featuresUriPath)));
+  wkspSteps = new Map([...stepMap].map(([k, v]) => [k.replace(featuresUriPath + ":", ""), v]));
 
   const exactSteps = new Map([...wkspSteps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...wkspSteps].filter(([k,]) => k.includes(parseRepWildcard)));
@@ -103,7 +102,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
 
     const stepMap = getStepMap();
     const wkspSettings = getWorkspaceSettingsForFile(eventUri);
-    const stepMatch = getStepMatch(wkspSettings, stepMap, line);
+    const stepMatch = getStepMatch(wkspSettings.featuresUri.path, stepMap, line);
 
     if (!stepMatch) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)
@@ -123,8 +122,13 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
-    const wkspUri = getWorkspaceUriForFile(eventUri);
-    config.logger.showError(e, wkspUri);
+    try {
+      const wkspUri = getWorkspaceUriForFile(eventUri);
+      config.logger.showError(e, wkspUri);
+    }
+    catch {
+      config.logger.showError(e);
+    }
   }
 
 }
