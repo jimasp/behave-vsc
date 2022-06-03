@@ -8,16 +8,16 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead.",
-					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead.",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead."
+					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
+					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "DEPRECATED: Please use behave-vsc.fastSkipTags instead.",
-					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipTags#` instead.",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead."
+					"description": "DEPRECATED: Please use behave-vsc.fastSkipTags instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
+					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipTags#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
+					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
 				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",

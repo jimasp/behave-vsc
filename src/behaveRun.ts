@@ -37,19 +37,22 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
 
-    // the multifolder fileSystemWatcher used by vscode (nsfw) occasionally has issues watching just-created directories (on linux)
-    // whereas creating the folder to watch in two steps (i.e. not mkdirp) seems to fix the problem,
-    // this seems to be caused by some kind of race-condition between nsfw and linux fs, as waiting before creating the watcher also fixes the issue.
-    // (if you modify this code then in linux, debug the multi-root project and 
-    // set all projects to runAllAsOne and check that no test UI nodes are stuck spinning)
     const subDir = junitDirUri.path.split("/").pop();
     if (!subDir)
-      throw "unable to determine subdirectory name for junit directory";
-    const junitRunDirUri = vscode.Uri.file(junitDirUri.path.replace(subDir, ""));
-    await vscode.workspace.fs.createDirectory(junitRunDirUri);
+      throw `unable to determine subdirectory name for junit directory`;
     await vscode.workspace.fs.createDirectory(junitDirUri);
-    diagLog(`created junit directory ${junitDirUri.path}`, wkspUri);
+    diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`, wkspUri);
+
+    // TODO: there is a problem here which is difficult to fix correctly, as it is INTERMITTENT.
+    // the watcher seems to occasionally (<1%) have issues on linux detecting changes to the junit directory, and so 
+    // the test results are not updated correctly, it may be caused by some kind of race condition between the filesystem and the watcher
+    // because sticking a wait between creating the directory and creating the watcher SEEMS? to fix the issue.
+    // we need to try and recreate the problem consistently BEFORE modifying this code.
+    // IF WE SEE THIS ISSUE AGAIN, CHECK THE DIAGNOSTICS LOGS FIRST
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     updatesComplete = new Promise(function (resolve, reject) {
+      diagLog(`run ${run.name} - creating filesystemwatcher for junit directory ${junitDirUri.fsPath}`, wkspUri);
       watcher = startWatchingJunitFolder(resolve, reject, queue, run, wkspSettings, junitDirUri, runToken);
     });
   }
@@ -135,7 +138,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       else {
         // because the run ends when all instances of this function have returned, we need to make sure 
         // that all tests have been updated before returning (you can't update a test when the run has ended)              
-        diagLog(`run ${run.name} - waiting for all junit results to update...`, wkspUri);
+        diagLog(`run ${run.name} - waiting for all junit results to update from filesystemwatcher...`, wkspUri);
         await updatesComplete;
         diagLog(`run ${run.name} - all junit result updates complete`, wkspUri);
       }
@@ -163,9 +166,6 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   queue: QueueItem[], run: vscode.TestRun, wkspSettings: WorkspaceSettings,
   junitDirUri: vscode.Uri, runToken: vscode.CancellationToken): vscode.FileSystemWatcher {
 
-  let updated = 0;
-  const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
-
   const updateResult = async (uri: vscode.Uri) => {
     try {
       diagLog(`${run.name} - updateResult called for uri ${uri.path}`, wkspSettings.uri);
@@ -192,11 +192,14 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
   }
 
+  let updated = 0;
+  const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
   const pattern = new vscode.RelativePattern(junitDirUri, '**/*.xml');
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
   watcher.onDidCreate(uri => updateResult(uri));
   watcher.onDidChange(uri => updateResult(uri));
 
-  diagLog(`${run.name} - watching junit directory ${junitDirUri}/**/*.xml}`, wkspSettings.uri);
+  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/**/*.xml}`, wkspSettings.uri);
   return watcher;
 }

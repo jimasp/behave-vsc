@@ -259,7 +259,8 @@ function tryDeprecatedFastSkipList(wkspSettings: WorkspaceSettings, wkspConfig: 
       return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
     }
 
-    return `${EXTENSION_NAME}.fastSkipList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.fastSkipTags instead.`;
+    return `${EXTENSION_NAME}.fastSkipList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.fastSkipTags instead.` +
+      ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
   }
 
 }
@@ -289,6 +290,7 @@ function tryDeprecatedEnvVarList(wkspSettings: WorkspaceSettings, wkspConfig: vs
       return `Invalid ${EXTENSION_NAME}.envVarList setting ignored.`;
     }
 
-    return `${EXTENSION_NAME}.envVarList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.envVarOverrides instead.`;
+    return `${EXTENSION_NAME}.envVarList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.envVarOverrides instead.` +
+      ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
   }
 }
