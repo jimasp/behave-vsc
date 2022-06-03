@@ -149,4 +149,4 @@ paths=behave_tests/features
 
 ## Contributing
 
-If you would like to submit a pull request, please see the [contributing](CONTRIBUTING.md) doc.
+If you would like to submit a pull request, please see the  [contributing](CONTRIBUTING.md) doc.
