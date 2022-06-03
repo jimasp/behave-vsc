@@ -1,6 +1,4 @@
 {
-	"name": "behave-vsc",
-	"displayName": "Behave VSC",
 	"contributes": {
 		"configuration": {
 			"title": "behave-vsc",
@@ -96,6 +94,8 @@
 			]
 		}
 	},
+	"name": "behave-vsc",
+	"displayName": "Behave VSC",
 	"description": "Debug and Run Behave tests from Sidebar or Feature file",
 	"version": "0.3.0",
 	"icon": "images/behave-vsc.png",
