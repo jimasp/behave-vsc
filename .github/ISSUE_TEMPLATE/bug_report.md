@@ -29,6 +29,7 @@ If applicable, add .jpg/.png screenshots or gifs to your post (using markdown) t
 (If recording a gif of vscode, please enable "Developer: Toggle Screencast mode" in vscode to show your mouse interactions).
 
 **Debug result (optional)**
+Did you enable the "behave-vsc.xRay" setting? Did it give you any more information about the problem?
 Have you tried debugging the extension itself with your own workspace (via the instructions in https://github.com/jimasp/behave-vsc/blob/main/CONTRIBUTING.md)?
 If so, what was the result?
 
