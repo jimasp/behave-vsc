@@ -131,13 +131,14 @@ paths=behave_tests/features
 - Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in vscode, or in [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - Try temporarily disabling other extensions.
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues). github [issues](https://github.com/jimasp/behave-vsc/issues).
+- Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 - The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
 
 ---
 
 ## Known issues and limitations
 
-- There is currently a [bug](https://github.com/microsoft/vscode/issues/149328) in vscode itself when you hit the "Run Tests" button (or equivalent command) and multiple test extensions are enabled, this causes: (a) skipped tests not to update (they are shown as "not yet run"), and (b) the test run not to end/update results in a multi-root project when there are multiple test extensions active. A workaround is simply not to use the "Run Tests" button, i.e. run a parent test node instead like the "Feature Tests" node.
+- There is currently a [bug](https://github.com/microsoft/vscode/issues/149328) in vscode itself when you hit the "Run Tests" button (or equivalent command) and multiple test extensions are enabled, this causes: (a) skipped tests not to update (they are shown as "not yet run"), and (b) the test run not to end/update results in a multi-root project when there are multiple test extensions active. A workaround is simply not to use the "Run Tests" button, i.e. run tests from a test tree node instead (e.g. "Feature Tests")
 - Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires *other* test extension authors to update their code (this extension has applied the fix).
 - "Go to Step" context menu doesn't always match correctly (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly.
 - "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder it won't find them).

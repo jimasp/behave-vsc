@@ -115,7 +115,7 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.67.1"
+		"vscode": "^1.67.2"
 	},
 	"categories": [
 		"Testing",
