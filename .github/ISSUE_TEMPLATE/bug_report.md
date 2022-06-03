@@ -14,7 +14,8 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 The hardest thing when fixing bugs can be reproducing the problem...
-Can you supply a link to a public repo that recreates the issue?
+What steps are required to recreate your issue?
+(Optional) can you supply a link to a public repo that recreates the problem?
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
