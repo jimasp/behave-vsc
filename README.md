@@ -129,9 +129,9 @@ paths=behave_tests/features
 - Do you have runParallel turned on? Try turning it off.
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Check if the problem is in [Known Issues](#known-issues-and-limitations)
-- Does your project match the [Tested with](#tested-with) environment tested for this release? (Older releases are available from from the uninstall dropdown in vscode, or in [github](https://github.com/jimasp/behave-vsc/releases) (github contains information on which software versions they were tested with).
 - Try temporarily disabling other extensions.
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues). github [issues](https://github.com/jimasp/behave-vsc/issues).
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
+- Does your environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 - The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
 
