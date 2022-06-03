@@ -9,6 +9,8 @@ assignees: ''
 
 NOTE: before posting an issue, please make sure you read through the Troubleshooting section of the readme: https://github.com/jimasp/behave-vsc/blob/main/README.md#troubleshooting
 
+Please note that I can only support issues with the latest release (https://github.com/jimasp/behave-vsc/releases) and the latest version of vscode. The supported behave version is 1.2.6.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -36,12 +38,8 @@ If so, what was the result?
 **Pull request (optional)**
 If you have created a pull request in a fork to fix the issue, please link it here
 
-**Desktop (please complete the following information):**
-- OS: 
-- Behave VSC extension version: 
-- Python version: 
-- behave version: 
-- vscode version: 
+**Operating system (please complete the following information):**
+Please note that only Windows and Linux are directly supported, i.e. if your issue is Mac-specific, you'll need to raise a PR.
 
 **Additional context**
 Add any other context about the problem here.
