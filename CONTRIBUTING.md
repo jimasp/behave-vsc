@@ -253,7 +253,7 @@ After running automated tests and the manual UI tests in (1) above, then if you 
 - F. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
 - G. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file
  (the normal feature file that is open, not the diff view)
-- H. rename the table.feature file, in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
+- H. rename the table.feature file (i.e. rename the file itself), then in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
 - I. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
 - K. delete a feature file, check it gets removed from the test tree
 - L. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
@@ -261,4 +261,4 @@ After running automated tests and the manual UI tests in (1) above, then if you 
 - N. go to a feature file, click "go to step defintion" and check at least some of them work
 - O. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
 - P. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
-- Q. assuming you committed at step A, use e.g. `git reset --hard` to undo the file changes created by these manual tests.
+- Q. assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
