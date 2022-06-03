@@ -8,14 +8,14 @@
 				"behave-vsc.envVarList": {
 					"type": "string",
 					"default": "",
-					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead.",
+					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead.",
 					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead.",
 					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead."
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
 					"default": "",
-					"description": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead.",
+					"description": "DEPRECATED: Please use behave-vsc.fastSkipTags instead.",
 					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipTags#` instead.",
 					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead."
 				},
