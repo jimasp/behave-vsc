@@ -125,6 +125,7 @@ paths=behave_tests/features
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
+- Does restarting vscode solve your issue?
 - Do you have runParallel turned on? Try turning it off.
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Check if the problem is in [Known Issues](#known-issues-and-limitations)
