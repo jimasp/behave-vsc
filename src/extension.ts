@@ -2,401 +2,230 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
-import config, { ExtensionConfiguration } from "./configuration";
-import { Scenario, testData, TestFile } from './testTree';
-import { runBehaveAll } from './runOrDebug';
-import { getFeatureNameFromFile } from './featureParser';
-import { parseStepsFile, StepDetail, Steps } from './stepsParser';
-import { getContentFromFilesystem, logActivate, logRunDiagOutput } from './helpers';
+import { config, Configuration } from "./configuration";
+import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
+import {
+  EXTENSION_FULL_NAME,
+  EXTENSION_NAME,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory
+} from './common';
+import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
+import { getStepMap, FileParser } from './fileParser';
+import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
+import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
+import { diagLog, DiagLogType } from './logger';
+import { getDebugAdapterTrackerFactory } from './behaveDebug';
+import { performance } from 'perf_hooks';
 
 
-let stopDebugRun = false;
-const steps: Steps = new Map<string, StepDetail>();
-export const getSteps = () => steps;
-export interface QueueItem { test: vscode.TestItem; scenario: Scenario }
+const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 
-export type ActivateResult = {
-  runHandler: (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
-  config: ExtensionConfiguration,
+export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
+
+
+export type TestSupport = {
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, testRunStopButtonToken: vscode.CancellationToken) => Promise<QueueItem[] | undefined>,
+  config: Configuration,
   ctrl: vscode.TestController,
-  treeBuilder: TreeBuilder
+  parser: FileParser,
+  getSteps: () => StepMap,
+  testData: TestData,
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
 
 
-class TreeBuilder {
-
-  private _featuresLoaded = false;
-  private _cancelTokenSource: vscode.CancellationTokenSource | null = null;
-
-  async readyForRun(timeout: number) {
-    const interval = 100;
-
-    const check = (resolve: (value: boolean) => void) => {
-      if (this._featuresLoaded) {
-        resolve(true);
-      }
-      else {
-        timeout -= interval;
-        if (timeout < interval)
-          resolve(false);
-        setTimeout(() => check(resolve), interval);
-      }
-    }
-
-    return new Promise<boolean>(check);
-  }
-
-
-  private _findFeatureFiles = async (controller: vscode.TestController, cancelToken: vscode.CancellationToken, reparse?: boolean) => {
-    controller.items.forEach(item => controller.items.delete(item.id));
-    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/*.feature`);
-    const featureFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
-
-    for (const uri of featureFiles) {
-      if (!cancelToken.isCancellationRequested)
-        await updateTestItemFromFeatureFile(controller, uri, reparse);
-    }
-  }
-
-  private _findStepsFiles = async (cancelToken: vscode.CancellationToken) => {
-    steps.clear();
-    const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**/steps/**/*.py`);
-    const stepFiles = await vscode.workspace.findFiles(pattern, undefined, undefined, cancelToken);
-
-    for (const uri of stepFiles) {
-      if (!cancelToken.isCancellationRequested)
-        await updateStepsFromStepsFile(uri);
-    }
-  }
-
-
-
-  // NOTE - this is a background task that should only be awaited on 
-  // user request, i.e. when called by the refreshHandler
-  async buildTree(ctrl: vscode.TestController, reparseFeatures = false) {
-    this._featuresLoaded = false;
-    const start = Date.now();
-
-    // this function is normally not awaited, and therefore re-entrant, so cancel any existing buildTree
-    if (this._cancelTokenSource) {
-      this._cancelTokenSource.cancel();
-      await new Promise(t => setTimeout(t, 100));
-      this._cancelTokenSource.dispose();
-    }
-
-    this._cancelTokenSource = new vscode.CancellationTokenSource();
-    await this._findFeatureFiles(ctrl, this._cancelTokenSource.token, reparseFeatures);
-    this._findStepsFiles(this._cancelTokenSource.token);
-
-    if (!this._cancelTokenSource.token.isCancellationRequested) {
-      this._featuresLoaded = true;
-
-      console.log(
-        `buildTree of ${ctrl.items.size} items took ${Date.now() - start}ms. ` +
-        `(ignore if there are active breakpoints. slower during contention like vscode startup. ` +
-        `click test refresh button a few times without active breakpoints for a more representative time.)`
-      );
-    }
-
-  }
-
+export function deactivate() {
+  disposeCancelTestRunSource();
 }
 
-const treeBuilder = new TreeBuilder();
 
-export async function activate(context: vscode.ExtensionContext): Promise<ActivateResult | undefined> {
+// called on extension activation or the first time a new/unrecognised workspace gets added.
+// call anything that needs to be initialised, and set up all relevant event handlers/hooks/subscriptions with vscode api
+export async function activate(context: vscode.ExtensionContext): Promise<TestSupport | undefined> {
 
   try {
 
-    logActivate(context);
+    const start = performance.now();
+    diagLog("activate called, node pid:" + process.pid);
+    config.logger.syncChannelsToWorkspaceFolders();
+    logExtensionVersion(context);
+    const parser = new FileParser();
+    const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
+    parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
-    const ctrl = vscode.tests.createTestController(`${config.extensionName}.TestController`, 'Feature Tests');
-    // func in push() will execute immediately, as well as registering it for disposal on extension deactivate
+    // any function contained in subscriptions.push() will execute immediately, 
+    // as well as registering it for disposal on extension deactivation
+    // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
+    // registerCommand, which is a disposable that ensures our custom command will no longer be active when the extension is deactivated).
+    // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.
     context.subscriptions.push(ctrl);
-    context.subscriptions.push(startWatchingWorkspace(ctrl));
-    context.subscriptions.push(vscode.commands.registerCommand("behave-vsc.gotoStep", gotoStepHandler));
+    context.subscriptions.push(vscode.Disposable.from(config));
+    for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
+      const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
+      wkspWatchers.set(wkspUri, watcher);
+      context.subscriptions.push(watcher);
+    }
+    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler));
 
-    const runHandler = async (debug: boolean, request: vscode.TestRunRequest, cancellation: vscode.CancellationToken) => {
+    const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
+    context.subscriptions.push(removeTempDirectoryCancelSource);
+    removeExtensionTempDirectory(removeTempDirectoryCancelSource.token);
+    const runHandler = testRunHandler(testData, ctrl, parser, removeTempDirectoryCancelSource);
+    context.subscriptions.push(getDebugAdapterTrackerFactory());
 
-      // the test tree is built as a background process which is called from a few places
-      // (and it will be slow on vscode startup due to contention), so we 
-      // don't want to await it except on user request (refresh click),
-      // but at the same time, we also don't to allow test runs when the tests items are out of date vs the file system
-      const ready = await treeBuilder.readyForRun(1000);
-      if (!ready) {
-        const msg = "cannot run tests while test items are still updating, please try again";
-        console.log(msg);
-        vscode.window.showWarningMessage(msg);
-        return;
-      }
-
-      try {
-
-        logRunDiagOutput(debug);
-        const queue: QueueItem[] = [];
-        const run = ctrl.createTestRun(request, config.extensionFullName, false);
-        config.logger.run = run;
-
-        // map of file uris to statements on each line:
-        // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-        const coveredLines = new Map</* file uri */ string, (vscode.StatementCoverage | undefined)[]>();
-
-        const queueSelectedTestItems = async (tests: Iterable<vscode.TestItem>) => {
-          for (const test of tests) {
-            if (request.exclude?.includes(test)) {
-              continue;
-            }
-
-            const data = testData.get(test);
-
-            if (data instanceof Scenario) {
-              run.enqueued(test);
-              queue.push({ test, scenario: data });
-            }
-            else {
-              if (data instanceof TestFile && !data.didResolve) {
-                await data.updateFromDisk(ctrl, test);
-              }
-
-              await queueSelectedTestItems(gatherTestItems(test.children));
-            }
-
-            if (test.uri && !coveredLines.has(test.uri.toString())) {
-              try {
-                const lines = (await getContentFromFilesystem(test.uri)).split('\n');
-                coveredLines.set(
-                  test.uri.toString(),
-                  lines.map((lineText, lineNo) =>
-                    // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-                    lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
-                  )
-                );
-              } catch {
-                // ignored
-              }
-            }
-          }
-        };
-
-
-        const runTestQueue = async (request: vscode.TestRunRequest) => {
-
-          if (queue.length === 0) {
-            const err = "empty queue - nothing to do";
-            config.logger.logError(err);
-            throw err;
-          }
-
-          const allTestsIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
-
-          if (!debug && allTestsIncluded && config.userSettings.runAllAsOne) {
-
-            await runBehaveAll(context, run, queue, cancellation);
-
-            for (const qi of queue) {
-              updateRun(qi.test, coveredLines, run);
-            }
-
-            return;
-          }
-
-
-          const asyncPromises: Promise<void>[] = [];
-          stopDebugRun = false;
-
-          for (const qi of queue) {
-            run.appendOutput(`Running ${qi.test.id}\r\n`);
-            if (stopDebugRun || cancellation.isCancellationRequested) {
-              updateRun(qi.test, coveredLines, run);
-            }
-            else {
-
-              run.started(qi.test);
-
-              if (!config.userSettings.runParallel || debug) {
-                await qi.scenario.runOrDebug(context, debug, run, qi, cancellation);
-                updateRun(qi.test, coveredLines, run);
-              }
-              else {
-                // async run (parallel)
-                const promise = qi.scenario.runOrDebug(context, false, run, qi, cancellation).then(() => {
-                  updateRun(qi.test, coveredLines, run)
-                });
-                asyncPromises.push(promise);
-              }
-            }
-          }
-
-          await Promise.all(asyncPromises);
-        };
-
-
-        let completed = 0;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const updateRun = (test: vscode.TestItem, coveredLines: Map<string, any[]>, run: vscode.TestRun) => {
-          if (!test || !test.range || !test.uri)
-            throw "invalid test item";
-
-          const lineNo = test.range.start.line;
-          const fileCoverage = coveredLines.get(test.uri.toString());
-          if (fileCoverage) {
-            fileCoverage[lineNo].executionCount++;
-          }
-
-          run.appendOutput(`Completed ${test.id}\r\n`);
-
-          completed++;
-          if (completed === queue.length) {
-            run.end();
-          }
-        };
-
-        // @ts-ignore: Property 'coverageProvider' does not exist on type 'TestRun'
-        run.coverageProvider = {
-          provideFileCoverage() {
-            // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-            const coverage: vscode.FileCoverage[] = [];
-            for (const [uri, statements] of coveredLines) {
-              coverage.push(
-                // @ts-ignore: '"vscode"' has no exported member 'FileCoverage'
-                vscode.FileCoverage.fromDetails(
-                  vscode.Uri.parse(uri),
-                  // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
-                  statements.filter((s): s is vscode.StatementCoverage => !!s)
-                )
-              );
-            }
-
-            return coverage;
-          },
-        };
-
-        await queueSelectedTestItems(request.include ?? gatherTestItems(ctrl.items));
-        await runTestQueue(request);
-
-        return queue;
-
-      }
-      catch (e: unknown) {
-        config.logger.logError(e);
-      }
-
-    };
-
-
-
-    ctrl.createRunProfile('Run Tests',
-      vscode.TestRunProfileKind.Run,
-      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
-        runHandler(false, request, token);
+    ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
+      async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        await runHandler(false, request, token);
       }
       , true);
 
-    ctrl.createRunProfile('Debug Tests',
-      vscode.TestRunProfileKind.Debug,
-      (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
-        runHandler(true, request, token);
+    ctrl.createRunProfile('Debug Tests', vscode.TestRunProfileKind.Debug,
+      async (request: vscode.TestRunRequest, token: vscode.CancellationToken) => {
+        await runHandler(true, request, token);
       }
       , true);
 
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
+      let wkspSettings;
       try {
         if (!item)
           return;
 
         const data = testData.get(item);
         if (data instanceof TestFile) {
-          await data.updateFromDisk(ctrl, item);
+          wkspSettings = getWorkspaceSettingsForFile(item.uri);
+          await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        // entry point function (handler) - show error
+        const wkspUri = wkspSettings ? wkspSettings.uri : undefined;
+        config.logger.showError(e, wkspUri);
       }
     };
 
-    ctrl.refreshHandler = async () => {
+    ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-        await treeBuilder.buildTree(ctrl, true);
+        await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
       }
     };
 
 
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (e) => {
+    // called when a user renames, adds or removes a workspace folder
+    // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
+    // process will start, this host process will terminate, and activate() will be called shortly after    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
-        if (e.affectsConfiguration(config.extensionName)) {
-          config.reloadUserSettings();
-          treeBuilder.buildTree(ctrl, false); // need to rebuild - user may have e.g. changed featuresPath, fastSkipList, etc.
-        }
+        await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
-        config.logger.logError(e);
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
       }
     }));
 
 
-    // onDidTerminateDebugSession doesn't provide reason for the stop,
-    // so we need to check the reason from the debug adapter protocol
-    context.subscriptions.push(vscode.debug.registerDebugAdapterTrackerFactory('*', {
-      createDebugAdapterTracker() {
-        let threadExit = false;
+    // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
+    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg)
+    // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
+    // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
+      forceFullRefresh?: boolean) => {
 
-        return {
-          onDidSendMessage: (m) => {
+      // for integration test runAllTestsAndAssertTheResults, 
+      // only reload config on request (i.e. when testCfg supplied)
+      if (config.integrationTestRun && !testCfg)
+        return;
 
-            // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
-            // console.log(m);
+      try {
 
-            if (m.body?.reason === "exited" && m.body?.threadId) {
-              // thread exit
-              threadExit = true;
-              return;
+        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want 
+        // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from 
+        // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
+        // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
+        const affected = event && event.affectsConfiguration(EXTENSION_NAME);
+        if (!affected && !forceFullRefresh && !testCfg)
+          return;
+
+        if (!testCfg) {
+          config.logger.clearAllWksps();
+          cancelTestRun("configurationChangedHandler");
+        }
+
+        // changing featuresPath in settings.json/*.vscode-workspace to a valid path, or adding/removing/renaming workspaces
+        // will not only change the set of workspaces we are watching, but also the output channels
+        config.logger.syncChannelsToWorkspaceFolders();
+
+        for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
+          if (testCfg) {
+            if (testCfg.wkspUri === wkspUri) {
+              config.reloadSettings(wkspUri, testCfg.testConfig);
             }
+            continue;
+          }
 
-            if (m.event === "exited") {
-              if (!threadExit) {
-                // exit, but not a thread exit, so we need to set flag to 
-                // stop the run, (most likely debug was stopped by user)
-                stopDebugRun = true;
-              }
-            }
+          config.reloadSettings(wkspUri);
+          const oldWatcher = wkspWatchers.get(wkspUri);
+          if (oldWatcher)
+            oldWatcher.dispose();
+          const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
+          wkspWatchers.set(wkspUri, watcher);
+          context.subscriptions.push(watcher);
+        }
 
-          },
-        };
+        // configuration has now changed, e.g. featuresPath, so we need to reparse files
+
+        // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
+        if (testCfg) {
+          parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");
+          return;
+        }
+
+        // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
+        // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes to rebuild the top level nodes)
+        parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
+      catch (e: unknown) {
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
+      }
+    }
+
+
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
+      await configurationChangedHandler(event);
     }));
 
-
-    const updateNodeForDocument = async (e: vscode.TextDocument) => {
-      const item = await getOrCreateTestItemFromFeatureFile(ctrl, e.uri);
-      if (item)
-        item.testFile.updateFromContents(ctrl, e.getText(), item.testItem);
-    }
-
-    // for any open .feature documents on startup
-    const docs = vscode.workspace.textDocuments.filter(d => d.uri.scheme === "file" && d.uri.path.toLowerCase().endsWith(".feature"));
-    for (const doc of docs) {
-      await updateNodeForDocument(doc);
-    }
+    diagLog(`perf info: activate took  ${performance.now() - start} ms`);
 
     return {
-      // support extensiontest.ts (i.e. maintain same instances)
+      // return instances to support integration testing
       runHandler: runHandler,
       config: config,
       ctrl: ctrl,
-      treeBuilder: treeBuilder
+      parser: parser,
+      getSteps: getStepMap,
+      testData: testData,
+      configurationChangedHandler: configurationChangedHandler
     };
 
   }
   catch (e: unknown) {
-    if (config)
-      config.logger.logError(e);
+    // entry point function (handler) - show error    
+    if (config && config.logger) {
+      config.logger.showError(e, undefined);
+    }
     else {
-      // this should never happen
+      // no logger, use vscode.window.showErrorMessage directly
       const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
       vscode.window.showErrorMessage(text);
     }
@@ -406,138 +235,70 @@ export async function activate(context: vscode.ExtensionContext): Promise<Activa
 
 
 
+function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
-async function getOrCreateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri)
-  : Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
-
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
-    throw new Error(`${uri.path} is not a feature file`);
-
-  const existing = controller.items.get(uri.toString());
-  if (existing) {
-    return { testItem: existing, testFile: testData.get(existing) as TestFile || new TestFile() };
-  }
-
-  const featureName = await getFeatureNameFromFile(uri);
-  if (featureName === null)
-    return undefined;
-
-  // support e.g. /group1_features/ parentGroup folder node
-  let parentGroup: vscode.TestItem | undefined = undefined
-  const featIdxPath = "/" + config.userSettings.featuresPath + "/";
-  const featuresFolderIndex = uri.path.lastIndexOf(featIdxPath) + featIdxPath.length;
-  const sfp = uri.path.substring(featuresFolderIndex);
-  if (sfp.indexOf("/") !== -1) {
-    const groupName = sfp.split("/")[0];
-    parentGroup = controller.items.get(groupName);
-    if (!parentGroup) {
-      parentGroup = controller.createTestItem(groupName, groupName, undefined);
-      parentGroup.canResolveChildren = true;
-    }
-  }
-
-  const testItem = controller.createTestItem(uri.toString(), featureName, uri);
-  controller.items.add(testItem);
-
-  if (parentGroup !== undefined) {
-    parentGroup.children.add(testItem);
-    controller.items.add(parentGroup);
-  }
-
-  const testFile = new TestFile();
-  testData.set(testItem, testFile);
-
-  testItem.canResolveChildren = true;
-
-  return { testItem: testItem, testFile: testFile };
-}
-
-function gatherTestItems(collection: vscode.TestItemCollection) {
-  const items: vscode.TestItem[] = [];
-  collection.forEach((item: vscode.TestItem) => items.push(item));
-  return items;
-}
-
-
-
-async function updateStepsFromStepsFile(uri: vscode.Uri) {
-
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".py"))
-    throw new Error(`${uri.path} is not a python file`);
-
-  await parseStepsFile(uri, steps);
-}
-
-async function updateTestItemFromFeatureFile(controller: vscode.TestController, uri: vscode.Uri, reparse?: boolean) {
-
-  if (uri.scheme !== "file" || !uri.path.toLowerCase().endsWith(".feature"))
-    throw new Error(`${uri.path} is not a feature file`);
-
-  const item = await getOrCreateTestItemFromFeatureFile(controller, uri);
-  if (item && reparse) {
-    await item.testFile.updateFromDisk(controller, item.testItem);
-  }
-}
-
-function startWatchingWorkspace(ctrl: vscode.TestController) {
-
-  // not just *.feature and /steps/*.py files, but also support folder changes inside the features folder
-  const pattern = new vscode.RelativePattern(config.workspaceFolder, `**/${config.userSettings.featuresPath}/**`);
+  // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
+  const wkspSettings = config.workspaceSettings[wkspUri.path];
+  const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = (uri: vscode.Uri) => {
-
-    if (uri.scheme !== "file")
-      return;
-
-    const path = uri.path.toLowerCase();
-
     try {
 
-      if (path.endsWith(".py") && path.indexOf("/steps/") !== -1) {
-        updateStepsFromStepsFile(uri);
+      if (isStepsFile(uri)) {
+        parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
         return;
       }
 
-      if (path.endsWith(".feature")) {
-        updateTestItemFromFeatureFile(ctrl, uri, true);
+      if (isFeatureFile(uri)) {
+        parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
       }
 
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      // entry point function (handler) - show error
+      config.logger.showError(e, wkspUri);
     }
   }
 
 
-  // fires on file/folder creation (inc. git branch switch)
+  // fires on either new file/folder creation OR rename (inc. git actions)
   watcher.onDidCreate(uri => {
-    updater(uri);
+    updater(uri)
   });
 
-  // fires on file/folder rename (inc. git branch switch) AND when file is open in editor on startup 
+  // fires on file save (inc. git actions)
   watcher.onDidChange(uri => {
-    updater(uri);
+    updater(uri)
   });
 
-  // fires on file/folder delete AND rename (inc. git branch switch)
-  watcher.onDidDelete((uri) => {
+  // fires on either file/folder delete OR rename (inc. git actions)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  watcher.onDidDelete(uri => {
 
-    if (uri.scheme !== "file")
+    const path = uri.path.toLowerCase();
+
+    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
+    // files, but we cannot determine if this is a file or folder deletion as:
+    //   (a) it has been deleted so we can't stat it, and 
+    //   (b) "." is valid in folder names so we can't determine by looking at the path
+    // but we should ignore specific file extensions or paths we know we don't care about
+    if (path.endsWith(".tmp")) // .tmp = vscode file history file
       return;
 
+    // log for extension developers in case we need to add another file type above
+    if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+      diagLog("detected deletion of unanticipated file type", wkspUri, DiagLogType.warn);
+    }
+
     try {
-      treeBuilder.buildTree(ctrl, true);
+      parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
-      config.logger.logError(e);
+      // entry point function (handler) - show error
+      config.logger.showError(e, wkspUri);
     }
   });
-
-
-  treeBuilder.buildTree(ctrl, true);
 
   return watcher;
 }
-
-

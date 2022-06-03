@@ -1,0 +1,4 @@
+{
+    "behave-vsc.xRay": true,
+    "behave-vsc.runParallel": true
+}

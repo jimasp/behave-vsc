@@ -1,0 +1,19 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./unit tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+    "behave-vsc.fastSkipTags": [
+        "@fast-skip-me",
+        "@fast-skip-me-too"
+    ],
+    "behave-vsc.featuresPath": "",
+    "behave-vsc.runParallel": true,
+    "behave-vsc.runAllAsOne": false,
+    "behave-vsc.xRay": true
+}

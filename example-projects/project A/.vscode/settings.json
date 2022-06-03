@@ -1,0 +1,29 @@
+{
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./unit tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+    "behave-vsc.envVarOverrides": {
+        "some_var": "double qu\"oted",
+        "some_var2": "single qu'oted",
+        "space_var": " ",
+        "USERNAME": "bob-163487",
+    },
+    "behave-vsc.fastSkipTags": [
+        "@fast-skip-me",
+        "@fast-skip-me-too"
+    ],
+    // "behave-vsc.fastSkipList": "@fast-skip-me, @fast-skip-me-too",
+    // "behave-vsc.envVarList": "  'some_var':'double qu\"oted',  'some_var2':'single qu\\'oted', 'USERNAME': 'bob-163487', 'space_var': ' ' ",
+    "behave-vsc.featuresPath": "behave tests/some tests/",
+    "behave-vsc.justMyCode": true,
+    "behave-vsc.runAllAsOne": true,
+    "behave-vsc.runParallel": false,
+    "behave-vsc.showSettingsWarnings": true,
+    "behave-vsc.xRay": true
+}

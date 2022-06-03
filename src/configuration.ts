@@ -1,245 +1,105 @@
-import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { logUserSettings } from './helpers';
+import { getUrisOfWkspFoldersWithFeatures, EXTENSION_NAME, EXTENSION_FRIENDLY_NAME } from './common';
+import { diagLog, Logger } from './logger';
+import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 
-const EXTENSION_NAME = "behave-vsc";
-const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
-const EXTENSION_FRIENDLY_NAME = "Behave VSC";
-const MSPY_EXT = "ms-python.python";
-
-
-const getWorkspaceFolder = () => {
-  const wsf = vscode.workspace.workspaceFolders;
-  if (wsf && wsf?.length > 0)
-    return wsf[0];
-  throw "could not resolve workspace folder";
-}
-
-export interface ExtensionConfiguration {
-  readonly extensionName: string;
-  readonly extensionFullName: string;
-  readonly extensionFriendlyName: string;
-  readonly debugOutputFilePath: string;
+export interface Configuration {
+  integrationTestRun: boolean;
+  readonly extensionTempFilesUri: vscode.Uri;
   readonly logger: Logger;
-  readonly userSettings: UserSettings;
-  readonly workspaceFolder: vscode.WorkspaceFolder;
-  readonly workspaceFolderPath: string;
-  reloadUserSettings(testConfig: vscode.WorkspaceConfiguration | undefined): void;
-  getPythonExec(): Promise<string>;
+  readonly workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings };
+  readonly globalSettings: WindowSettings;
+  reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
+  getPythonExecutable(wkspUri: vscode.Uri, wkspName: string): Promise<string>;
+  dispose(): void;
 }
 
 
-class Configuration implements ExtensionConfiguration {
-  public readonly extensionName = EXTENSION_NAME;
-  public readonly extensionFullName = EXTENSION_FULL_NAME;
-  public readonly extensionFriendlyName = EXTENSION_FRIENDLY_NAME;
-  public readonly debugOutputFilePath = path.join(os.tmpdir(), EXTENSION_NAME);
-  public readonly logger: Logger = new Logger();
-  private static _userSettings: UserSettings | undefined = undefined;
-
-  private static _configuration?: Configuration;
+// don't export this, use the interface
+class ExtensionConfiguration implements Configuration {
+  public integrationTestRun = false;
+  public readonly extensionTempFilesUri;
+  public readonly logger: Logger;
+  private static _configuration?: ExtensionConfiguration;
+  private _windowSettings: WindowSettings | undefined = undefined;
+  private _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
 
   private constructor() {
-    Configuration._configuration = this;
-    console.log("Configuration singleton constructed (this should only fire once except for test runs)");
+    ExtensionConfiguration._configuration = this;
+    this.logger = new Logger();
+    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
+    diagLog("Configuration singleton constructed (this should only fire once)");
+  }
+
+  public dispose() {
+    this.logger.dispose();
   }
 
   static get configuration() {
-    if (Configuration._configuration)
-      return Configuration._configuration;
-
-    Configuration._configuration = new Configuration();
-    return Configuration._configuration;
+    if (ExtensionConfiguration._configuration)
+      return ExtensionConfiguration._configuration;
+    ExtensionConfiguration._configuration = new ExtensionConfiguration();
+    return ExtensionConfiguration._configuration;
   }
 
   // called by onDidChangeConfiguration
-  public reloadUserSettings(testConfig: vscode.WorkspaceConfiguration | undefined = undefined) {
-    if (!testConfig)
-      Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
-    else
-      Configuration._userSettings = new UserSettings(testConfig, this.logger);
-
-    this.logger.clear();
-    this.logger.logInfo("Settings change detected.")
-    logUserSettings();
+  public reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
+    if (testConfig) {
+      this._windowSettings = new WindowSettings(testConfig);
+      this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this._windowSettings, this.logger);
+    }
+    else {
+      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
+        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this._windowSettings, this.logger);
+    }
   }
 
-  public get userSettings() {
-    return Configuration._userSettings
-      ? Configuration._userSettings
-      : Configuration._userSettings = new UserSettings(vscode.workspace.getConfiguration(EXTENSION_NAME), this.logger);
+  public get globalSettings(): WindowSettings {
+    return this._windowSettings
+      ? this._windowSettings
+      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
   }
 
-  // WE ONLY SUPPORT A SINGLE WORKSPACE FOLDER ATM
-  public get workspaceFolder(): vscode.WorkspaceFolder {
-    return getWorkspaceFolder();
+  public get workspaceSettings(): { [wkspUriPath: string]: WorkspaceSettings } {
+    const winSettings = this.globalSettings;
+    getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
+      if (!this._resourceSettings[wkspUri.path]) {
+        this._resourceSettings[wkspUri.path] =
+          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), winSettings, this.logger);
+      }
+    })
+    return this._resourceSettings;
   }
-
-  public get workspaceFolderPath(): string {
-    return this.workspaceFolder.uri.fsPath;
-  }
-
 
   // note - this can be changed dynamically by the user, so don't store the result
-  public getPythonExec = async (): Promise<string> => {
-    return await getPythonExecutable(this.logger, this.workspaceFolder.uri);
-  }
-}
+  getPythonExecutable = async (wkspUri: vscode.Uri, wkspName: string) => {
+    const msPyExt = "ms-python.python";
+    const pyext = vscode.extensions.getExtension(msPyExt);
 
+    if (!pyext)
+      throw (EXTENSION_FRIENDLY_NAME + " could not find required dependency " + msPyExt);
 
-class Logger {
-
-  private outputChannel: vscode.OutputChannel = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
-  public run: vscode.TestRun | undefined = undefined;
-
-  show = () => {
-    this.outputChannel.show();
-  }
-
-  clear = () => {
-    console.clear();
-    this.outputChannel.clear();
-  }
-
-  logInfo = (text: string) => {
-    console.log(text);
-    this.outputChannel.appendLine(text);
-    if (this.run)
-      this.run?.appendOutput(text);
-  }
-
-  logError = (msgOrError: unknown, prependMsg = "") => {
-
-    let text = (msgOrError instanceof Error ? (msgOrError.stack ? msgOrError.stack : msgOrError.message) : msgOrError as string);
-    if (prependMsg)
-      text = `${prependMsg}\n${text}`;
-
-    console.error(text);
-    const ocHighlight = "\x1b \x1b \x1b \x1b \x1b \x1b \x1b";
-    this.outputChannel.appendLine(ocHighlight);
-    this.outputChannel.appendLine(text);
-    this.outputChannel.appendLine(ocHighlight);
-    this.outputChannel.show(true);
-    vscode.debug.activeDebugConsole.appendLine(text);
-    if (this.run)
-      this.run?.appendOutput(text);
-  }
-}
-
-
-class UserSettings {
-  public envVarList: { [name: string]: string } = {};
-  public fastSkipList: string[] = [];
-  public justMyCode: boolean;
-  public runAllAsOne: boolean;
-  public runParallel: boolean;
-  public featuresPath = "features";
-  constructor(wsConfig: vscode.WorkspaceConfiguration, logger: Logger) {
-
-    const envVarListCfg: string | undefined = wsConfig.get("envVarList");
-    const fastSkipListCfg: string | undefined = wsConfig.get("fastSkipList");
-    const featuresPathCfg: string | undefined = wsConfig.get("featuresPath");
-    const justMyCodeCfg: boolean | undefined = wsConfig.get("justMyCode");
-    const runAllAsOneCfg: boolean | undefined = wsConfig.get("runAllAsOne");
-    const runParallelCfg: boolean | undefined = wsConfig.get("runParallel");
-
-    this.justMyCode = justMyCodeCfg === undefined ? true : justMyCodeCfg;
-    this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
-    this.runParallel = runParallelCfg === undefined ? false : runParallelCfg;
-
-    if (featuresPathCfg) {
-      const path = featuresPathCfg.trim();
-      const uri = vscode.Uri.joinPath(getWorkspaceFolder().uri, path);
-      const wsf = vscode.workspace.getWorkspaceFolder(uri);
-      if (wsf) {
-        this.featuresPath = vscode.workspace.asRelativePath(path);
-      }
-      else {
-        logger.logError(`Invalid featuresPath '${featuresPathCfg}' setting ignored.\nMust be a relative path within the workspace.\n` +
-          "Defaulting to 'features' path instead.");
-      }
-    }
-
-    if (fastSkipListCfg) {
-      if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2) {
-        logger.logError("Invalid FastSkipList setting ignored.");
-      }
-      else {
-        try {
-          const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
-          let invalid = false;
-          skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
-          if (invalid)
-            logger.logError("Invalid FastSkipList setting ignored.");
-          else
-            this.fastSkipList = skipList.filter(s => s !== "");
-        }
-        catch {
-          logger.logError("Invalid FastSkipList setting ignored.");
-        }
-      }
-    }
-
-    if (envVarListCfg) {
-      if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7) {
-        logger.logError("Invalid EnvVarList setting ignored.");
-      }
-      else {
-        try {
-          const escape = "#^@";
-          const envList = envVarListCfg.replace(/'\s*:\s*'/g, "':'").replace(/'\s*,\s*'/g, "','").trim();
-          envList.split("',").filter(s => s.trim() !== "").map(s => {
-            s = s.replace(/\\'/g, escape);
-            const e = s.split("':");
-            const name = e[0].trim().replace(/'/g, "").replace(escape, "'");
-            const value = e[1].trim().replace(/'/g, "").replace(escape, "'");
-            console.log(`${name}='${value}'`)
-            this.envVarList[name] = value;
-          });
-        }
-        catch {
-          logger.logError("Invalid EnvVarList setting ignored.");
-        }
-      }
-    }
-  }
-}
-
-const getPythonExecutable = async (logger: Logger, scope: vscode.Uri) => {
-
-  const pyext = vscode.extensions.getExtension(MSPY_EXT);
-
-
-  if (!pyext) {
-    const msg = EXTENSION_FRIENDLY_NAME + " could not find required dependency " + MSPY_EXT;
-    vscode.window.showErrorMessage(msg);
-    logger.logError(msg);
-    return undefined;
-  }
-
-  if (!pyext.isActive) {
-    await pyext?.activate();
     if (!pyext.isActive) {
-      const msg = EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + MSPY_EXT;
-      vscode.window.showErrorMessage(msg);
-      logger.logError(msg);
-      return undefined;
+      await pyext?.activate();
+      if (!pyext.isActive)
+        throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + msPyExt);
     }
+
+    const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
+    if (!pythonExec)
+      throw (`${EXTENSION_FRIENDLY_NAME} failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
+
+    return pythonExec;
   }
 
-  const pythonExec = await pyext?.exports.settings.getExecutionDetails(scope).execCommand[0];
-  if (!pythonExec) {
-    const msg = EXTENSION_FRIENDLY_NAME + " failed to obtain python executable from " + MSPY_EXT;
-    vscode.window.showErrorMessage(msg);
-    logger.logError(msg);
-    return undefined;
-  }
-
-  return pythonExec;
 }
 
 
-export default Configuration.configuration;
 
-
+// global = stop the constructor getting called twice in extension integration tests
+declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+if (!global.config)
+  global.config = ExtensionConfiguration.configuration;
+export const config: ExtensionConfiguration = global.config;

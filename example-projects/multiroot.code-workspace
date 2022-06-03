@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"path": "./simple",
+			"name": "simple"
+		},
+		{
+			"path": "./project A",
+			"name": "project A"
+		},
+		{
+			"path": "./project B",
+			"name": "project B"
+		},
+		{
+			"path": "./multiroot bad features path",
+			"name": "bad features path"
+		},
+		{
+			"path": "./multiroot empty folder",
+			"name": "empty folder"
+		},
+		{
+			"path": "./multiroot ignored",
+			"name": "ignored folder"
+		},
+	],
+	"settings": {
+		"behave-vsc.multiRootRunWorkspacesInParallel": true,
+		"behave-vsc.showSettingsWarnings": true,
+		"behave-vsc.xRay": true
+	}
+}

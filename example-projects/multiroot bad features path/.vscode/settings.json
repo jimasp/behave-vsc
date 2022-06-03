@@ -1,0 +1,4 @@
+{
+    // to test bad features path
+    "behave-vsc.featuresPath": "foobar",
+}

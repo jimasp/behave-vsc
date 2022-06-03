@@ -1,0 +1,5 @@
+{
+    /* see README.md in parent folder */
+    "behave-vsc.runAllAsOne": true,
+    "behave-vsc.justMyCode": true,
+}

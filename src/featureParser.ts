@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
-import config from "./configuration";
-import { getContentFromFilesystem } from './helpers';
+import { WorkspaceSettings } from "./settings";
+import { getContentFromFilesystem } from './common';
+import { diagLog } from './logger';
 
 
 const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -22,12 +23,13 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureFile = (featureName: string, text: string,
+export const parseFeatureContent = (wkspSettings: WorkspaceSettings, featureFilePath: string, featureName: string, text: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureName: (range: vscode.Range) => void) => {
 
   const lines = text.split('\n');
   let fastSkipFeature = false;
+  let fileScenarios = 0;
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
     const line = lines[lineNo].trim();
@@ -43,8 +45,8 @@ export const parseFeatureFile = (featureName: string, text: string,
         fastSkipScenario = true;
       }
       else {
-        config.userSettings.fastSkipList.forEach(skipStr => {
-          if (skipStr.startsWith("@") && lines[lineNo - 1].indexOf(skipStr) !== -1) {
+        wkspSettings.fastSkipTags.forEach(skipStr => {
+          if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipScenario = true;
           }
         });
@@ -54,6 +56,7 @@ export const parseFeatureFile = (featureName: string, text: string,
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, featureName, scenarioName, isOutline, fastSkipScenario);
+      fileScenarios++;
       continue;
     }
 
@@ -65,13 +68,15 @@ export const parseFeatureFile = (featureName: string, text: string,
       onFeatureName(range);
 
       if (lineNo > 0) {
-        config.userSettings.fastSkipList.forEach(skipStr => {
-          if (skipStr.startsWith("@") && lines[lineNo - 1].indexOf(skipStr) !== -1) {
+        wkspSettings.fastSkipTags.forEach(skipStr => {
+          if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
             fastSkipFeature = true;
           }
         });
       }
     }
   }
+
+  diagLog(`${caller}: parsed ${fileScenarios} scenarios from ${featureFilePath}`, wkspSettings.uri);
 };
 

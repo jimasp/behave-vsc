@@ -1,0 +1,6 @@
+Feature: With a hook-error # features/feature_with_hook_error.feature:1
+
+  @raise_error_in_before_scenario
+  Scenario: create a before hook-error  # features/feature_with_hook_error.feature:4
+    Given we have behave installed      # None
+

@@ -8,7 +8,9 @@ import {
 
 
 // this code handles `npm run test` or `npm run testinsiders`
-// (to debug this code, go to package.json and click the ">Debug" link and choose "test" or "testinsiders")
+// to debug this code, add a breakpoint here, then open package.json and click the "Debug >" link 
+// and choose "test" or "testinsiders" from the dropdown
+// (to debug the tests themselves, just launch from the usual debug link in vscode and select the suite to run)
 async function runTestSuites() {
   try {
     const version = process.argv[2].slice(2);
@@ -38,9 +40,12 @@ async function runTestSuites() {
 
     console.log("starting test run...");
 
+    let launchArgs = [""];
+    let extensionTestsPath = "";
 
-    let launchArgs = ["example-project-workspace-1"]
-    let extensionTestsPath = path.resolve(__dirname, './workspace-1-suite/index');
+
+    launchArgs = ["example-projects/simple"]
+    extensionTestsPath = path.resolve(__dirname, './simple suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -48,8 +53,26 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-project-workspace-2"]
-    extensionTestsPath = path.resolve(__dirname, './workspace-2-suite/index');
+    launchArgs = ["example-projects/project A"]
+    extensionTestsPath = path.resolve(__dirname, './project A suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/project B"]
+    extensionTestsPath = path.resolve(__dirname, './project B suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/multiroot.code-workspace"];
+    extensionTestsPath = path.resolve(__dirname, './multiroot suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

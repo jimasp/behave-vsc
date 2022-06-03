@@ -6,48 +6,12 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Debug Extension - Workspace 1",
+			"name": "Debug: MY workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceFolder}/example-project-workspace-1",
-			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			],
-			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
-		},
-		{
-			"name": "Debug Extension - Workspace 2",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceFolder}/example-project-workspace-2",
-			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			],
-			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
-		},
-		{
-			"name": "Debug Extension - My Project",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}",
 				"${workspaceFolder}/../my-project",
+				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
 				"${workspaceFolder}/dist/**/*.js"
@@ -57,16 +21,100 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
-			"justMyCode": true,
 		},
 		{
-			"name": "Run Extension Test Suite - Workspace 1",
+			"name": "Debug: simple workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+				"${workspaceFolder}/example-projects/simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceFolder}/example-project-workspace-1",
-				"--extensionTestsPath=${workspaceFolder}/out/test/workspace-1-suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: project A workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/project A",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: project B workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/project B",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: bad import workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/bad import",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: multiroot workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/multiroot.code-workspace",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Run Test Suite: project A workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/project A",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/project A suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -75,13 +123,43 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Extension Test Suite - Workspace 2",
+			"name": "Run Test Suite: project B workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
+				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"${workspaceFolder}/example-project-workspace-2",
-				"--extensionTestsPath=${workspaceFolder}/out/test/workspace-2-suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/test/project B suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Run Test Suite: simple workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/simple",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/simple suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Run Test Suite: multiroot workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/multiroot.code-workspace",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/multiroot suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

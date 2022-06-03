@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';
 
-export function runner(globStr: string): Promise<void> {
+export async function runner(globStr: string, ignore?: string[]): Promise<void> {
 	// Create the mocha test
 	const mocha = new Mocha({
 		ui: 'tdd',
@@ -13,7 +13,7 @@ export function runner(globStr: string): Promise<void> {
 	const testsRoot = path.resolve(__dirname, '..');
 
 	return new Promise((c, e) => {
-		glob(globStr, { cwd: testsRoot }, (err, files) => {
+		glob(globStr, { cwd: testsRoot, ignore: ignore }, (err, files) => {
 			if (err) {
 				return e(err);
 			}
