@@ -82,6 +82,10 @@
 			{
 				"command": "behave-vsc.gotoStep",
 				"title": "Go to Step Definition"
+			},
+			{
+				"command": "behave-vsc.findFeatureRefs",
+				"title": "Find all Feature References"
 			}
 		],
 		"menus": {
@@ -90,9 +94,40 @@
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/",
 					"command": "behave-vsc.gotoStep",
 					"group": "navigation"
+				},
+				{
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
+					"command": "behave-vsc.findFeatureRefs",
+					"group": "navigation"
 				}
 			]
-		}
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "featureReferences",
+					"title": "Feature References",
+					"icon": "images/behave-vsc.png"
+				}
+			]
+		},
+		"views": {
+			"featureReferences": [
+				{
+					"id": "featureReferences",
+					"name": "Feature References",
+					"icon": "images/behave-vsc.png",
+					"contextualTitle": "Feature References",
+					"visibility": "hidden"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "featureReferences",
+				"contents": "Feature references will appear here when you select \"Find all Feature References\" from the editor context menu inside a steps file."
+			}
+		]
 	},
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",

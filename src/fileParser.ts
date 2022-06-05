@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { getFeatureNameFromFile } from './featureParser';
+import { getFeatureNameFromFile, KeyedFeatureReferenceDetail } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
@@ -12,8 +12,10 @@ import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
 
 
-const stepMap: StepMap = new Map<string, StepDetail>();
-export const getStepMap = () => stepMap;
+const steps: StepMap = new Map<string, StepDetail>();
+export const getSteps = () => steps;
+const featureSteps: KeyedFeatureReferenceDetail[] = [];
+export const getFeatureSteps = () => featureSteps;
 export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
 
 export class FileParser {
@@ -87,9 +89,9 @@ export class FileParser {
     let processed = 0;
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
-    const wkspStepKeys = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
+    const wkspStepKeys = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
     for (const key of wkspStepKeys) {
-      stepMap.delete(key);
+      steps.delete(key);
     }
 
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
@@ -121,7 +123,7 @@ export class FileParser {
     if (!isStepsFile(fileUri))
       throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFile(featuresUri, fileUri, stepMap, caller);
+    await parseStepsFile(featuresUri, fileUri, caller);
   }
 
   async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
@@ -329,7 +331,7 @@ export class FileParser {
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
-      const wkspSteps = new Map([...stepMap].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
+      const wkspSteps = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
       return {
         tests: testCounts, featureFileCountExcludingEmptyOrCommentedOut: featureFileCount,
         stepFiles: stepFileCount, stepMappings: wkspSteps.size
@@ -366,7 +368,7 @@ export class FileParser {
       `---` +
       `\nperf info: ${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${stepMap.size} stepMatches took ${stepsTime + featTime} ms. ` +
+      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} stepMatches took ${stepsTime + featTime} ms. ` +
       `\nBreakdown: features ${featTime} ms, steps ${stepsTime} ms.` +
       `\nIgnore times if any of these are true: (a) time taken was during vscode startup contention, (b) busy cpu due to background processes, " + 
       "(c) another test extension is also refreshing, (d) you are debugging the extension itself or running an extension integration test.` +

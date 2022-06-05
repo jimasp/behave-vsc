@@ -12,12 +12,14 @@ import {
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { getStepMap, FileParser } from './fileParser';
+import { findFeatureRefsHandler } from './findFeatureRefsHandler';
+import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
+import { KeyedFeatureReferenceDetail } from './featureParser';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -32,6 +34,7 @@ export type TestSupport = {
   ctrl: vscode.TestController,
   parser: FileParser,
   getSteps: () => StepMap,
+  getFeatureSteps: () => KeyedFeatureReferenceDetail[],
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -69,6 +72,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       context.subscriptions.push(watcher);
     }
     context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler));
+    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findFeatureRefsHandler));
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     context.subscriptions.push(removeTempDirectoryCancelSource);
@@ -213,7 +217,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getStepMap,
+      getSteps: getSteps,
+      getFeatureSteps: getFeatureSteps,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };

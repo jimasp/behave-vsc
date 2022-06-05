@@ -13,8 +13,8 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, item: vscode.TestItem,
-    caller: string) {
+  public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, testData: TestData,
+    controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     try {
       if (!item.uri)
         throw new Error("missing test item uri");
@@ -23,7 +23,7 @@ export class TestFile {
 
       const content = await getContentFromFilesystem(item.uri);
       item.error = undefined;
-      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, item.uri.path, controller, content, item, caller);
+      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, controller, content, item, caller);
     }
     catch (e: unknown) {
       item.error = (e as Error).stack;
@@ -32,14 +32,14 @@ export class TestFile {
   }
 
 
-  public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, testData: TestData, featureFilePath: string,
+  public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, testData: TestData,
     controller: vscode.TestController, content: string, item: vscode.TestItem, caller: string) {
 
     if (item.uri === undefined)
       throw new Error("testitem uri is undefined");
     const featureFileWkspRelativePath = vscode.workspace.asRelativePath(item.uri, false);
 
-    const featureFilename = featureFilePath.split('/').pop();
+    const featureFilename = item.uri.path.split('/').pop();
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
 
@@ -82,7 +82,7 @@ export class TestFile {
       tcase.range = range;
       parent.item.label = featureName;
       parent.children.push(tcase);
-      diagLog(`created child test item scenario ${tcase.id} from ${featureFilePath}`);
+      diagLog(`created child test item scenario ${tcase.id} from ${item.uri.path}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {
@@ -90,7 +90,7 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(wkspSettings, featureFilePath, item.label, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(wkspSettings, item.uri, item.label, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

@@ -7,7 +7,6 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { getStepMatch } from '../../gotoStepHandler';
-import { StepMap } from '../../stepsParser';
 import { ParseCounts } from '../../fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
@@ -131,7 +130,7 @@ async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 }
 
 
-async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: WorkspaceSettings) {
+async function assertAllStepsCanBeMatched(wkspSettings: WorkspaceSettings) {
 
 	const featureSteps = await getAllStepsFromFeatureFiles(wkspSettings);
 
@@ -139,7 +138,7 @@ async function assertAllStepsCanBeMatched(parsedSteps: StepMap, wkspSettings: Wo
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const match = getStepMatch(wkspSettings.featuresUri.path, parsedSteps, line);
+				const match = getStepMatch(wkspSettings.featuresUri.path, line);
 				assert(match, "match");
 			}
 		}
@@ -348,7 +347,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getUriMatchString(wkspUri)) !== undefined;
 
 	// check all steps can be matched
-	await assertAllStepsCanBeMatched(instances.getSteps(), instances.config.workspaceSettings[wkspUri.path]);
+	await assertAllStepsCanBeMatched(instances.config.workspaceSettings[wkspUri.path]);
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allWkspItems);
