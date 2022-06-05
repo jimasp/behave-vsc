@@ -18,9 +18,10 @@
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-- Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode.
+- Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode. Each workspace must have its own distinct features/steps folders.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keybinding for this command if you wish (e.g. F12).
+- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keyboard shortcut for this command if you wish.
+- Find All Feature references for a step. (Not shown in the below gif. Right-click inside a steps file on a line containing step text (starting with @given/@when/@then) and click "Find All Feature References"). You can also map a keyboard shortcut for this command if you wish.
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 

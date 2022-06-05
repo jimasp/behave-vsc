@@ -15,20 +15,14 @@ export class TestFile {
 
   public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
-    try {
-      if (!item.uri)
-        throw new Error("missing test item uri");
-      if (!isFeatureFile(item.uri))
-        throw new Error(`${item.uri.path} is not a feature file`);
+    if (!item.uri)
+      throw new Error("missing test item uri");
+    if (!isFeatureFile(item.uri))
+      throw new Error(`${item.uri.path} is not a feature file`);
 
-      const content = await getContentFromFilesystem(item.uri);
-      item.error = undefined;
-      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, controller, content, item, caller);
-    }
-    catch (e: unknown) {
-      item.error = (e as Error).stack;
-      throw new WkspError(e, wkspSettings.uri);
-    }
+    const content = await getContentFromFilesystem(item.uri);
+    item.error = undefined;
+    this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, controller, content, item, caller);
   }
 
 

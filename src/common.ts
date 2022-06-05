@@ -14,6 +14,7 @@ export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
+
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can use the workspace name in the notification window
@@ -26,6 +27,14 @@ export class WkspError extends Error {
     super(msg);
     Object.setPrototypeOf(this, WkspError.prototype);
   }
+}
+
+
+// note currently vscode.workspace.showTextDocument(stepMatch.Uri) does not behave the same as
+// showTextDocument(vscode.Uri.file(stepMatch.uri.path))
+// e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
+export const showTextDocumentRange = (uri: vscode.Uri, range: vscode.Range) => {
+  vscode.window.showTextDocument(vscode.Uri.file(uri.path), { selection: range, preview: false });
 }
 
 
@@ -50,6 +59,7 @@ export async function removeExtensionTempDirectory(cancelToken: vscode.Cancellat
   await removeDirectoryRecursive(config.extensionTempFilesUri, cancelToken);
 }
 
+
 export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
 
   try {
@@ -71,9 +81,6 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
 }
 
 
-let workspaceFoldersWithFeatures: vscode.Uri[];
-
-
 
 // get the actual value in the file or return undefined, this is
 // for cases where we need to distinguish between an unset value and the default value
@@ -83,7 +90,9 @@ export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfigu
 }
 
 
-// THIS FUNCTION MUST BE FAST (< 10ms) 
+// THIS FUNCTION MUST BE FAST (ideally < 1ms) 
+// (check performance if you change it)
+let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
   if (!forceRefresh && workspaceFoldersWithFeatures)
@@ -269,11 +278,11 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 
 // we can't distinguish behave execution errors by exit code
 // a normal assertion failure gives an exit code of 1, but so do lots of other issues
-// so we need to check the stderr message.
+// so we need to check the stdout/stderr.
 // we do this so that we know whether we can expect junit files to 
 // be created (just an assertion failure) or stop the run and mark tests as failed in the UI
-export function isBehaveExecutionError(stderrStr: string) {
-  if (stderrStr.startsWith("Traceback"))
+export function isBehaveExecutionError(outputStr: string) {
+  if (outputStr.startsWith("Traceback") || outputStr.startsWith("ParserError:"))
     return true;
   return false;
 }

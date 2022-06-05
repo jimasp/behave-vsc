@@ -1,37 +1,50 @@
 import * as vscode from 'vscode';
+import { EXTENSION_NAME, showTextDocumentRange } from './common';
 import { FeatureReferenceDetail } from './featureParser';
 
 
 export class FeatureReference extends vscode.TreeItem {
   constructor(
-    public readonly featureName: string,
+    public resourceUri: vscode.Uri,
+    public readonly featureFileName: string,
     public readonly featureRefDetails: FeatureReferenceDetail[],
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
   ) {
-    super(featureName, collapsibleState);
+    super(featureFileName, collapsibleState);
   }
 }
 
-class FeatureDetails extends vscode.TreeItem {
+class FeatureReferenceDetails extends vscode.TreeItem {
+  public readonly range: vscode.Range;
+  public readonly contextValue = "FeatureReferenceDetails";
+  public readonly command: vscode.Command;
+
   constructor(
-    public readonly content: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+    public readonly label: string,
+    public readonly featureDetail: FeatureReferenceDetail
   ) {
-    super(content, collapsibleState);
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.tooltip = undefined;
+    this.range = this.featureDetail.range;
+    this.command = {
+      command: `${EXTENSION_NAME}.openFeatureFileFromReference`,
+      title: '',
+      arguments: [this.featureDetail.uri, this.range]
+    }
   }
 }
 
 
 export class FeatureReferencesTree implements vscode.TreeDataProvider<vscode.TreeItem> {
 
-  private _featureReferences: FeatureReference[];
+  private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
+  readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
-  constructor(featureReferences: FeatureReference[]) {
-    this._featureReferences = featureReferences;
-  }
+  private _featureReferences: FeatureReference[] = [];
 
   refresh(featureReferences: FeatureReference[]): void {
     this._featureReferences = featureReferences;
+    this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
@@ -46,7 +59,7 @@ export class FeatureReferencesTree implements vscode.TreeDataProvider<vscode.Tre
       return this._featureReferences.length > 0 ? Promise.resolve(this._featureReferences) : Promise.resolve([]);
 
     if (element instanceof FeatureReference) {
-      const featureReference = element.featureRefDetails.map(featureDetail => new FeatureDetails(featureDetail.content));
+      const featureReference = element.featureRefDetails.map(featureDetail => new FeatureReferenceDetails(featureDetail.content, featureDetail));
       return Promise.resolve(featureReference);
     }
 
@@ -54,5 +67,3 @@ export class FeatureReferencesTree implements vscode.TreeDataProvider<vscode.Tre
   }
 
 }
-
-

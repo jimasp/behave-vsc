@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile } from './common';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, showTextDocumentRange } from './common';
 import { getSteps } from './fileParser';
 import { parseRepWildcard, StepDetail } from "./stepsParser";
 
@@ -108,16 +108,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
       return;
     }
 
-    // note openTextDocument(stepMatch.Uri) does not behave the same as
-    // openTextDocument(vscode.Uri.file(stepMatch.uri.path))
-    // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
-    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(stepMatch.uri.path));
-    const editor = await vscode.window.showTextDocument(doc, { preview: false });
-    if (!editor) {
-      throw `Could not open editor for file:${stepMatch.uri.fsPath}`;
-    }
-    editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
-    editor.revealRange(stepMatch.range, vscode.TextEditorRevealType.InCenter);
+    await showTextDocumentRange(stepMatch.uri, stepMatch.range);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  

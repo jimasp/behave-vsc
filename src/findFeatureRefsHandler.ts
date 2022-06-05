@@ -39,11 +39,25 @@ export function getFeatureMatch(featuresUri: vscode.Uri, stExec: RegExpExecArray
   // convert to array of feature references
   const featureReferences: FeatureReference[] = [];
   for (const [key, value] of featureDetails) {
-    const featureReference = new FeatureReference(key, value);
+    const featureReference = new FeatureReference(value[0].uri, key, value);
     featureReferences.push(featureReference);
   }
 
   return featureReferences;
+}
+
+const treeDataProvider = new FeatureReferencesTree();
+const featureReferences: FeatureReference[] = [];
+
+export function refreshFeatureRefsHandler() {
+  try {
+    // refresh with current feature references
+    treeDataProvider.refresh(featureReferences);
+  }
+  catch (e: unknown) {
+    // entry point function (handler) - show error  
+    config.logger.showError(e);
+  }
 }
 
 
@@ -53,7 +67,7 @@ export function findFeatureRefsHandler(eventUri: vscode.Uri) {
 
     if (!eventUri || !isStepsFile(eventUri)) {
       // this should never happen - controlled by package.json editor/context
-      throw `Go to feature definition must be used from a steps file, uri was: ${eventUri}`;
+      throw `Find All Feature References must be used from a steps file, uri was: ${eventUri}`;
     }
 
     const activeEditor = vscode.window.activeTextEditor;
@@ -67,39 +81,47 @@ export function findFeatureRefsHandler(eventUri: vscode.Uri) {
       return;
 
     line = line.trim();
-    if (line == "" || line.startsWith("#"))
+    if (line == "" || !line.startsWith("def ")) {
+      vscode.window.showInformationMessage('To find feature references, you must be on a step line that contains a ' +
+        'step definition, e.g. "def mystep(context)".');
       return;
-
-    const stExec = stepRe.exec(line);
-    if (!stExec || !stExec[1])
-      return;
+    }
 
     const wkspSettings = getWorkspaceSettingsForFile(eventUri);
-    const featureReferences = getFeatureMatch(wkspSettings.featuresUri, stExec);
+    const featureReferences: FeatureReference[] = [];
 
-    const treeDataProvider = new FeatureReferencesTree(featureReferences);
+    for (let i = activeEditor.selection.active.line - 1; i > 0; i--) {
+      line = activeEditor.document.lineAt(i).text;
+      line = line.trim();
+      if (line == "")
+        continue;
+      const stExec = stepRe.exec(line);
+      if (!stExec || !stExec[1])
+        break;
+      const featureRefs = getFeatureMatch(wkspSettings.featuresUri, stExec);
+      featureReferences.push(...featureRefs);
+      console.log(featureReferences);
+    }
+
+
+    //featureReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
+    //const treeDataProvider = new FeatureReferencesTree(featureReferences);
 
     if (!treeView) {
+      // TODO: pass this is as a pre-registered disposable
       treeView = vscode.window.createTreeView("featureReferences", { treeDataProvider });
+      treeDataProvider.refresh(featureReferences);
     }
     else {
       treeDataProvider.refresh(featureReferences);
+      //treeView.reveal(featureReferences[0]);
     }
 
     //treeView.reveal(featureReferences[0]);
 
     vscode.commands.executeCommand(`featureReferences.focus`);
 
-    // // note openTextDocument(stepMatch.Uri) does not behave the same as
-    // // openTextDocument(vscode.Uri.file(stepMatch.uri.path))
-    // // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
-    // const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(stepMatch.uri.path));
-    // const editor = await vscode.window.showTextDocument(doc, { preview: false });
-    // if (!editor) {
-    //   throw `Could not open editor for file:${stepMatch.uri.fsPath}`;
-    // }
-    // editor.selection = new vscode.Selection(stepMatch.range.start, stepMatch.range.end);
-    // editor.revealRange(stepMatch.range, vscode.TextEditorRevealType.InCenter);
+
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  

@@ -8,11 +8,11 @@ import {
   EXTENSION_FULL_NAME,
   EXTENSION_NAME,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeExtensionTempDirectory
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, showTextDocumentRange
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findFeatureRefsHandler } from './findFeatureRefsHandler';
+import { findFeatureRefsHandler, refreshFeatureRefsHandler } from './findFeatureRefsHandler';
 import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -71,8 +71,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       wkspWatchers.set(wkspUri, watcher);
       context.subscriptions.push(watcher);
     }
-    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler));
-    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findFeatureRefsHandler));
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findFeatureRefsHandler),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshFeatureRefs`, () => refreshFeatureRefsHandler()),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
+        showTextDocumentRange(uri, range)),
+    );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     context.subscriptions.push(removeTempDirectoryCancelSource);

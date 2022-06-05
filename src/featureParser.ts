@@ -5,7 +5,7 @@ import { diagLog } from './logger';
 import { getFeatureSteps } from './fileParser';
 
 
-const featureReStr = "^(\\s*|\\s*#\\s*)Feature:(\\s*)(.+)(\\s*)$";
+const featureReStr = "^(\\s*)Feature:(\\s*)(.+)(\\s*)$";
 const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;

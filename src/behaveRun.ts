@@ -105,6 +105,12 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     });
     cp.stdout?.on('data', chunk => {
       const str = chunk.toString();
+      // some errors come via stdout, e.g. ParserError if you have no feature before a scenario
+      if (isBehaveExecutionError(str)) {
+        // fatal behave error (i.e. there will be no junit output)
+        behaveExecutionError = true;
+        config.logger.show(wkspUri);
+      }
       log(str);
     });
 
