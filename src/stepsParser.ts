@@ -20,10 +20,10 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
   if (!isStepsFile(fileUri))
     throw new Error(`${fileUri.path} is not a steps file`);
 
-  // user may have deleted a step, so clear the steps for this uri
+  // clear existing steps for this file uri
   const stepMap = getSteps();
   stepMap.forEach((value, key, map) => {
-    if (value.uri.path === fileUri.path)
+    if (value.uri === fileUri)
       map.delete(key);
   });
 

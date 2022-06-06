@@ -98,7 +98,7 @@ export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: st
 
     if (!treeView) {
       // TODO: pass this is as a pre-registered disposable
-      treeView = vscode.window.createTreeView("stepReferences", { treeDataProvider });
+      treeView = vscode.window.createTreeView("stepReferences", { showCollapseAll: true, treeDataProvider });
       treeDataProvider.refresh(stepReferences);
     }
     else {

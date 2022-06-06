@@ -45,6 +45,12 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
   let fileSteps = 0;
   const featureSteps = getFeatureSteps();
 
+  // clear existing steps for this file uri  
+  for (let i = featureSteps.length - 1; i >= 0; i--) {
+    if (featureSteps[i].feature.uri === fileUri)
+      featureSteps.splice(i, 1);
+  }
+
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 
     // get indent before we trim
