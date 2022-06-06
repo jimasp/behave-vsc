@@ -109,9 +109,9 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ## Development guidelines
 
+- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and documentation updates.
 - The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
 - No reliance on other extensions except `ms-python.python`.
-- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.)
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions.
 - Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
@@ -147,10 +147,10 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 - Stack traces will only appear if `behave-vsc.xRay` is enabled.
 - The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
-- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
-- If you are adding a `throw` or `showError`, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
+- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).
+- If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, only gets shown once, and has the full expected stack if `xRay` is enabled.
 - Entry point (event handlers/hooks) and background tasks (i.e. unawaited async functions/promises) should always contain a `try/catch` with a `config.showError`. Examples are `activate`,`deactivate` and any function called `...Handler` or `onDid...`, or just `on...` (e.g. `onCancellationRequested`). These are the top-level functions and so they need catches.
-- Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option (`wkspError`) should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github.
 - Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
 - Info appears in the output window. Warnings and Errors appear in the output window and the notification window. All of them will appear in console if `xRay` is enabled.
@@ -158,7 +158,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 ### Logging
 
 - You should `throw` for errors (see [Error handling](#error_handling)), and `showWarn` for warnings. This will log the error/warning and open a notification window to alert the user.
-- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
+- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` wherever possible.
 - Log info to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *This should only be used where a workspace context does not make sense.*
 - Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
@@ -258,7 +258,8 @@ After running automated tests and the manual UI tests in (1) above, then if you 
 - K. delete a feature file, check it gets removed from the test tree
 - L. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
 - M. copy a feature file, check it gets added to the test tree
-- N. go to a feature file, click "go to step defintion" and check at least some of them work
-- O. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
-- P. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
-- Q. assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
+- N. in "project B", open the `goto_step.feature` feature file and click "go to step defintion" on some steps, including one step that spans multiple lines, and check they still work
+- O. rename the `goto_step.feature` file and check you can still use "go to step definition" for a step in that file
+- P. in the file UI remove a workspace folder (e.g. "project A") and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all remaining workspaces.
+- Q. in the file UI add the workspace folder you removed and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all workspaces.
+- I. assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.

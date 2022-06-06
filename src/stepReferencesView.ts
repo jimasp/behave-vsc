@@ -1,27 +1,27 @@
 import * as vscode from 'vscode';
-import { EXTENSION_NAME, showTextDocumentRange } from './common';
-import { FeatureReferenceDetail } from './featureParser';
+import { EXTENSION_NAME } from './common';
+import { StepReferenceDetail } from './featureParser';
 
 
-export class FeatureReference extends vscode.TreeItem {
+export class StepReference extends vscode.TreeItem {
   constructor(
     public resourceUri: vscode.Uri,
     public readonly featureFileName: string,
-    public readonly featureRefDetails: FeatureReferenceDetail[],
+    public readonly featureRefDetails: StepReferenceDetail[],
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
   ) {
     super(featureFileName, collapsibleState);
   }
 }
 
-class FeatureReferenceDetails extends vscode.TreeItem {
+class StepReferenceDetails extends vscode.TreeItem {
   public readonly range: vscode.Range;
-  public readonly contextValue = "FeatureReferenceDetails";
+  public readonly contextValue = "StepReferenceDetails";
   public readonly command: vscode.Command;
 
   constructor(
     public readonly label: string,
-    public readonly featureDetail: FeatureReferenceDetail
+    public readonly featureDetail: StepReferenceDetail
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
@@ -35,15 +35,15 @@ class FeatureReferenceDetails extends vscode.TreeItem {
 }
 
 
-export class FeatureReferencesTree implements vscode.TreeDataProvider<vscode.TreeItem> {
+export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeItem> {
 
   private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
-  private _featureReferences: FeatureReference[] = [];
+  private _stepReferences: StepReference[] = [];
 
-  refresh(featureReferences: FeatureReference[]): void {
-    this._featureReferences = featureReferences;
+  refresh(stepReferences: StepReference[]): void {
+    this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
   }
 
@@ -52,15 +52,15 @@ export class FeatureReferencesTree implements vscode.TreeDataProvider<vscode.Tre
   }
 
   getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
-    if (!this._featureReferences)
+    if (!this._stepReferences)
       return Promise.resolve([]);
 
     if (!element)
-      return this._featureReferences.length > 0 ? Promise.resolve(this._featureReferences) : Promise.resolve([]);
+      return this._stepReferences.length > 0 ? Promise.resolve(this._stepReferences) : Promise.resolve([]);
 
-    if (element instanceof FeatureReference) {
-      const featureReference = element.featureRefDetails.map(featureDetail => new FeatureReferenceDetails(featureDetail.content, featureDetail));
-      return Promise.resolve(featureReference);
+    if (element instanceof StepReference) {
+      const stepReference = element.featureRefDetails.map(featureDetail => new StepReferenceDetails(featureDetail.content, featureDetail));
+      return Promise.resolve(stepReference);
     }
 
     return Promise.resolve([]);

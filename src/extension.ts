@@ -12,14 +12,14 @@ import {
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findFeatureRefsHandler, refreshFeatureRefsHandler } from './findFeatureRefsHandler';
+import { findStepReferencesHandler, refreshStepReferencesHandler } from './findStepReferencesHandler';
 import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { KeyedFeatureReferenceDetail } from './featureParser';
+import { KeyedStepReferenceDetail } from './featureParser';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -34,7 +34,7 @@ export type TestSupport = {
   ctrl: vscode.TestController,
   parser: FileParser,
   getSteps: () => StepMap,
-  getFeatureSteps: () => KeyedFeatureReferenceDetail[],
+  getFeatureSteps: () => KeyedStepReferenceDetail[],
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -74,8 +74,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     context.subscriptions.push(
       vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findFeatureRefsHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshFeatureRefs`, () => refreshFeatureRefsHandler()),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findStepReferencesHandler),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshFeatureRefs`, () => refreshStepReferencesHandler()),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
         showTextDocumentRange(uri, range)),
     );

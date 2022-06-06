@@ -21,7 +21,7 @@
 - Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode. Each workspace must have its own distinct features/steps folders.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keyboard shortcut for this command if you wish.
-- Find All Feature references for a step. (Not shown in the below gif. Right-click inside a steps file on a line containing step text (starting with @given/@when/@then) and click "Find All Feature References"). You can also map a keyboard shortcut for this command if you wish.
+- Find All Step references from step file. (Not shown in the below gif. Right-click inside a steps file on a line containing a step function definition and click "Find All Step References"). You can also map a keyboard shortcut for this command if you wish.
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -39,10 +39,11 @@
 ### Required project directory structure
 
 - A single `features` (lowercase by default) folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires you have a "steps" folder.)
-- A behave-conformant directory structure, for example:
+- A *behave-conformant* directory structure, for example:
 
 ```text
-  . features/  
+  . my-project
+  .    +-- features/  
   .       +-- environment.py
   .       +-- steps/  
   .       |      +-- *.py  
@@ -142,8 +143,8 @@ paths=behave_tests/features
 
 - There is currently a [bug](https://github.com/microsoft/vscode/issues/149328) in vscode itself when you hit the "Run Tests" button (or equivalent command) and multiple test extensions are enabled, this causes: (a) skipped tests not to update (they are shown as "not yet run"), and (b) the test run not to end/update results in a multi-root project when there are multiple test extensions active. A workaround is simply not to use the "Run Tests" button, i.e. run tests from a test tree node instead (e.g. "Feature Tests")
 - Test side bar refresh button may be duplicated if more than one test extension is active, (this isn't really an issue as such, you may actually prefer it. MS have a [fix](https://github.com/microsoft/vscode/issues/139737), but it requires *other* test extension authors to update their code (this extension has applied the fix).
-- "Go to Step" context menu doesn't always match correctly (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly.
-- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder it won't find them).
+- "Go to Step" context menu doesn't always match as per behave (and never will). This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly.
+- "Go to step" context menu will only find steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder it won't find them).
 - vscode always adds up test durations. For parallel runs this means the parent test node reports a longer time than the test run actually took.
 - Running debug against *multiple* test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
 

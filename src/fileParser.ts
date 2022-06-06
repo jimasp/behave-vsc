@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { getFeatureNameFromFile, KeyedFeatureReferenceDetail } from './featureParser';
+import { getFeatureNameFromFile, KeyedStepReferenceDetail } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
@@ -14,7 +14,7 @@ import { diagLog } from './logger';
 
 const steps: StepMap = new Map<string, StepDetail>();
 export const getSteps = () => steps;
-const featureSteps: KeyedFeatureReferenceDetail[] = [];
+const featureSteps: KeyedStepReferenceDetail[] = [];
 export const getFeatureSteps = () => featureSteps;
 export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
 

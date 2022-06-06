@@ -20,7 +20,7 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Optional key-value pairs of environment variable overrides to use when calling a behave command. This will apply to all behave tests within the workspace.",
+					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the workspace.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -85,14 +85,14 @@
 			},
 			{
 				"command": "behave-vsc.findFeatureRefs",
-				"title": "Find All Feature References"
+				"title": "Find All Step References"
 			},
 			{
 				"command": "behave-vsc.refreshFeatureRefs",
 				"title": "Refresh",
 				"icon": {
-					"light": "images/behave-vsc.png",
-					"dark": "images/behave-vsc.png"
+					"light": "images/light/refresh.svg",
+					"dark": "images/dark/refresh.svg"
 				}
 			}
 		],
@@ -112,7 +112,7 @@
 			"view/title": [
 				{
 					"command": "behave-vsc.refreshFeatureRefs",
-					"when": "view == featureReferences",
+					"when": "view == stepReferences",
 					"group": "navigation"
 				}
 			]
@@ -120,27 +120,27 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "featureReferences",
-					"title": "Feature References",
+					"id": "stepReferences",
+					"title": "Step References",
 					"icon": "images/behave-vsc.png"
 				}
 			]
 		},
 		"views": {
-			"featureReferences": [
+			"stepReferences": [
 				{
-					"id": "featureReferences",
-					"name": "Feature References",
+					"id": "stepReferences",
+					"name": "Step References",
 					"icon": "images/behave-vsc.png",
-					"contextualTitle": "Feature References",
+					"contextualTitle": "Step References",
 					"visibility": "hidden"
 				}
 			]
 		},
 		"viewsWelcome": [
 			{
-				"view": "featureReferences",
-				"contents": "Feature references will appear here when you select \"Find All Feature References\" from the editor context menu inside a steps file."
+				"view": "stepReferences",
+				"contents": "Step references will appear here when you select \"Find All Step References\" from the editor context menu inside a steps file."
 			}
 		]
 	},

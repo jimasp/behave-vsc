@@ -6,7 +6,7 @@ import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { getStepMatch } from '../../gotoStepHandler';
+import { getStepText, getStepMatch } from '../../gotoStepHandler';
 import { ParseCounts } from '../../fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
@@ -138,7 +138,10 @@ async function assertAllStepsCanBeMatched(wkspSettings: WorkspaceSettings) {
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const match = getStepMatch(wkspSettings.featuresUri.path, line);
+				const stepText = getStepText(line);
+				if (!stepText)
+					throw `getStepText returned undefined for line: ${line}`;
+				const match = getStepMatch(wkspSettings.featuresUri.path, stepText);
 				assert(match, "match");
 			}
 		}

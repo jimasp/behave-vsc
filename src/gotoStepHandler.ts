@@ -6,16 +6,7 @@ import { parseRepWildcard, StepDetail } from "./stepsParser";
 
 
 
-export function getStepMatch(featuresUriPath: string, stepLine: string): StepDetail | undefined {
-
-  if (stepLine.endsWith(":")) // table
-    stepLine = stepLine.slice(0, -1);
-
-  const stepRe = /^(\s*)(given|when|then|and)(.+)$/i;
-  const stExec = stepRe.exec(stepLine);
-  if (!stExec || !stExec[3])
-    return;
-  const stepText = stExec[3].trim();
+export function getStepMatch(featuresUriPath: string, stepText: string): StepDetail | undefined {
 
   const allSteps = getSteps();
   // filter matches to the workspace that raised the click event
@@ -91,17 +82,13 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
       return;
     }
 
-    let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
-
-    if (!line)
-      return;
-
-    line = line.trim();
-    if (line == "" || line.startsWith("#"))
+    const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
+    const stepText = getStepText(line);
+    if (!stepText)
       return;
 
     const wkspSettings = getWorkspaceSettingsForFile(eventUri);
-    const stepMatch = getStepMatch(wkspSettings.featuresUri.path, line);
+    const stepMatch = getStepMatch(wkspSettings.featuresUri.path, stepText);
 
     if (!stepMatch) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)
@@ -121,4 +108,26 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
     }
   }
 
+}
+
+
+export function getStepText(line: string): string | undefined {
+  if (!line)
+    return;
+
+  line = line.trim();
+  if (line == "" || line.startsWith("#"))
+    return;
+
+  if (line.endsWith(":")) // table
+    line = line.slice(0, -1);
+
+  const stepRe = /^(\s*)(given |when |then |and )(.+)$/i;
+  const stExec = stepRe.exec(line);
+  if (!stExec || !stExec[3]) {
+    vscode.window.showInformationMessage('Selected line does not start with "Given /When /Then /And "');
+    return;
+  }
+
+  return stExec[3].trim();
 }
