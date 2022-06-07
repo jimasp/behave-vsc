@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem } from './common';
+import { getContentFromFilesystem, getUriMatchString, sepr } from './common';
 import { diagLog } from './logger';
 import { getFeatureSteps } from './fileParser';
 
@@ -45,9 +45,10 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
   let fileSteps = 0;
   const featureSteps = getFeatureSteps();
 
-  // clear existing steps for this file uri  
+  // clear existing steps for this file uri
+  const fileUriMatchString = getUriMatchString(fileUri);
   for (let i = featureSteps.length - 1; i >= 0; i--) {
-    if (featureSteps[i].feature.uri === fileUri)
+    if (featureSteps[i].key.startsWith(fileUriMatchString))
       featureSteps.splice(i, 1);
   }
 
@@ -65,7 +66,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
     const step = featureStepRe.exec(line);
     if (step) {
       const stepText = step[2].trim();
-      const key = `${wkspSettings.featuresUri.path}:${stepText}`;
+      const key = `${getUriMatchString(fileUri)}${sepr}${stepText}`;
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const fileName = fileUri.path.split("/").pop();
       if (!fileName)
@@ -100,8 +101,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
 
     const feature = featureReLine.exec(line);
     if (feature) {
-      //featureName = feature[3];
-
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
       onFeatureLine(range);
 

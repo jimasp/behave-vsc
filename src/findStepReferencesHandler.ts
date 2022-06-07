@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile } from './common';
+import { afterSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile } from './common';
 import { getFeatureSteps } from './fileParser';
 import { getStepKey, stepRe } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
@@ -13,10 +13,11 @@ let treeView: vscode.TreeView<vscode.TreeItem>;
 export function getStepReferences(featuresUri: vscode.Uri, stepKey: string): StepReference[] {
 
   const allFeatureSteps = getFeatureSteps();
+  const featuresUriMatchString = getUriMatchString(featuresUri);
   // filter matches to the workspace that raised the click event
-  const wkpsFeatureSteps = allFeatureSteps.filter((fs) => fs.key.startsWith(featuresUri.path));
-  // then remove the featuresUriPath prefix from the keys
-  const featureSteps = [...wkpsFeatureSteps].map((fs) => [fs.key.replace(`${featuresUri.path}:`, ""), fs.feature]);
+  const wkpsFeatureSteps = allFeatureSteps.filter((fs) => fs.key.startsWith(featuresUriMatchString));
+  // then remove the fileUri match string prefix from the keys
+  const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterSepr(fs.key), fs.feature]);
 
   // get matches
   const featureDetails = new Map<string, StepReferenceDetail[]>();

@@ -14,6 +14,9 @@ export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
+// used as a separator e.g. `${mypath}${sep}${myfile}` 
+export const sepr = "////";
+export const afterSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
 
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
@@ -47,15 +50,19 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
-// this function is here to highlight why uri.toString() is needed:
-// both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
+// these two uri Match functions are here to highlight why uri.toString() is needed:
+// 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
 // whether uri.path === uri.path or uri.fsPath === fs.path works out of the box depends on whether the uri is being set 
 // and read on a similar code stack (i.e. whether both used "C" or "c" when the value was set).
-// at any rate, for matching one uri path or fsPath to another we can use toString() to provide consistent casing
-// (on the other hand uri === uri does seem to work)
-// also see https://github.com/microsoft/vscode/issues/93368
+// at any rate, for matching one uri path or fsPath to another we can use toString() to provide consistent casing.
+// 2. separately, two uris that point to the same path (regardless of casing) may not be the same object, so uri1 === uri2 would fail
+// so whenever we plan to use a uri in an equals comparison we should use one of these functions
 export function getUriMatchString(uri: vscode.Uri) {
   return uri.toString();
+}
+
+export function urisMatch(uri1: vscode.Uri, uri2: vscode.Uri) {
+  return getUriMatchString(uri1) === getUriMatchString(uri2);
 }
 
 
