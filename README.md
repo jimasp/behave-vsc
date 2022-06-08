@@ -1,6 +1,6 @@
 # Behave VSC
 
-## Pre-release v0.3.0
+## Pre-release v0.3.1
 
 - This is a pre-release. On each update please make sure to check the release notes for any breaking changes.
 - A test runner (and debugger) for Python behave tests in vscode
