@@ -8,7 +8,7 @@
 					"default": "",
 					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
 					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
+					"deprecationMessage": "behave-vsc.envVarList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
@@ -97,7 +97,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug and Run Behave tests from Sidebar or Feature file",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
