@@ -1,5 +1,7 @@
+**PLEASE READ [CONTRIBUTING.md](https://github.com/jimasp/behave-vsc/blob/main/CONTRIBUTING.md) BEFORE SUBMITTING A PULL REQUEST**
+
 **Issue #**
-Please link to the issue here.
+Please link to the issue that this resolves here.
 
 **Description of changes**
 Short description of your changes, or any other info not detailed in the issue.
