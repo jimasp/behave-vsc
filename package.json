@@ -147,7 +147,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug and Run behave tests, with built-in step navigation",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
