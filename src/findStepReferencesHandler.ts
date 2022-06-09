@@ -99,14 +99,14 @@ export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: st
 
     if (!treeView) {
       // TODO: pass this is as a pre-registered disposable
-      treeView = vscode.window.createTreeView("stepReferences", { showCollapseAll: true, treeDataProvider });
+      treeView = vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider });
       treeDataProvider.refresh(stepReferences);
     }
     else {
       treeDataProvider.refresh(stepReferences);
     }
 
-    vscode.commands.executeCommand(`stepReferences.focus`);
+    vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
@@ -136,7 +136,7 @@ function getMatchKeys(wkspSettings: WorkspaceSettings): string[] | undefined {
 
   line = line.trim();
   if (line == "" || !line.startsWith("def ")) {
-    vscode.window.showInformationMessage('Selected line is not a step definition (does not start with "def ").');
+    vscode.window.showInformationMessage('Selected line is not a step function definition. Line must start with "def ".');
     return;
   }
 

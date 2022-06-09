@@ -35,22 +35,22 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vscode.Uri, featureName: string, text: string, caller: string,
+export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vscode.Uri, featureName: string, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
-  const lines = text.split('\n');
-  let fastSkipFeature = false;
-  let fileScenarios = 0;
-  let fileSteps = 0;
-  const featureSteps = getFeatureSteps();
-
-  // clear existing steps for this file uri
+  // clear existing feature steps for this file uri
   const fileUriMatchString = getUriMatchString(fileUri);
+  const featureSteps = getFeatureSteps();
   for (let i = featureSteps.length - 1; i >= 0; i--) {
     if (featureSteps[i].key.startsWith(fileUriMatchString))
       featureSteps.splice(i, 1);
   }
+
+  const lines = content.split('\n');
+  let fastSkipFeature = false;
+  let fileScenarios = 0;
+  let fileSteps = 0;
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 

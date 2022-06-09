@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { isStepsFile } from './common';
+import { getUriMatchString, isStepsFile } from './common';
 import { getContentFromFilesystem } from './common';
 import { getSteps } from './fileParser';
 import { diagLog } from './logger';
@@ -21,18 +21,18 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
     throw new Error(`${fileUri.path} is not a steps file`);
 
   // clear existing steps for this file uri
+  const fileUriMatchString = getUriMatchString(fileUri);
   const stepMap = getSteps();
   stepMap.forEach((value, key, map) => {
-    if (value.uri === fileUri)
+    if (getUriMatchString(value.uri) === fileUriMatchString)
       map.delete(key);
   });
-
-  let fileSteps = 0;
 
   const content = await getContentFromFilesystem(fileUri);
   if (!content)
     return;
 
+  let fileSteps = 0;
   let multiLineBuilding = false;
   let multiLine = "";
   let startLine = 0;

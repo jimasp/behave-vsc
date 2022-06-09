@@ -8,7 +8,7 @@
 					"default": "",
 					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
 					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
+					"deprecationMessage": "behave-vsc.envVarList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
 				},
 				"behave-vsc.fastSkipList": {
 					"type": "string",
@@ -84,12 +84,12 @@
 				"title": "Go to Step Definition"
 			},
 			{
-				"command": "behave-vsc.findFeatureRefs",
+				"command": "behave-vsc.findStepReferences",
 				"title": "Find All Step References"
 			},
 			{
-				"command": "behave-vsc.refreshFeatureRefs",
-				"title": "Refresh",
+				"command": "behave-vsc.refreshStepReferences",
+				"title": "Refresh Step References",
 				"icon": {
 					"light": "images/light/refresh.svg",
 					"dark": "images/dark/refresh.svg"
@@ -105,14 +105,14 @@
 				},
 				{
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
-					"command": "behave-vsc.findFeatureRefs",
+					"command": "behave-vsc.findStepReferences",
 					"group": "navigation"
 				}
 			],
 			"view/title": [
 				{
-					"command": "behave-vsc.refreshFeatureRefs",
-					"when": "view == stepReferences",
+					"command": "behave-vsc.refreshStepReferences",
+					"when": "view == behave-vsc_stepReferences",
 					"group": "navigation"
 				}
 			]
@@ -120,16 +120,16 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "stepReferences",
+					"id": "behave-vsc_stepReferences",
 					"title": "Step References",
 					"icon": "images/behave-vsc.png"
 				}
 			]
 		},
 		"views": {
-			"stepReferences": [
+			"behave-vsc_stepReferences": [
 				{
-					"id": "stepReferences",
+					"id": "behave-vsc_stepReferences",
 					"name": "Step References",
 					"icon": "images/behave-vsc.png",
 					"contextualTitle": "Step References",
@@ -139,7 +139,7 @@
 		},
 		"viewsWelcome": [
 			{
-				"view": "stepReferences",
+				"view": "behave-vsc_stepReferences",
 				"contents": "Step references will appear here when you select \"Find All Step References\" from the editor context menu inside a steps file."
 			}
 		]

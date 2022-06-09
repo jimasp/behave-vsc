@@ -74,8 +74,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     context.subscriptions.push(
       vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.findFeatureRefs`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshFeatureRefs`, () => refreshStepReferencesHandler()),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferencesHandler()),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
         showTextDocumentRange(uri, range)),
     );
@@ -253,18 +253,18 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-  const updater = (uri: vscode.Uri) => {
+  const updater = async (uri: vscode.Uri) => {
     try {
 
       if (isStepsFile(uri)) {
-        parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
-        return;
+        await parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
       }
 
       if (isFeatureFile(uri)) {
-        parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
+        await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
       }
 
+      refreshStepReferencesHandler();
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
