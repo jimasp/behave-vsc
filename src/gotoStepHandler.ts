@@ -68,13 +68,21 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
 }
 
 
-export async function gotoStepHandler(eventUri: vscode.Uri) {
+export async function gotoStepHandler() {
+
+  // we won't use a passed-in event parameter, because the default extension keybinding 
+  // in package.json doesn't provide it to this function
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor)
+    return;
+
+  const docUri = activeEditor.document.uri;
 
   try {
 
-    if (!eventUri || !isFeatureFile(eventUri)) {
-      // this should never happen - controlled by package.json editor/context
-      throw `Go to step definition must be used from a feature file, uri was: ${eventUri}`;
+    if (!docUri || !isFeatureFile(docUri)) {
+      // this should never happen - command availability context is controlled by package.json editor/context
+      throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
     const activeEditor = vscode.window.activeTextEditor;
@@ -87,7 +95,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
     if (!stepText)
       return;
 
-    const wkspSettings = getWorkspaceSettingsForFile(eventUri);
+    const wkspSettings = getWorkspaceSettingsForFile(docUri);
     const stepMatch = getStepMatch(wkspSettings.featuresUri.path, stepText);
 
     if (!stepMatch) {
@@ -100,7 +108,7 @@ export async function gotoStepHandler(eventUri: vscode.Uri) {
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const wkspUri = getWorkspaceUriForFile(eventUri);
+      const wkspUri = getWorkspaceUriForFile(docUri);
       config.logger.showError(e, wkspUri);
     }
     catch {

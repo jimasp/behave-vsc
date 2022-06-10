@@ -96,6 +96,18 @@
 				}
 			}
 		],
+		"keybindings": [
+			{
+				"command": "behave-vsc.gotoStep",
+				"key": "alt+f12",
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/"
+			},
+			{
+				"command": "behave-vsc.findStepReferences",
+				"key": "alt+f12",
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/"
+			}
+		],
 		"menus": {
 			"editor/context": [
 				{

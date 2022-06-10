@@ -62,18 +62,26 @@ export function refreshStepReferencesHandler() {
 }
 
 
-export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: string[]) {
+export function findStepReferencesHandler(event: vscode.Uri, refreshKeys?: string[]) {
+
+  // we won't use a passed-in event parameter, because the default extension keybinding 
+  // in package.json doesn't provide it to this function
+  const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor)
+    return;
+
+  const docUri = activeEditor.document.uri;
 
   try {
 
-    if (!eventUri || !isStepsFile(eventUri)) {
-      // this should never happen - controlled by package.json editor/context
-      throw `Find All Step References must be used from a steps file, uri was: ${eventUri}`;
+    if (!docUri || !isStepsFile(docUri)) {
+      // this should never happen - command availability context is controlled by package.json editor/context
+      throw `Find All Step References must be used from a steps file, uri was: ${docUri}`;
     }
 
 
     let matchKeys: string[] | undefined;
-    const wkspSettings = getWorkspaceSettingsForFile(eventUri);
+    const wkspSettings = getWorkspaceSettingsForFile(docUri);
     const stepReferences: StepReference[] = [];
 
 
@@ -87,7 +95,7 @@ export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: st
 
       // store in module vars for refresh
       refreshMatchKeys = matchKeys;
-      refreshEventUri = eventUri;
+      refreshEventUri = docUri;
     }
 
     for (const key of matchKeys) {
@@ -113,7 +121,7 @@ export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: st
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const wkspUri = getWorkspaceUriForFile(eventUri);
+      const wkspUri = getWorkspaceUriForFile(docUri);
       config.logger.showError(e, wkspUri);
     }
     catch {

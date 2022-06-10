@@ -20,8 +20,8 @@
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode. Each workspace must have its own distinct features/steps folders.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-- Go to step definition from feature file. (Not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition"). You can also map a keyboard shortcut for this command if you wish.
-- Find All Step references from step file. (Not shown in the below gif. Right-click inside a steps file on a line containing a step function definition and click "Find All Step References"). You can also map a keyboard shortcut for this command if you wish.
+- Go to step definition from feature file. This is not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition". Default keybinding is Alt+F12.
+- Find All Step references from step file. This is not shown in the below gif. Right-click inside a steps file on a line containing a step function definition and click "Find All Step References". Default keybinding is Alt+F12.
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
