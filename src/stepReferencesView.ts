@@ -42,9 +42,16 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
 
   private _stepReferences: StepReference[] = [];
 
-  refresh(stepReferences: StepReference[]): void {
+  update(stepReferences: StepReference[], treeView: vscode.TreeView<vscode.TreeItem>): void {
+    // note - order of execution here is important to how the display is updated,
+    // i.e. we have to watch for artifacts when going between having results/no results or the reverse
+    // (e.g. treeView.message is set on two separate lines, and fire() is in the middle)
+    if (stepReferences.length > 0)
+      treeView.message = "";
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
+    if (stepReferences.length === 0)
+      treeView.message = "No step references found";
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {

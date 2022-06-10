@@ -100,13 +100,15 @@ export function findStepReferencesHandler(eventUri: vscode.Uri, refreshKeys?: st
     if (!treeView) {
       // TODO: pass this is as a pre-registered disposable
       treeView = vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider });
-      treeDataProvider.refresh(stepReferences);
+      treeDataProvider.update(stepReferences, treeView);
     }
     else {
-      treeDataProvider.refresh(stepReferences);
+      treeDataProvider.update(stepReferences, treeView);
     }
 
-    vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
+    // refresh can be called from code, but will already be shown if a user click, so keep current visibility
+    if (!refreshKeys)
+      vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
@@ -135,8 +137,8 @@ function getMatchKeys(wkspSettings: WorkspaceSettings): string[] | undefined {
     return;
 
   line = line.trim();
-  if (line == "" || !line.startsWith("def ")) {
-    vscode.window.showInformationMessage('Selected line is not a step function definition. Line must start with "def ".');
+  if (line == "" || (!line.startsWith("def ") && !line.startsWith("async def "))) {
+    vscode.window.showInformationMessage('Selected line is not a step function definition.');
     return;
   }
 
