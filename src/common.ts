@@ -14,9 +14,10 @@ export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
 export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
-// used as a separator e.g. `${mypath}${sep}${myfile}` 
-export const sepr = "////";
-export const afterSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
+export const sepr = "#£#£#"; // separator without any regex special chars
+export const pathSepr = "////"; // separator that cannot exist in file paths
+export const afterPathSepr = (str: string) => str.substring(str.indexOf(pathSepr) + pathSepr.length, str.length);
+
 
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
@@ -36,8 +37,8 @@ export class WkspError extends Error {
 // note currently vscode.workspace.showTextDocument(stepMatch.Uri) does not behave the same as
 // showTextDocument(vscode.Uri.file(stepMatch.uri.path))
 // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
-export const showTextDocumentRange = (uri: vscode.Uri, range: vscode.Range) => {
-  vscode.window.showTextDocument(vscode.Uri.file(uri.path), { selection: range, preview: false });
+export const showTextDocumentRange = async (uri: vscode.Uri, range: vscode.Range) => {
+  await vscode.window.showTextDocument(vscode.Uri.file(uri.path), { selection: range, preview: false });
 }
 
 

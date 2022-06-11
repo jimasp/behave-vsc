@@ -3,6 +3,25 @@
 # pylint: disable=missing-class-docstring
 from behave import *
 
+@given("given step")
+def given_step(context):
+    pass
+
+@given("and step")
+def and_step(context):
+    pass
+
+@when("when step")
+def when_step(context):
+    pass    
+
+@then("then step")
+def then_step(context):
+    pass
+
+@then("but step")
+def but_step(context):
+    pass
 
 @step("a simple step")
 def simple_step(context):

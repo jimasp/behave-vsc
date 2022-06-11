@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { getUriMatchString, isStepsFile } from './common';
+import { getUriMatchString, isStepsFile, sepr } from './common';
 import { getContentFromFilesystem } from './common';
 import { getSteps } from './fileParser';
 import { diagLog } from './logger';
 
 export const parseRepWildcard = ".*";
-export const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
+export const stepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
 const startRe = /^\s*(@step|@given|@when|@then).+/i;
 
 
@@ -35,7 +35,8 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
   let fileSteps = 0;
   let multiLineBuilding = false;
   let multiLine = "";
-  let startLine = 0;
+  let startLineNo = 0;
+  let multiLineStepType = "";
   const lines = content.trim().split('\n');
 
 
@@ -54,7 +55,8 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
     const foundStep = startRe.exec(line);
     if (foundStep) {
       if (foundStep && line.endsWith("(")) {
-        startLine = lineNo;
+        startLineNo = lineNo;
+        multiLineStepType = foundStep[1];
         multiLineBuilding = true;
         continue;
       }
@@ -74,18 +76,18 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
 
 
     if (multiLine) {
-      line = "@step(" + multiLine + ")";
+      line = `${multiLineStepType}(${multiLine})`;
       multiLine = "";
     }
     else {
-      startLine = lineNo;
+      startLineNo = lineNo;
     }
 
 
     const step = stepRe.exec(line);
     if (step) {
       const reKey = getStepKey(step, featuresUri);
-      const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
+      const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
       const detail = new StepDetail(fileUri, range);
       if (stepMap.get(reKey))
         diagLog("replacing duplicate step file step reKey: " + reKey);
@@ -99,9 +101,10 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
 }
 
 export function getStepKey(step: RegExpExecArray, featuresUri: vscode.Uri) {
-  let stepText = step[1].trim();
+  const stepType = step[1].slice(1);
+  let stepText = step[2].trim();
   stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   stepText = stepText.replace(/{.*?}/g, parseRepWildcard);
-  return `${featuresUri.path}:^${stepText}$`;
+  return `${featuresUri.path}:^${stepType}${sepr}${stepText}$`;
 }
 

@@ -29,20 +29,21 @@
 
 ## Project requirements
 
-- Extension activation requires at least one `*.feature` file somewhere in a workspace.
+- Extension activation requires at least one `*.feature` file somewhere in a workspace
 - No conflicting behave extension is enabled
 - A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
-### Required project directory structure
+### Required workspace directory structure
 
-- A single `features` (lowercase by default) folder somewhere, which contains a `steps` folder. (You don't have to call it "features" - read on, but behave requires you have a "steps" folder.)
+- A single (per workspace) `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps".
 - A *behave-conformant* directory structure, for example:
 
 ```text
   . my-project
+  .    +-- behave.ini
   .    +-- features/  
   .       +-- environment.py
   .       +-- steps/  
@@ -53,7 +54,7 @@
   .       |      +-- *.feature  
 ```
 
-- If your features folder is not called "features", or is not in the workspace root, then you can add a `behave.ini` or `.behaverc` file to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. This is a relative path to your project folder. Example:
+- If your features folder is not called "features", or is not in the workspace root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. This is a relative path to your workspace folder. Example:
 
 ```text
 # behave.ini
@@ -107,8 +108,10 @@ paths=behave_tests/features
 
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
 - *Why am I not seeing any exceptions while debugging?* Do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
-- *How do I clear test results?* This isn't that obvious in vscode atm. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test because behave writes "skipped" (not "pending") by default for tests that are not yet complete.)
+- *How do I clear previous test results?* This isn't that obvious in vscode. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
+- *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the the outputted command and run it manually.
+- *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
+- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test because behave initially writes "skipped" (not "pending") for tests that are not yet complete.)
 - *When will this extension have a release version?* When the code is stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
 
 ---
@@ -121,7 +124,7 @@ paths=behave_tests/features
   
 ### Otherwise
 
-- Does your project meet the [Project Requirements](#project-requirements) and have the [Required project directory structure](#required-project-directory-structure)?
+- Does your project meet the [Project Requirements](#project-requirements) and have the [Required workspace directory structure](#required-workspace-directory-structure)?
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?

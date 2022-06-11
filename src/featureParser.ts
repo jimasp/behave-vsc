@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, getUriMatchString, sepr } from './common';
+import { getContentFromFilesystem, getUriMatchString, pathSepr, sepr } from './common';
 import { diagLog } from './logger';
 import { getFeatureSteps } from './fileParser';
 
@@ -10,7 +10,7 @@ const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
-const featureStepRe = /^\s*(Given |When |Then |And )(.+)/i;
+const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 export class StepReferenceDetail {
   constructor(public readonly fileName: string, public readonly uri: vscode.Uri, public readonly range: vscode.Range, public readonly content: string) { }
@@ -66,7 +66,8 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
     const step = featureStepRe.exec(line);
     if (step) {
       const stepText = step[2].trim();
-      const key = `${getUriMatchString(fileUri)}${sepr}${stepText}`;
+      const stepType = step[1].trim().toLowerCase();
+      const key = `${getUriMatchString(fileUri)}${pathSepr}${stepType}${sepr}${stepText}`;
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const fileName = fileUri.path.split("/").pop();
       if (!fileName)

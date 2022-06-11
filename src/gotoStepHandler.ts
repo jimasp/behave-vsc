@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, showTextDocumentRange } from './common';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange } from './common';
 import { getSteps } from './fileParser';
 import { parseRepWildcard, StepDetail } from "./stepsParser";
 
@@ -19,39 +19,53 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
 
   let stepMatch: StepDetail | undefined;
 
-  // look for exact match
-  for (const [key, value] of exactSteps) {
-    const rx = new RegExp(key, "i");
-    const match = rx.exec(stepText);
-    if (match && match.length !== 0) {
-      stepMatch = value;
-      break;
+  const findExactMatch = (stepText: string) => {
+    for (const [key, value] of exactSteps) {
+      const rx = new RegExp(key, "i");
+      const match = rx.exec(stepText);
+      if (match && match.length !== 0) {
+        return value;
+      }
     }
+  }
+
+  stepMatch = findExactMatch(stepText);
+  if (!stepMatch) {
+    const idx = stepText.indexOf(sepr);
+    stepMatch = findExactMatch("step" + stepText.substring(idx));
   }
 
   // got exact match - return it
   if (stepMatch)
     return stepMatch;
 
-  // get all parameter matches
-  const matches = new Map<string, StepDetail>();
-  for (const [key, value] of paramsSteps) {
-    const rx = new RegExp(key, "i");
-    const match = rx.exec(stepText);
-    if (match && match.length !== 0) {
-      matches.set(key, value);
+  const findParamsMatch = (stepText: string) => {
+    const matches = new Map<string, StepDetail>();
+    for (const [key, value] of paramsSteps) {
+      const rx = new RegExp(key, "i");
+      const match = rx.exec(stepText);
+      if (match && match.length !== 0) {
+        matches.set(key, value);
+      }
     }
+    return matches;
+  }
+
+  let stepMatches = findParamsMatch(stepText);
+  if (stepMatches.size === 0) {
+    const idx = stepText.indexOf(sepr);
+    stepMatches = findParamsMatch("step" + stepText.substring(idx));
   }
 
   // got single parameters match - return it
-  if (matches.size === 1)
-    return matches.values().next().value;
+  if (stepMatches.size === 1)
+    return stepMatches.values().next().value;
 
   // more than one parameters match - get longest matched key      
-  if (matches.size > 1) {
+  if (stepMatches.size > 1) {
     let longestKey = "";
     let longestKeyLength = 0;
-    for (const [key,] of matches) {
+    for (const [key,] of stepMatches) {
       if (key.length > longestKeyLength) {
         longestKey = key;
         longestKeyLength = key.length;
@@ -59,7 +73,7 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
     }
 
     // return longest
-    const stepMatch = matches.get(longestKey);
+    const stepMatch = stepMatches.get(longestKey);
     return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
   }
 
@@ -130,12 +144,22 @@ export function getStepText(line: string): string | undefined {
   if (line.endsWith(":")) // table
     line = line.slice(0, -1);
 
-  const stepRe = /^(\s*)(given |when |then |and )(.+)$/i;
+  const stepRe = /^(\s*)(given |and |when |then |but )(.+)$/i;
   const stExec = stepRe.exec(line);
   if (!stExec || !stExec[3]) {
-    vscode.window.showInformationMessage('Selected line does not start with "Given /When /Then /And "');
+    vscode.window.showInformationMessage('Selected line does not start with "given/and/when/then/but"');
     return;
   }
 
-  return stExec[3].trim();
+  const stepType = stExec[2].trim().toLowerCase()
+  const stepMatchType = getStepMatchType(stepType);
+  return stepMatchType + sepr + stExec[3].trim();
+}
+
+function getStepMatchType(stepType: string): string {
+  if (stepType === "and")
+    return "given";
+  if (stepType === "but")
+    return "then";
+  return stepType;
 }

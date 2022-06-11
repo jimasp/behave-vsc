@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { afterSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile } from './common';
+import { afterPathSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
 import { getFeatureSteps } from './fileParser';
 import { getStepKey, stepRe } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
@@ -12,27 +12,37 @@ let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function getStepReferences(featuresUri: vscode.Uri, stepKey: string): StepReference[] {
 
+  const featureDetails = new Map<string, StepReferenceDetail[]>();
   const allFeatureSteps = getFeatureSteps();
   const featuresUriMatchString = getUriMatchString(featuresUri);
+
   // filter matches to the workspace that raised the click event
   const wkpsFeatureSteps = allFeatureSteps.filter((fs) => fs.key.startsWith(featuresUriMatchString));
   // then remove the fileUri match string prefix from the keys
-  const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterSepr(fs.key), fs.feature]);
+  const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterPathSepr(fs.key), fs.feature]);
 
-  // get matches
-  const featureDetails = new Map<string, StepReferenceDetail[]>();
-  for (const [key, value] of featureSteps) {
-    const rx = new RegExp(stepKey, "i");
-    const sKey = key as string;
-    const match = rx.exec(sKey);
-    if (match && match.length !== 0) {
-      const featureDetail = value as StepReferenceDetail;
-      const stepReference = featureDetails.get(featureDetail.fileName);
-      if (!stepReference)
-        featureDetails.set(featureDetail.fileName, [featureDetail]);
-      else
-        stepReference.push(featureDetail);
+  const split = stepKey.split(sepr);
+  const stepMatchTypes = getFeatureStepMatchTypes(split[0].slice(1));
+  const matchStr = split[1];
+
+  // get matches for each matching type
+  for (const matchType of stepMatchTypes) {
+    stepKey = "^" + matchType + sepr + matchStr;
+
+    for (const [key, value] of featureSteps) {
+      const rx = new RegExp(stepKey, "i");
+      const sKey = key as string;
+      const match = rx.exec(sKey);
+      if (match && match.length !== 0) {
+        const featureDetail = value as StepReferenceDetail;
+        const stepReference = featureDetails.get(featureDetail.fileName);
+        if (!stepReference)
+          featureDetails.set(featureDetail.fileName, [featureDetail]);
+        else
+          stepReference.push(featureDetail);
+      }
     }
+
   }
 
   // convert to array of step references
@@ -59,6 +69,15 @@ export function refreshStepReferencesHandler() {
     // entry point function (handler) - show error  
     config.logger.showError(e);
   }
+}
+
+
+function getFeatureStepMatchTypes(stepType: string): string[] {
+  if (stepType === "then")
+    return ["then", "but"];
+  if (stepType === "given")
+    return ["and", "given"];
+  return [stepType];
 }
 
 
@@ -156,7 +175,7 @@ function getMatchKeys(wkspSettings: WorkspaceSettings): string[] | undefined {
     if (line == "")
       continue;
     const stExec = stepRe.exec(line);
-    if (!stExec || !stExec[1])
+    if (!stExec || stExec.length === 0)
       break;
     let stepKey = getStepKey(stExec, wkspSettings.featuresUri);
     stepKey = stepKey.replace(`${wkspSettings.featuresUri.path}:`, "");
@@ -165,3 +184,5 @@ function getMatchKeys(wkspSettings: WorkspaceSettings): string[] | undefined {
 
   return matchKeys;
 }
+
+
