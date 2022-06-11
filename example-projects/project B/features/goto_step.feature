@@ -27,6 +27,9 @@ Scenario: simple step with more text
 Scenario: a cased step
     Given a CASed StEP
 
+Scenario: a cased step2
+    Given a cased STEP
+
 Scenario: param step
     Given a param step
 
