@@ -81,9 +81,9 @@ function getFeatureStepMatchTypes(stepType: string): string[] {
 }
 
 
-export function findStepReferencesHandler(event: vscode.Uri, refreshKeys?: string[]) {
+export function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: string[]) {
 
-  // we won't use a passed-in event parameter, because the default extension keybinding 
+  // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
   // in package.json doesn't provide it to this function
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor)
@@ -93,7 +93,7 @@ export function findStepReferencesHandler(event: vscode.Uri, refreshKeys?: strin
 
   try {
 
-    if (!docUri || !isStepsFile(docUri)) {
+    if (!refreshKeys && (!docUri || !isStepsFile(docUri))) {
       // this should never happen - command availability context is controlled by package.json editor/context
       throw `Find All Step References must be used from a steps file, uri was: ${docUri}`;
     }
@@ -108,7 +108,7 @@ export function findStepReferencesHandler(event: vscode.Uri, refreshKeys?: strin
       matchKeys = refreshKeys;
     }
     else {
-      matchKeys = getMatchKeys(wkspSettings);
+      matchKeys = getMatchKeys(activeEditor, wkspSettings);
       if (!matchKeys)
         return;
 
@@ -151,13 +151,9 @@ export function findStepReferencesHandler(event: vscode.Uri, refreshKeys?: strin
 }
 
 
-function getMatchKeys(wkspSettings: WorkspaceSettings): string[] | undefined {
+function getMatchKeys(activeEditor: vscode.TextEditor, wkspSettings: WorkspaceSettings): string[] | undefined {
 
   const matchKeys: string[] = [];
-
-  const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor)
-    return;
 
   let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
   if (!line)

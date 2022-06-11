@@ -1,5 +1,26 @@
 Feature: Go to Step def tests
 
+Scenario: step types 1
+    Given given step
+    And and step
+    When when step
+    Then then step
+    But but step
+
+Scenario: step types 2
+    Given stepA
+    And stepB
+    When stepC
+    Then stepD
+    But stepE
+
+Scenario: step types 3
+    Given step1_and
+    And step2_given
+    When step3_when
+    Then step4_but
+    But step4_then
+
 Scenario: simple step
     Given a SIMPLE step
 
