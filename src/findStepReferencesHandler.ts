@@ -75,13 +75,9 @@ export function refreshStepReferencesHandler() {
 
 
 function getFeatureStepMatchTypes(stepType: string): string[] {
-  if (stepType === "then")
-    return ["then", "but"];
-  if (stepType === "given")
-    return ["and", "given"];
-  if (stepType === "step")
-    return ["given", "and", "when", "then", "but"];
-  return [stepType];
+  if (stepType === "given" || stepType === "when" || stepType === "then")
+    return [stepType, "and", "but"];
+  return ["given", "and", "when", "then", "but"];
 }
 
 

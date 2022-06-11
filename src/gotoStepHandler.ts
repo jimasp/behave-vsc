@@ -54,11 +54,14 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
 
-  const idx = stepText.indexOf(sepr);
-  const stepSwap = "step" + stepText.substring(idx);
+  let stepSwap: string | undefined;
+  if (!stepText.startsWith("step")) {
+    const idx = stepText.indexOf(sepr);
+    stepSwap = "step" + stepText.substring(idx);
+  }
 
   let exactMatch = findExactMatch(stepText);
-  if (!exactMatch)
+  if (!exactMatch && stepSwap)
     exactMatch = findExactMatch(stepSwap);
 
   // got exact match - return it
@@ -67,7 +70,7 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
 
   // look for a parameters match, e.g. {something1} {something2}
   let paramsMatches = findParamsMatch(stepText);
-  if (paramsMatches.size === 0)
+  if (paramsMatches.size === 0 && stepSwap)
     paramsMatches = findParamsMatch(stepSwap);
 
   // got single parameters match - return it
