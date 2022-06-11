@@ -51,6 +51,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
   let fastSkipFeature = false;
   let fileScenarios = 0;
   let fileSteps = 0;
+  let lastStepType = "given";
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 
@@ -64,9 +65,16 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
     }
 
     const step = featureStepRe.exec(line);
+
     if (step) {
       const stepText = step[2].trim();
-      const stepType = step[1].trim().toLowerCase();
+
+      let stepType = step[1].trim().toLowerCase();
+      if (stepType === "and" || stepType === "but")
+        stepType = lastStepType;
+      else
+        lastStepType = stepType;
+
       const key = `${getUriMatchString(fileUri)}${pathSepr}${stepType}${sepr}${stepText}`;
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const fileName = fileUri.path.split("/").pop();

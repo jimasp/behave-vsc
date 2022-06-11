@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange } from './common';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange, WkspError } from './common';
 import { getSteps } from './fileParser';
 import { parseRepWildcard, StepDetail } from "./stepsParser";
-
 
 
 export function getStepMatch(featuresUriPath: string, stepText: string): StepDetail | undefined {
@@ -55,47 +54,31 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
 
-
   let match: StepDetail | undefined;
-  const split = stepText.split(sepr);
-  const stepMatchTypes = getStepMatchTypes(split[0]);
-  const matchStr = split[1];
 
-  for (const matchType of stepMatchTypes) {
-    const stepTextWithType = matchType + sepr + matchStr;
+  match = findExactMatch(stepText);
+  if (!match) {
+    const idx = stepText.indexOf(sepr);
+    match = findExactMatch("step" + stepText.substring(idx));
+  }
 
-    match = findExactMatch(stepTextWithType);
-    if (!match) {
-      const idx = stepTextWithType.indexOf(sepr);
-      match = findExactMatch("step" + stepTextWithType.substring(idx));
-    }
+  // got exact match - return it
+  if (match)
+    return match;
 
-    // got exact match - return it
-    if (match)
-      return match;
+  const paramsMatches = findParamsMatch(stepText);
 
-    const paramsMatches = findParamsMatch(stepTextWithType);
+  // got single parameters match - return it
+  if (paramsMatches.size === 1)
+    return paramsMatches.values().next().value;
 
-    // got single parameters match - return it
-    if (paramsMatches.size === 1)
-      return paramsMatches.values().next().value;
-
-    // more than one parameters match - get longest matched key      
-    if (paramsMatches.size > 1) {
-      return findLongestParamsMatch(paramsMatches);
-    }
+  // more than one parameters match - get longest matched key      
+  if (paramsMatches.size > 1) {
+    return findLongestParamsMatch(paramsMatches);
   }
 
   // no matches
   return undefined;
-}
-
-function getStepMatchTypes(stepType: string): string[] {
-  if (stepType === "and")
-    return ["given", "then", "step"];
-  if (stepType === "but")
-    return ["then", "step"];
-  return [stepType, "step"];
 }
 
 
@@ -121,12 +104,13 @@ export async function gotoStepHandler() {
       return;
     }
 
-    const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
-    const stepText = getStepMatchText(line);
+    const lineNo = activeEditor.selection.active.line;
+    const line = activeEditor.document.lineAt(lineNo).text;
+    const wkspSettings = getWorkspaceSettingsForFile(docUri);
+    const stepText = getStepMatchText(activeEditor, line, lineNo, wkspSettings.uri);
     if (!stepText)
       return;
 
-    const wkspSettings = getWorkspaceSettingsForFile(docUri);
     const stepMatch = getStepMatch(wkspSettings.featuresUri.path, stepText);
 
     if (!stepMatch) {
@@ -150,7 +134,7 @@ export async function gotoStepHandler() {
 }
 
 
-export function getStepMatchText(line: string): string | undefined {
+export function getStepMatchText(activeEditor: vscode.TextEditor, line: string, lineNum: number, wkspUri: vscode.Uri): string | undefined {
   if (!line)
     return;
 
@@ -168,6 +152,27 @@ export function getStepMatchText(line: string): string | undefined {
     return;
   }
 
-  return `${stExec[2].trim().toLowerCase()}${sepr}${stExec[3].trim()}`;
-}
+  let stepType = stExec[2].trim().toLowerCase();
+  if (stepType === "and" || stepType === "but") {
+    for (let lineNo = lineNum - 1; lineNo > 0; lineNo--) {
 
+      const line = activeEditor.document.lineAt(lineNo).text.trim();
+      if (line.startsWith(stepType))
+        continue;
+      if (line === '' || line.startsWith("#"))
+        continue;
+
+      const stExec = stepRe.exec(line);
+      if (!stExec)
+        throw new WkspError(`Could not determine step type for '${line}'`, wkspUri);
+
+      stepType = stExec[2].trim().toLowerCase();
+      if (stepType === "and" || stepType === "but")
+        continue;
+
+      break;
+    }
+  }
+
+  return `${stepType}${sepr}${stExec[3].trim()}`;
+}
