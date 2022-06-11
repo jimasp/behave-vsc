@@ -23,24 +23,32 @@ def then_step(context):
 def but_step(context):
     pass
 
-@step("stepA")
+@step("given_step")
 def step_a(context):
     pass
 
-@step("stepB")
+@step("and_step")
 def step_b(context):
     pass
 
-@step("stepC")
+@step("when_step")
 def step_c(context):
     pass
 
-@step("stepD")
+@step("then_step")
 def step_d(context):
     pass
 
-@step("stepE")
+@step("but_step")
 def step_e(context):
+    pass
+
+@given("step_given")
+def step_given(context):
+    pass
+
+@then("step_then")
+def step_then(context):
     pass
 
 @step("a simple step")

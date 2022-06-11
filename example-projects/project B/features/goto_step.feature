@@ -8,18 +8,17 @@ Scenario: step types 1
     But but step
 
 Scenario: step types 2
-    Given stepA
-    And stepB
-    When stepC
-    Then stepD
-    But stepE
+    Given given_step
+    And and_step
+    When when_step
+    Then then_step
+    But but_step
 
 Scenario: step types 3
-    Given step1_and
-    And step2_given
-    When step3_when
-    Then step4_but
-    But step4_then
+    Given step_given
+    And step_given
+    And step_then
+    But step_then
 
 Scenario: simple step
     Given a SIMPLE step

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { afterPathSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
 import { getFeatureSteps } from './fileParser';
-import { parseStepsFile, startRe, StepDetail, StepMap } from "./stepsParser";
+import { parseStepsFile, StepDetail, StepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { StepReferenceDetail } from './featureParser';
 import { WorkspaceSettings } from './settings';

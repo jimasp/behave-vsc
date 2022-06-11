@@ -8,17 +8,6 @@ import { parseRepWildcard, StepDetail } from "./stepsParser";
 
 export function getStepMatch(featuresUriPath: string, stepText: string): StepDetail | undefined {
 
-  const allSteps = getSteps();
-  // filter matches to the workspace that raised the click event
-  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriPath)));
-  // then remove the featuresUriPath prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [k.replace(`${featuresUriPath}:`, ""), v]));
-
-  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
-  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
-
-  let stepMatch: StepDetail | undefined;
-
   const findExactMatch = (stepText: string) => {
     for (const [key, value] of exactSteps) {
       const rx = new RegExp(key, "i");
@@ -28,16 +17,6 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
       }
     }
   }
-
-  stepMatch = findExactMatch(stepText);
-  if (!stepMatch) {
-    const idx = stepText.indexOf(sepr);
-    stepMatch = findExactMatch("step" + stepText.substring(idx));
-  }
-
-  // got exact match - return it
-  if (stepMatch)
-    return stepMatch;
 
   const findParamsMatch = (stepText: string) => {
     const matches = new Map<string, StepDetail>();
@@ -51,21 +30,10 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
     return matches;
   }
 
-  let stepMatches = findParamsMatch(stepText);
-  if (stepMatches.size === 0) {
-    const idx = stepText.indexOf(sepr);
-    stepMatches = findParamsMatch("step" + stepText.substring(idx));
-  }
-
-  // got single parameters match - return it
-  if (stepMatches.size === 1)
-    return stepMatches.values().next().value;
-
-  // more than one parameters match - get longest matched key      
-  if (stepMatches.size > 1) {
+  const findLongestParamsMatch = (paramsMatches: Map<string, StepDetail>) => {
     let longestKey = "";
     let longestKeyLength = 0;
-    for (const [key,] of stepMatches) {
+    for (const [key,] of paramsMatches) {
       if (key.length > longestKeyLength) {
         longestKey = key;
         longestKeyLength = key.length;
@@ -73,12 +41,61 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
     }
 
     // return longest
-    const stepMatch = stepMatches.get(longestKey);
-    return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+    const stepMatch = paramsMatches.get(longestKey);
+    return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion    
+  }
+
+
+  const allSteps = getSteps();
+  // filter matches to the workspace that raised the click event
+  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriPath)));
+  // then remove the featuresUriPath prefix from the keys
+  const steps = new Map([...wkspSteps].map(([k, v]) => [k.replace(`${featuresUriPath}:`, ""), v]));
+
+  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+
+
+  let match: StepDetail | undefined;
+  const split = stepText.split(sepr);
+  const stepMatchTypes = getStepMatchTypes(split[0]);
+  const matchStr = split[1];
+
+  for (const matchType of stepMatchTypes) {
+    const stepTextWithType = matchType + sepr + matchStr;
+
+    match = findExactMatch(stepTextWithType);
+    if (!match) {
+      const idx = stepTextWithType.indexOf(sepr);
+      match = findExactMatch("step" + stepTextWithType.substring(idx));
+    }
+
+    // got exact match - return it
+    if (match)
+      return match;
+
+    const paramsMatches = findParamsMatch(stepTextWithType);
+
+    // got single parameters match - return it
+    if (paramsMatches.size === 1)
+      return paramsMatches.values().next().value;
+
+    // more than one parameters match - get longest matched key      
+    if (paramsMatches.size > 1) {
+      return findLongestParamsMatch(paramsMatches);
+    }
   }
 
   // no matches
   return undefined;
+}
+
+function getStepMatchTypes(stepType: string): string[] {
+  if (stepType === "and")
+    return ["given", "then", "step"];
+  if (stepType === "but")
+    return ["then", "step"];
+  return [stepType, "step"];
 }
 
 
@@ -105,7 +122,7 @@ export async function gotoStepHandler() {
     }
 
     const line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
-    const stepText = getStepText(line);
+    const stepText = getStepMatchText(line);
     if (!stepText)
       return;
 
@@ -133,7 +150,7 @@ export async function gotoStepHandler() {
 }
 
 
-export function getStepText(line: string): string | undefined {
+export function getStepMatchText(line: string): string | undefined {
   if (!line)
     return;
 
@@ -146,20 +163,11 @@ export function getStepText(line: string): string | undefined {
 
   const stepRe = /^(\s*)(given |and |when |then |but )(.+)$/i;
   const stExec = stepRe.exec(line);
-  if (!stExec || !stExec[3]) {
+  if (!stExec) {
     vscode.window.showInformationMessage('Selected line does not start with "given/and/when/then/but"');
     return;
   }
 
-  const stepType = stExec[2].trim().toLowerCase()
-  const stepMatchType = getStepMatchType(stepType);
-  return stepMatchType + sepr + stExec[3].trim();
+  return `${stExec[2].trim().toLowerCase()}${sepr}${stExec[3].trim()}`;
 }
 
-function getStepMatchType(stepType: string): string {
-  if (stepType === "and")
-    return "given";
-  if (stepType === "but")
-    return "then";
-  return stepType;
-}

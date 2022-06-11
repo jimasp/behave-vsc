@@ -6,7 +6,7 @@ import { diagLog } from './logger';
 
 export const parseRepWildcard = ".*";
 const stepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
-export const startRe = /^\s*(@step|@given|@when|@then).+/i;
+const startRe = /^\s*(@step|@given|@when|@then).+/i;
 
 
 export class StepDetail {
