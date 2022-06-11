@@ -131,6 +131,13 @@ def wrapped_step2(context, a, b):
     'blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv '
     'blahw blahx blahy blahz'
 )
+
+@step(
+    'wrapped step4 blaha another one blahd blahe blahf blahg blahh blahi blahj blahk '
+    'blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv '
+    'blahw blahx blahy blahz'
+)
+
 def wrapped_step3(context, a, b):
     assert a == "foo3"
     assert b == "bar3"

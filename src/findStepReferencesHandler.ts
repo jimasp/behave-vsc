@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { afterPathSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
 import { getFeatureSteps } from './fileParser';
-import { getStepKey, stepRe } from "./stepsParser";
+import { parseStepsFile, startRe, StepDetail, StepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { StepReferenceDetail } from './featureParser';
 import { WorkspaceSettings } from './settings';
@@ -10,7 +10,7 @@ import { WorkspaceSettings } from './settings';
 
 let treeView: vscode.TreeView<vscode.TreeItem>;
 
-export function getStepReferences(featuresUri: vscode.Uri, stepKey: string): StepReference[] {
+export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]): StepReference[] {
 
   const featureDetails = new Map<string, StepReferenceDetail[]>();
   const allFeatureSteps = getFeatureSteps();
@@ -21,28 +21,30 @@ export function getStepReferences(featuresUri: vscode.Uri, stepKey: string): Ste
   // then remove the fileUri match string prefix from the keys
   const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterPathSepr(fs.key), fs.feature]);
 
-  const split = stepKey.split(sepr);
-  const stepMatchTypes = getFeatureStepMatchTypes(split[0].slice(1));
-  const matchStr = split[1];
+  for (const key of matchKeys) {
+    const split = key.split(sepr);
+    const stepMatchTypes = getFeatureStepMatchTypes(split[0].slice(1));
+    const matchStr = split[1];
 
-  // get matches for each matching type
-  for (const matchType of stepMatchTypes) {
-    stepKey = "^" + matchType + sepr + matchStr;
+    // get matches for each matching type
+    for (const matchType of stepMatchTypes) {
+      const stepKey = "^" + matchType + sepr + matchStr;
 
-    for (const [key, value] of featureSteps) {
-      const rx = new RegExp(stepKey, "i");
-      const sKey = key as string;
-      const match = rx.exec(sKey);
-      if (match && match.length !== 0) {
-        const featureDetail = value as StepReferenceDetail;
-        const stepReference = featureDetails.get(featureDetail.fileName);
-        if (!stepReference)
-          featureDetails.set(featureDetail.fileName, [featureDetail]);
-        else
-          stepReference.push(featureDetail);
+      for (const [key, value] of featureSteps) {
+        const rx = new RegExp(stepKey, "i");
+        const sKey = key as string;
+        const match = rx.exec(sKey);
+        if (match && match.length !== 0) {
+          const featureDetail = value as StepReferenceDetail;
+          const stepReference = featureDetails.get(featureDetail.fileName);
+          if (!stepReference)
+            featureDetails.set(featureDetail.fileName, [featureDetail]);
+          else
+            stepReference.push(featureDetail);
+        }
       }
-    }
 
+    }
   }
 
   // convert to array of step references
@@ -77,11 +79,13 @@ function getFeatureStepMatchTypes(stepType: string): string[] {
     return ["then", "but"];
   if (stepType === "given")
     return ["and", "given"];
+  if (stepType === "step")
+    return ["given", "and", "when", "then", "but"];
   return [stepType];
 }
 
 
-export function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: string[]) {
+export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: string[]) {
 
   // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
   // in package.json doesn't provide it to this function
@@ -108,7 +112,7 @@ export function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: str
       matchKeys = refreshKeys;
     }
     else {
-      matchKeys = getMatchKeys(activeEditor, wkspSettings);
+      matchKeys = await getMatchKeys(activeEditor, docUri, wkspSettings);
       if (!matchKeys)
         return;
 
@@ -117,10 +121,9 @@ export function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: str
       refreshEventUri = docUri;
     }
 
-    for (const key of matchKeys) {
-      const featureRefs = getStepReferences(wkspSettings.featuresUri, key);
-      stepReferences.push(...featureRefs);
-    }
+    const featureRefs = getStepReferences(wkspSettings.featuresUri, matchKeys);
+    stepReferences.push(...featureRefs);
+
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
 
@@ -151,7 +154,7 @@ export function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: str
 }
 
 
-function getMatchKeys(activeEditor: vscode.TextEditor, wkspSettings: WorkspaceSettings): string[] | undefined {
+async function getMatchKeys(activeEditor: vscode.TextEditor, docUri: vscode.Uri, wkspSettings: WorkspaceSettings): Promise<string[] | undefined> {
 
   const matchKeys: string[] = [];
 
@@ -165,17 +168,32 @@ function getMatchKeys(activeEditor: vscode.TextEditor, wkspSettings: WorkspaceSe
     return;
   }
 
-  for (let i = activeEditor.selection.active.line - 1; i > 0; i--) {
+
+  let start = 0;
+  const end = activeEditor.selection.active.line - 1;
+  const re = /^(@|\)|"|').*/;
+
+  // go back up line-by-line to find the first line that doesn't match the regex
+  for (let i = end; i > 0; i--) {
     line = activeEditor.document.lineAt(i).text;
     line = line.trim();
     if (line == "")
       continue;
-    const stExec = stepRe.exec(line);
+
+    const stExec = re.exec(line);
     if (!stExec || stExec.length === 0)
       break;
-    let stepKey = getStepKey(stExec, wkspSettings.featuresUri);
-    stepKey = stepKey.replace(`${wkspSettings.featuresUri.path}:`, "");
-    matchKeys.push(stepKey);
+    start = i;
+  }
+
+  if (start !== 0) {
+    const stepsMap: StepMap = new Map<string, StepDetail>();
+    await parseStepsFile(wkspSettings.featuresUri, docUri, "getMatchKeys", stepsMap, start, end + 1);
+
+    for (const [key] of stepsMap) {
+      const stepKey = key.replace(`${wkspSettings.featuresUri.path}:`, "");
+      matchKeys.push(stepKey);
+    }
   }
 
   return matchKeys;

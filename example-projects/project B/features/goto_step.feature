@@ -68,3 +68,6 @@ Scenario: wrapped step 2
 
 Scenario: wrapped step 3
     Given wrapped step3 blaha "foo3" "bar3" blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+
+Scenario: wrapped step 4
+    Given wrapped step4 blaha another one blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz    

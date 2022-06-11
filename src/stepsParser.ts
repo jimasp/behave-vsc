@@ -5,8 +5,8 @@ import { getSteps } from './fileParser';
 import { diagLog } from './logger';
 
 export const parseRepWildcard = ".*";
-export const stepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
-const startRe = /^\s*(@step|@given|@when|@then).+/i;
+const stepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
+export const startRe = /^\s*(@step|@given|@when|@then).+/i;
 
 
 export class StepDetail {
@@ -15,18 +15,20 @@ export class StepDetail {
 
 export type StepMap = Map<string, StepDetail>;
 
-export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Uri, caller: string) => {
+export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Uri, caller: string, tempMap?: StepMap, start?: number, end?: number) => {
 
   if (!isStepsFile(fileUri))
     throw new Error(`${fileUri.path} is not a steps file`);
 
-  // clear existing steps for this file uri
-  const fileUriMatchString = getUriMatchString(fileUri);
   const stepMap = getSteps();
-  stepMap.forEach((value, key, map) => {
-    if (getUriMatchString(value.uri) === fileUriMatchString)
-      map.delete(key);
-  });
+  if (!tempMap) {
+    // clear existing steps for this file uri
+    const fileUriMatchString = getUriMatchString(fileUri);
+    stepMap.forEach((value, key, map) => {
+      if (getUriMatchString(value.uri) === fileUriMatchString)
+        map.delete(key);
+    });
+  }
 
   const content = await getContentFromFilesystem(fileUri);
   if (!content)
@@ -39,8 +41,11 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
   let multiLineStepType = "";
   const lines = content.trim().split('\n');
 
+  const startAt = tempMap && start ? start : 0;
+  const endAt = tempMap && end ? end : lines.length;
+  const map = tempMap ? tempMap : stepMap;
 
-  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+  for (let lineNo = startAt; lineNo < endAt; lineNo++) {
 
     let line = lines[lineNo].trim();
 
@@ -89,13 +94,16 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
       const reKey = getStepKey(step, featuresUri);
       const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
       const detail = new StepDetail(fileUri, range);
-      if (stepMap.get(reKey))
+      if (map.get(reKey))
         diagLog("replacing duplicate step file step reKey: " + reKey);
-      stepMap.set(reKey, detail); // there can be only one (per workspace)
+      map.set(reKey, detail); // there can be only one (per workspace)
       fileSteps++;
     }
 
   }
+
+  if (tempMap)
+    return;
 
   diagLog(`${caller}: parsed ${fileSteps} steps from ${fileUri.path}`);
 }
