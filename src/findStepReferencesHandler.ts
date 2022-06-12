@@ -124,7 +124,7 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
     stepReferences.forEach(x => refCount += x.featureRefDetails.length);
 
     let message = "";
-    if (matchKeys.filter(k => k.endsWith(parseRepWildcard)) && refCount > 1) {
+    if (matchKeys.filter(k => k.endsWith(parseRepWildcard)).length > 0 && refCount > 1) {
       message = "WARNING: step text ends with unquoted {parameter}, mismatches possible";
     }
     else {
