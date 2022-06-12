@@ -6,6 +6,7 @@ import { parseRepWildcard, parseStepsFile, StepDetail, StepMap } from "./stepsPa
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { FeatureStepDetail } from './featureParser';
 import { WorkspaceSettings } from './settings';
+import { waitOnReadyForStepsNavigation } from './gotoStepHandler';
 
 
 let treeView: vscode.TreeView<vscode.TreeItem>;
@@ -61,7 +62,7 @@ const treeDataProvider = new StepReferencesTree();
 let refreshEventUri: vscode.Uri | undefined;
 let refreshMatchKeys: string[];
 
-export function refreshStepReferences() {
+export function refreshStepReferencesWindow() {
   if (!refreshEventUri)
     return;
   findStepReferencesHandler(undefined, true);
@@ -76,6 +77,7 @@ function getFeatureStepMatchTypes(stepType: string): string[] {
 
 
 export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
+
 
   // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
   // in package.json doesn't provide it to this function
@@ -92,6 +94,8 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
       throw `Find All Step References must be used from a steps file, uri was: ${docUri}`;
     }
 
+    if (!await waitOnReadyForStepsNavigation())
+      return;
 
     let matchKeys: string[] | undefined;
     const wkspSettings = getWorkspaceSettingsForFile(docUri);

@@ -8,11 +8,11 @@ import {
   EXTENSION_FULL_NAME,
   EXTENSION_NAME,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, showTextDocumentRange
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, showTextDocumentRange, urisMatch
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, refreshStepReferences } from './findStepReferencesHandler';
+import { findStepReferencesHandler, refreshStepReferencesWindow } from './findStepReferencesHandler';
 import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -24,8 +24,8 @@ import { KeyedFeatureStepDetail } from './featureParser';
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
-
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
+export const parser: FileParser = new FileParser();
 
 
 export type TestSupport = {
@@ -55,7 +55,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
-    const parser = new FileParser();
     const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
     parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
@@ -75,7 +74,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(
       vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferences()),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferencesWindow()),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
         showTextDocumentRange(uri, range)),
     );
@@ -177,7 +176,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
-            if (testCfg.wkspUri === wkspUri) {
+            if (urisMatch(testCfg.wkspUri, wkspUri)) {
               config.reloadSettings(wkspUri, testCfg.testConfig);
             }
             continue;
@@ -264,7 +263,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
       }
 
-      refreshStepReferences();
+      refreshStepReferencesWindow();
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

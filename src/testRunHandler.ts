@@ -41,7 +41,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
     const ready = await parser.readyForRun(1000, "testRunHandler");
     if (!ready) {
-      const msg = "cannot run tests while test items are still updating, please try again";
+      const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
       vscode.window.showWarningMessage(msg);
       return;

@@ -53,7 +53,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
-// these two uri Match functions are here to highlight why uri.toString() is needed:
+// these two uri match functions are here to highlight why uri.toString() is needed:
 // 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
 // whether uri.path === uri.path or uri.fsPath === fs.path works out of the box depends on whether the uri is being set 
 // and read on a similar code stack (i.e. whether both used "C" or "c" when the value was set).

@@ -10,7 +10,7 @@ import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { refreshStepReferences } from './findStepReferencesHandler';
+import { refreshStepReferencesWindow as refreshStepReferencesView } from './findStepReferencesHandler';
 
 
 const steps: StepMap = new Map<string, StepDetail>();
@@ -23,7 +23,9 @@ export class FileParser {
 
   private _parseFilesCallCounts = 0;
   private _finishedFeaturesParseForAllWorkspaces = false;
+  private _finishedStepsParseForAllWorkspaces = false;
   private _finishedFeaturesParseForWorkspace: { [key: string]: boolean } = {};
+  private _finishedStepsParseForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
 
@@ -40,6 +42,28 @@ export class FileParser {
         diagLog(`readyForRun (${caller}) timeout remaining:` + timeout);
         if (timeout < interval) {
           diagLog(`readyForRun (${caller})  - timed out`);
+          return resolve(false);
+        }
+        setTimeout(() => check(resolve), interval);
+      }
+    }
+
+    return new Promise<boolean>(check);
+  }
+
+  async readyForStepsNavigation(timeout: number, caller: string) {
+    const interval = 100;
+
+    const check = (resolve: (value: boolean) => void) => {
+      if (this._finishedStepsParseForAllWorkspaces) {
+        diagLog(`readyForStepsNavigation (${caller}) - good to go (all steps parsed)`);
+        resolve(true);
+      }
+      else {
+        timeout -= interval;
+        diagLog(`readyForStepsNavigation (${caller}) timeout remaining:` + timeout);
+        if (timeout < interval) {
+          diagLog(`readyForStepsNavigation (${caller})  - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -267,7 +291,9 @@ export class FileParser {
 
     const wkspPath = wkspUri.path;
     this._finishedFeaturesParseForAllWorkspaces = false;
+    this._finishedStepsParseForAllWorkspaces = false;
     this._finishedFeaturesParseForWorkspace[wkspPath] = false;
+    this._finishedStepsParseForWorkspace[wkspPath] = false;
 
     // if caller cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
@@ -276,7 +302,6 @@ export class FileParser {
 
 
     try {
-
 
       this._parseFilesCallCounts++;
       const wkspName = getWorkspaceFolder(wkspUri).name;
@@ -312,7 +337,7 @@ export class FileParser {
           diagLog(`${callName}: features loaded for all workspaces`);
         }
         else {
-          diagLog(`${callName}: features not loaded for all workspaces, waiting on ${wkspsStillParsingFeatures.map(w => w.path)}`)
+          diagLog(`${callName}: waiting on feature parse for ${wkspsStillParsingFeatures.map(w => w.path)}`)
         }
       }
 
@@ -320,8 +345,17 @@ export class FileParser {
       const stepFileCount = await this._parseStepsFiles(wkspSettings, this._cancelTokenSources[wkspPath].token, callName);
       const stepsTime = performance.now() - stepsStart;
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
+        this._finishedStepsParseForWorkspace[wkspPath] = true;
         diagLog(`${callName}: steps loaded`);
-        refreshStepReferences();
+        const wkspsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForWorkspace[uri.path])
+        if (wkspsStillParsingSteps.length === 0) {
+          this._finishedStepsParseForAllWorkspaces = true;
+          diagLog(`${callName}: steps loaded for all workspaces`);
+          refreshStepReferencesView();
+        }
+        else {
+          diagLog(`${callName}: waiting on steps parse for ${wkspsStillParsingSteps.map(w => w.path)}`)
+        }
       }
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {

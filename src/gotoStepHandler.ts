@@ -2,7 +2,9 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange, WkspError } from './common';
 import { getSteps } from './fileParser';
+import { parser } from './extension';
 import { parseRepWildcard, StepDetail } from "./stepsParser";
+import { diagLog, DiagLogType } from './logger';
 
 
 export function getStepMatch(featuresUriPath: string, stepText: string): StepDetail | undefined {
@@ -91,6 +93,16 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   return undefined;
 }
 
+export async function waitOnReadyForStepsNavigation() {
+  const ready = await parser.readyForStepsNavigation(500, "checkReadyForStepsNavigation");
+  if (!ready) {
+    const msg = "Cannot navigate steps while step files are being parsed, please try again.";
+    diagLog(msg, undefined, DiagLogType.warn);
+    vscode.window.showWarningMessage(msg);
+    return false;
+  }
+  return true;
+}
 
 export async function gotoStepHandler() {
 
@@ -109,10 +121,8 @@ export async function gotoStepHandler() {
       throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
+    if (!await waitOnReadyForStepsNavigation())
       return;
-    }
 
     const lineNo = activeEditor.selection.active.line;
     const line = activeEditor.document.lineAt(lineNo).text;
