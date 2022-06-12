@@ -21,7 +21,7 @@
 - Supports multi-root workspaces, so you can run features from more than one project in one instance of vscode. Each workspace must have its own distinct features/steps folders.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - Go to step definition from feature file. This is not shown in the below gif. Right-click inside a feature file on a line containing a step and click "Go to Step Definition". Default keybinding is Alt+F12.
-- Find All Step references from step file. This is not shown in the below gif. Right-click inside a steps file on a line containing a step function definition and click "Find All Step References". Default keybinding is Alt+F12.
+- Find All Step references from step file. This is not shown in the below gif. Right-click inside a steps file on a line containing a step function definition and click "Find All Step References". Default keybinding is Alt+F12. (You can navigate between steps in the Step References Window itself via keybindings, default is F4 + Shift F4, the same as vscode's own references navigation).
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 

@@ -8,11 +8,11 @@ import {
   EXTENSION_FULL_NAME,
   EXTENSION_NAME,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, showTextDocumentRange, urisMatch
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, refreshStepReferencesWindow } from './findStepReferencesHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesWindow, treeView } from './findStepReferencesHandler';
 import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -24,8 +24,8 @@ import { KeyedFeatureStepDetail } from './featureParser';
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
+export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
-export const parser: FileParser = new FileParser();
 
 
 export type TestSupport = {
@@ -63,8 +63,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
     // registerCommand, which is a disposable that ensures our custom command will no longer be active when the extension is deactivated).
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.
-    context.subscriptions.push(ctrl);
-    context.subscriptions.push(vscode.Disposable.from(config));
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
       const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
       wkspWatchers.set(wkspUri, watcher);
@@ -72,11 +70,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }
 
     context.subscriptions.push(
+      ctrl,
+      treeView,
+      config,
       vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferencesWindow()),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
-        showTextDocumentRange(uri, range)),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.prev`, prevStepReferenceHandler),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.next`, nextStepReferenceHandler)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();

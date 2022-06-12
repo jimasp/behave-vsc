@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { afterPathSepr, afterSepr, beforeSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr, urisMatch } from './common';
+import { afterPathSepr, afterSepr, beforeSepr, EXTENSION_NAME, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr, urisMatch } from './common';
 import { getFeatureSteps } from './fileParser';
 import { parseRepWildcard, parseStepsFile, StepDetail, StepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
@@ -9,7 +9,13 @@ import { WorkspaceSettings } from './settings';
 import { waitOnReadyForStepsNavigation } from './gotoStepHandler';
 
 
-let treeView: vscode.TreeView<vscode.TreeItem>;
+const treeDataProvider = new StepReferencesTree();
+export const treeView: vscode.TreeView<vscode.TreeItem> =
+  vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider: treeDataProvider });
+treeDataProvider.setTreeView(treeView);
+let refreshEventUri: vscode.Uri | undefined;
+let refreshMatchKeys: string[];
+
 
 export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]): StepReference[] {
 
@@ -58,9 +64,6 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
   return stepReferences;
 }
 
-const treeDataProvider = new StepReferencesTree();
-let refreshEventUri: vscode.Uri | undefined;
-let refreshMatchKeys: string[];
 
 export function refreshStepReferencesWindow() {
   if (!refreshEventUri)
@@ -139,7 +142,7 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
     stepReferences.push(...featureRefs);
 
     let refCount = 0;
-    stepReferences.forEach(x => refCount += x.featureRefDetails.length);
+    stepReferences.forEach(sr => refCount += sr.children.length);
 
     let message = "";
     if (matchKeys.filter(k => k.endsWith(parseRepWildcard)).length > 0 && refCount > 1) {
@@ -151,16 +154,13 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
         : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
     }
 
-    //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
+    if (refCount > 1)
+      vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, true);
+    else
+      vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, false);
 
-    if (!treeView) {
-      // TODO: pass this is as a pre-registered disposable
-      treeView = vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider });
-      treeDataProvider.update(stepReferences, treeView, message);
-    }
-    else {
-      treeDataProvider.update(stepReferences, treeView, message);
-    }
+    //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
+    treeDataProvider.update(stepReferences, message);
 
     // keep current visibility on a refresh
     if (!refresh)
@@ -232,3 +232,22 @@ async function getMatchKeys(activeEditor: vscode.TextEditor, docUri: vscode.Uri,
 }
 
 
+export function prevStepReferenceHandler() {
+  try {
+    treeDataProvider.prev();
+  }
+  catch (e: unknown) {
+    // entry point function (handler) - show error   
+    config.logger.showError(e);
+  }
+}
+
+export function nextStepReferenceHandler() {
+  try {
+    treeDataProvider.next();
+  }
+  catch (e: unknown) {
+    // entry point function (handler) - show error   
+    config.logger.showError(e);
+  }
+}

@@ -86,6 +86,14 @@
 			{
 				"command": "behave-vsc.findStepReferences",
 				"title": "Find All Step References"
+			},
+			{
+				"command": "behave-vsc.stepReferences.next",
+				"title": "Step References - select next"
+			},
+			{
+				"command": "behave-vsc.stepReferences.prev",
+				"title": "Step References - select previous"
 			}
 		],
 		"keybindings": [
@@ -98,6 +106,16 @@
 				"command": "behave-vsc.findStepReferences",
 				"key": "alt+f12",
 				"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/"
+			},
+			{
+				"command": "behave-vsc.stepReferences.next",
+				"when": "behave-vsc.stepReferences.canNavigate",
+				"key": "f4"
+			},
+			{
+				"command": "behave-vsc.stepReferences.prev",
+				"when": "behave-vsc.stepReferences.canNavigate",
+				"key": "shift+f4"
 			}
 		],
 		"menus": {
