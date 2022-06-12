@@ -86,14 +86,6 @@
 			{
 				"command": "behave-vsc.findStepReferences",
 				"title": "Find All Step References"
-			},
-			{
-				"command": "behave-vsc.refreshStepReferences",
-				"title": "Refresh Step References",
-				"icon": {
-					"light": "images/light/refresh.svg",
-					"dark": "images/dark/refresh.svg"
-				}
 			}
 		],
 		"keybindings": [
@@ -118,13 +110,6 @@
 				{
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
 					"command": "behave-vsc.findStepReferences",
-					"group": "navigation"
-				}
-			],
-			"view/title": [
-				{
-					"command": "behave-vsc.refreshStepReferences",
-					"when": "view == behave-vsc_stepReferences",
 					"group": "navigation"
 				}
 			]

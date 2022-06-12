@@ -12,7 +12,7 @@ import {
 } from './common';
 import { StepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, refreshStepReferencesHandler } from './findStepReferencesHandler';
+import { findStepReferencesHandler, refreshStepReferences } from './findStepReferencesHandler';
 import { getSteps, getFeatureSteps, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -75,7 +75,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(
       vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferencesHandler()),
+      vscode.commands.registerCommand(`${EXTENSION_NAME}.refreshStepReferences`, () => refreshStepReferences()),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.openFeatureFileFromReference`, (uri: vscode.Uri, range: vscode.Range) =>
         showTextDocumentRange(uri, range)),
     );
@@ -264,7 +264,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
       }
 
-      refreshStepReferencesHandler();
+      refreshStepReferences();
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

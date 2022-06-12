@@ -10,7 +10,7 @@ import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { refreshStepReferencesHandler } from './findStepReferencesHandler';
+import { refreshStepReferences } from './findStepReferencesHandler';
 
 
 const steps: StepMap = new Map<string, StepDetail>();
@@ -321,7 +321,7 @@ export class FileParser {
       const stepsTime = performance.now() - stepsStart;
       if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: steps loaded`);
-        refreshStepReferencesHandler();
+        refreshStepReferences();
       }
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {

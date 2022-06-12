@@ -61,16 +61,10 @@ const treeDataProvider = new StepReferencesTree();
 let refreshEventUri: vscode.Uri | undefined;
 let refreshMatchKeys: string[];
 
-export function refreshStepReferencesHandler() {
-  try {
-    if (!refreshEventUri)
-      return;
-    findStepReferencesHandler(refreshEventUri, refreshMatchKeys);
-  }
-  catch (e: unknown) {
-    // entry point function (handler) - show error  
-    config.logger.showError(e);
-  }
+export function refreshStepReferences() {
+  if (!refreshEventUri)
+    return;
+  findStepReferencesHandler(undefined, true);
 }
 
 
@@ -81,7 +75,7 @@ function getFeatureStepMatchTypes(stepType: string): string[] {
 }
 
 
-export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys?: string[]) {
+export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
 
   // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
   // in package.json doesn't provide it to this function
@@ -93,7 +87,7 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
 
   try {
 
-    if (!refreshKeys && (!docUri || !isStepsFile(docUri))) {
+    if (!refresh && (!docUri || !isStepsFile(docUri))) {
       // this should never happen - command availability context is controlled by package.json editor/context
       throw `Find All Step References must be used from a steps file, uri was: ${docUri}`;
     }
@@ -104,8 +98,28 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
     const stepReferences: StepReference[] = [];
 
 
-    if (refreshKeys) {
-      matchKeys = refreshKeys;
+    if (refresh) {
+      if (!refreshEventUri)
+        throw "refreshEventUri is undefined";
+      // check if steps file has changed step text since last refresh
+      const stepsMap: StepMap = new Map<string, StepDetail>();
+      await parseStepsFile(wkspSettings.featuresUri, refreshEventUri, "findStepReferencesHandler", stepsMap);
+      const allStepKeys: string[] = [];
+      for (const [key] of stepsMap) {
+        const stepKey = key.replace(`${wkspSettings.featuresUri.path}${sepr}`, "");
+        allStepKeys.push(stepKey);
+      }
+
+      // clone to preserve refresh state
+      matchKeys = [...refreshMatchKeys];
+
+      // disable any keys that are no longer in the steps file
+      matchKeys.forEach((key, idx) => {
+        if (!allStepKeys.includes(key) && matchKeys) {
+          matchKeys[idx] = "$^";
+        }
+      });
+
     }
     else {
       matchKeys = await getMatchKeys(activeEditor, docUri, wkspSettings);
@@ -144,8 +158,8 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
       treeDataProvider.update(stepReferences, treeView, message);
     }
 
-    // refresh can be called from code, but will already be shown if a user click, so keep current visibility
-    if (!refreshKeys)
+    // keep current visibility on a refresh
+    if (!refresh)
       vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
   }
   catch (e: unknown) {
