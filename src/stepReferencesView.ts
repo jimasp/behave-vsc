@@ -28,11 +28,6 @@ class StepReferenceDetails extends vscode.TreeItem {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
     this.range = this.featureDetail.range;
-    // this.command = {
-    //   command: `${EXTENSION_NAME}.openFeatureFileFromStepReference`,
-    //   title: '',
-    //   arguments: [this.featureDetail.uri, this.range]
-    // }
   }
 }
 
@@ -45,21 +40,30 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
   private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
   public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
+  private _setCanNavigate(enable: boolean) {
+    vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, enable);
+  }
 
   setTreeView(treeView: vscode.TreeView<vscode.TreeItem>) {
-    this._treeView = treeView;
-    this._treeView.onDidChangeSelection(selectionEvent => {
+
+    treeView.onDidChangeVisibility(visibilityEvent => this._setCanNavigate(visibilityEvent.visible));
+
+    treeView.onDidChangeSelection(selectionEvent => {
       if (selectionEvent.selection.length !== 1)
         return;
       const current = selectionEvent.selection[0] as StepReferenceDetails;
       showTextDocumentRange(current.featureDetail.uri, current.featureDetail.range);
+      this._setCanNavigate(true);
     });
+
+    this._treeView = treeView;
   }
 
   update(stepReferences: StepReference[], message: string): void {
     this._treeView.message = message;
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
+    this._setCanNavigate(this._treeView.visible);
   }
 
   prev() {

@@ -81,7 +81,6 @@ function getFeatureStepMatchTypes(stepType: string): string[] {
 
 export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
 
-
   // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
   // in package.json doesn't provide it to this function
   const activeEditor = vscode.window.activeTextEditor;
@@ -153,11 +152,6 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
         ? "No results"
         : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
     }
-
-    if (refCount > 1)
-      vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, true);
-    else
-      vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, false);
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
     treeDataProvider.update(stepReferences, message);
