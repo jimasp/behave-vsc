@@ -125,7 +125,7 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
 
     let message = "";
     if (matchKeys.filter(k => k.endsWith(parseRepWildcard)) && refCount > 1) {
-      message = "WARNING: step text ends with unquoted {parameter}, possible mismatches";
+      message = "WARNING: step text ends with unquoted {parameter}, mismatches possible";
     }
     else {
       message = refCount === 0
@@ -203,6 +203,11 @@ async function getMatchKeys(activeEditor: vscode.TextEditor, docUri: vscode.Uri,
       const stepKey = key.replace(`${wkspSettings.featuresUri.path}${sepr}`, "");
       matchKeys.push(stepKey);
     }
+  }
+
+  if (matchKeys.length === 0) {
+    vscode.window.showInformationMessage('Selected line is not a step function definition. (No preceding step text found.)');
+    return;
   }
 
   return matchKeys;
