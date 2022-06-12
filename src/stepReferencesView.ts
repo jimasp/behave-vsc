@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { EXTENSION_NAME } from './common';
-import { StepReferenceDetail } from './featureParser';
+import { FeatureStepDetail } from './featureParser';
 
 
 export class StepReference extends vscode.TreeItem {
   constructor(
     public resourceUri: vscode.Uri,
     public readonly featureFileName: string,
-    public readonly featureRefDetails: StepReferenceDetail[],
+    public readonly featureRefDetails: FeatureStepDetail[],
     public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded
   ) {
     super(featureFileName, collapsibleState);
@@ -21,7 +21,7 @@ class StepReferenceDetails extends vscode.TreeItem {
 
   constructor(
     public readonly label: string,
-    public readonly featureDetail: StepReferenceDetail
+    public readonly featureDetail: FeatureStepDetail
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
@@ -42,16 +42,10 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
 
   private _stepReferences: StepReference[] = [];
 
-  update(stepReferences: StepReference[], treeView: vscode.TreeView<vscode.TreeItem>): void {
-    // note - order of execution here is important to how the display is updated,
-    // i.e. we have to watch for artifacts when going between having results/no results or the reverse
-    // (e.g. treeView.message is set on two separate lines, and fire() is in the middle)
-    if (stepReferences.length > 0)
-      treeView.message = "";
+  update(stepReferences: StepReference[], treeView: vscode.TreeView<vscode.TreeItem>, message: string): void {
+    treeView.message = message;
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
-    if (stepReferences.length === 0)
-      treeView.message = "No step references found";
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
@@ -66,7 +60,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       return this._stepReferences.length > 0 ? Promise.resolve(this._stepReferences) : Promise.resolve([]);
 
     if (element instanceof StepReference) {
-      const stepReference = element.featureRefDetails.map(featureDetail => new StepReferenceDetails(featureDetail.content, featureDetail));
+      const stepReference = element.featureRefDetails.map(featureDetail => new StepReferenceDetails(featureDetail.lineContent, featureDetail));
       return Promise.resolve(stepReference);
     }
 

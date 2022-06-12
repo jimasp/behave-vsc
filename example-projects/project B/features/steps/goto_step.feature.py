@@ -8,9 +8,11 @@ from behave import *
 def and_step(context):
     pass
 
+
 @when("when step")
 def when_step(context):
     pass    
+
 
 @then("then step")
 def then_step(context):
@@ -21,13 +23,16 @@ def then_step(context):
 def simple_step(context):
     pass
 
+
 @step(u"a simple step with more text")
 def simple_step_with_more_text(context):
     pass
 
+
 @step("a CaSeD step")
 def simple_step_with_more_text(context):
     pass
+
 
 @step("{a} param step")
 def param_step(context, a):
@@ -50,12 +55,10 @@ def two_param_step_with_more_text(context, a, b):
     assert a == "a"   
     assert b == "step"   
         
-
 @given('a step with {num:d}')
 def step_with_typed_param(context, num:int):
-    assert num == 1
-    
-    
+    assert num == 1    
+   
 @given('a step with "{num:d}"')
 def step_with_typed_param2(context, num:int):
     assert num == 2

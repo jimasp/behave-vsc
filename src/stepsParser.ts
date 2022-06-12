@@ -113,6 +113,6 @@ export function getStepKey(step: RegExpExecArray, featuresUri: vscode.Uri) {
   let stepText = step[2].trim();
   stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   stepText = stepText.replace(/{.*?}/g, parseRepWildcard);
-  return `${featuresUri.path}:^${stepType}${sepr}${stepText}$`;
+  return `${featuresUri.path}${sepr}^${stepType}${sepr}${stepText}$`;
 }
 

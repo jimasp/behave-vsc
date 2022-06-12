@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { afterPathSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
+import { afterPathSepr, afterSepr, beforeSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr, urisMatch } from './common';
 import { getFeatureSteps } from './fileParser';
-import { parseStepsFile, StepDetail, StepMap } from "./stepsParser";
+import { parseRepWildcard, parseStepsFile, StepDetail, StepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { StepReferenceDetail } from './featureParser';
+import { FeatureStepDetail } from './featureParser';
 import { WorkspaceSettings } from './settings';
 
 
@@ -12,7 +12,7 @@ let treeView: vscode.TreeView<vscode.TreeItem>;
 
 export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]): StepReference[] {
 
-  const featureDetails = new Map<string, StepReferenceDetail[]>();
+  const featureDetails = new Map<string, FeatureStepDetail[]>();
   const allFeatureSteps = getFeatureSteps();
   const featuresUriMatchString = getUriMatchString(featuresUri);
 
@@ -21,10 +21,10 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
   // then remove the fileUri match string prefix from the keys
   const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterPathSepr(fs.key), fs.feature]);
 
+
   for (const key of matchKeys) {
-    const split = key.split(sepr);
-    const stepMatchTypes = getFeatureStepMatchTypes(split[0].slice(1));
-    const matchStr = split[1];
+    const stepMatchTypes = getFeatureStepMatchTypes(beforeSepr(key).slice(1));
+    const matchStr = afterSepr(key);
 
     // get matches for each matching type
     for (const matchType of stepMatchTypes) {
@@ -35,7 +35,7 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
         const sKey = key as string;
         const match = rx.exec(sKey);
         if (match && match.length !== 0) {
-          const featureDetail = value as StepReferenceDetail;
+          const featureDetail = value as FeatureStepDetail;
           const stepReference = featureDetails.get(featureDetail.fileName);
           if (!stepReference)
             featureDetails.set(featureDetail.fileName, [featureDetail]);
@@ -120,16 +120,28 @@ export async function findStepReferencesHandler(ignored: vscode.Uri, refreshKeys
     const featureRefs = getStepReferences(wkspSettings.featuresUri, matchKeys);
     stepReferences.push(...featureRefs);
 
+    let refCount = 0;
+    stepReferences.forEach(x => refCount += x.featureRefDetails.length);
+
+    let message = "";
+    if (matchKeys.filter(k => k.endsWith(parseRepWildcard)) && refCount > 1) {
+      message = "WARNING: step text ends with unquoted {parameter}, possible mismatches";
+    }
+    else {
+      message = refCount === 0
+        ? "No results"
+        : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
+    }
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
 
     if (!treeView) {
       // TODO: pass this is as a pre-registered disposable
       treeView = vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider });
-      treeDataProvider.update(stepReferences, treeView);
+      treeDataProvider.update(stepReferences, treeView, message);
     }
     else {
-      treeDataProvider.update(stepReferences, treeView);
+      treeDataProvider.update(stepReferences, treeView, message);
     }
 
     // refresh can be called from code, but will already be shown if a user click, so keep current visibility
@@ -184,10 +196,11 @@ async function getMatchKeys(activeEditor: vscode.TextEditor, docUri: vscode.Uri,
 
   if (start !== 0) {
     const stepsMap: StepMap = new Map<string, StepDetail>();
+    // reuse the parseStepsFile algorithm (including multiline considerations) to get the step map just for this file range
     await parseStepsFile(wkspSettings.featuresUri, docUri, "getMatchKeys", stepsMap, start, end + 1);
 
     for (const [key] of stepsMap) {
-      const stepKey = key.replace(`${wkspSettings.featuresUri.path}:`, "");
+      const stepKey = key.replace(`${wkspSettings.featuresUri.path}${sepr}`, "");
       matchKeys.push(stepKey);
     }
   }

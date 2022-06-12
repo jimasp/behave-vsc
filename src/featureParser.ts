@@ -12,15 +12,15 @@ const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
-export class StepReferenceDetail {
-  constructor(public readonly fileName: string, public readonly uri: vscode.Uri, public readonly range: vscode.Range, public readonly content: string) { }
+export class FeatureStepDetail {
+  constructor(public readonly fileName: string, public readonly uri: vscode.Uri, public readonly range: vscode.Range, public readonly lineContent: string) { }
 }
 
-export class KeyedStepReferenceDetail {
-  constructor(public readonly key: string, public readonly feature: StepReferenceDetail) { }
+export class KeyedFeatureStepDetail {
+  constructor(public readonly key: string, public readonly feature: FeatureStepDetail) { }
 }
 
-export type FeatureSteps = KeyedStepReferenceDetail[];
+export type FeatureDupeMap = KeyedFeatureStepDetail[]; // basically a map with duplicate keys
 
 
 export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
@@ -80,8 +80,8 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
       const fileName = fileUri.path.split("/").pop();
       if (!fileName)
         throw `no file name found in uri path ${fileUri.path}`;
-      const refDetail = new StepReferenceDetail(fileName, fileUri, range, line);
-      featureSteps.push(new KeyedStepReferenceDetail(key, refDetail)); // duplicate keys expected (one step can be reused across many feature files)
+      const refDetail = new FeatureStepDetail(fileName, fileUri, range, line);
+      featureSteps.push(new KeyedFeatureStepDetail(key, refDetail)); // duplicate keys expected (one step can be reused across many feature files)
       fileSteps++;
       continue;
     }

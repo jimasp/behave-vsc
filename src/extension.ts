@@ -19,7 +19,7 @@ import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspac
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { KeyedStepReferenceDetail } from './featureParser';
+import { KeyedFeatureStepDetail } from './featureParser';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -34,7 +34,7 @@ export type TestSupport = {
   ctrl: vscode.TestController,
   parser: FileParser,
   getSteps: () => StepMap,
-  getFeatureSteps: () => KeyedStepReferenceDetail[],
+  getFeatureSteps: () => KeyedFeatureStepDetail[],
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };

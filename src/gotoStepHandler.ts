@@ -49,10 +49,15 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   // filter matches to the workspace that raised the click event
   const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriPath)));
   // then remove the featuresUriPath prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [k.replace(`${featuresUriPath}:`, ""), v]));
+  const steps = new Map([...wkspSteps].map(([k, v]) => [k.replace(`${featuresUriPath}${sepr}`, ""), v]));
 
   const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+
+
+
+  // any feature file step must map to a single python step function 
+  // so this function should return the SINGLE best match
 
   let stepSwap: string | undefined;
   if (!stepText.startsWith("step")) {
@@ -81,7 +86,6 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   if (paramsMatches.size > 1) {
     return findLongestParamsMatch(paramsMatches);
   }
-
 
   // no matches
   return undefined;
@@ -113,7 +117,8 @@ export async function gotoStepHandler() {
     const lineNo = activeEditor.selection.active.line;
     const line = activeEditor.document.lineAt(lineNo).text;
     const wkspSettings = getWorkspaceSettingsForFile(docUri);
-    const stepText = getStepMatchText(activeEditor, line, lineNo, wkspSettings.uri);
+    const content = activeEditor.document.getText();
+    const stepText = getStepMatchText(content, line, lineNo);
     if (!stepText)
       return;
 
@@ -140,7 +145,7 @@ export async function gotoStepHandler() {
 }
 
 
-export function getStepMatchText(activeEditor: vscode.TextEditor, line: string, lineNum: number, wkspUri: vscode.Uri): string | undefined {
+export function getStepMatchText(content: string, line: string, lineNum: number): string | undefined {
   if (!line)
     return;
 
@@ -158,11 +163,13 @@ export function getStepMatchText(activeEditor: vscode.TextEditor, line: string, 
     return;
   }
 
+  const lines = content.split("\n");
+
   let stepType = stExec[2].trim().toLowerCase();
   if (stepType === "and" || stepType === "but") {
     for (let lineNo = lineNum - 1; lineNo > 0; lineNo--) {
 
-      const line = activeEditor.document.lineAt(lineNo).text.trim();
+      const line = lines[lineNo].trim();
       if (line.startsWith(stepType))
         continue;
       if (line === '' || line.startsWith("#"))
@@ -170,7 +177,7 @@ export function getStepMatchText(activeEditor: vscode.TextEditor, line: string, 
 
       const stExec = stepRe.exec(line);
       if (!stExec)
-        throw new WkspError(`Could not determine step type for '${line}'`, wkspUri);
+        throw `could not determine step type for '${line}`;
 
       stepType = stExec[2].trim().toLowerCase();
       if (stepType === "and" || stepType === "but")
