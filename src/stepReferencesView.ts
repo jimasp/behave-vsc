@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { EXTENSION_NAME, showTextDocumentRange, urisMatch } from './common';
+import { EXTENSION_NAME, showTextDocumentRange } from './common';
 import { FeatureStepDetail } from './featureParser';
 
 
@@ -77,7 +77,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = children.length - 1; i2 > -1; i2--) {
-        if (urisMatch(children[i2].featureDetail.uri, current.featureDetail.uri)
+        if (children[i2].featureDetail.uriString === current.featureDetail.uriString
           && children[i2].featureDetail.range.start === current.featureDetail.range.start) {
           prevChild = children[i2 - 1];
           if (prevChild) {
@@ -109,7 +109,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = 0; i2 < children.length; i2++) {
-        if (urisMatch(children[i2].featureDetail.uri, current.featureDetail.uri)
+        if (children[i2].featureDetail.uriString === current.featureDetail.uriString
           && children[i2].featureDetail.range.start === current.featureDetail.range.start) {
           nextChild = children[i2 + 1];
           if (nextChild) {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { afterPathSepr, afterSepr, beforeSepr, EXTENSION_NAME, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr, urisMatch } from './common';
+import { afterPathSepr, afterSepr, beforeSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
 import { getFeatureSteps } from './fileParser';
 import { parseRepWildcard, parseStepsFile, StepDetail, StepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
@@ -42,12 +42,12 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
         const sKey = key as string;
         const match = rx.exec(sKey);
         if (match && match.length !== 0) {
-          const featureDetail = value as FeatureStepDetail;
-          const stepReference = featureDetails.get(featureDetail.fileName);
-          if (!stepReference)
-            featureDetails.set(featureDetail.fileName, [featureDetail]);
+          const featureStepDetail = value as FeatureStepDetail;
+          const featureStepDetails = featureDetails.get(featureStepDetail.uriString);
+          if (!featureStepDetails)
+            featureDetails.set(featureStepDetail.uriString, [featureStepDetail]);
           else
-            stepReference.push(featureDetail);
+            featureStepDetails.push(featureStepDetail);
         }
       }
 
@@ -56,8 +56,8 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
 
   // convert to array of step references
   const stepReferences: StepReference[] = [];
-  for (const [key, value] of featureDetails) {
-    const stepReference = new StepReference(value[0].uri, key, value);
+  for (const [, value] of featureDetails) {
+    const stepReference = new StepReference(value[0].uri, value[0].fileName, value);
     stepReferences.push(stepReference);
   }
 

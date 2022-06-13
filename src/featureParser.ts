@@ -13,7 +13,8 @@ const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 export class FeatureStepDetail {
-  constructor(public readonly fileName: string, public readonly uri: vscode.Uri, public readonly range: vscode.Range, public readonly lineContent: string) { }
+  constructor(public readonly uriString: string, public uri: vscode.Uri, public readonly fileName: string,
+    public readonly range: vscode.Range, public readonly lineContent: string) { }
 }
 
 export class KeyedFeatureStepDetail {
@@ -80,7 +81,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
       const fileName = fileUri.path.split("/").pop();
       if (!fileName)
         throw `no file name found in uri path ${fileUri.path}`;
-      const refDetail = new FeatureStepDetail(fileName, fileUri, range, line);
+      const refDetail = new FeatureStepDetail(getUriMatchString(fileUri), fileUri, fileName, range, line);
       featureSteps.push(new KeyedFeatureStepDetail(key, refDetail)); // duplicate keys expected (one step can be reused across many feature files)
       fileSteps++;
       continue;
