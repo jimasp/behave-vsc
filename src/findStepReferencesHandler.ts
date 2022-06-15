@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { getUriMatchString, getWorkspaceUriForFile, isStepsFile, urisMatch } from './common';
 import { getStepMappings } from './fileParser';
-// import { parseStepsFile, StepFileStep, StepFileStepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { FeatureStep } from './featureParser';
 import { waitOnParseComplete } from './gotoStepHandler';
@@ -19,7 +18,6 @@ function getReferencesToStepFunction(stepsFileUri: vscode.Uri, lineNo: number): 
 
   const stepMappingsForThisStepsFile = getStepMappings().filter(x => x.stepFileStep && urisMatch(x.stepFileStep.uri, stepsFileUri));
   const featureStepMatches = new Map<string, FeatureStep[]>();
-
 
   stepMappingsForThisStepsFile.forEach(sm => {
     console.log(sm.stepFileStep);
@@ -44,20 +42,6 @@ function getReferencesToStepFunction(stepsFileUri: vscode.Uri, lineNo: number): 
 }
 
 
-export function refreshStepReferencesWindow() {
-  if (!refreshStore.uri)
-    return;
-  findStepReferencesHandler(undefined, true);
-}
-
-
-// function getFeatureStepMatchTypes(stepType: string): string[] {
-//   if (stepType === "given" || stepType === "when" || stepType === "then")
-//     return [stepType, "and", "but"];
-//   return ["given", "and", "when", "then", "but"];
-// }
-
-
 export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
 
   // we won't use a passed-in "ignored" event parameter for the uri, because the default extension keybinding 
@@ -66,8 +50,6 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
   if (!activeEditor)
     return;
   const fileUri = activeEditor.document.uri;
-
-
 
   try {
 
@@ -79,42 +61,9 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
     if (!await waitOnParseComplete())
       return;
 
-    // let stepRes: string[];
-    // const wkspSettings = getWorkspaceSettingsForFile(fileUri);
-    // const stepFileSteps = getStepFileSteps();
-    // let stepFileStepsForFile: StepFileStep[];
-
-    // if (refresh) {
-    //   // if (!refreshStore.uri)
-    //   //   throw "refreshStore.uri is undefined";
-    //   // if (!refreshStore.lineNo)
-    //   //   throw "refreshStore.lineNo is undefined";
-    //   // lineNo = refreshStore.lineNo;
-
-    //   //     const uriMatchString = getUriMatchString(refreshEventUri);
-    //   //   stepFileStepsForFile = [...stepFileSteps.values()].filter(stepFileStep => getUriMatchString(stepFileStep.uri) === uriMatchString);
-
-    //   //   // clone to preserve refresh state (in case of ctrl+z revert on the steps file)
-    //   //   stepRes = [...refreshStepTexts];
-
-    //   //   // disable any keys that are no longer in the steps file 
-    //   //   stepRes.forEach((stepText, idx) => {
-    //   //     if (!stepFileStepsForFile.filter(sfs => sfs.textAsRe !== stepText)) {
-    //   //       stepRes[idx] = "$^";
-    //   //     }
-    //   //   });
-
-    // }
     if (!refresh) {
       refreshStore.uri = fileUri;
       refreshStore.lineNo = activeEditor.selection.active.line;
-      //   stepRes = await getStepRanges(activeEditor, wkspSettings.featuresUri, fileUri);
-      //   if (!stepRes)
-      //     return;
-
-      //   // store in module vars for refresh
-      //   refreshStepTexts = stepRes;
-      //   refreshEventUri = fileUri;
     }
 
     const stepReferences = getReferencesToStepFunction(fileUri, refreshStore.lineNo);
@@ -145,68 +94,11 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
 
 }
 
-
-// async function getStepRanges(activeEditor: vscode.TextEditor, stepFileStepsForFile: StepFileStepMap, featuresUri: vscode.Uri, fileUri: vscode.Uri): Promise<string[]> {
-
-//   const stepRes: string[] = [];
-
-//   let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
-//   if (!line)
-//     return [];
-
-//   line = line.trim();
-//   if (line == "" || (!line.startsWith("def ") && !line.startsWith("async def "))) {
-//     vscode.window.showInformationMessage('Selected line is not a step function definition.');
-//     return [];
-//   }
-
-
-//   let start = 0;
-//   const end = activeEditor.selection.active.line - 1;
-//   const re = /^(@|\)|"|').*/;
-
-//   // go back up line-by-line to find the first line above the selected function definition that doesn't match the regex
-//   // i.e. the first line that is not a @given/@when/@...
-//   for (let i = end; i > 0; i--) {
-//     line = activeEditor.document.lineAt(i).text;
-//     line = line.trim();
-//     if (line == "")
-//       continue;
-
-//     const stExec = re.exec(line);
-//     if (!stExec || stExec.length === 0)
-//       break;
-//     start = i;
-//   }
-
-//   if (start !== 0) {
-//     // const tempMap: StepFileStepMap = new Map<string, StepFileStep>();
-//     // // reuse the parseStepsFile algorithm (including multiline considerations) to get the 
-//     // // step map just for this part of the file
-//     // await parseStepsFile(featuresUri, fileUri, "getMatchKeys", tempMap, start, end + 1);
-
-//     // // return the stepTexts for these lines
-//     // for (const [, stepFileStep] of tempMap) {
-//     //   stepRes.push(stepFileStep.textAsRe);
-//     // }
-
-
-//     // // match on ranges rather than reTexts, in case there are duplicate step texts which would give us invalid results
-//     // for (const [, stepFileStep] of stepFileStepsForFile) {
-//     //   if(stepFileStep.range.start >= start && stepFileStep.range.end <= end) {
-//     //     stepRes.push(stepFileStep.range);
-//     //   }
-//     // }
-//   }
-
-
-//   if (stepRes.length === 0) {
-//     vscode.window.showInformationMessage('Selected line is not a step function definition. (No preceding step text found.)');
-//     return [];
-//   }
-
-//   return stepRes;
-// }
+export function refreshStepReferencesWindow() {
+  if (!refreshStore.uri)
+    return;
+  findStepReferencesHandler(undefined, true);
+}
 
 
 export function prevStepReferenceHandler() {
