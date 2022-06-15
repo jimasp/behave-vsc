@@ -25,11 +25,11 @@ export class FeatureStep {
   ) { }
 }
 
-export class StepMapp {
+export class StepMapping {
   constructor(
-    // a feature step must match to a single step file step (or none)
+    // a feature step must match to a SINGLE step file step (or none)
     public readonly featureStep: FeatureStep,
-    public readonly stepFileStep: StepFileStep | undefined
+    public stepFileStep: StepFileStep | undefined
   ) { }
 }
 
@@ -95,7 +95,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       const stepFileStep = getStepMatch(wkspSettings.featuresUri, stepType, stepText);
       const featureStep = new FeatureStep(uri, fileName, stepType, range, stepText);
 
-      const stepMappItem = new StepMapp(
+      const stepMappItem = new StepMapping(
         featureStep,
         stepFileStep
       );

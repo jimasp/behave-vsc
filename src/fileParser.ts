@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { getFeatureNameFromFile, StepMapp } from './featureParser';
+import { getFeatureNameFromFile, StepMapping } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, EXTENSION_NAME
@@ -15,7 +15,7 @@ import { refreshStepReferencesWindow as refreshStepReferencesView } from './find
 // todo - does these need to be here?
 const stepFileSteps: StepFileSteps = new Map<string, StepFileStep>();
 export const getStepFileSteps = () => stepFileSteps;
-const stepMapp: StepMapp[] = [];
+const stepMapp: StepMapping[] = [];
 export const getStepMappings = () => stepMapp;
 
 export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
