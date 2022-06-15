@@ -88,7 +88,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           else {
             if (data instanceof TestFile && !data.didResolve) {
               const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-              await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, test, "queueSelectedItems");
+              await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, test, "queueSelectedItems");
             }
 
             await queueSelectedTestItems(gatherTestItems(test.children));

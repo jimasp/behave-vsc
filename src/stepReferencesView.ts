@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { EXTENSION_NAME, showTextDocumentRange, urisMatch } from './common';
-import { FeatureStep } from './featureParser';
+import { FeatureFileStep } from './featureParser';
 
 
 export class StepReference extends vscode.TreeItem {
@@ -8,7 +8,7 @@ export class StepReference extends vscode.TreeItem {
   constructor(
     public resourceUri: vscode.Uri,
     public readonly featureFileName: string,
-    private readonly featureRefDetails: FeatureStep[],
+    private readonly featureRefDetails: FeatureFileStep[],
   ) {
     super(featureFileName, vscode.TreeItemCollapsibleState.Expanded);
     this.children = this.featureRefDetails.map(featureStep => new StepReferenceDetails(featureStep.text, featureStep, this));
@@ -22,7 +22,7 @@ class StepReferenceDetails extends vscode.TreeItem {
 
   constructor(
     public readonly label: string,
-    public readonly featureStep: FeatureStep,
+    public readonly featureStep: FeatureFileStep,
     public readonly parent: StepReference
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
@@ -66,11 +66,15 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     this._setCanNavigate(this._treeView.visible);
   }
 
+  // Shift+F4 shortcut - this should mirror the behaviour of vscode's own "Find All References" window Shift+F4 shortcut
   prev() {
-    if (this._treeView.selection.length !== 1)
-      return;
+    let selected = this._treeView.selection[0];
+    if (!selected)
+      selected = this._stepReferences[0];
+    if (selected instanceof StepReference)
+      selected = selected.children[0];
 
-    const current = this._treeView.selection[0] as StepReferenceDetails;
+    const current = selected as StepReferenceDetails;
     let prevChild: StepReferenceDetails | undefined;
     let prevParent: StepReference | undefined;
 
@@ -90,19 +94,22 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     }
 
     if (!prevParent)
-      return;
+      prevParent = this._stepReferences[this._stepReferences.length - 1];
 
     prevChild = prevParent.children[prevParent.children.length - 1];
     showTextDocumentRange(prevChild.featureStep.uri, prevChild.featureStep.range);
     this._treeView.reveal(prevParent.children[prevParent.children.length - 1]);
   }
 
-
+  // F4 shortcut - this should mirror the behaviour of vscode's own "Find All References" window F4 shortcut
   next() {
-    if (this._treeView.selection.length !== 1)
-      return;
+    let selected = this._treeView.selection[0];
+    if (!selected)
+      selected = this._stepReferences[this._stepReferences.length - 1];
+    if (selected instanceof StepReference)
+      selected = selected.children[selected.children.length - 1];
 
-    const current = this._treeView.selection[0] as StepReferenceDetails;
+    const current = selected as StepReferenceDetails;
     let nextChild: StepReferenceDetails | undefined;
     let nextParent: StepReference | undefined;
 
@@ -122,7 +129,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     }
 
     if (!nextParent)
-      return;
+      nextParent = this._stepReferences[0];
 
     nextChild = nextParent.children[0];
     showTextDocumentRange(nextChild.featureStep.uri, nextChild.featureStep.range);

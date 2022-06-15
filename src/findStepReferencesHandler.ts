@@ -3,7 +3,7 @@ import { config } from "./configuration";
 import { getUriMatchString, getWorkspaceUriForFile, isStepsFile, urisMatch } from './common';
 import { getStepMappings } from './fileParser';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { FeatureStep } from './featureParser';
+import { FeatureFileStep } from './featureParser';
 import { waitOnParseComplete } from './gotoStepHandler';
 
 
@@ -17,17 +17,17 @@ const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: und
 function getReferencesToStepFunction(stepsFileUri: vscode.Uri, lineNo: number): StepReference[] {
 
   const stepMappingsForThisStepsFile = getStepMappings().filter(x => x.stepFileStep && urisMatch(x.stepFileStep.uri, stepsFileUri));
-  const featureStepMatches = new Map<string, FeatureStep[]>();
+  const featureStepMatches = new Map<string, FeatureFileStep[]>();
 
   stepMappingsForThisStepsFile.forEach(sm => {
     console.log(sm.stepFileStep);
     if (sm.stepFileStep && sm.stepFileStep.funcLineNo === lineNo) {
-      const featureKey = getUriMatchString(sm.featureStep.uri);
+      const featureKey = getUriMatchString(sm.featureFileStep.uri);
       const parentFeature = featureStepMatches.get(featureKey);
       if (!parentFeature)
-        featureStepMatches.set(featureKey, [sm.featureStep]);
+        featureStepMatches.set(featureKey, [sm.featureFileStep]);
       else
-        parentFeature.push(sm.featureStep);
+        parentFeature.push(sm.featureFileStep);
     }
   });
 

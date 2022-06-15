@@ -107,7 +107,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const data = testData.get(item);
         if (data instanceof TestFile) {
           wkspSettings = getWorkspaceSettingsForFile(item.uri);
-          await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, item, "resolveHandler");
+          await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
@@ -292,7 +292,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
     // files, but we cannot determine if this is a file or folder deletion as:
     //   (a) it has been deleted so we can't stat it, and 
     //   (b) "." is valid in folder names so we can't determine by looking at the path
-    // but we should ignore specific file extensions or paths we know we don't care about
+    // but we can ignore specific file extensions or paths we know we don't care about
     if (path.endsWith(".tmp")) // .tmp = vscode file history file
       return;
 

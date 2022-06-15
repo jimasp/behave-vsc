@@ -138,10 +138,10 @@ async function assertAllStepsCanBeMatched(wkspSettings: WorkspaceSettings) {
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const stepText = getStepTypeAndText(line);
-				if (!stepText)
-					throw `getStepText returned undefined for line: ${line}`;
-				const match = getStepMatch(wkspSettings.featuresUri, stepText);
+				const stepTypeAndText = getStepTypeAndText(line);
+				if (!stepTypeAndText)
+					throw `getStepTypeAndText returned undefined for line: ${line}`;
+				const match = getStepMatch(wkspSettings.featuresUri, stepTypeAndText.stepType, stepTypeAndText.text);
 				assert(match, "match");
 			}
 		}

@@ -52,27 +52,6 @@ export class FileParser {
     return new Promise<boolean>(check);
   }
 
-  // async readyForStepsNavigation(timeout: number, caller: string) {
-  //   const interval = 100;
-
-  //   const check = (resolve: (value: boolean) => void) => {
-  //     if (this._finishedStepsParseForAllWorkspaces) {
-  //       diagLog(`readyForStepsNavigation (${caller}) - good to go (all steps parsed)`);
-  //       resolve(true);
-  //     }
-  //     else {
-  //       timeout -= interval;
-  //       diagLog(`readyForStepsNavigation (${caller}) timeout remaining:` + timeout);
-  //       if (timeout < interval) {
-  //         diagLog(`readyForStepsNavigation (${caller})  - timed out`);
-  //         return resolve(false);
-  //       }
-  //       setTimeout(() => check(resolve), interval);
-  //     }
-  //   }
-
-  //   return new Promise<boolean>(check);
-  // }
 
   private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
@@ -160,7 +139,7 @@ export class FileParser {
     const item = await this.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, testData, controller, uri, caller);
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
-      await item.testFile.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, controller, item.testItem, caller);
+      await item.testFile.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, controller, item.testItem, caller);
     }
     else {
       diagLog(`${caller}: no scenarios found in ${uri.path}`);

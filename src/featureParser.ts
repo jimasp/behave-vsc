@@ -15,7 +15,7 @@ const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 
-export class FeatureStep {
+export class FeatureFileStep {
   constructor(
     public readonly uri: vscode.Uri,
     public readonly fileName: string,
@@ -28,7 +28,7 @@ export class FeatureStep {
 export class StepMapping {
   constructor(
     // a feature step must match to a SINGLE step file step (or none)
-    public readonly featureStep: FeatureStep,
+    public readonly featureFileStep: FeatureFileStep,
     public stepFileStep: StepFileStep | undefined
   ) { }
 }
@@ -52,10 +52,10 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
   // clear existing feature steps for this file uri
   const featureFileUriMatchString = getUriMatchString(uri);
-  const stepMapp = getStepMappings();
-  for (let i = stepMapp.length - 1; i >= 0; i--) {
-    if (getUriMatchString(stepMapp[i].featureStep.uri).startsWith(featureFileUriMatchString))
-      stepMapp.splice(i, 1);
+  const stepMappings = getStepMappings();
+  for (let i = stepMappings.length - 1; i >= 0; i--) {
+    if (getUriMatchString(stepMappings[i].featureFileStep.uri).startsWith(featureFileUriMatchString))
+      stepMappings.splice(i, 1);
   }
 
   const lines = content.split('\n');
@@ -86,21 +86,20 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       else
         lastStepType = stepType;
 
-      //const key = `${getUriMatchString(featureFileUri)}${pathSepr}${stepType}${sepr}${stepText}`;
+
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const fileName = uri.path.split("/").pop();
       if (!fileName)
         throw `no file name found in uri path ${uri.path}`;
-
+      const featureFileStep = new FeatureFileStep(uri, fileName, stepType, range, stepText);
       const stepFileStep = getStepMatch(wkspSettings.featuresUri, stepType, stepText);
-      const featureStep = new FeatureStep(uri, fileName, stepType, range, stepText);
 
-      const stepMappItem = new StepMapping(
-        featureStep,
+      const stepMapping = new StepMapping(
+        featureFileStep,
         stepFileStep
       );
 
-      stepMapp.push(stepMappItem);
+      stepMappings.push(stepMapping);
       fileSteps++;
       continue;
     }

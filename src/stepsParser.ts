@@ -69,7 +69,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
         // update the stepMappings for this step uri
         stepMappings.forEach(stepMapping => {
           if (stepMapping.stepFileStep && urisMatch(stepMapping.stepFileStep.uri, stepFileUri))
-            stepMapping.stepFileStep = getStepMatch(featuresUri, stepMapping.featureStep.stepType, stepMapping.featureStep.text);
+            stepMapping.stepFileStep = getStepMatch(featuresUri, stepMapping.featureFileStep.stepType, stepMapping.featureFileStep.text);
         });
 
       });
