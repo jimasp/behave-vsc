@@ -1,63 +1,42 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { afterPathSepr, afterSepr, beforeSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isStepsFile, sepr } from './common';
-import { getFeatureSteps } from './fileParser';
-import { parseRepWildcard, parseStepsFile, StepDetail, StepMap } from "./stepsParser";
+import { getUriMatchString, getWorkspaceUriForFile, isStepsFile, urisMatch } from './common';
+import { getStepMappings } from './fileParser';
+// import { parseStepsFile, StepFileStep, StepFileStepMap } from "./stepsParser";
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { FeatureStepDetail } from './featureParser';
-import { WorkspaceSettings } from './settings';
-import { waitOnReadyForStepsNavigation } from './gotoStepHandler';
+import { FeatureStep } from './featureParser';
+import { waitOnParseComplete } from './gotoStepHandler';
 
 
 const treeDataProvider = new StepReferencesTree();
 export const treeView: vscode.TreeView<vscode.TreeItem> =
   vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider: treeDataProvider });
 treeDataProvider.setTreeView(treeView);
-let refreshEventUri: vscode.Uri | undefined;
-let refreshMatchKeys: string[];
+const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: undefined, lineNo: -1 };
 
 
-export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]): StepReference[] {
+function getReferencesToStepFunction(stepsFileUri: vscode.Uri, lineNo: number): StepReference[] {
 
-  const featureDetails = new Map<string, FeatureStepDetail[]>();
-  const allFeatureSteps = getFeatureSteps();
-  const featuresUriMatchString = getUriMatchString(featuresUri);
-
-  // filter matches to the workspace that raised the click event
-  const wkpsFeatureSteps = allFeatureSteps.filter((fs) => fs.key.startsWith(featuresUriMatchString));
-  // then remove the fileUri match string prefix from the keys
-  const featureSteps = [...wkpsFeatureSteps].map((fs) => [afterPathSepr(fs.key), fs.feature]);
+  const stepMappingsForThisStepsFile = getStepMappings().filter(x => x.stepFileStep && urisMatch(x.stepFileStep.uri, stepsFileUri));
+  const featureStepMatches = new Map<string, FeatureStep[]>();
 
 
-  for (const key of matchKeys) {
-    const stepMatchTypes = getFeatureStepMatchTypes(beforeSepr(key).slice(1));
-    const matchStr = afterSepr(key);
-
-    // get matches for each matching type
-    for (const matchType of stepMatchTypes) {
-      const stepKey = "^" + matchType + sepr + matchStr;
-
-      for (const [key, value] of featureSteps) {
-        const rx = new RegExp(stepKey, "i");
-        const sKey = key as string;
-        const match = rx.exec(sKey);
-        if (match && match.length !== 0) {
-          const featureStepDetail = value as FeatureStepDetail;
-          const featureStepDetails = featureDetails.get(featureStepDetail.uriString);
-          if (!featureStepDetails)
-            featureDetails.set(featureStepDetail.uriString, [featureStepDetail]);
-          else
-            featureStepDetails.push(featureStepDetail);
-        }
-      }
-
+  stepMappingsForThisStepsFile.forEach(sm => {
+    console.log(sm.stepFileStep);
+    if (sm.stepFileStep && sm.stepFileStep.funcLineNo === lineNo) {
+      const featureKey = getUriMatchString(sm.featureStep.uri);
+      const parentFeature = featureStepMatches.get(featureKey);
+      if (!parentFeature)
+        featureStepMatches.set(featureKey, [sm.featureStep]);
+      else
+        parentFeature.push(sm.featureStep);
     }
-  }
+  });
 
   // convert to array of step references
   const stepReferences: StepReference[] = [];
-  for (const [, value] of featureDetails) {
-    const stepReference = new StepReference(value[0].uri, value[0].fileName, value);
+  for (const [, featureSteps] of featureStepMatches) {
+    const stepReference = new StepReference(featureSteps[0].uri, featureSteps[0].fileName, featureSteps);
     stepReferences.push(stepReference);
   }
 
@@ -66,92 +45,85 @@ export function getStepReferences(featuresUri: vscode.Uri, matchKeys: string[]):
 
 
 export function refreshStepReferencesWindow() {
-  if (!refreshEventUri)
+  if (!refreshStore.uri)
     return;
   findStepReferencesHandler(undefined, true);
 }
 
 
-function getFeatureStepMatchTypes(stepType: string): string[] {
-  if (stepType === "given" || stepType === "when" || stepType === "then")
-    return [stepType, "and", "but"];
-  return ["given", "and", "when", "then", "but"];
-}
+// function getFeatureStepMatchTypes(stepType: string): string[] {
+//   if (stepType === "given" || stepType === "when" || stepType === "then")
+//     return [stepType, "and", "but"];
+//   return ["given", "and", "when", "then", "but"];
+// }
 
 
 export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
 
-  // we won't use a passed-in "ignored" event parameter, because the default extension keybinding 
+  // we won't use a passed-in "ignored" event parameter for the uri, because the default extension keybinding 
   // in package.json doesn't provide it to this function
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor)
     return;
+  const fileUri = activeEditor.document.uri;
 
-  const docUri = activeEditor.document.uri;
+
 
   try {
 
-    if (!refresh && (!docUri || !isStepsFile(docUri))) {
+    if (!refresh && (!fileUri || !isStepsFile(fileUri))) {
       // this should never happen - command availability context is controlled by package.json editor/context
-      throw `Find All Step References must be used from a steps file, uri was: ${docUri}`;
+      throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
+    if (!await waitOnParseComplete())
       return;
 
-    let matchKeys: string[] | undefined;
-    const wkspSettings = getWorkspaceSettingsForFile(docUri);
-    const stepReferences: StepReference[] = [];
+    // let stepRes: string[];
+    // const wkspSettings = getWorkspaceSettingsForFile(fileUri);
+    // const stepFileSteps = getStepFileSteps();
+    // let stepFileStepsForFile: StepFileStep[];
 
+    // if (refresh) {
+    //   // if (!refreshStore.uri)
+    //   //   throw "refreshStore.uri is undefined";
+    //   // if (!refreshStore.lineNo)
+    //   //   throw "refreshStore.lineNo is undefined";
+    //   // lineNo = refreshStore.lineNo;
 
-    if (refresh) {
-      if (!refreshEventUri)
-        throw "refreshEventUri is undefined";
-      // check if steps file has changed step text since last refresh
-      const stepsMap: StepMap = new Map<string, StepDetail>();
-      await parseStepsFile(wkspSettings.featuresUri, refreshEventUri, "findStepReferencesHandler", stepsMap);
-      const allStepKeys: string[] = [];
-      for (const [key] of stepsMap) {
-        const stepKey = key.replace(`${wkspSettings.featuresUri.path}${sepr}`, "");
-        allStepKeys.push(stepKey);
-      }
+    //   //     const uriMatchString = getUriMatchString(refreshEventUri);
+    //   //   stepFileStepsForFile = [...stepFileSteps.values()].filter(stepFileStep => getUriMatchString(stepFileStep.uri) === uriMatchString);
 
-      // clone to preserve refresh state
-      matchKeys = [...refreshMatchKeys];
+    //   //   // clone to preserve refresh state (in case of ctrl+z revert on the steps file)
+    //   //   stepRes = [...refreshStepTexts];
 
-      // disable any keys that are no longer in the steps file
-      matchKeys.forEach((key, idx) => {
-        if (!allStepKeys.includes(key) && matchKeys) {
-          matchKeys[idx] = "$^";
-        }
-      });
+    //   //   // disable any keys that are no longer in the steps file 
+    //   //   stepRes.forEach((stepText, idx) => {
+    //   //     if (!stepFileStepsForFile.filter(sfs => sfs.textAsRe !== stepText)) {
+    //   //       stepRes[idx] = "$^";
+    //   //     }
+    //   //   });
 
+    // }
+    if (!refresh) {
+      refreshStore.uri = fileUri;
+      refreshStore.lineNo = activeEditor.selection.active.line;
+      //   stepRes = await getStepRanges(activeEditor, wkspSettings.featuresUri, fileUri);
+      //   if (!stepRes)
+      //     return;
+
+      //   // store in module vars for refresh
+      //   refreshStepTexts = stepRes;
+      //   refreshEventUri = fileUri;
     }
-    else {
-      matchKeys = await getMatchKeys(activeEditor, docUri, wkspSettings);
-      if (!matchKeys)
-        return;
 
-      // store in module vars for refresh
-      refreshMatchKeys = matchKeys;
-      refreshEventUri = docUri;
-    }
-
-    const featureRefs = getStepReferences(wkspSettings.featuresUri, matchKeys);
-    stepReferences.push(...featureRefs);
+    const stepReferences = getReferencesToStepFunction(fileUri, refreshStore.lineNo);
 
     let refCount = 0;
     stepReferences.forEach(sr => refCount += sr.children.length);
-
-    let message = "";
-    if (matchKeys.filter(k => k.endsWith(parseRepWildcard)).length > 0 && refCount > 1) {
-      message = "WARNING: step text ends with unquoted {parameter}, mismatches possible";
-    }
-    else {
-      message = refCount === 0
-        ? "No results"
-        : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
-    }
+    const message = refCount === 0
+      ? "No results"
+      : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
     treeDataProvider.update(stepReferences, message);
@@ -163,7 +135,7 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const wkspUri = getWorkspaceUriForFile(docUri);
+      const wkspUri = getWorkspaceUriForFile(fileUri);
       config.logger.showError(e, wkspUri);
     }
     catch {
@@ -174,56 +146,67 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
 }
 
 
-async function getMatchKeys(activeEditor: vscode.TextEditor, docUri: vscode.Uri, wkspSettings: WorkspaceSettings): Promise<string[] | undefined> {
+// async function getStepRanges(activeEditor: vscode.TextEditor, stepFileStepsForFile: StepFileStepMap, featuresUri: vscode.Uri, fileUri: vscode.Uri): Promise<string[]> {
 
-  const matchKeys: string[] = [];
+//   const stepRes: string[] = [];
 
-  let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
-  if (!line)
-    return;
+//   let line = activeEditor.document.lineAt(activeEditor.selection.active.line).text;
+//   if (!line)
+//     return [];
 
-  line = line.trim();
-  if (line == "" || (!line.startsWith("def ") && !line.startsWith("async def "))) {
-    vscode.window.showInformationMessage('Selected line is not a step function definition.');
-    return;
-  }
+//   line = line.trim();
+//   if (line == "" || (!line.startsWith("def ") && !line.startsWith("async def "))) {
+//     vscode.window.showInformationMessage('Selected line is not a step function definition.');
+//     return [];
+//   }
 
 
-  let start = 0;
-  const end = activeEditor.selection.active.line - 1;
-  const re = /^(@|\)|"|').*/;
+//   let start = 0;
+//   const end = activeEditor.selection.active.line - 1;
+//   const re = /^(@|\)|"|').*/;
 
-  // go back up line-by-line to find the first line that doesn't match the regex
-  for (let i = end; i > 0; i--) {
-    line = activeEditor.document.lineAt(i).text;
-    line = line.trim();
-    if (line == "")
-      continue;
+//   // go back up line-by-line to find the first line above the selected function definition that doesn't match the regex
+//   // i.e. the first line that is not a @given/@when/@...
+//   for (let i = end; i > 0; i--) {
+//     line = activeEditor.document.lineAt(i).text;
+//     line = line.trim();
+//     if (line == "")
+//       continue;
 
-    const stExec = re.exec(line);
-    if (!stExec || stExec.length === 0)
-      break;
-    start = i;
-  }
+//     const stExec = re.exec(line);
+//     if (!stExec || stExec.length === 0)
+//       break;
+//     start = i;
+//   }
 
-  if (start !== 0) {
-    const stepsMap: StepMap = new Map<string, StepDetail>();
-    // reuse the parseStepsFile algorithm (including multiline considerations) to get the step map just for this file range
-    await parseStepsFile(wkspSettings.featuresUri, docUri, "getMatchKeys", stepsMap, start, end + 1);
+//   if (start !== 0) {
+//     // const tempMap: StepFileStepMap = new Map<string, StepFileStep>();
+//     // // reuse the parseStepsFile algorithm (including multiline considerations) to get the 
+//     // // step map just for this part of the file
+//     // await parseStepsFile(featuresUri, fileUri, "getMatchKeys", tempMap, start, end + 1);
 
-    for (const [key] of stepsMap) {
-      const stepKey = key.replace(`${wkspSettings.featuresUri.path}${sepr}`, "");
-      matchKeys.push(stepKey);
-    }
-  }
+//     // // return the stepTexts for these lines
+//     // for (const [, stepFileStep] of tempMap) {
+//     //   stepRes.push(stepFileStep.textAsRe);
+//     // }
 
-  if (matchKeys.length === 0) {
-    vscode.window.showInformationMessage('Selected line is not a step function definition. (No preceding step text found.)');
-    return;
-  }
 
-  return matchKeys;
-}
+//     // // match on ranges rather than reTexts, in case there are duplicate step texts which would give us invalid results
+//     // for (const [, stepFileStep] of stepFileStepsForFile) {
+//     //   if(stepFileStep.range.start >= start && stepFileStep.range.end <= end) {
+//     //     stepRes.push(stepFileStep.range);
+//     //   }
+//     // }
+//   }
+
+
+//   if (stepRes.length === 0) {
+//     vscode.window.showInformationMessage('Selected line is not a step function definition. (No preceding step text found.)');
+//     return [];
+//   }
+
+//   return stepRes;
+// }
 
 
 export function prevStepReferenceHandler() {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { EXTENSION_NAME, showTextDocumentRange } from './common';
-import { FeatureStepDetail } from './featureParser';
+import { EXTENSION_NAME, showTextDocumentRange, urisMatch } from './common';
+import { FeatureStep } from './featureParser';
 
 
 export class StepReference extends vscode.TreeItem {
@@ -8,10 +8,10 @@ export class StepReference extends vscode.TreeItem {
   constructor(
     public resourceUri: vscode.Uri,
     public readonly featureFileName: string,
-    private readonly featureRefDetails: FeatureStepDetail[],
+    private readonly featureRefDetails: FeatureStep[],
   ) {
     super(featureFileName, vscode.TreeItemCollapsibleState.Expanded);
-    this.children = this.featureRefDetails.map(featureDetail => new StepReferenceDetails(featureDetail.lineContent, featureDetail, this));
+    this.children = this.featureRefDetails.map(featureStep => new StepReferenceDetails(featureStep.text, featureStep, this));
   }
 }
 
@@ -22,12 +22,12 @@ class StepReferenceDetails extends vscode.TreeItem {
 
   constructor(
     public readonly label: string,
-    public readonly featureDetail: FeatureStepDetail,
+    public readonly featureStep: FeatureStep,
     public readonly parent: StepReference
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
-    this.range = this.featureDetail.range;
+    this.range = this.featureStep.range;
   }
 }
 
@@ -52,7 +52,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       if (selectionEvent.selection.length !== 1)
         return;
       const current = selectionEvent.selection[0] as StepReferenceDetails;
-      showTextDocumentRange(current.featureDetail.uri, current.featureDetail.range);
+      showTextDocumentRange(current.featureStep.uri, current.featureStep.range);
       this._setCanNavigate(true);
     });
 
@@ -77,11 +77,11 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = children.length - 1; i2 > -1; i2--) {
-        if (children[i2].featureDetail.uriString === current.featureDetail.uriString
-          && children[i2].featureDetail.range.start === current.featureDetail.range.start) {
+        if (urisMatch(children[i2].featureStep.uri, current.featureStep.uri)
+          && children[i2].featureStep.range.start === current.featureStep.range.start) {
           prevChild = children[i2 - 1];
           if (prevChild) {
-            showTextDocumentRange(prevChild.featureDetail.uri, prevChild.featureDetail.range);
+            showTextDocumentRange(prevChild.featureStep.uri, prevChild.featureStep.range);
             return this._treeView.reveal(prevChild);
           }
           prevParent = this._stepReferences[i - 1];
@@ -93,7 +93,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       return;
 
     prevChild = prevParent.children[prevParent.children.length - 1];
-    showTextDocumentRange(prevChild.featureDetail.uri, prevChild.featureDetail.range);
+    showTextDocumentRange(prevChild.featureStep.uri, prevChild.featureStep.range);
     this._treeView.reveal(prevParent.children[prevParent.children.length - 1]);
   }
 
@@ -109,11 +109,11 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = 0; i2 < children.length; i2++) {
-        if (children[i2].featureDetail.uriString === current.featureDetail.uriString
-          && children[i2].featureDetail.range.start === current.featureDetail.range.start) {
+        if (urisMatch(children[i2].featureStep.uri, current.featureStep.uri)
+          && children[i2].featureStep.range.start === current.featureStep.range.start) {
           nextChild = children[i2 + 1];
           if (nextChild) {
-            showTextDocumentRange(nextChild.featureDetail.uri, nextChild.featureDetail.range);
+            showTextDocumentRange(nextChild.featureStep.uri, nextChild.featureStep.range);
             return this._treeView.reveal(nextChild);
           }
           nextParent = this._stepReferences[i + 1];
@@ -125,7 +125,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       return;
 
     nextChild = nextParent.children[0];
-    showTextDocumentRange(nextChild.featureDetail.uri, nextChild.featureDetail.range);
+    showTextDocumentRange(nextChild.featureStep.uri, nextChild.featureStep.range);
     this._treeView.reveal(nextParent.children[0]);
   }
 

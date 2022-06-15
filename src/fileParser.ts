@@ -1,22 +1,23 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { FeatureDupeMap, getFeatureNameFromFile } from './featureParser';
+import { getFeatureNameFromFile, StepMapp } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, EXTENSION_NAME
 } from './common';
-import { parseStepsFile, StepDetail, StepMap as StepMap } from './stepsParser';
+import { parseStepsFile, StepFileStep, StepFileStepMap as StepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
 import { refreshStepReferencesWindow as refreshStepReferencesView } from './findStepReferencesHandler';
 
+// todo - does these need to be here?
+const stepFileSteps: StepFileSteps = new Map<string, StepFileStep>();
+export const getStepFileSteps = () => stepFileSteps;
+const stepMapp: StepMapp[] = [];
+export const getStepMappings = () => stepMapp;
 
-const steps: StepMap = new Map<string, StepDetail>();
-export const getSteps = () => steps;
-const featureSteps: FeatureDupeMap = [];
-export const getFeatureSteps = () => featureSteps;
 export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
 
 export class FileParser {
@@ -29,19 +30,19 @@ export class FileParser {
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
 
-  async readyForRun(timeout: number, caller: string) {
+  async parseComplete(timeout: number, caller: string) {
     const interval = 100;
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedFeaturesParseForAllWorkspaces) {
-        diagLog(`readyForRun (${caller}) - good to go (all features parsed, steps parsing may continue in background)`);
+        diagLog(`parseComplete (${caller}) - good to go`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        diagLog(`readyForRun (${caller}) timeout remaining:` + timeout);
+        diagLog(`parseComplete (${caller}) timeout remaining:` + timeout);
         if (timeout < interval) {
-          diagLog(`readyForRun (${caller})  - timed out`);
+          diagLog(`parseComplete (${caller})  - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -51,27 +52,27 @@ export class FileParser {
     return new Promise<boolean>(check);
   }
 
-  async readyForStepsNavigation(timeout: number, caller: string) {
-    const interval = 100;
+  // async readyForStepsNavigation(timeout: number, caller: string) {
+  //   const interval = 100;
 
-    const check = (resolve: (value: boolean) => void) => {
-      if (this._finishedStepsParseForAllWorkspaces) {
-        diagLog(`readyForStepsNavigation (${caller}) - good to go (all steps parsed)`);
-        resolve(true);
-      }
-      else {
-        timeout -= interval;
-        diagLog(`readyForStepsNavigation (${caller}) timeout remaining:` + timeout);
-        if (timeout < interval) {
-          diagLog(`readyForStepsNavigation (${caller})  - timed out`);
-          return resolve(false);
-        }
-        setTimeout(() => check(resolve), interval);
-      }
-    }
+  //   const check = (resolve: (value: boolean) => void) => {
+  //     if (this._finishedStepsParseForAllWorkspaces) {
+  //       diagLog(`readyForStepsNavigation (${caller}) - good to go (all steps parsed)`);
+  //       resolve(true);
+  //     }
+  //     else {
+  //       timeout -= interval;
+  //       diagLog(`readyForStepsNavigation (${caller}) timeout remaining:` + timeout);
+  //       if (timeout < interval) {
+  //         diagLog(`readyForStepsNavigation (${caller})  - timed out`);
+  //         return resolve(false);
+  //       }
+  //       setTimeout(() => check(resolve), interval);
+  //     }
+  //   }
 
-    return new Promise<boolean>(check);
-  }
+  //   return new Promise<boolean>(check);
+  // }
 
   private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
@@ -114,9 +115,9 @@ export class FileParser {
     let processed = 0;
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
-    const wkspStepKeys = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
+    const wkspStepKeys = new Map([...stepFileSteps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
     for (const key of wkspStepKeys) {
-      steps.delete(key);
+      stepFileSteps.delete(key);
     }
 
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
@@ -324,23 +325,8 @@ export class FileParser {
       this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
       const wkspSettings: WorkspaceSettings = config.workspaceSettings[wkspUri.path];
 
-      const start = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
-      const featTime = performance.now() - start;
 
-      if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
-        diagLog(`${callName}: features loaded for workspace ${wkspName}`);
-        this._finishedFeaturesParseForWorkspace[wkspPath] = true;
-        const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedFeaturesParseForWorkspace[uri.path])
-        if (wkspsStillParsingFeatures.length === 0) {
-          this._finishedFeaturesParseForAllWorkspaces = true;
-          diagLog(`${callName}: features loaded for all workspaces`);
-        }
-        else {
-          diagLog(`${callName}: waiting on feature parse for ${wkspsStillParsingFeatures.map(w => w.path)}`)
-        }
-      }
-
+      // parse steps files first so the feature parse can use the step data to build the step mappings
       const stepsStart = performance.now();
       const stepFileCount = await this._parseStepsFiles(wkspSettings, this._cancelTokenSources[wkspPath].token, callName);
       const stepsTime = performance.now() - stepsStart;
@@ -358,6 +344,23 @@ export class FileParser {
         }
       }
 
+
+      const start = performance.now();
+      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
+      const featTime = performance.now() - start;
+      if (!this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
+        diagLog(`${callName}: features loaded for workspace ${wkspName}`);
+        this._finishedFeaturesParseForWorkspace[wkspPath] = true;
+        const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedFeaturesParseForWorkspace[uri.path])
+        if (wkspsStillParsingFeatures.length === 0) {
+          this._finishedFeaturesParseForAllWorkspaces = true;
+          diagLog(`${callName}: features loaded for all workspaces`);
+        }
+        else {
+          diagLog(`${callName}: waiting on feature parse for ${wkspsStillParsingFeatures.map(w => w.path)}`)
+        }
+      }
+
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
       }
@@ -367,7 +370,7 @@ export class FileParser {
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, featureFileCount, stepFileCount);
       }
 
-      const wkspSteps = new Map([...steps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
+      const wkspSteps = new Map([...stepFileSteps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
       return {
         tests: testCounts, featureFileCountExcludingEmptyOrCommentedOut: featureFileCount,
         stepFiles: stepFileCount, stepMappings: wkspSteps.size
@@ -404,7 +407,7 @@ export class FileParser {
       `---` +
       `\nperf info: ${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${steps.size} stepMatches took ${stepsTime + featTime} ms. ` +
+      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${stepFileSteps.size} stepMatches took ${stepsTime + featTime} ms. ` +
       `\nBreakdown: features ${featTime} ms, steps ${stepsTime} ms.` +
       `\nIgnore times if any of these are true: (a) time taken was during vscode startup contention, (b) busy cpu due to background processes, " + 
       "(c) another test extension is also refreshing, (d) you are debugging the extension itself or running an extension integration test.` +

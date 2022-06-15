@@ -2,7 +2,9 @@ import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
 import { getContentFromFilesystem, getUriMatchString, pathSepr, sepr } from './common';
 import { diagLog } from './logger';
-import { getFeatureSteps } from './fileParser';
+import { getStepMappings } from './fileParser';
+import { getStepMatch } from './gotoStepHandler';
+import { StepFileStep } from './stepsParser';
 
 
 const featureReStr = "^(\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -12,16 +14,24 @@ const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
-export class FeatureStepDetail {
-  constructor(public readonly uriString: string, public uri: vscode.Uri, public readonly fileName: string,
-    public readonly range: vscode.Range, public readonly lineContent: string) { }
+
+export class FeatureStep {
+  constructor(
+    public readonly uri: vscode.Uri,
+    public readonly fileName: string,
+    public readonly stepType: string,
+    public readonly range: vscode.Range,
+    public readonly text: string,
+  ) { }
 }
 
-export class KeyedFeatureStepDetail {
-  constructor(public readonly key: string, public readonly feature: FeatureStepDetail) { }
+export class StepMapp {
+  constructor(
+    // a feature step must match to a single step file step (or none)
+    public readonly featureStep: FeatureStep,
+    public readonly stepFileStep: StepFileStep | undefined
+  ) { }
 }
-
-export type FeatureDupeMap = KeyedFeatureStepDetail[]; // basically a map with duplicate keys
 
 
 export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
@@ -36,16 +46,16 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vscode.Uri, featureName: string, content: string, caller: string,
+export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode.Uri, featureName: string, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
   // clear existing feature steps for this file uri
-  const fileUriMatchString = getUriMatchString(fileUri);
-  const featureSteps = getFeatureSteps();
-  for (let i = featureSteps.length - 1; i >= 0; i--) {
-    if (featureSteps[i].key.startsWith(fileUriMatchString))
-      featureSteps.splice(i, 1);
+  const featureFileUriMatchString = getUriMatchString(uri);
+  const stepMapp = getStepMappings();
+  for (let i = stepMapp.length - 1; i >= 0; i--) {
+    if (getUriMatchString(stepMapp[i].featureStep.uri).startsWith(featureFileUriMatchString))
+      stepMapp.splice(i, 1);
   }
 
   const lines = content.split('\n');
@@ -76,13 +86,21 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
       else
         lastStepType = stepType;
 
-      const key = `${getUriMatchString(fileUri)}${pathSepr}${stepType}${sepr}${stepText}`;
+      //const key = `${getUriMatchString(featureFileUri)}${pathSepr}${stepType}${sepr}${stepText}`;
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
-      const fileName = fileUri.path.split("/").pop();
+      const fileName = uri.path.split("/").pop();
       if (!fileName)
-        throw `no file name found in uri path ${fileUri.path}`;
-      const refDetail = new FeatureStepDetail(getUriMatchString(fileUri), fileUri, fileName, range, line);
-      featureSteps.push(new KeyedFeatureStepDetail(key, refDetail)); // duplicate keys expected (one step can be reused across many feature files)
+        throw `no file name found in uri path ${uri.path}`;
+
+      const stepFileStep = getStepMatch(wkspSettings.featuresUri, stepType, stepText);
+      const featureStep = new FeatureStep(uri, fileName, stepType, range, stepText);
+
+      const stepMappItem = new StepMapp(
+        featureStep,
+        stepFileStep
+      );
+
+      stepMapp.push(stepMappItem);
       fileSteps++;
       continue;
     }
@@ -125,5 +143,5 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, fileUri: vs
 
   }
 
-  diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${fileUri.path}`, wkspSettings.uri);
+  diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, wkspSettings.uri);
 };

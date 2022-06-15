@@ -15,8 +15,8 @@ export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 export const sepr = "::"; // standard separator (unsafe for splitting)
-export const beforeSepr = (str: string) => str.substring(0, str.indexOf(sepr));
-export const afterSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
+export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));
+export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
 export const pathSepr = "////"; // separator that cannot exist in file paths, safe for splitting in a path context
 export const afterPathSepr = (str: string) => str.split(pathSepr)[1];
 

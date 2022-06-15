@@ -1,29 +1,31 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange, WkspError } from './common';
-import { getSteps } from './fileParser';
+import { afterFirstSepr, getUriMatchString, getWorkspaceSettingsForFile, getWorkspaceUriForFile, isFeatureFile, sepr, showTextDocumentRange, WkspError } from './common';
+import { getStepFileSteps } from './fileParser';
 import { parser } from './extension';
-import { parseRepWildcard, StepDetail } from "./stepsParser";
+import { parseRepWildcard, StepFileStep } from "./stepsParser";
 import { diagLog, DiagLogType } from './logger';
 
 
-export function getStepMatch(featuresUriPath: string, stepText: string): StepDetail | undefined {
+export function getStepMatch(featuresUri: vscode.Uri, stepType: string, stepText: string): StepFileStep | undefined {
 
-  const findExactMatch = (stepText: string) => {
+  const findExactMatch = (stepText: string, stepType: string) => {
+    const matchText = stepType + sepr + stepText;
     for (const [key, value] of exactSteps) {
       const rx = new RegExp(key, "i");
-      const match = rx.exec(stepText);
+      const match = rx.exec(matchText);
       if (match && match.length !== 0) {
         return value;
       }
     }
   }
 
-  const findParamsMatch = (stepText: string) => {
-    const matches = new Map<string, StepDetail>();
+  const findParamsMatch = (stepText: string, stepType: string) => {
+    const matchText = stepType + sepr + stepText;
+    const matches = new Map<string, StepFileStep>();
     for (const [key, value] of paramsSteps) {
       const rx = new RegExp(key, "i");
-      const match = rx.exec(stepText);
+      const match = rx.exec(matchText);
       if (match && match.length !== 0) {
         matches.set(key, value);
       }
@@ -31,7 +33,7 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
     return matches;
   }
 
-  const findLongestParamsMatch = (paramsMatches: Map<string, StepDetail>) => {
+  const findLongestParamsMatch = (paramsMatches: Map<string, StepFileStep>) => {
     let longestKey = "";
     let longestKeyLength = 0;
     for (const [key,] of paramsMatches) {
@@ -47,11 +49,13 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   }
 
 
-  const allSteps = getSteps();
-  // filter matches to the workspace that raised the click event
-  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriPath)));
-  // then remove the featuresUriPath prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [k.replace(`${featuresUriPath}${sepr}`, ""), v]));
+  // NOTE - this function needs to be FAST, hence the concat key for the map  
+  const featuresUriMatchString = getUriMatchString(featuresUri);
+  const allSteps = getStepFileSteps();
+  // filter matches to the workspace that raised the click event using the fileUri in the key
+  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriMatchString)));
+  // then remove the fileUri prefix from the keys
+  const steps = new Map([...wkspSteps].map(([k, v]) => [afterFirstSepr(k), v]));
 
   const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
@@ -61,24 +65,19 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   // any feature file step must map to a single python step function 
   // so this function should return the SINGLE best match
 
-  let stepSwap: string | undefined;
-  if (!stepText.startsWith("step")) {
-    const idx = stepText.indexOf(sepr);
-    stepSwap = "step" + stepText.substring(idx);
-  }
 
-  let exactMatch = findExactMatch(stepText);
-  if (!exactMatch && stepSwap)
-    exactMatch = findExactMatch(stepSwap);
+  let exactMatch = findExactMatch(stepText, stepType);
+  if (!exactMatch && stepText !== "step")
+    exactMatch = findExactMatch(stepText, "step");
 
   // got exact match - return it
   if (exactMatch)
     return exactMatch;
 
   // look for a parameters match, e.g. {something1} {something2}
-  let paramsMatches = findParamsMatch(stepText);
-  if (paramsMatches.size === 0 && stepSwap)
-    paramsMatches = findParamsMatch(stepSwap);
+  let paramsMatches = findParamsMatch(stepText, stepType);
+  if (paramsMatches.size === 0 && stepText !== "step")
+    paramsMatches = findParamsMatch(stepText, "step");
 
   // got single parameters match - return it
   if (paramsMatches.size === 1)
@@ -93,8 +92,8 @@ export function getStepMatch(featuresUriPath: string, stepText: string): StepDet
   return undefined;
 }
 
-export async function waitOnReadyForStepsNavigation() {
-  const ready = await parser.readyForStepsNavigation(500, "checkReadyForStepsNavigation");
+export async function waitOnParseComplete() {
+  const ready = await parser.parseComplete(500, "checkReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
@@ -121,25 +120,25 @@ export async function gotoStepHandler() {
       throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
+    if (!await waitOnParseComplete())
       return;
 
     const lineNo = activeEditor.selection.active.line;
     const line = activeEditor.document.lineAt(lineNo).text;
     const wkspSettings = getWorkspaceSettingsForFile(docUri);
     const content = activeEditor.document.getText();
-    const stepText = getStepMatchText(content, line, lineNo);
-    if (!stepText)
+    const typeAndText = getStepTypeAndText(content, line, lineNo);
+    if (!typeAndText)
       return;
 
-    const stepMatch = getStepMatch(wkspSettings.featuresUri.path, stepText);
+    const stepFileStep = getStepMatch(wkspSettings.featuresUri, typeAndText.stepType, typeAndText.text);
 
-    if (!stepMatch) {
+    if (!stepFileStep) {
       vscode.window.showInformationMessage(`Step '${line}' not found`)
       return;
     }
 
-    await showTextDocumentRange(stepMatch.uri, stepMatch.range);
+    await showTextDocumentRange(stepFileStep.uri, stepFileStep.range);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
@@ -155,7 +154,7 @@ export async function gotoStepHandler() {
 }
 
 
-export function getStepMatchText(content: string, line: string, lineNum: number): string | undefined {
+export function getStepTypeAndText(content: string, line: string, lineNum: number) {
   if (!line)
     return;
 
@@ -197,5 +196,6 @@ export function getStepMatchText(content: string, line: string, lineNum: number)
     }
   }
 
-  return `${stepType}${sepr}${stExec[3].trim()}`;
+  const text = stExec[3].trim();
+  return { stepType, text };
 }

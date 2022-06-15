@@ -10,16 +10,16 @@ import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepMap } from './stepsParser';
+import { StepFileStepMap } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesWindow, treeView } from './findStepReferencesHandler';
-import { getSteps, getFeatureSteps, FileParser } from './fileParser';
+import { getStepFileSteps, getStepMappings, FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { KeyedFeatureStepDetail } from './featureParser';
+import { StepMapp } from './featureParser';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -33,8 +33,8 @@ export type TestSupport = {
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => StepMap,
-  getFeatureSteps: () => KeyedFeatureStepDetail[],
+  getSteps: () => StepFileStepMap,
+  getFeatureSteps: () => StepMapp[],
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -222,8 +222,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getSteps,
-      getFeatureSteps: getFeatureSteps,
+      getSteps: getStepFileSteps,
+      getFeatureSteps: getStepMappings,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
