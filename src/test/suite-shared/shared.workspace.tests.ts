@@ -3,7 +3,7 @@ import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { Configuration } from '../../configuration';
 import { TestResult } from './expectedResults.helpers';
-import { ParseCounts } from '../../fileParser';
+import { WkspParseCounts } from '../../fileParser';
 
 
 const envVarOverrides = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
@@ -15,7 +15,7 @@ export class SharedWorkspaceTests {
   constructor(readonly testPre: string) { }
 
   runAllAsOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -31,7 +31,7 @@ export class SharedWorkspaceTests {
 
 
   runParallel = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -46,7 +46,7 @@ export class SharedWorkspaceTests {
   }
 
   runOneByOne = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 
@@ -61,7 +61,7 @@ export class SharedWorkspaceTests {
   }
 
   runDebug = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => ParseCounts,
+    getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (debug: boolean, wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
 

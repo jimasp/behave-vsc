@@ -22,7 +22,7 @@ export class StepMapping {
 }
 
 
-export function getStepMappingForFeatureFileLine(featureFileUri: vscode.Uri, lineNo: number): StepFileStep | null {
+export function getStepFileStepForFeatureFileLine(featureFileUri: vscode.Uri, lineNo: number): StepFileStep | null {
   const stepMappingForFeatureFileStep = stepMappings.find(sm =>
     sm.featureFileStep && urisMatch(sm.featureFileStep.uri, featureFileUri) && sm.featureFileStep.range.start.line === lineNo);
   return stepMappingForFeatureFileStep ? stepMappingForFeatureFileStep.stepFileStep : null;
@@ -57,7 +57,7 @@ export async function waitOnReadyForStepsNavigation() {
 
 let hasStepMappings = false;
 let stopBuilding = false;
-export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
+export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vscode.CancellationToken): Promise<number> {
   hasStepMappings = false;
   stopBuilding = false;
 
@@ -68,16 +68,19 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
 
   deleteStepMappings(featuresUri);
 
+  let processed = 0;
   getFeatureFileSteps().forEach(featureFileStep => {
     if (stopBuilding)
       return;
     const stepFileStep = _getStepFileStepMatch(featuresUri, featureFileStep);
     if (stepFileStep)
       stepMappings.push(new StepMapping(featuresUri, stepFileStep, featureFileStep));
+    processed++;
   });
 
   hasStepMappings = true;
   refreshStepReferencesView();
+  return processed;
 }
 
 

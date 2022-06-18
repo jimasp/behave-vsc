@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { getWorkspaceUriForFile, isFeatureFile, showTextDocumentRange } from './common';
-import { getStepMappingForFeatureFileLine, waitOnReadyForStepsNavigation } from './stepMappings';
+import { getStepFileStepForFeatureFileLine, waitOnReadyForStepsNavigation } from './stepMappings';
 import { featureStepRe } from './featureParser';
 
 
@@ -28,7 +28,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       return;
     }
 
-    const stepFileStep = getStepMappingForFeatureFileLine(docUri, lineNo);
+    const stepFileStep = getStepFileStepForFeatureFileLine(docUri, lineNo);
 
     if (!stepFileStep) {
       vscode.window.showInformationMessage(`Step '${textEditor.document.lineAt(lineNo).text}' not found`)

@@ -1,11 +1,15 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { ParseCounts } from "../../fileParser";
+import { WkspParseCounts } from "../../fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(debug, wkspUri, config).length;
-  return { tests: { nodeCount: 4, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 1, stepFiles: 1, stepMappings: 6 };
+  return {
+    tests: { nodeCount: 4, testCount: testCount },
+    featureFilesExcludingEmptyOrCommentedOut: 1, stepFiles: 1,
+    stepFileSteps: 6, featureFileSteps: 7, stepMappings: 7
+  };
 }
 
 export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {

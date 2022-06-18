@@ -1,20 +1,27 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
-import { getFeatureNameFromFile } from './featureParser';
+import { getFeatureFileSteps, getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, urisMatch
 } from './common';
 import { parseStepsFile, getStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { deleteStepMappings, getStepMappings, buildStepMappings } from './stepMappings';
+import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMappings';
 
 
-
-export type ParseCounts = { tests: TestCounts, featureFileCountExcludingEmptyOrCommentedOut: number, stepFiles: number, stepMappings: number }; // for integration test assertions      
+// for integration test assertions      
+export type WkspParseCounts = {
+  tests: TestCounts,
+  featureFilesExcludingEmptyOrCommentedOut: number,
+  stepFiles: number,
+  stepFileSteps: number
+  featureFileSteps: number,
+  stepMappings: number
+};
 
 export class FileParser {
 
@@ -289,7 +296,7 @@ export class FileParser {
   // NOTE - this is normally a BACKGROUND task
   // it should only be await-ed on user request, i.e. when called by the refreshHandler
   async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
-    callerCancelToken?: vscode.CancellationToken): Promise<ParseCounts | null> {
+    callerCancelToken?: vscode.CancellationToken): Promise<WkspParseCounts | null> {
 
     const wkspPath = wkspUri.path;
     this._finishedFeaturesParseForAllWorkspaces = false;
@@ -359,8 +366,8 @@ export class FileParser {
       }
 
       const updateMappingsStart = performance.now();
-      await buildStepMappings(wkspSettings.featuresUri, this._cancelTokenSources[wkspPath].token);
-      const updateMappingsTime = performance.now() - updateMappingsStart;
+      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri, this._cancelTokenSources[wkspPath].token);
+      const buildMappingsTime = performance.now() - updateMappingsStart;
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
@@ -368,13 +375,21 @@ export class FileParser {
       else {
         diagLog(`${callName}: complete`);
         testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
-        this._logTimesToConsole(callName, testCounts, featTime, stepsTime, updateMappingsTime, featureFileCount, stepFileCount);
+        this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
       }
 
-      const wkspSteps = new Map([...getStepFileSteps()].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path)));
+      if (!config.integrationTestRun)
+        return null;
+
+      const wkspStepMappings = [...getStepMappings()].filter(k => urisMatch(k.featuresUri, wkspSettings.featuresUri));
+      const wkspStepMappingsCount = wkspStepMappings.length;
+      const wkspStepFileStepsCount = getStepFileSteps().size;
+      const wkspFeatureFileStepsCount = getFeatureFileSteps().size;
+
       return {
-        tests: testCounts, featureFileCountExcludingEmptyOrCommentedOut: featureFileCount,
-        stepFiles: stepFileCount, stepMappings: wkspSteps.size
+        tests: testCounts, featureFilesExcludingEmptyOrCommentedOut: featureFileCount,
+        stepFiles: stepFileCount, stepFileSteps: wkspStepFileStepsCount, featureFileSteps: wkspFeatureFileStepsCount,
+        stepMappings: wkspStepMappingsCount
       };
     }
     catch (e: unknown) {
@@ -402,15 +417,14 @@ export class FileParser {
   }
 
 
-  private _logTimesToConsole = (callName: string, counts: TestCounts, featTime: number, stepsTime: number, updateMappingsTime: number,
-    featureFileCount: number, stepFileCount: number) => {
-    // show diag times for extension developers
+  private _logTimesToConsole = (callName: string, testCounts: TestCounts, featParseTime: number, stepsParseTime: number,
+    mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
     diagLog(
       `---` +
       `\nperf info: ${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${counts.nodeCount} tree nodes, ${counts.testCount} tests, and ${getStepMappings().length} stepMappings took ${stepsTime + featTime} ms. ` +
-      `\nBreakdown: features ${featTime} ms, steps ${stepsTime} ms, stepMapping: ${updateMappingsTime} ms` +
+      `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
+      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
       `\nIgnore times if any of these are true: (a) time taken was during vscode startup contention, (b) busy cpu due to background processes, " + 
       "(c) another test extension is also refreshing, (d) you are debugging the extension itself or running an extension integration test.` +
       `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +

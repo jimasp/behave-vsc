@@ -17,7 +17,7 @@ import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspac
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { getStepMappings, buildStepMappings, StepMapping } from './stepMappings';
+import { getStepMappings, buildStepMappings, StepMapping, getStepFileStepForFeatureFileLine } from './stepMappings';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -33,6 +33,7 @@ export type TestSupport = {
   parser: FileParser,
   getSteps: () => Map<string, StepFileStep>,
   getStepMappings: () => StepMapping[],
+  getStepFileStepForFeatureFileLine: (featureFileUri: vscode.Uri, line: number) => StepFileStep | null,
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -222,6 +223,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       parser: parser,
       getSteps: getStepFileSteps,
       getStepMappings: getStepMappings,
+      getStepFileStepForFeatureFileLine: getStepFileStepForFeatureFileLine,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
