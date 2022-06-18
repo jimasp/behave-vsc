@@ -39,18 +39,14 @@ function getFeatureReferencesToStepFileFunction(stepsFileUri: vscode.Uri, lineNo
 }
 
 
-export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = false) {
+export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) {
 
-  // we won't use a passed-in "ignored" event parameter for the uri, because the default extension keybinding 
-  // in package.json doesn't provide it to this function
-  const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor)
-    return;
-  const fileUri = activeEditor.document.uri;
+  // (textEditor param is null when called via refreshStepReferencesView)
+  const fileUri = textEditor?.document.uri;
 
   try {
 
-    if (!refresh && (!fileUri || !isStepsFile(fileUri))) {
+    if (textEditor && (!fileUri || !isStepsFile(fileUri))) {
       // this should never happen - command availability context is controlled by package.json editor/context
       throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }
@@ -58,24 +54,37 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
     if (!await waitOnReadyForStepsNavigation())
       return;
 
-    if (!refresh) {
+    if (textEditor) {
+      const lineNo = textEditor.selection.active.line;
+      const lineText = textEditor.document.lineAt(lineNo).text.trim();
+      if (lineText == "" || lineText.startsWith("#"))
+        return;
+
+      if (!lineText.startsWith("def") && !lineText.startsWith("async def")) {
+        vscode.window.showInformationMessage(`Selected line is not a function definition.`);
+        return;
+      }
+
       refreshStore.uri = fileUri;
-      refreshStore.lineNo = activeEditor.selection.active.line;
+      refreshStore.lineNo = lineNo;
     }
 
-    const stepReferences = getFeatureReferencesToStepFileFunction(fileUri, refreshStore.lineNo);
+    if (!refreshStore.uri)
+      return;
+
+    const stepReferences = getFeatureReferencesToStepFileFunction(refreshStore.uri, refreshStore.lineNo);
 
     let refCount = 0;
     stepReferences.forEach(sr => refCount += sr.children.length);
     const message = refCount === 0
       ? "No results"
-      : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
+      : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s." : ""}`;
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
     treeDataProvider.update(stepReferences, message);
 
     // keep current visibility on a refresh
-    if (!refresh)
+    if (textEditor)
       vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
   }
   catch (e: unknown) {
@@ -91,10 +100,10 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
 
 }
 
-export function refreshStepReferencesWindow() {
+export function refreshStepReferencesView() {
   if (!refreshStore.uri)
     return;
-  findStepReferencesHandler(undefined, true);
+  findStepReferencesHandler();
 }
 
 

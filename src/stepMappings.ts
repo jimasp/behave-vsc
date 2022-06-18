@@ -4,6 +4,7 @@ import { parser } from './extension';
 import { diagLog, DiagLogType } from './logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
+import { refreshStepReferencesView } from './findStepReferencesHandler';
 
 
 let stepMappings: StepMapping[] = [];
@@ -84,6 +85,7 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
   });
 
   hasStepMappings = true;
+  refreshStepReferencesView();
 }
 
 
@@ -142,18 +144,22 @@ function _getStepFileStepMatch(featuresUri: vscode.Uri, featureFileStep: Feature
   const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
   const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
 
-  let exactMatch = findExactMatch(featureFileStep.text, featureFileStep.stepType);
+  let stepText = featureFileStep.text;
+  if (stepText.endsWith(":")) // table
+    stepText = stepText.slice(0, -1);
+
+  let exactMatch = findExactMatch(stepText, featureFileStep.stepType);
   if (!exactMatch && featureFileStep.stepType !== "step")
-    exactMatch = findExactMatch(featureFileStep.text, "step");
+    exactMatch = findExactMatch(stepText, "step");
 
   // got exact match - return it
   if (exactMatch)
     return exactMatch;
 
   // look for a parameters match, e.g. {something1} {something2}
-  let paramsMatches = findParamsMatch(featureFileStep.text, featureFileStep.stepType);
+  let paramsMatches = findParamsMatch(stepText, featureFileStep.stepType);
   if (paramsMatches.size === 0 && featureFileStep.stepType !== "step")
-    paramsMatches = findParamsMatch(featureFileStep.text, "step");
+    paramsMatches = findParamsMatch(stepText, "step");
 
   // got single parameters match - return it
   if (paramsMatches.size === 1)

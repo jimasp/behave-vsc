@@ -12,7 +12,7 @@ import {
 } from './common';
 import { getStepFileSteps, StepFileStep } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesWindow, treeView } from './findStepReferencesHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesView, treeView } from './findStepReferencesHandler';
 import { FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -73,8 +73,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       ctrl,
       treeView,
       config,
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
+      vscode.commands.registerTextEditorCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
+      vscode.commands.registerTextEditorCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.next`, nextStepReferenceHandler)
     );
@@ -266,8 +266,6 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       refreshStepMappingsTS.dispose();
       refreshStepMappingsTS = new vscode.CancellationTokenSource();
       await buildStepMappings(wkspSettings.featuresUri, refreshStepMappingsTS.token);
-
-      refreshStepReferencesWindow();
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

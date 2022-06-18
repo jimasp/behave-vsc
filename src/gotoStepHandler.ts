@@ -2,18 +2,13 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { getWorkspaceUriForFile, isFeatureFile, showTextDocumentRange } from './common';
 import { getStepMappingForFeatureFileLine, waitOnReadyForStepsNavigation } from './stepMappings';
+import { featureStepRe } from './featureParser';
 
 
 
-export async function gotoStepHandler() {
+export async function gotoStepHandler(textEditor: vscode.TextEditor) {
 
-  // we won't use a passed-in event parameter, because the default extension keybinding 
-  // in package.json doesn't provide it to this function
-  const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor)
-    return;
-
-  const docUri = activeEditor.document.uri;
+  const docUri = textEditor.document.uri;
 
   try {
 
@@ -25,16 +20,9 @@ export async function gotoStepHandler() {
     if (!await waitOnReadyForStepsNavigation())
       return;
 
-    const lineNo = activeEditor.selection.active.line;
-    let lineText = activeEditor.document.lineAt(lineNo).text;
-    if (!lineText)
-      return;
-    lineText = lineText.trim();
-    if (lineText == "" || lineText.startsWith("#"))
-      return;
-
-    const stepRe = /^(\s*)(given |and |when |then |but )(.+)$/i;
-    const stExec = stepRe.exec(lineText);
+    const lineNo = textEditor.selection.active.line;
+    const lineText = textEditor.document.lineAt(lineNo).text.trim();
+    const stExec = featureStepRe.exec(lineText);
     if (!stExec) {
       vscode.window.showInformationMessage(`Selected line is not a step.`);
       return;
@@ -43,7 +31,7 @@ export async function gotoStepHandler() {
     const stepFileStep = getStepMappingForFeatureFileLine(docUri, lineNo);
 
     if (!stepFileStep) {
-      vscode.window.showInformationMessage(`Step '${activeEditor.document.lineAt(lineNo).text}' not found`)
+      vscode.window.showInformationMessage(`Step '${textEditor.document.lineAt(lineNo).text}' not found`)
       return;
     }
 

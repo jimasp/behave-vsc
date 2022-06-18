@@ -9,6 +9,7 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorks
 import { ParseCounts } from '../../fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
+import { featureStepRe } from '../../featureParser';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -96,17 +97,10 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 	const lines = content.trim().split('\n');
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
-
 		const line = lines[lineNo].trim();
-
-		if (line === '' || line.startsWith("#")) {
-			continue;
-		}
-
-		const lcase = line.toLowerCase();
-		if (lcase.startsWith("given ") || lcase.startsWith("when ") || lcase.startsWith("then ") || lcase.startsWith("and ") || lcase.startsWith("but ")) {
+		const stExec = featureStepRe.exec(line);
+		if (stExec)
 			featureSteps.push(line);
-		}
 	}
 
 	return featureSteps;

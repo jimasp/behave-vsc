@@ -10,7 +10,6 @@ import { parseStepsFile, getStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { refreshStepReferencesWindow as refreshStepReferencesView } from './findStepReferencesHandler';
 import { deleteStepMappings, getStepMappings, buildStepMappings } from './stepMappings';
 
 
@@ -353,7 +352,6 @@ export class FileParser {
         if (wkspsStillParsingSteps.length === 0) {
           this._finishedStepsParseForAllWorkspaces = true;
           diagLog(`${callName}: steps loaded for all workspaces`);
-          refreshStepReferencesView();
         }
         else {
           diagLog(`${callName}: waiting on steps parse for ${wkspsStillParsingSteps.map(w => w.path)}`)

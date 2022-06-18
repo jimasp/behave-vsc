@@ -9,7 +9,7 @@ const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
-const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
+export const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 export const getFeatureFileSteps = () => featureFileSteps;
@@ -61,7 +61,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
     }
 
     const step = featureStepRe.exec(line);
-
     if (step) {
       const stepText = step[2].trim();
 
@@ -70,7 +69,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
         stepType = lastStepType;
       else
         lastStepType = stepType;
-
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const key = `${getUriMatchString(uri)}${sepr}${range.start.line}`;
@@ -93,7 +91,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
         });
       }
 
-      const scenarioName = scenario[4];
+      const scenarioName = scenario[4].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, featureName, scenarioName, isOutline, fastSkipScenario);
