@@ -5,7 +5,7 @@ import { parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
 import { diagLog } from './logger';
 import { cancelTestRun } from './testRunHandler';
-import { EXTENSION_NAME, isBehaveExecutionError } from './common';
+import { isBehaveExecutionError } from './common';
 import { performance } from 'perf_hooks';
 
 
@@ -82,7 +82,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     const env = { ...process.env, ...wkspSettings.envVarOverrides };
 
     const debugLaunchConfig = {
-      name: `${EXTENSION_NAME}-debug`,
+      name: `behave-vsc-debug`,
       console: "internalConsole",
       type: "python",
       cwd: wkspSettings.uri.fsPath,

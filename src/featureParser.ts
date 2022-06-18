@@ -4,11 +4,11 @@ import { getContentFromFilesystem, uriMatchString, sepr } from './common';
 import { diagLog } from './logger';
 
 
-const featureReStr = "^(\\s*)Feature:(\\s*)(.+)(\\s*)$";
+const featureReStr = /^(\s*)Feature:(\s*)(.+)$/;
 const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
-const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
-const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
+const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
+const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
 export const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
@@ -34,7 +34,7 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
   if (featureName === null)
     return null;
 
-  return featureName[3];
+  return featureName[3].trim();
 }
 
 
@@ -91,7 +91,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
         });
       }
 
-      const scenarioName = scenario[4].trim();
+      const scenarioName = scenario[3].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, featureName, scenarioName, isOutline, fastSkipScenario);

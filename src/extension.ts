@@ -5,14 +5,12 @@ import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
 import {
-  EXTENSION_FULL_NAME,
-  EXTENSION_NAME,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
 import { getStepFileSteps, StepFileStep } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesView, treeView } from './findStepReferencesHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './findStepReferencesHandler';
 import { FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
@@ -55,7 +53,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
-    const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
+    const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
     // any function contained in subscriptions.push() will execute immediately, 
@@ -73,10 +71,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       ctrl,
       treeView,
       config,
-      vscode.commands.registerTextEditorCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler),
-      vscode.commands.registerTextEditorCommand(`${EXTENSION_NAME}.findStepReferences`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.prev`, prevStepReferenceHandler),
-      vscode.commands.registerCommand(`${EXTENSION_NAME}.stepReferences.next`, nextStepReferenceHandler)
+      vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
+      vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
@@ -161,7 +159,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
-        const affected = event && event.affectsConfiguration(EXTENSION_NAME);
+        const affected = event && event.affectsConfiguration("behave-vsc");
         if (!affected && !forceFullRefresh && !testCfg)
           return;
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { EXTENSION_NAME, getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
+import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
 
@@ -172,13 +172,13 @@ export class WorkspaceSettings {
     }
 
     if (this.runParallel && this.runAllAsOne)
-      this._warnings.push(`${EXTENSION_NAME}.runParallel is overridden by ${EXTENSION_NAME}.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
+      this._warnings.push(`behave-vsc.runParallel is overridden by behave-vsc.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
 
-    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to ${EXTENSION_NAME}.fastSkipTags when deprecated settings removed
-      this._warnings.push(`fast skip has no effect whenever you run all tests at once and ${EXTENSION_NAME}.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
+    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to behave-vsc.fastSkipTags when deprecated settings removed
+      this._warnings.push(`fast skip has no effect whenever you run all tests at once and behave-vsc.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
 
     if (!this.runParallel && !this.runAllAsOne)
-      this._warnings.push(`${EXTENSION_NAME}.runParallel and ${EXTENSION_NAME}.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
+      this._warnings.push(`behave-vsc.runParallel and behave-vsc.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
 
 
     this.logUserSettings(logger, winSettings);
@@ -225,7 +225,7 @@ export class WorkspaceSettings {
       if (this._warnings.length > 0) {
         logger.logSettingsWarning(`\n${this._warnings.map(warn => "WARNING: " + warn).join("\n")}`, this.uri);
         logger.logInfo(`If you are happy with your settings, you can disable these warnings via the extension ` +
-          `setting '${EXTENSION_NAME}.showSettingsWarnings'.\n`, this.uri);
+          `setting 'behave-vsc.showSettingsWarnings'.\n`, this.uri);
       }
     }
 
@@ -245,21 +245,21 @@ function tryDeprecatedFastSkipList(wkspSettings: WorkspaceSettings, wkspConfig: 
 
   if (fastSkipListCfg) {
     if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2)
-      return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
+      return `Invalid behave-vsc.fastSkipList setting ignored.`;
 
     try {
       const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
       let invalid = false;
       skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
       if (invalid)
-        return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
+        return `Invalid behave-vsc.fastSkipList setting ignored.`;
       wkspSettings.fastSkipTags = skipList.filter(s => s !== "");
     }
     catch {
-      return `Invalid ${EXTENSION_NAME}.fastSkipList setting ignored.`;
+      return `Invalid behave-vsc.fastSkipList setting ignored.`;
     }
 
-    return `${EXTENSION_NAME}.fastSkipList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.fastSkipTags instead.` +
+    return `behave-vsc.fastSkipList setting is deprecated and will be removed in a future release. Please use behave-vsc.fastSkipTags instead.` +
       ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
   }
 
@@ -272,7 +272,7 @@ function tryDeprecatedEnvVarList(wkspSettings: WorkspaceSettings, wkspConfig: vs
 
   if (envVarListCfg) {
     if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7)
-      return `Invalid ${EXTENSION_NAME}.envVarList setting ignored.`;
+      return `Invalid behave-vsc.envVarList setting ignored.`;
 
     try {
       const escape = "#^@";
@@ -287,10 +287,10 @@ function tryDeprecatedEnvVarList(wkspSettings: WorkspaceSettings, wkspConfig: vs
       });
     }
     catch {
-      return `Invalid ${EXTENSION_NAME}.envVarList setting ignored.`;
+      return `Invalid behave-vsc.envVarList setting ignored.`;
     }
 
-    return `${EXTENSION_NAME}.envVarList setting is deprecated and will be removed in a future release. Please use ${EXTENSION_NAME}.envVarOverrides instead.` +
+    return `behave-vsc.envVarList setting is deprecated and will be removed in a future release. Please use behave-vsc.envVarOverrides instead.` +
       ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
   }
 }

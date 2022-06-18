@@ -9,9 +9,6 @@ import * as fs from 'fs';
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
 
-export const EXTENSION_NAME = "behave-vsc";
-export const EXTENSION_FULL_NAME = "jimasp.behave-vsc";
-export const EXTENSION_FRIENDLY_NAME = "Behave VSC";
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 export const sepr = "::"; // standard separator (unsafe for splitting)
@@ -29,8 +26,9 @@ export const afterPathSepr = (str: string) => str.split(pathSepr)[1];
 // - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
 export class WkspError extends Error {
   constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
-    const msg = (errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string);
+    const msg = errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string;
     super(msg);
+    this.stack = errorOrMsg instanceof Error ? errorOrMsg.stack : undefined;
     Object.setPrototypeOf(this, WkspError.prototype);
   }
 }
@@ -48,7 +46,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
-  config.logger.logInfoAllWksps(`${EXTENSION_FRIENDLY_NAME} v${outputVersion}`);
+  config.logger.logInfoAllWksps(`Behave VSC v${outputVersion}`);
   config.logger.logInfoAllWksps(`Release notes: ${releaseNotesUrl}`);
 }
 
@@ -125,7 +123,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
     // check if featuresPath specified in settings.json
     // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
-    const wkspConfig = vscode.workspace.getConfiguration(EXTENSION_NAME, folder.uri);
+    const wkspConfig = vscode.workspace.getConfiguration("behave-vsc", folder.uri);
     const featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
     if (!featuresPath && !hasDefaultFeaturesFolder) {
       return false; // probably a workspace with no behave requirements
@@ -162,12 +160,12 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0) {
-    if (folders.length === 1 && folders[0].name === EXTENSION_NAME)
-      throw `Please disable the marketplace ${EXTENSION_FRIENDLY_NAME} extension before beginning development!`;
+    if (folders.length === 1 && folders[0].name === "behave-vsc")
+      throw `Please disable the marketplace Behave VSC extension before beginning development!`;
     else
       throw `Extension was activated because a '*.feature' file was found in a workspace folder, but ` +
-      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid '${EXTENSION_NAME}.featuresPath'.\n` +
-      `Please add a valid '${EXTENSION_NAME}.featuresPath' property to your workspace settings.json file and then restart vscode.`;
+      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid 'behave-vsc.featuresPath'.\n` +
+      `Please add a valid 'behave-vsc.featuresPath' property to your workspace settings.json file and then restart vscode.`;
   }
 
   return workspaceFoldersWithFeatures;

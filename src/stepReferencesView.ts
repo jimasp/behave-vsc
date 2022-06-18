@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { EXTENSION_NAME, showTextDocumentRange, urisMatch } from './common';
+import { showTextDocumentRange, urisMatch } from './common';
 import { FeatureFileStep } from './featureParser';
 
 
@@ -41,7 +41,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
   public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
   private _setCanNavigate(enable: boolean) {
-    vscode.commands.executeCommand('setContext', `${EXTENSION_NAME}.stepReferences.canNavigate`, enable);
+    vscode.commands.executeCommand('setContext', `behave-vsc.stepReferences.canNavigate`, enable);
   }
 
   setTreeView(treeView: vscode.TreeView<vscode.TreeItem>) {

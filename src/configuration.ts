@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getUrisOfWkspFoldersWithFeatures, EXTENSION_NAME, EXTENSION_FRIENDLY_NAME } from './common';
+import { getUrisOfWkspFoldersWithFeatures } from './common';
 import { diagLog, Logger } from './logger';
 import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 
@@ -28,7 +28,7 @@ class ExtensionConfiguration implements Configuration {
   private constructor() {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
-    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), EXTENSION_NAME);
+    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
     diagLog("Configuration singleton constructed (this should only fire once)");
   }
 
@@ -50,16 +50,16 @@ class ExtensionConfiguration implements Configuration {
       this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this._windowSettings, this.logger);
     }
     else {
-      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
       this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), this._windowSettings, this.logger);
+        vscode.workspace.getConfiguration("behave-vsc", wkspUri), this._windowSettings, this.logger);
     }
   }
 
   public get globalSettings(): WindowSettings {
     return this._windowSettings
       ? this._windowSettings
-      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration(EXTENSION_NAME));
+      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
   }
 
   public get workspaceSettings(): { [wkspUriPath: string]: WorkspaceSettings } {
@@ -67,29 +67,29 @@ class ExtensionConfiguration implements Configuration {
     getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
       if (!this._resourceSettings[wkspUri.path]) {
         this._resourceSettings[wkspUri.path] =
-          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration(EXTENSION_NAME, wkspUri), winSettings, this.logger);
+          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration("behave-vsc", wkspUri), winSettings, this.logger);
       }
-    })
+    });
     return this._resourceSettings;
   }
 
-  // note - this can be changed dynamically by the user, so don't store the result
+  // note - python interpreter can be changed dynamically by the user, so don't store the result
   getPythonExecutable = async (wkspUri: vscode.Uri, wkspName: string) => {
     const msPyExt = "ms-python.python";
     const pyext = vscode.extensions.getExtension(msPyExt);
 
     if (!pyext)
-      throw (EXTENSION_FRIENDLY_NAME + " could not find required dependency " + msPyExt);
+      throw (`Behave VSC could not find required dependency ${msPyExt}`);
 
     if (!pyext.isActive) {
       await pyext?.activate();
       if (!pyext.isActive)
-        throw (EXTENSION_FRIENDLY_NAME + " could not activate required dependency " + msPyExt);
+        throw (`Behave VSC could not activate required dependency ${msPyExt}`);
     }
 
     const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
     if (!pythonExec)
-      throw (`${EXTENSION_FRIENDLY_NAME} failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
+      throw (`Behave VSC failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
 
     return pythonExec;
   }

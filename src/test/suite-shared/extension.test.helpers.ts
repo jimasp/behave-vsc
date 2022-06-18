@@ -7,7 +7,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { ParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, EXTENSION_FULL_NAME } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString } from '../../common';
 import { performance } from 'perf_hooks';
 import { featureStepRe } from '../../featureParser';
 
@@ -285,7 +285,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	if (extInstances)
 		return extInstances;
 
-	const extension = vscode.extensions.getExtension(EXTENSION_FULL_NAME);
+	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension);
 	assert(extension.isActive);
 

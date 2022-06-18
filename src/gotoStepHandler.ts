@@ -24,7 +24,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     const lineText = textEditor.document.lineAt(lineNo).text.trim();
     const stExec = featureStepRe.exec(lineText);
     if (!stExec) {
-      vscode.window.showInformationMessage(`Selected line is not a step.`);
+      vscode.window.showInformationMessage(`Selected line is not a step (or file has not been saved).`);
       return;
     }
 
