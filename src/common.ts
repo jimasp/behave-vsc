@@ -55,17 +55,17 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 
 // these two uri match functions are here to highlight why uri.toString() is needed:
 // 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
-// whether uri.path === uri.path or uri.fsPath === fs.path works out of the box depends on whether the uri is being set 
-// and read on a similar code stack (i.e. whether both used "C" or "c" when the value was set).
+// whether uri1.path === uri2.path or uri1.fsPath === uri2.fsPath depends on whether both uris are being set/read on
+// a similar code stack (i.e. whether both used "C" or "c" when the value was set).
 // at any rate, for matching one uri path or fsPath to another we can use toString() to provide consistent casing.
 // 2. separately, two uris that point to the same path (regardless of casing) may not be the same object, so uri1 === uri2 would fail
 // so whenever we plan to use a uri in an equals comparison we should use one of these functions
-export function getUriMatchString(uri: vscode.Uri) {
+export function uriMatchString(uri: vscode.Uri) {
   return uri.toString();
 }
 
 export function urisMatch(uri1: vscode.Uri, uri2: vscode.Uri) {
-  return getUriMatchString(uri1) === getUriMatchString(uri2);
+  return uri1.toString() === uri2.toString();
 }
 
 
@@ -222,7 +222,7 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
   // get all test items if wkspUri is null, or
   // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspUri === null || item.id.includes(getUriMatchString(wkspUri))) {
+    if (wkspUri === null || item.id.includes(uriMatchString(wkspUri))) {
       items.push(item);
       if (item.children)
         items.push(...getAllTestItems(wkspUri, item.children));

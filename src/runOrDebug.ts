@@ -53,9 +53,10 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
 
     let junitDirUri = getJunitWkspRunDirUri(run.name, wkspSettings.name);
     // a junit xml file is per feature, so when each scenario is run separately the same file is updated several times.
-    // behave writes "skipped" into the feature file for any test not included in each behave execution.
+    // behave writes "skipped" into the junit file for any test not included in each behave execution.
     // this works fine when tests are run sequentially and we read the file just after the test is run, but
-    // for async we need to use a different path for each scenario so we can determine which file contains the actual result for that scenario
+    // for async we need to use a different path for each scenario so we can determine which file contains 
+    // the actual result for that scenario.
     if (async)
       junitDirUri = getJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
 

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { afterFirstSepr, getUriMatchString, sepr, urisMatch } from './common';
+import { afterFirstSepr, uriMatchString, sepr, urisMatch } from './common';
 import { parser } from './extension';
 import { diagLog, DiagLogType } from './logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
@@ -36,15 +36,6 @@ export function getStepMappingsForStepsFileLine(stepsFileUri: vscode.Uri, lineNo
 }
 
 
-// export function deleteStepMappingsForFeatureFile(featureFileUri: vscode.Uri) {
-//   const featureFileUriMatchString = getUriMatchString(featureFileUri);
-//   for (const stepMapping of stepMappings) {
-//     if (getUriMatchString(stepMapping.featureFileStep.uri).startsWith(featureFileUriMatchString))
-//       stepMappings.slice(stepMappings.indexOf(stepMapping), 1);
-//   }
-// }
-
-
 export function deleteStepMappings(featuresUri: vscode.Uri) {
   stepMappings = stepMappings.filter(sm => !urisMatch(sm.featuresUri, featuresUri));
 }
@@ -71,7 +62,8 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
   stopBuilding = false;
 
   cancelToken.onCancellationRequested(() => {
-    stopBuilding = true; // don't use isCancellationRequested due to immediate disposal in startWatchingWorkspace.updater
+    // (don't use isCancellationRequested due to immediate dispose in startWatchingWorkspace.updater)    
+    stopBuilding = true;
   });
 
   deleteStepMappings(featuresUri);
@@ -134,7 +126,7 @@ function _getStepFileStepMatch(featuresUri: vscode.Uri, featureFileStep: Feature
 
 
   // NOTE - THIS FUNCTION NEEDS TO BE FAST (hence the concat key for the map)
-  const featuresUriMatchString = getUriMatchString(featuresUri);
+  const featuresUriMatchString = uriMatchString(featuresUri);
   const allSteps = getStepFileSteps();
   // filter matches to the workspace that raised the click event using the fileUri in the key
   const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriMatchString)));

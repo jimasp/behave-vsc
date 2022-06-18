@@ -4,7 +4,7 @@ import { WorkspaceSettings } from "./settings";
 import { Scenario, TestData, TestFile } from './testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, getUriMatchString,
+  countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
 } from './common';
 import { customAlphabet } from 'nanoid';
@@ -94,11 +94,11 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
             await queueSelectedTestItems(gatherTestItems(test.children));
           }
 
-          if (test.uri && !coveredLines.has(getUriMatchString(test.uri))) {
+          if (test.uri && !coveredLines.has(uriMatchString(test.uri))) {
             try {
               const lines = (await getContentFromFilesystem(test.uri)).split('\n');
               coveredLines.set(
-                getUriMatchString(test.uri),
+                uriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -134,7 +134,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
           if (!allTestsForThisWkspIncluded) {
-            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getUriMatchString(wkspSettings.uri)).length === 1;
+            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === uriMatchString(wkspSettings.uri)).length === 1;
 
             if (wkspGrandParentItemIncluded)
               allTestsForThisWkspIncluded = true;
@@ -213,7 +213,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         // run each workspace queue
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
           const wkspSettings = config.workspaceSettings[wkspUri.path];
-          const idMatch = getUriMatchString(wkspSettings.featuresUri);
+          const idMatch = uriMatchString(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
           if (wkspQueue.length === 0)

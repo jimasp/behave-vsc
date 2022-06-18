@@ -3,7 +3,7 @@ import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { getFeatureNameFromFile } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, getUriMatchString, getWorkspaceFolder,
+  countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
 } from './common';
 import { parseStepsFile, getStepFileSteps } from './stepsParser';
@@ -75,8 +75,6 @@ export class FileParser {
   _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
-    let processed = 0;
-
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
     const items = getAllTestItems(wkspSettings.uri, controller.items);
     for (const item of items) {
@@ -86,14 +84,15 @@ export class FileParser {
 
     deleteStepMappings(wkspSettings.featuresUri);
 
+    // replaced with custom findFiles function for now (see comment in findFiles function)
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
     //const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
-    const featuresPath = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeFeaturesPath);
-    const featureFiles = await findFiles(featuresPath, undefined, ".feature", cancelToken);
+    const featureFiles = await findFiles(wkspSettings.featuresUri, undefined, ".feature", cancelToken);
 
     if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
       throw `No feature files found in ${wkspSettings.featuresUri.fsPath}`;
 
+    let processed = 0;
     for (const uri of featureFiles) {
       if (cancelToken.isCancellationRequested)
         break;
@@ -112,15 +111,15 @@ export class FileParser {
 
   private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
-    let processed = 0;
-
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     const stepFileSteps = getStepFileSteps();
-    const wkspStepKeys = new Map([...stepFileSteps].filter(([k,]) => k.startsWith(wkspSettings.featuresUri.path))).keys();
+    const matchString = uriMatchString(wkspSettings.featuresUri);
+    const wkspStepKeys = new Map([...stepFileSteps].filter(([k,]) => k.startsWith(matchString))).keys();
     for (const key of wkspStepKeys) {
       stepFileSteps.delete(key);
     }
 
+    // replaced with custom findFiles function for now (see comment in findFiles function)    
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
     //let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
     let stepFiles = await findFiles(wkspSettings.featuresUri, "steps", ".py", cancelToken);
@@ -129,6 +128,7 @@ export class FileParser {
     if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
       throw `No step files found in ${vscode.Uri.joinPath(wkspSettings.featuresUri, "steps").fsPath}`;
 
+    let processed = 0;
     for (const uri of stepFiles) {
       if (cancelToken.isCancellationRequested)
         break;
@@ -185,7 +185,7 @@ export class FileParser {
     if (featureName === null)
       return undefined;
 
-    const testItem = controller.createTestItem(getUriMatchString(uri), featureName, uri);
+    const testItem = controller.createTestItem(uriMatchString(uri), featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
     const testFile = new TestFile();
@@ -193,7 +193,7 @@ export class FileParser {
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
     let wkspGrandParent: vscode.TestItem | undefined;
-    const wkspTestItemId = getUriMatchString(wkspSettings.uri);
+    const wkspTestItemId = uriMatchString(wkspSettings.uri);
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
       wkspGrandParent = controller.items.get(wkspTestItemId);
       if (!wkspGrandParent) {
@@ -220,7 +220,7 @@ export class FileParser {
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
         const folderName = "\uD83D\uDCC1 " + folders[i]; // folder icon
-        const folderTestItemId = `${getUriMatchString(wkspSettings.featuresUri)}/${path}`;
+        const folderTestItemId = `${uriMatchString(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)
           parent = wkspGrandParent;

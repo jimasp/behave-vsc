@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getUriMatchString, isStepsFile, sepr } from './common';
+import { uriMatchString, isStepsFile, sepr } from './common';
 import { getContentFromFilesystem } from './common';
 import { diagLog } from './logger';
 
@@ -34,11 +34,11 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
   if (!content)
     return;
 
-  const fileUriMatchString = getUriMatchString(stepFileUri);
+  const fileUriMatchString = uriMatchString(stepFileUri);
 
   // clear all existing stepFileSteps for this step file uri
   for (const [key, stepFileStep] of stepFileSteps) {
-    if (getUriMatchString(stepFileStep.uri) === fileUriMatchString)
+    if (uriMatchString(stepFileStep.uri) === fileUriMatchString)
       stepFileSteps.delete(key);
   }
 
@@ -128,7 +128,7 @@ export function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vsc
   if (!fileName)
     throw `no file name found in uri path ${fileUri.path}`;
   // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we don't want to allow duplicate matches in the workspace
-  const reKey = `${getUriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
+  const reKey = `${uriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
   return { reKey, stepFileStep };
 }

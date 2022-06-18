@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { getContentFromFilesystem, getUriMatchString, isFeatureFile, WkspError } from './common';
+import { getContentFromFilesystem, uriMatchString, isFeatureFile, WkspError } from './common';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { diagLog } from './logger';
@@ -61,7 +61,7 @@ export class TestFile {
       const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       if (!item.uri)
         throw new WkspError(`no uri for item ${item.id}`, wkspSettings.uri);
-      const id = `${getUriMatchString(item.uri)}/${data.getLabel()}`;
+      const id = `${uriMatchString(item.uri)}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
       tcase.range = range;

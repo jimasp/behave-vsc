@@ -4,7 +4,7 @@ import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, getUriMatchString, isBehaveExecutionError } from './common';
+import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from './common';
 import { diagLog } from './logger';
 import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';
@@ -176,7 +176,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       diagLog(`${run.name} - updateResult called for uri ${uri.path}`, wkspSettings.uri);
 
-      const matches = map.filter(m => getUriMatchString(m.junitFileUri) === getUriMatchString(uri));
+      const matches = map.filter(m => uriMatchString(m.junitFileUri) === uriMatchString(uri));
       if (matches.length === 0)
         throw `could not find any matching test items for junit file ${uri.fsPath}`;
 

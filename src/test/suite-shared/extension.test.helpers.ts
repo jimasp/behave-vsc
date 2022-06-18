@@ -7,7 +7,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { ParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
 import { featureStepRe } from '../../featureParser';
 
@@ -340,7 +340,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
 	assert(actualCounts !== null, "actualCounts !== null");
-	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === getUriMatchString(wkspUri)) !== undefined;
+	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriMatchString(wkspUri)) !== undefined;
 
 	// check all steps can be matched
 	await assertAllStepsCanBeMatched(instances.config.workspaceSettings[wkspUri.path]);

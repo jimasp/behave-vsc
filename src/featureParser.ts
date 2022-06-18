@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, getUriMatchString, sepr } from './common';
+import { getContentFromFilesystem, uriMatchString, sepr } from './common';
 import { diagLog } from './logger';
 
 
@@ -71,7 +71,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
         lastStepType = stepType;
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
-      const key = `${getUriMatchString(uri)}${sepr}${range.start.line}`;
+      const key = `${uriMatchString(uri)}${sepr}${range.start.line}`;
       featureFileSteps.set(key, new FeatureFileStep(key, uri, featureName, stepType, range, stepText));
       fileSteps++;
       continue;
