@@ -64,8 +64,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
 
     const queue: QueueItem[] = [];
-    const run_id = customAlphabet('1234567890', 6);
-    const run = ctrl.createTestRun(request, `${run_id()}`, false);
+    const run_id = customAlphabet('1234567890')(6);
+    const run = ctrl.createTestRun(request, `${run_id}`, false);
 
     try {
       // map of file uris to statements on each line:

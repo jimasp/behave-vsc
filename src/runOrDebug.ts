@@ -119,7 +119,7 @@ function getJunitWkspRunDirUri(runName: string | undefined, wkspName: string): v
 function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
 
   const escape = "#^@";
-  const nidSuffix = "_" + customAlphabet("1234567890abcdef", 5);
+  const nidSuffix = "_" + customAlphabet("1234567890abcdef")(5);
   const allPlatformsValidFolderNameChars = /[^a-zA-Z0-9_\\.\\-]/g;
   let scenarioFolderName = scenarioName.replaceAll(" ", "_").replace(allPlatformsValidFolderNameChars, () => escape);
 

@@ -7,9 +7,10 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { ParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, sepr, afterFirstSepr, beforeFirstSepr } from '../../common';
 import { performance } from 'perf_hooks';
 import { featureStepRe } from '../../featureParser';
+import { getStepMappingForFeatureFileLine } from '../../stepMappings';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -94,13 +95,18 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 }
 
 
-function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
+type LineAndLineNo = {
+	line: string
+	lineNo: number,
+}
+
+function addStepsFromFeatureFile(featureFileUri: vscode.Uri, content: string, featureSteps: Map<vscode.Uri, LineAndLineNo>) {
 	const lines = content.trim().split('\n');
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
 		const stExec = featureStepRe.exec(line);
 		if (stExec)
-			featureSteps.push(line);
+			featureSteps.set(featureFileUri, { lineNo, line });
 	}
 
 	return featureSteps;
@@ -109,17 +115,17 @@ function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 
 async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
 
-	const stepLines: string[] = [];
+	const stepLines = new Map<vscode.Uri, LineAndLineNo>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
 		const doc = await vscode.workspace.openTextDocument(featFileUri);
 		const content = doc.getText();
-		addStepsFromFeatureFile(content, stepLines);
+		addStepsFromFeatureFile(featFileUri, content, stepLines);
 	}
 
-	return [...new Set(stepLines)]; // remove duplicates
+	return [...stepLines];
 }
 
 
@@ -127,15 +133,13 @@ async function assertAllStepsCanBeMatched(wkspSettings: WorkspaceSettings) {
 
 	const featureSteps = await getAllStepsFromFeatureFiles(wkspSettings);
 
-	for (const idx in featureSteps) {
-		const line = featureSteps[idx];
+	for (const [uri, lineAndLineNo] of featureSteps) {
+		const line = lineAndLineNo.line;
+		const lineNo = lineAndLineNo.lineNo;
 		try {
 			if (!line.includes("missing step")) {
-				//const stepTypeAndText = getStepTypeAndText(line);
-				//if (!stepTypeAndText)
-				throw `getStepTypeAndText returned undefined for line: ${line}`;
-				//const match = getStepMatch(wkspSettings.featuresUri, stepTypeAndText.stepType, stepTypeAndText.text);
-				//assert(match, "match");
+				const match = getStepMappingForFeatureFileLine(uri, lineNo);
+				assert(match, "match");
 			}
 		}
 		catch (e: unknown) {
