@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, getUriMatchString, pathSepr, sepr } from './common';
+import { getContentFromFilesystem, getUriMatchString, sepr } from './common';
 import { diagLog } from './logger';
-import { getStepMappings } from './fileParser';
-import { getStepMatch } from './gotoStepHandler';
-import { StepFileStep } from './stepsParser';
 
 
 const featureReStr = "^(\\s*)Feature:(\\s*)(.+)(\\s*)$";
@@ -14,9 +11,12 @@ const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(\s*)(.+)(\s*)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(\s*)(.+)(\s*)$/i;
 const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
+const featureFileSteps = new Map<string, FeatureFileStep>();
+export const getFeatureFileSteps = () => featureFileSteps;
 
 export class FeatureFileStep {
   constructor(
+    public readonly key: string,
     public readonly uri: vscode.Uri,
     public readonly fileName: string,
     public readonly stepType: string,
@@ -25,13 +25,6 @@ export class FeatureFileStep {
   ) { }
 }
 
-export class StepMapping {
-  constructor(
-    // a feature step must match to a SINGLE step file step (or none)
-    public readonly featureFileStep: FeatureFileStep,
-    public stepFileStep: StepFileStep | undefined
-  ) { }
-}
 
 
 export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
@@ -49,14 +42,6 @@ export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | 
 export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode.Uri, featureName: string, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
-
-  // clear existing feature steps for this file uri
-  const featureFileUriMatchString = getUriMatchString(uri);
-  const stepMappings = getStepMappings();
-  for (let i = stepMappings.length - 1; i >= 0; i--) {
-    if (getUriMatchString(stepMappings[i].featureFileStep.uri).startsWith(featureFileUriMatchString))
-      stepMappings.splice(i, 1);
-  }
 
   const lines = content.split('\n');
   let fastSkipFeature = false;
@@ -88,18 +73,8 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
-      const fileName = uri.path.split("/").pop();
-      if (!fileName)
-        throw `no file name found in uri path ${uri.path}`;
-      const featureFileStep = new FeatureFileStep(uri, fileName, stepType, range, stepText);
-      const stepFileStep = getStepMatch(wkspSettings.featuresUri, stepType, stepText);
-
-      const stepMapping = new StepMapping(
-        featureFileStep,
-        stepFileStep
-      );
-
-      stepMappings.push(stepMapping);
+      const key = `${getUriMatchString(uri)}${sepr}${range.start.line}`;
+      featureFileSteps.set(key, new FeatureFileStep(key, uri, featureName, stepType, range, stepText));
       fileSteps++;
       continue;
     }
@@ -144,3 +119,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
   diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, wkspSettings.uri);
 };
+
+
+

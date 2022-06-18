@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getUriMatchString, getWorkspaceUriForFile, isStepsFile, urisMatch } from './common';
-import { getStepMappings } from './fileParser';
+import { getUriMatchString, getWorkspaceUriForFile, isStepsFile } from './common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
+import { getStepMappingsForStepsFileLine, waitOnReadyForStepsNavigation } from './stepMappings';
 import { FeatureFileStep } from './featureParser';
-import { waitOnParseComplete } from './gotoStepHandler';
+
 
 
 const treeDataProvider = new StepReferencesTree();
@@ -14,21 +14,18 @@ treeDataProvider.setTreeView(treeView);
 const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: undefined, lineNo: -1 };
 
 
-function getReferencesToStepFunction(stepsFileUri: vscode.Uri, lineNo: number): StepReference[] {
+function getFeatureReferencesToStepFileFunction(stepsFileUri: vscode.Uri, lineNo: number): StepReference[] {
 
-  const stepMappingsForThisStepsFile = getStepMappings().filter(x => x.stepFileStep && urisMatch(x.stepFileStep.uri, stepsFileUri));
+  const stepsFileLineMappings = getStepMappingsForStepsFileLine(stepsFileUri, lineNo);
   const featureStepMatches = new Map<string, FeatureFileStep[]>();
 
-  stepMappingsForThisStepsFile.forEach(sm => {
-    console.log(sm.stepFileStep);
-    if (sm.stepFileStep && sm.stepFileStep.funcLineNo === lineNo) {
-      const featureKey = getUriMatchString(sm.featureFileStep.uri);
-      const parentFeature = featureStepMatches.get(featureKey);
-      if (!parentFeature)
-        featureStepMatches.set(featureKey, [sm.featureFileStep]);
-      else
-        parentFeature.push(sm.featureFileStep);
-    }
+  stepsFileLineMappings.forEach(sm => {
+    const featureKey = getUriMatchString(sm.featureFileStep.uri);
+    const parentFeature = featureStepMatches.get(featureKey);
+    if (!parentFeature)
+      featureStepMatches.set(featureKey, [sm.featureFileStep]);
+    else
+      parentFeature.push(sm.featureFileStep);
   });
 
   // convert to array of step references
@@ -58,7 +55,7 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
       throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }
 
-    if (!await waitOnParseComplete())
+    if (!await waitOnReadyForStepsNavigation())
       return;
 
     if (!refresh) {
@@ -66,7 +63,7 @@ export async function findStepReferencesHandler(ignored?: vscode.Uri, refresh = 
       refreshStore.lineNo = activeEditor.selection.active.line;
     }
 
-    const stepReferences = getReferencesToStepFunction(fileUri, refreshStore.lineNo);
+    const stepReferences = getFeatureReferencesToStepFileFunction(fileUri, refreshStore.lineNo);
 
     let refCount = 0;
     stepReferences.forEach(sr => refCount += sr.children.length);

@@ -39,7 +39,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
     // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
-    const ready = await parser.parseComplete(1000, "testRunHandler");
+    const ready = await parser.featureParseComplete(1000, "testRunHandler");
     if (!ready) {
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);

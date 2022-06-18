@@ -10,16 +10,16 @@ import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepFileStepMap } from './stepsParser';
+import { getStepFileSteps, StepFileStep } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, refreshStepReferencesWindow, treeView } from './findStepReferencesHandler';
-import { getStepFileSteps, getStepMappings, FileParser } from './fileParser';
+import { FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { StepMapping } from './featureParser';
+import { getStepMappings, buildStepMappings, StepMapping } from './stepMappings';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -33,8 +33,8 @@ export type TestSupport = {
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => StepFileStepMap,
-  getFeatureSteps: () => StepMapping[],
+  getSteps: () => Map<string, StepFileStep>,
+  getStepMappings: () => StepMapping[],
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -223,7 +223,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       ctrl: ctrl,
       parser: parser,
       getSteps: getStepFileSteps,
-      getFeatureSteps: getStepMappings,
+      getStepMappings: getStepMappings,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
@@ -251,17 +251,21 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const wkspSettings = config.workspaceSettings[wkspUri.path];
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+  let refreshStepMappingsTS = new vscode.CancellationTokenSource();
 
   const updater = async (uri: vscode.Uri) => {
     try {
 
-      if (isStepsFile(uri)) {
+      if (isStepsFile(uri))
         await parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
-      }
 
-      if (isFeatureFile(uri)) {
+      if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
-      }
+
+      refreshStepMappingsTS.cancel();
+      refreshStepMappingsTS.dispose();
+      refreshStepMappingsTS = new vscode.CancellationTokenSource();
+      await buildStepMappings(wkspSettings.featuresUri, refreshStepMappingsTS.token);
 
       refreshStepReferencesWindow();
     }
@@ -269,6 +273,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
     }
+
   }
 
 
@@ -283,7 +288,6 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   });
 
   // fires on either file/folder delete OR rename (inc. git actions)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   watcher.onDidDelete(uri => {
 
     const path = uri.path.toLowerCase();

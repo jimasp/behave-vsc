@@ -6,7 +6,6 @@ import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { getStepTypeAndText, getStepMatch } from '../../gotoStepHandler';
 import { ParseCounts } from '../../fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, getUriMatchString, EXTENSION_FULL_NAME } from '../../common';
 import { performance } from 'perf_hooks';
@@ -105,7 +104,7 @@ function addStepsFromFeatureFile(content: string, featureSteps: string[]) {
 		}
 
 		const lcase = line.toLowerCase();
-		if (lcase.startsWith("given ") || lcase.startsWith("when ") || lcase.startsWith("then ")) {
+		if (lcase.startsWith("given ") || lcase.startsWith("when ") || lcase.startsWith("then ") || lcase.startsWith("and ") || lcase.startsWith("but ")) {
 			featureSteps.push(line);
 		}
 	}
@@ -138,11 +137,11 @@ async function assertAllStepsCanBeMatched(wkspSettings: WorkspaceSettings) {
 		const line = featureSteps[idx];
 		try {
 			if (!line.includes("missing step")) {
-				const stepTypeAndText = getStepTypeAndText(line);
-				if (!stepTypeAndText)
-					throw `getStepTypeAndText returned undefined for line: ${line}`;
-				const match = getStepMatch(wkspSettings.featuresUri, stepTypeAndText.stepType, stepTypeAndText.text);
-				assert(match, "match");
+				//const stepTypeAndText = getStepTypeAndText(line);
+				//if (!stepTypeAndText)
+				throw `getStepTypeAndText returned undefined for line: ${line}`;
+				//const match = getStepMatch(wkspSettings.featuresUri, stepTypeAndText.stepType, stepTypeAndText.text);
+				//assert(match, "match");
 			}
 		}
 		catch (e: unknown) {
@@ -313,7 +312,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	extInstances.config.integrationTestRun = true;
 
 	// wait for any initial parse to complete
-	await extInstances.parser.parseComplete(5000, "getExtensionInstances");
+	await extInstances.parser.featureParseComplete(5000, "getExtensionInstances");
 
 	await vscode.commands.executeCommand("testing.clearTestResults");
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -368,7 +367,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
-	assert(await instances.parser.parseComplete(0, consoleName));
+	assert(await instances.parser.featureParseComplete(0, consoleName));
 	const fakeTestRunStopButtonToken = new vscode.CancellationTokenSource().token;
 	const resultsPromise = instances.runHandler(debug, runRequest, fakeTestRunStopButtonToken);
 
