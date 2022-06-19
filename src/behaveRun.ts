@@ -37,24 +37,20 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   let updatesComplete: Promise<unknown> | undefined;
   if (runAllAsOne) {
 
-    const subDir = junitDirUri.path.split("/").pop();
-    if (!subDir)
-      throw `unable to determine subdirectory name for junit directory`;
     await vscode.workspace.fs.createDirectory(junitDirUri);
     diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`, wkspUri);
 
-    // TODO: there is a problem here which is difficult to fix correctly, as it is INTERMITTENT.
-    // the watcher seems to occasionally (<1%) have issues on linux detecting changes to the junit directory, and so 
-    // the test results are not updated correctly, it may be caused by some kind of race condition between the filesystem and the watcher
-    // because sticking a wait between creating the directory and creating the watcher SEEMS? to fix the issue.
-    // we need to try and recreate the problem consistently BEFORE modifying this code.
-    // IF WE SEE THIS ISSUE AGAIN, CHECK THE DIAGNOSTICS LOGS FIRST
-    await new Promise(resolve => setTimeout(resolve, 100));
 
     updatesComplete = new Promise(function (resolve, reject) {
       diagLog(`run ${run.name} - creating filesystemwatcher for junit directory ${junitDirUri.fsPath}`, wkspUri);
       watcher = startWatchingJunitFolder(resolve, reject, queue, run, wkspSettings, junitDirUri, runToken);
     });
+
+    // The filesystemwatcher created above has intermittent issues detecting files created immediately after the watcher is created. 
+    // Putting a small wait before kicking off behave for runAllAsOne fixes the issue.     
+    // This has been observed on Ubuntu when running all tests from all projects simultaneously in the example multi-root workspace.
+    // TODO: find a better fix or use a different watcher
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
 
@@ -184,8 +180,8 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       for (const match of matches) {
         await parseAndUpdateTestResults(false, false, wkspSettings, match.junitFileUri, run, match.queueItem, runToken);
         match.updated = true;
-        diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
         updated++;
+        diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
       }
       if (updated === map.length)
         resolve("");
@@ -200,10 +196,8 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
 
   let updated = 0;
   const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
-  const pattern = new vscode.RelativePattern(junitDirUri, '**/*.xml');
-  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-
-  watcher.onDidCreate(uri => updateResult(uri));
+  const pattern = new vscode.RelativePattern(junitDirUri, '*.xml');
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern, true, false, true);
   watcher.onDidChange(uri => updateResult(uri));
 
   diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/**/*.xml}`, wkspSettings.uri);

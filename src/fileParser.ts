@@ -378,13 +378,14 @@ export class FileParser {
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
       }
 
-      if (!config.integrationTestRun)
+      if (!config.integrationTestRun || this._cancelTokenSources[wkspPath].token.isCancellationRequested)
         return null;
 
       const wkspStepMappings = [...getStepMappings()].filter(k => urisMatch(k.featuresUri, wkspSettings.featuresUri));
       const wkspStepMappingsCount = wkspStepMappings.length;
-      const wkspStepFileStepsCount = getStepFileSteps().size;
-      const wkspFeatureFileStepsCount = getFeatureFileSteps().size;
+      const featuresUriMatchString = uriMatchString(wkspSettings.featuresUri);
+      const wkspStepFileStepsCount = [...getStepFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString)).length;
+      const wkspFeatureFileStepsCount = [...getFeatureFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString)).length;
 
       return {
         tests: testCounts, featureFilesExcludingEmptyOrCommentedOut: featureFileCount,

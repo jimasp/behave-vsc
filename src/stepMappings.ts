@@ -69,10 +69,15 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
   deleteStepMappings(featuresUri);
 
   let processed = 0;
-  getFeatureFileSteps().forEach(featureFileStep => {
+
+  // get filtered objects for loop
+  const featuresUriMatchString = uriMatchString(featuresUri);
+  const { featureFileSteps, exactSteps, paramsSteps } = _getFilteredSteps(featuresUriMatchString);
+
+  featureFileSteps.forEach(([, featureFileStep]) => {
     if (stopBuilding)
       return;
-    const stepFileStep = _getStepFileStepMatch(featuresUri, featureFileStep);
+    const stepFileStep = _getStepFileStepMatch(featuresUriMatchString, featureFileStep, exactSteps, paramsSteps);
     if (stepFileStep)
       stepMappings.push(new StepMapping(featuresUri, stepFileStep, featureFileStep));
     processed++;
@@ -84,9 +89,22 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
 }
 
 
+function _getFilteredSteps(featuresUriMatchString: string) {
+  const featureFileSteps = [...getFeatureFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString));
+  const allSteps = getStepFileSteps();
+  // filter matches to the workspace features uri
+  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriMatchString)));
+  // then remove the fileUri prefix from the keys
+  const steps = new Map([...wkspSteps].map(([k, v]) => [afterFirstSepr(k), v]));
+  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+  return { featureFileSteps, featuresUriMatchString, exactSteps, paramsSteps };
+}
+
 // any feature file step must map to a single python step function 
 // so this function should return the SINGLE best match
-function _getStepFileStepMatch(featuresUri: vscode.Uri, featureFileStep: FeatureFileStep): StepFileStep | null {
+function _getStepFileStepMatch(featuresUriMatchString: string, featureFileStep: FeatureFileStep,
+  exactSteps: Map<string, StepFileStep>, paramsSteps: Map<string, StepFileStep>): StepFileStep | null {
 
   const findExactMatch = (stepText: string, stepType: string) => {
     const matchText = stepType + sepr + stepText;
@@ -128,16 +146,7 @@ function _getStepFileStepMatch(featuresUri: vscode.Uri, featureFileStep: Feature
   }
 
 
-  // NOTE - THIS FUNCTION NEEDS TO BE FAST (hence the concat key for the map)
-  const featuresUriMatchString = uriMatchString(featuresUri);
-  const allSteps = getStepFileSteps();
-  // filter matches to the workspace that raised the click event using the fileUri in the key
-  const wkspSteps = new Map([...allSteps].filter(([k,]) => k.startsWith(featuresUriMatchString)));
-  // then remove the fileUri prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [afterFirstSepr(k), v]));
-
-  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
-  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+  // NOTE - THIS FUNCTION NEEDS TO BE FAST
 
   let stepText = featureFileStep.text;
   if (stepText.endsWith(":")) // table

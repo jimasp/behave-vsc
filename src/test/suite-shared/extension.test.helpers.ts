@@ -7,7 +7,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, sepr, afterFirstSepr, beforeFirstSepr } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString } from '../../common';
 import { performance } from 'perf_hooks';
 import { featureStepRe } from '../../featureParser';
 
