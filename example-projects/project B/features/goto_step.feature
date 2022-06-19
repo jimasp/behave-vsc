@@ -64,13 +64,13 @@ Scenario: 'yet' 'another' step single quoted
     Given 'yet' 'another' step    
 
 Scenario: wrapped step 1
-    Given wrapped step1 blaha foo1 bar1 blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+    Given wrapped step1 blaha unquoted params blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
 
 Scenario: wrapped step 2
-    Given wrapped step2 blaha 'foo2' 'bar2' blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+    Given wrapped step2 blaha 'single' 'quoted' blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
 
 Scenario: wrapped step 3
-    Given wrapped step3 blaha "foo3" "bar3" blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+    Given wrapped step3 blaha "double" "quoted" blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
 
 Scenario: wrapped step 4
-    Given wrapped step4 blaha another one blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz    
+    Given wrapped step4 blaha no params blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz

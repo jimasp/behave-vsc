@@ -85,10 +85,10 @@ paths=behave_tests/features
 - The python path is obtained via the `ms-python.python` extension (exported settings) and is read before each run, so it is kept in sync with your project.
 
 - When running all tests *and* the "RunAllAsOne" extension setting is enabled (the default), it runs this command:  
-`python -m behave`
+`python -m behave --show-skipped`
 
 - When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:  
-`python -m behave -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
+`python -m behave --show-skipped -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
 - For each run, the *equivalent* behave command to run the test manually appears in the Behave VSC output window. (The *actual* command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
 - The behave process is spawned, and behave output is written to the Behave VSC output window for the associated workspace.
@@ -106,12 +106,13 @@ paths=behave_tests/features
 
 ## Q&A
 
+- *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is added just in case your behave.ini file specifies `show_skipped=False`. (It is included in the command output to ensure you get the same test run output if you run the behave command manually.)
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
 - *Why am I not seeing any exceptions while debugging?* Do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - *How do I clear previous test results?* This isn't that obvious in vscode. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the the outputted command and run it manually (or run `python -m behave` for all test output).
-- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same file being written multiple times for the same feature, which in runParallel mode would stop us from being able to update the test, because behave writes "skipped" into the junit file for tests that are not included in a behave execution.)
+- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test, as each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
 - *When will this extension have a release version?* When the code is stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
 
 ---

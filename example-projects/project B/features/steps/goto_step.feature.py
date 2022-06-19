@@ -5,7 +5,9 @@ from behave import *
 
 
 @given("given step")
-def and_step(context):
+@given("and step")
+def given_step(context):
+    print(context)
     pass
 
 
@@ -15,6 +17,7 @@ def when_step(context):
 
 
 @then("then step")
+@then("but step")
 def then_step(context):
     pass
 
@@ -89,8 +92,8 @@ def a_double_quoted_step(context, a, b):
     "blahw blahx blahy blahz"
 )
 def wrapped_step1(context, a, b):
-    assert a == "foo1"
-    assert b == "bar1"
+    assert a == "unquoted"
+    assert b == "params"
 
 
 @step(
@@ -99,8 +102,8 @@ def wrapped_step1(context, a, b):
     "blahw blahx blahy blahz"
 )
 def wrapped_step2(context, a, b):
-    assert a == "foo2"
-    assert b == "bar2"
+    assert a == "single"
+    assert b == "quoted"
 
 
 @step(
@@ -108,14 +111,15 @@ def wrapped_step2(context, a, b):
     'blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv '
     'blahw blahx blahy blahz'
 )
+def wrapped_step3(context, a, b):
+    assert a == "double"
+    assert b == "quoted"
+    
 
 @step(
-    'wrapped step4 blaha another one blahd blahe blahf blahg blahh blahi blahj blahk '
+    'wrapped step4 blaha no params blahd blahe blahf blahg blahh blahi blahj blahk '
     'blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv '
     'blahw blahx blahy blahz'
-)
-
-def wrapped_step3(context, a, b):
-    assert a == "foo3"
-    assert b == "bar3"
-
+)    
+def wrapped_step4(context):
+    pass

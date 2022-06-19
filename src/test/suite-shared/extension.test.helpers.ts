@@ -64,7 +64,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 	if (match.length !== 1) {
 		console.log(actualResult);
 		// eslint-disable-next-line no-debugger
-		debugger; // UHOH (did we add a new test that hasn't been added to expected results? if so, see debug console and copy/paste into ws?.expectedResults.ts)
+		debugger; // UHOH (did you add a new scenario that hasn't been added to expected results yet? IF a new scenario has been added: see debug console and copy/paste into ws?.expectedResults.ts)
 		throw `match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`;
 	}
 

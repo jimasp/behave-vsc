@@ -31,7 +31,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     const stepFileStep = getStepFileStepForFeatureFileLine(docUri, lineNo);
 
     if (!stepFileStep) {
-      vscode.window.showInformationMessage(`Step '${textEditor.document.lineAt(lineNo).text}' not found`)
+      vscode.window.showInformationMessage(`Step '${lineText}' not found`)
       return;
     }
 
