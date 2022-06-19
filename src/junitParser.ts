@@ -71,10 +71,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
   }
 
   item.scenario.result = result.status;
-
-  const rundiag = `test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`;
-  run.appendOutput(rundiag);
-  diagLog(rundiag);
+  run.appendOutput(`test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`);
 }
 
 

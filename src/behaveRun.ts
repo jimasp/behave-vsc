@@ -200,6 +200,6 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   const watcher = vscode.workspace.createFileSystemWatcher(pattern, true, false, true);
   watcher.onDidChange(uri => updateResult(uri));
 
-  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/**/*.xml}`, wkspSettings.uri);
+  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/*.xml`, wkspSettings.uri);
   return watcher;
 }
