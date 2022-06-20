@@ -11,6 +11,7 @@ export class StepReference extends vscode.TreeItem {
     private readonly featureRefDetails: FeatureFileStep[],
   ) {
     super(featureFileName, vscode.TreeItemCollapsibleState.Expanded);
+    this.description = vscode.workspace.asRelativePath(resourceUri).replace(featureFileName, "").slice(0, -1);
     this.children = this.featureRefDetails.map(featureStep => new StepReferenceDetails(featureStep.text, featureStep, this));
   }
 }
@@ -18,7 +19,6 @@ export class StepReference extends vscode.TreeItem {
 class StepReferenceDetails extends vscode.TreeItem {
   public readonly range: vscode.Range;
   public readonly contextValue = "StepReferenceDetails";
-  //public readonly command: vscode.Command;
 
   constructor(
     public readonly label: string,

@@ -312,3 +312,10 @@ export function rndAlphaNumeric(size = 5) {
 export function rndNumeric(size = 6) {
   return customAlphabet("0123456789")(size);
 }
+
+export function getFilename(uri: vscode.Uri) {
+  const fileName = uri.path.split("/").pop();
+  if (!fileName)
+    throw "could not determine file name from uri path";
+  return fileName;
+}

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, uriMatchString, sepr } from './common';
+import { getContentFromFilesystem, uriMatchString, sepr, getFilename } from './common';
 import { diagLog } from './logger';
 
 
@@ -43,6 +43,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
+  const fileName = getFilename(uri);
   const lines = content.split('\n');
   let fastSkipFeature = false;
   let fileScenarios = 0;
@@ -72,7 +73,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const key = `${uriMatchString(uri)}${sepr}${range.start.line}`;
-      featureFileSteps.set(key, new FeatureFileStep(key, uri, featureName, stepType, range, stepText));
+      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, stepType, range, stepText));
       fileSteps++;
       continue;
     }

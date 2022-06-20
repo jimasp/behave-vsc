@@ -79,7 +79,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     stepReferences.forEach(sr => refCount += sr.children.length);
     const message = refCount === 0
       ? "No results"
-      : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s." : ""}`;
+      : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
 
     //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
     treeDataProvider.update(stepReferences, message);

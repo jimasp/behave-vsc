@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { uriMatchString, isStepsFile, sepr } from './common';
+import { uriMatchString, isStepsFile, sepr, getFilename } from './common';
 import { getContentFromFilesystem } from './common';
 import { diagLog } from './logger';
 
@@ -125,9 +125,7 @@ export function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vsc
   let textAsRe = step[2].trim();
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
-  const fileName = fileUri.path.split("/").pop();
-  if (!fileName)
-    throw `no file name found in uri path ${fileUri.path}`;
+  const fileName = getFilename(fileUri);
   // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we don't want to allow duplicate matches in the workspace
   const reKey = `${uriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
