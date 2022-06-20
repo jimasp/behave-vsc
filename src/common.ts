@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
 import { Scenario, TestData } from './testFile';
 import { WorkspaceSettings } from './settings';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import * as fs from 'fs';
+
 
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -301,4 +303,12 @@ export function isBehaveExecutionError(outputStr: string) {
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
+}
+
+export function rndAlphaNumeric(size = 5) {
+  return customAlphabet("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")(size);
+}
+
+export function rndNumeric(size = 6) {
+  return customAlphabet("0123456789")(size);
 }

@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';
 import { QueueItem } from './extension';
 import { getJunitFileUri, updateTest } from './junitParser';
-import { WIN_MAX_PATH, WkspError } from './common';
+import { rndAlphaNumeric, WIN_MAX_PATH, WkspError } from './common';
 import { cancelTestRun } from './testRunHandler';
 
 
@@ -126,15 +125,14 @@ function getJunitWkspRunDirUri(runName: string | undefined, wkspName: string): v
 
 function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, scenarioName: string): vscode.Uri {
 
-  const escape = "#^@";
-  const nidSuffix = "_" + customAlphabet("1234567890abcdef")(5);
-  const allPlatformsValidFolderNameChars = /[^a-zA-Z0-9_\\.\\-]/g;
-  let scenarioFolderName = scenarioName.replaceAll(" ", "_").replace(allPlatformsValidFolderNameChars, () => escape);
-
-  if (scenarioFolderName.includes(escape)) {
-    scenarioFolderName = scenarioFolderName.replaceAll(escape, "X");
-    scenarioFolderName += nidSuffix; // ensure unique after replacing special characters
+  const nidSuffix = "_" + rndAlphaNumeric();
+  let scenarioFolderName = scenarioName.replaceAll(" ", "_");
+  const allPlatformsValidFolderNameChars = /[^ a-zA-Z0-9_.-]/g;
+  if (allPlatformsValidFolderNameChars.test(scenarioFolderName)) {
+    scenarioFolderName = scenarioFolderName.replace(allPlatformsValidFolderNameChars, "X");
+    scenarioFolderName += nidSuffix; // ensure unique after replacing invalid folder name characters    
   }
+
 
   let scenJunitDirUri = vscode.Uri.joinPath(junitDirUri, scenarioFolderName);
   if (os.platform() !== "win32")

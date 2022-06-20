@@ -5,9 +5,8 @@ import { Scenario, TestData, TestFile } from './testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndAlphaNumeric, rndNumeric
 } from './common';
-import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
 import { FileParser } from './fileParser';
 import { performance } from 'perf_hooks';
@@ -64,8 +63,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
 
     const queue: QueueItem[] = [];
-    const run_id = customAlphabet('1234567890')(6);
-    const run = ctrl.createTestRun(request, `${run_id}`, false);
+    const run = ctrl.createTestRun(request, rndNumeric(), false);
 
     try {
       // map of file uris to statements on each line:
