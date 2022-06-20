@@ -7,9 +7,10 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile } from '../../common';
 import { performance } from 'perf_hooks';
-import { featureStepRe } from '../../featureParser';
+import { featureFileStepRe } from '../../featureParser';
+import { funcRe } from '../../stepsParser';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -94,63 +95,123 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 }
 
 
-type FeatStep = {
-	featureFileUri: vscode.Uri,
+type FileStep = {
+	uri: vscode.Uri,
 	lineNo: number,
 }
 
-function addStepsFromFeatureFile(featureFileUri: vscode.Uri, content: string, featureSteps: Map<FeatStep, string>) {
+function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
 	const lines = content.trim().split('\n');
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
-		const stExec = featureStepRe.exec(line);
+		const stExec = featureFileStepRe.exec(line);
 		if (stExec)
-			featureSteps.set({ featureFileUri, lineNo }, line);
+			featureSteps.set({ uri, lineNo }, line);
 	}
 
 	return featureSteps;
 }
 
+function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<FileStep, string>) {
+	const lines = content.trim().split('\n');
+	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+		const line = lines[lineNo].trim();
+		const prevLine = lineNo === 0 ? "" : lines[lineNo - 1].trim();
+		if (funcRe.test(line) && prevLine !== "" && prevLine !== "@classmethod") {
+			steps.set({ uri, lineNo }, line);
+		}
+	}
 
-async function getAllStepsFromFeatureFiles(wkspSettings: WorkspaceSettings) {
+	return steps;
+}
 
-	const stepLines = new Map<FeatStep, string>();
+
+async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceSettings) {
+
+	const stepLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
-		const doc = await vscode.workspace.openTextDocument(featFileUri);
-		const content = doc.getText();
-		addStepsFromFeatureFile(featFileUri, content, stepLines);
+		if (isFeatureFile(featFileUri)) {
+			const doc = await vscode.workspace.openTextDocument(featFileUri);
+			const content = doc.getText();
+			addStepsFromFeatureFile(featFileUri, content, stepLines);
+		}
+	}
+
+	return [...stepLines];
+}
+
+async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceSettings) {
+
+	const stepLines = new Map<FileStep, string>();
+	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/steps/*.py`);
+	const stepFileUris = await vscode.workspace.findFiles(pattern, null);
+
+	for (const stepFileUri of stepFileUris) {
+		if (isStepsFile(stepFileUri)) {
+			const doc = await vscode.workspace.openTextDocument(stepFileUri);
+			const content = doc.getText();
+			addStepsFromStepsFile(stepFileUri, content, stepLines);
+		}
 	}
 
 	return [...stepLines];
 }
 
 
-async function assertAllFeatureStepsFindAMatch(wkspUri: vscode.Uri, instances: TestSupport) {
+
+async function assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri: vscode.Uri, instances: TestSupport) {
 
 	const wkspSettings = instances.config.workspaceSettings[wkspUri.path];
-	const featureSteps = await getAllStepsFromFeatureFiles(wkspSettings);
+	const featureFileSteps = await getAllStepLinesFromFeatureFiles(wkspSettings);
 
-	for (const [featStep, stepText] of featureSteps) {
-		const featFileUri = featStep.featureFileUri;
-		const lineNo = featStep.lineNo;
+	for (const [step, stepText] of featureFileSteps) {
+		const uri = step.uri;
+		const lineNo = step.lineNo;
 		try {
 			if (!stepText.includes("missing step")) {
-				const match = instances.getStepFileStepForFeatureFileLine(featFileUri, lineNo);
+				const match = instances.getStepFileStepForFeatureFileStep(uri, lineNo);
 				assert(match);
 			}
 		}
 		catch (e: unknown) {
 			debugger; // eslint-disable-line no-debugger
 			if (e instanceof assert.AssertionError)
-				throw new Error(`getStepFileStepForFeatureFileLine() could not find match for line ${featFileUri}:${lineNo}, (step text: "${stepText}")`);
+				throw new Error(`getStepFileStepForFeatureFileLine() could not find match for line ${uri}:${lineNo}, (step text: "${stepText}")`);
 			throw e;
 		}
 	}
-	console.log(`assertAllFeatureStepsFindAMatch for ${wkspSettings.name}, ${featureSteps.length} feature steps successfully matched`)
+	console.log(`assertAllFeatureFileStepsHaveAStepFileStepMatch for ${wkspSettings.name}, ${featureFileSteps.length} feature file steps successfully matched`)
 }
+
+
+async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri: vscode.Uri, instances: TestSupport) {
+
+	const wkspSettings = instances.config.workspaceSettings[wkspUri.path];
+	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(wkspSettings);
+
+	for (const [step, stepText] of stepFileSteps) {
+		const uri = step.uri;
+		const lineNo = step.lineNo;
+		try {
+			const mappings = instances.getStepMappingsForStepsFileFunction(uri, lineNo);
+			assert(mappings.length > 0);
+			mappings.forEach(mapping => {
+				assert(mapping.featureFileStep);
+			});
+		}
+		catch (e: unknown) {
+			debugger; // eslint-disable-line no-debugger
+			if (e instanceof assert.AssertionError)
+				throw new Error(`getStepMappingsForStepsFileFunction() could not find mapping for line ${uri}:${lineNo}, (step text: "${stepText}")`);
+			throw e;
+		}
+	}
+	console.log(`assertAllStepFileStepsHaveAtLeastOneFeatureReference for ${wkspSettings.name}, ${stepFileSteps.length} step file steps successfully matched`)
+}
+
 
 
 function standardisePath(path: string | undefined): string | undefined {
@@ -222,9 +283,8 @@ function assertInstances(instances: TestSupport) {
 	assert(instances);
 	assert(instances.config);
 	assert(instances.ctrl);
-	assert(instances.getSteps);
-	assert(instances.getStepMappings);
-	assert(instances.getStepFileStepForFeatureFileLine);
+	assert(instances.getStepFileStepForFeatureFileStep);
+	assert(instances.getStepMappingsForStepsFileFunction);
 	assert(instances.parser);
 	assert(instances.runHandler);
 	assert(instances.testData);
@@ -352,7 +412,8 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriMatchString(wkspUri)) !== undefined;
 
 	// check all steps can be matched
-	await assertAllFeatureStepsFindAMatch(wkspUri, instances);
+	await assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri, instances);
+	await assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri, instances);
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allWkspItems);

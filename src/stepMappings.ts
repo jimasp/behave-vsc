@@ -22,14 +22,14 @@ export class StepMapping {
 }
 
 
-export function getStepFileStepForFeatureFileLine(featureFileUri: vscode.Uri, lineNo: number): StepFileStep | null {
+export function getStepFileStepForFeatureFileStep(featureFileUri: vscode.Uri, lineNo: number): StepFileStep | undefined {
   const stepMappingForFeatureFileStep = stepMappings.find(sm =>
     sm.featureFileStep && urisMatch(sm.featureFileStep.uri, featureFileUri) && sm.featureFileStep.range.start.line === lineNo);
-  return stepMappingForFeatureFileStep ? stepMappingForFeatureFileStep.stepFileStep : null;
+  return stepMappingForFeatureFileStep?.stepFileStep;
 }
 
 
-export function getStepMappingsForStepsFileLine(stepsFileUri: vscode.Uri, lineNo: number): StepMapping[] {
+export function getStepMappingsForStepsFileFunction(stepsFileUri: vscode.Uri, lineNo: number): StepMapping[] {
   return stepMappings.filter(sm =>
     sm.stepFileStep && urisMatch(sm.stepFileStep.uri, stepsFileUri) &&
     sm.stepFileStep.funcLineNo === lineNo);

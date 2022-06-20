@@ -4,8 +4,9 @@ import { getContentFromFilesystem } from './common';
 import { diagLog } from './logger';
 
 export const parseRepWildcard = ".*";
-const stepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
-const startRe = /^\s*(@step|@given|@when|@then).+/i;
+export const funcRe = /^(async )?def/;
+const stepFileStepStartRe = /^\s*(@step|@given|@when|@then).+/i;
+const stepFileStepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
 
 const stepFileSteps = new Map<string, StepFileStep>();
 export const getStepFileSteps = () => stepFileSteps;
@@ -60,7 +61,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
     if (line.endsWith("\\"))
       line = line.slice(0, -1).trim();
 
-    if (setFuncLineKeys.length > 0 && line.startsWith("def") || line.startsWith("async def")) {
+    if (setFuncLineKeys.length > 0 && funcRe.test(line)) {
       setFuncLineKeys.forEach(key => {
         const step = stepFileSteps.get(key);
         if (!step)
@@ -70,7 +71,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
       setFuncLineKeys = [];
     }
 
-    const foundStep = startRe.exec(line);
+    const foundStep = stepFileStepStartRe.exec(line);
     if (foundStep) {
       if (foundStep && line.endsWith("(")) {
         startLineNo = lineNo;
@@ -102,7 +103,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
     }
 
 
-    const step = stepRe.exec(line);
+    const step = stepFileStepRe.exec(line);
     if (step) {
       const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
       const stepFsRk = createStepFileStepAndReKey(featuresUri, stepFileUri, range, step);

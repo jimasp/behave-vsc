@@ -4,6 +4,10 @@
 from behave import *
 
 
+def non_step_function(context):
+    pass
+
+
 @given("given step")
 @given("and step")
 def given_step(context):

@@ -9,7 +9,7 @@ const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
-export const featureStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 export const getFeatureFileSteps = () => featureFileSteps;
@@ -60,7 +60,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const step = featureStepRe.exec(line);
+    const step = featureFileStepRe.exec(line);
     if (step) {
       const stepText = step[2].trim();
 

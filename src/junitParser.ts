@@ -4,7 +4,6 @@ import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
 import { config } from './configuration';
-import { diagLog } from './logger';
 import { WorkspaceSettings } from './settings';
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };

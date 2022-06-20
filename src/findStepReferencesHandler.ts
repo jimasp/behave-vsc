@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 import { config } from "./configuration";
 import { uriMatchString, getWorkspaceUriForFile, isStepsFile } from './common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { getStepMappingsForStepsFileLine, waitOnReadyForStepsNavigation } from './stepMappings';
+import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from './stepMappings';
 import { FeatureFileStep } from './featureParser';
+import { funcRe } from './stepsParser';
 
 
 
@@ -16,7 +17,7 @@ const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: und
 
 function getFeatureReferencesToStepFileFunction(stepsFileUri: vscode.Uri, lineNo: number): StepReference[] {
 
-  const stepsFileLineMappings = getStepMappingsForStepsFileLine(stepsFileUri, lineNo);
+  const stepsFileLineMappings = getStepMappingsForStepsFileFunction(stepsFileUri, lineNo);
   const featureStepMatches = new Map<string, FeatureFileStep[]>();
 
   stepsFileLineMappings.forEach(sm => {
@@ -60,7 +61,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
       if (lineText == "" || lineText.startsWith("#"))
         return;
 
-      if (!lineText.startsWith("def") && !lineText.startsWith("async def")) {
+      if (!funcRe.test(lineText)) {
         vscode.window.showInformationMessage(`Selected line is not a function definition.`);
         return;
       }

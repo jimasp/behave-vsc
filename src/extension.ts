@@ -8,7 +8,7 @@ import {
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { getStepFileSteps, StepFileStep } from './stepsParser';
+import { StepFileStep } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './findStepReferencesHandler';
 import { FileParser } from './fileParser';
@@ -17,7 +17,7 @@ import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspac
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
-import { getStepMappings, buildStepMappings, StepMapping, getStepFileStepForFeatureFileLine } from './stepMappings';
+import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './stepMappings';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -31,9 +31,8 @@ export type TestSupport = {
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => Map<string, StepFileStep>,
-  getStepMappings: () => StepMapping[],
-  getStepFileStepForFeatureFileLine: (featureFileUri: vscode.Uri, line: number) => StepFileStep | null,
+  getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
+  getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -221,9 +220,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getStepFileSteps,
-      getStepMappings: getStepMappings,
-      getStepFileStepForFeatureFileLine: getStepFileStepForFeatureFileLine,
+      getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
+      getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
