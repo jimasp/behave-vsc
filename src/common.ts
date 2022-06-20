@@ -296,9 +296,8 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 // we do this so that we know whether we can expect junit files to 
 // be created (just an assertion failure) or stop the run and mark tests as failed in the UI
 export function isBehaveExecutionError(outputStr: string) {
-  if (outputStr.startsWith("Traceback") || outputStr.startsWith("ParserError:"))
-    return true;
-  return false;
+  const errRe = /^(Traceback|ParserError:|ConfigError:)/;
+  return errRe.test(outputStr);
 }
 
 export function showDebugWindow() {
