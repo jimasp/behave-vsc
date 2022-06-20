@@ -29,34 +29,23 @@ export async function runScenario(async: boolean, wkspSettings: WorkspaceSetting
 async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
 
-  const wkspUri = wkspSettings.uri;
-
   // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI, 
   // so we set up a watcher so we can update results as they come in, i.e. as the test files are updated on disk
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
+  const wkspUri = wkspSettings.uri;
   if (runAllAsOne) {
-
     await vscode.workspace.fs.createDirectory(junitDirUri);
     diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`, wkspUri);
-
 
     updatesComplete = new Promise(function (resolve, reject) {
       diagLog(`run ${run.name} - creating filesystemwatcher for junit directory ${junitDirUri.fsPath}`, wkspUri);
       watcher = startWatchingJunitFolder(resolve, reject, queue, run, wkspSettings, junitDirUri, runToken);
     });
-
-    // The filesystemwatcher created above has intermittent issues detecting files created immediately after the watcher is created. 
-    // Putting a small wait before kicking off behave for runAllAsOne fixes the issue.     
-    // This has been observed on Ubuntu when running all tests from all projects simultaneously in the example multi-root workspace.
-    // TODO: find a better fix or use a different watcher
-    await new Promise(resolve => setTimeout(resolve, 500));
   }
 
 
-
   let cp: ChildProcess;
-
   const cancellationHandler = runToken.onCancellationRequested(() => {
     cp?.kill();
   });
@@ -110,10 +99,9 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
       log(str);
     });
 
-    if (!async) {
-      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
-    }
 
+    if (!async)
+      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
@@ -194,12 +182,13 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
   }
 
+
   let updated = 0;
   const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
   const pattern = new vscode.RelativePattern(junitDirUri, '*.xml');
-  const watcher = vscode.workspace.createFileSystemWatcher(pattern, true, false, true);
-  watcher.onDidChange(uri => updateResult(uri));
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, true, true);
+  watcher.onDidCreate(uri => updateResult(uri));
 
-  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/*.xml`, wkspSettings.uri);
+  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri.fsPath}/*.xml`, wkspSettings.uri);
   return watcher;
 }

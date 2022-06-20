@@ -345,9 +345,10 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "runAllTestsAndAssertTheResults");
+	assert(actualCounts, "actualCounts was undefined");
 	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
-	assert(actualCounts !== null, "actualCounts !== null");
+	assert(allWkspItems.length > 0, "allWkspItems.length was 0");
 	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriMatchString(wkspUri)) !== undefined;
 
 	// check all steps can be matched
