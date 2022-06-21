@@ -4,13 +4,13 @@ import { WorkspaceSettings } from "./settings";
 import { getFeatureFileSteps, getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, urisMatch
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
 } from './common';
-import { parseStepsFile, getStepFileSteps } from './stepsParser';
+import { parseStepsFile, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { deleteStepMappings, buildStepMappings, getStepMappings, getStepMappings } from './stepMappings';
+import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMappings';
 
 
 // for integration test assertions      
@@ -119,12 +119,7 @@ export class FileParser {
   private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
-    const stepFileSteps = getStepFileSteps();
-    const matchString = uriMatchString(wkspSettings.featuresUri);
-    const wkspStepKeys = new Map([...stepFileSteps].filter(([k,]) => k.startsWith(matchString))).keys();
-    for (const key of wkspStepKeys) {
-      stepFileSteps.delete(key);
-    }
+    deleteStepFileSteps(wkspSettings.featuresUri);
 
     // replaced with custom findFiles function for now (see comment in findFiles function)    
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);

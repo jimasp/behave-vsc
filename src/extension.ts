@@ -261,7 +261,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
-      await buildStepMappings(wkspSettings.featuresUri, "updater");
+      await buildStepMappings(wkspSettings.featuresUri);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

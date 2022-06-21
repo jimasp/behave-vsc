@@ -27,6 +27,12 @@ export const getStepFileSteps = (featuresUri: vscode.Uri) => {
   return [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
 }
 
+export const deleteStepFileSteps = (featuresUri: vscode.Uri) => {
+  const wkspStepFileSteps = getStepFileSteps(featuresUri);
+  for (const [key,] of wkspStepFileSteps) {
+    stepFileSteps.delete(key);
+  }
+}
 
 export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) => {
 
