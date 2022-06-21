@@ -373,7 +373,7 @@ export class FileParser {
 
 
       const updateMappingsStart = performance.now();
-      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri, this._cancelTokenSources[wkspPath].token, "parseFilesForWorkspace");
+      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri);
       const buildMappingsTime = performance.now() - updateMappingsStart;
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
@@ -381,25 +381,20 @@ export class FileParser {
         return;
       }
 
-
       diagLog(`${callName}: complete`);
       testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
       this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
 
-
       if (!config.integrationTestRun)
         return;
 
-      const wkspStepMappings = getStepMappings(wkspSettings.featuresUri);
-      const wkspStepMappingsCount = wkspStepMappings.length;
-      const featuresUriMatchString = uriMatchString(wkspSettings.featuresUri);
-      const wkspStepFileStepsCount = [...getStepFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString)).length;
-      const wkspFeatureFileStepsCount = [...getFeatureFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString)).length;
-
       return {
-        tests: testCounts, featureFilesExcludingEmptyOrCommentedOut: featureFileCount,
-        stepFiles: stepFileCount, stepFileSteps: wkspStepFileStepsCount, featureFileSteps: wkspFeatureFileStepsCount,
-        stepMappings: wkspStepMappingsCount
+        tests: testCounts,
+        featureFilesExcludingEmptyOrCommentedOut: featureFileCount,
+        stepFiles: stepFileCount,
+        stepFileSteps: getStepFileSteps(wkspSettings.featuresUri).length,
+        featureFileSteps: getFeatureFileSteps(wkspSettings.featuresUri).length,
+        stepMappings: getStepMappings(wkspSettings.featuresUri).length
       };
     }
     catch (e: unknown) {

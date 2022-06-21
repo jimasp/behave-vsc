@@ -5,6 +5,7 @@ import { diagLog, DiagLogType } from './logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
 import { refreshStepReferencesView } from './findStepReferencesHandler';
+import { performance } from 'perf_hooks';
 
 
 let stepMappings: StepMapping[] = [];
@@ -60,10 +61,10 @@ export async function waitOnReadyForStepsNavigation() {
 
 
 let hasStepMappings = false;
-export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vscode.CancellationToken, caller: string): Promise<number> {
+export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number> {
   hasStepMappings = false;
-  let cancelled = false;
 
+  const start = performance.now();
   deleteStepMappings(featuresUri);
 
   // get filtered objects before we loop
@@ -71,21 +72,17 @@ export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vs
 
   let processed = 0;
   for (const [, featureFileStep] of featureFileSteps) {
-    if (!cancelToken || cancelToken.isCancellationRequested) {
-      cancelled = true;
-      break;
-    }
     const stepFileStep = _getStepFileStepMatch(featureFileStep, exactSteps, paramsSteps);
     if (stepFileStep)
       stepMappings.push(new StepMapping(featuresUri, stepFileStep, featureFileStep));
     processed++;
   }
 
-  if (cancelled)
-    diagLog(`${caller}: cancelling, buildStepMappings stopped`);
-
-  hasStepMappings = !cancelled;
+  hasStepMappings = true;
   refreshStepReferencesView();
+
+  diagLog(`rebuilding step mappings for ${featuresUri.path} took ${performance.now() - start} ms`);
+
   return processed;
 }
 

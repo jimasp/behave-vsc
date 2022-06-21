@@ -261,10 +261,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
-      refreshStepMappingsTS?.cancel();
-      refreshStepMappingsTS?.dispose();
-      refreshStepMappingsTS = new vscode.CancellationTokenSource();
-      await buildStepMappings(wkspSettings.featuresUri, refreshStepMappingsTS.token, "startWatchingWorkspace");
+      await buildStepMappings(wkspSettings.featuresUri, "updater");
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
