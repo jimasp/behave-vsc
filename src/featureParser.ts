@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, uriMatchString, sepr, getFilename } from './common';
+import { getContentFromFilesystem, uriMatchString, sepr, basename } from './common';
 import { diagLog } from './logger';
 
 
@@ -43,7 +43,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
-  const fileName = getFilename(uri);
+  const fileName = basename(uri);
   const lines = content.split('\n');
   let fastSkipFeature = false;
   let fileScenarios = 0;

@@ -300,21 +300,25 @@ export function isBehaveExecutionError(outputStr: string) {
   return errRe.test(outputStr);
 }
 
+
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }
+
 
 export function rndAlphaNumeric(size = 5) {
   return customAlphabet("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")(size);
 }
 
+
 export function rndNumeric(size = 6) {
   return customAlphabet("0123456789")(size);
 }
 
-export function getFilename(uri: vscode.Uri) {
-  const fileName = uri.path.split("/").pop();
-  if (!fileName)
-    throw "could not determine file name from uri path";
-  return fileName;
+
+export function basename(uri: vscode.Uri) {
+  const basename = uri.path.split("/").pop();
+  if (!basename)
+    throw "could not determine file name from uri";
+  return basename;
 }

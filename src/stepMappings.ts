@@ -56,34 +56,32 @@ export async function waitOnReadyForStepsNavigation() {
 
 
 let hasStepMappings = false;
-let stopBuilding = false;
-export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vscode.CancellationToken): Promise<number> {
+export async function buildStepMappings(featuresUri: vscode.Uri, cancelToken: vscode.CancellationToken, caller: string): Promise<number> {
   hasStepMappings = false;
-  stopBuilding = false;
-
-  cancelToken.onCancellationRequested(() => {
-    // (don't use isCancellationRequested due to immediate dispose in startWatchingWorkspace.updater)    
-    stopBuilding = true;
-  });
+  let cancelled = false;
 
   deleteStepMappings(featuresUri);
-
-  let processed = 0;
 
   // get filtered objects for loop
   const featuresUriMatchString = uriMatchString(featuresUri);
   const { featureFileSteps, exactSteps, paramsSteps } = _getFilteredSteps(featuresUriMatchString);
 
-  featureFileSteps.forEach(([, featureFileStep]) => {
-    if (stopBuilding)
-      return;
+  let processed = 0;
+  for (const [, featureFileStep] of featureFileSteps) {
+    if (!cancelToken || cancelToken.isCancellationRequested) {
+      cancelled = true;
+      break;
+    }
     const stepFileStep = _getStepFileStepMatch(featuresUriMatchString, featureFileStep, exactSteps, paramsSteps);
     if (stepFileStep)
       stepMappings.push(new StepMapping(featuresUri, stepFileStep, featureFileStep));
     processed++;
-  });
+  }
 
-  hasStepMappings = true;
+  if (cancelled)
+    diagLog(`${caller}: cancelling, buildStepMappings stopped`);
+
+  hasStepMappings = !cancelled;
   refreshStepReferencesView();
   return processed;
 }

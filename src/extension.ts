@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
 import {
+  basename,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
@@ -249,7 +250,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const wkspSettings = config.workspaceSettings[wkspUri.path];
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-  let refreshStepMappingsTS = new vscode.CancellationTokenSource();
+  let refreshStepMappingsTS: vscode.CancellationTokenSource;
 
   const updater = async (uri: vscode.Uri) => {
     try {
@@ -260,28 +261,27 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
-      refreshStepMappingsTS.cancel();
-      refreshStepMappingsTS.dispose();
+      // multiple files are changed e.g. top-level folder rename or git revert
+      refreshStepMappingsTS?.cancel();
+      refreshStepMappingsTS?.dispose();
       refreshStepMappingsTS = new vscode.CancellationTokenSource();
-      await buildStepMappings(wkspSettings.featuresUri, refreshStepMappingsTS.token);
+      await buildStepMappings(wkspSettings.featuresUri, refreshStepMappingsTS.token, "startWatchingWorkspace");
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
     }
-
+    finally {
+      refreshStepMappingsTS?.dispose();
+    }
   }
 
 
   // fires on either new file/folder creation OR rename (inc. git actions)
-  watcher.onDidCreate(uri => {
-    updater(uri)
-  });
+  watcher.onDidCreate(uri => updater(uri));
 
   // fires on file save (inc. git actions)
-  watcher.onDidChange(uri => {
-    updater(uri)
-  });
+  watcher.onDidChange(uri => updater(uri));
 
   // fires on either file/folder delete OR rename (inc. git actions)
   watcher.onDidDelete(uri => {
@@ -297,8 +297,8 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       return;
 
     // log for extension developers in case we need to add another file type above
-    if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      diagLog("detected deletion of unanticipated file type", wkspUri, DiagLogType.warn);
+    if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+      diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
     }
 
     try {

@@ -373,7 +373,7 @@ export class FileParser {
 
 
       const updateMappingsStart = performance.now();
-      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri, this._cancelTokenSources[wkspPath].token);
+      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri, this._cancelTokenSources[wkspPath].token, "parseFilesForWorkspace");
       const buildMappingsTime = performance.now() - updateMappingsStart;
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
@@ -419,7 +419,7 @@ export class FileParser {
       return;
     }
     finally {
-      this._cancelTokenSources[wkspPath].dispose();
+      this._cancelTokenSources[wkspPath]?.dispose();
       delete this._cancelTokenSources[wkspPath];
       cancellationHandler?.dispose();
     }
