@@ -12,7 +12,6 @@ const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
 export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
-export const getFeatureFileSteps = () => featureFileSteps;
 
 export class FeatureFileStep {
   constructor(
@@ -25,6 +24,10 @@ export class FeatureFileStep {
   ) { }
 }
 
+export const getFeatureFileSteps = (featuresUri: vscode.Uri) => {
+  const featuresUriMatchString = uriMatchString(featuresUri);
+  return [...featureFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+}
 
 
 export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
@@ -49,6 +52,15 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   let fileScenarios = 0;
   let fileSteps = 0;
   let lastStepType = "given";
+
+  const fileUriMatchString = uriMatchString(uri);
+
+  // clear all existing featureFileSteps for this step file uri
+  for (const [key, featureFileStep] of featureFileSteps) {
+    if (uriMatchString(featureFileStep.uri) === fileUriMatchString)
+      featureFileSteps.delete(key);
+  }
+
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 

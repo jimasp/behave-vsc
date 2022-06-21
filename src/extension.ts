@@ -261,7 +261,6 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
-      // multiple files are changed e.g. top-level folder rename or git revert
       refreshStepMappingsTS?.cancel();
       refreshStepMappingsTS?.dispose();
       refreshStepMappingsTS = new vscode.CancellationTokenSource();

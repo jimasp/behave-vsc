@@ -10,7 +10,7 @@ import { parseStepsFile, getStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
-import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMappings';
+import { deleteStepMappings, buildStepMappings, getStepMappings, getStepMappings } from './stepMappings';
 
 
 // for integration test assertions      
@@ -390,7 +390,7 @@ export class FileParser {
       if (!config.integrationTestRun)
         return;
 
-      const wkspStepMappings = [...getStepMappings()].filter(k => urisMatch(k.featuresUri, wkspSettings.featuresUri));
+      const wkspStepMappings = getStepMappings(wkspSettings.featuresUri);
       const wkspStepMappingsCount = wkspStepMappings.length;
       const featuresUriMatchString = uriMatchString(wkspSettings.featuresUri);
       const wkspStepFileStepsCount = [...getStepFileSteps()].filter(([k,]) => k.startsWith(featuresUriMatchString)).length;

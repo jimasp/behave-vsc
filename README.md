@@ -106,14 +106,14 @@ paths=behave_tests/features
 
 ## Q&A
 
-- *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is added just in case your behave.ini file specifies `show_skipped=False`. (It is included in the command output to ensure you get the same test run output if you run the behave command manually.)
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
-- *Why am I not seeing any exceptions while debugging?* Do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
-- *How do I clear previous test results?* This isn't that obvious in vscode. You have to click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
+- *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
+- *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your behave.ini file specifies `show_skipped=False`.
+- *How can I only execute specific tags while using the extension?* You can use the `tags=` setting in your behave.ini file. However this will not avoid the overhead associated with starting a behave process for each test, i.e. it will only be faster when either (a) you have runAllAsOne enabled and you run all tests in the workspace at once, or (b) you are effectively skipping slow tests. (If you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run a folder from the test tree in the UI instead.)
 - *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the the outputted command and run it manually (or run `python -m behave` for all test output).
-- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test, as each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
-- *When will this extension have a release version?* When the code is stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
+- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test, because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
+- *When will this extension have a release version?* When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
 
 ---
 
@@ -130,6 +130,7 @@ paths=behave_tests/features
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 - If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
+- If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
 - Does restarting vscode solve your issue?
 - Do you have runParallel turned on? Try turning it off.

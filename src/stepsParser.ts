@@ -7,10 +7,7 @@ export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
 const stepFileStepStartRe = /^\s*(@step|@given|@when|@then).+/i;
 const stepFileStepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
-
 const stepFileSteps = new Map<string, StepFileStep>();
-export const getStepFileSteps = () => stepFileSteps;
-
 
 export class StepFileStep {
   public funcLineNo = -1;
@@ -24,6 +21,11 @@ export class StepFileStep {
   ) { }
 }
 
+
+export const getStepFileSteps = (featuresUri: vscode.Uri) => {
+  const featuresUriMatchString = uriMatchString(featuresUri);
+  return [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+}
 
 
 export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) => {
