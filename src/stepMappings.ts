@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { afterFirstSepr, uriMatchString, sepr, urisMatch } from './common';
+import { afterFirstSepr, sepr, urisMatch } from './common';
 import { parser } from './extension';
 import { diagLog, DiagLogType } from './logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
@@ -32,7 +32,7 @@ export function getStepFileStepForFeatureFileStep(featureFileUri: vscode.Uri, li
 export function getStepMappingsForStepsFileFunction(stepsFileUri: vscode.Uri, lineNo: number): StepMapping[] {
   return stepMappings.filter(sm =>
     sm.stepFileStep && urisMatch(sm.stepFileStep.uri, stepsFileUri) &&
-    sm.stepFileStep.funcLineNo === lineNo);
+    sm.stepFileStep.functionDefinitionRange.start.line === lineNo);
 }
 
 

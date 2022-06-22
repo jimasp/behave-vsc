@@ -10,13 +10,13 @@ const stepFileStepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\)
 const stepFileSteps = new Map<string, StepFileStep>();
 
 export class StepFileStep {
-  public funcLineNo = -1;
+  public functionDefinitionRange: vscode.Range = new vscode.Range(0, 0, 0, 0);
   constructor(
     public readonly key: string,
     public readonly uri: vscode.Uri,
     public readonly fileName: string,
     public readonly stepType: string,
-    public readonly range: vscode.Range,
+    public readonly stepTextRange: vscode.Range,
     public readonly textAsRe: string
   ) { }
 }
@@ -76,7 +76,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
         const step = stepFileSteps.get(key);
         if (!step)
           throw `could not find step for key ${key}`;
-        step.funcLineNo = lineNo;
+        step.functionDefinitionRange = new vscode.Range(lineNo, 0, lineNo, line.length);
       });
       setFuncLineKeys = [];
     }
