@@ -1,32 +1,26 @@
 # Behave VSC
 
-A test runner (and debugger) for Python behave tests in vscode, built with the native Visual Studio Code Test API.
+- A test runner (and debugger) for Python behave tests in vscode
+- Includes two-way step navigation
+- Built with the native Visual Studio Code Test API
+- Tested on Linux and Windows
 
 ## Pre-release v0.4.0
 
-- This is a pre-release. On each update please make sure to check the release notes for any breaking changes.
-- Tested on Linux and Windows
-- See [Troubleshooting](#troubleshooting) below if you have any problems
-
-### Release notes
-
-- See [here](https://github.com/jimasp/behave-vsc/releases)
+- On each update please check the release notes for any breaking changes.
+- [Release notes](https://github.com/jimasp/behave-vsc/releases)
 
 ---
 
 ## Features
 
-- Run or Debug behave tests:
-  - Either from the test side bar or from inside a feature file.
-  - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-  - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-  - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each workspace must have its own distinct features/steps folders.)
-- Step navigation (not show in below gif):
-  - "Go to Step Definition" from inside a feature file.
-    - Right-click inside a feature file on a line containing a step and click "Go to Step Definition". Default keybinding is Alt+F12.
-  - "Find All Step References" from inside a step file.
-    - Right-click inside a steps file on a line containing a step function definition and click "Find All Step References". Default keybinding is Alt+F12. This will open up a "Step references" window.
-    - You can also navigate between steps in the Step References Window itself via keybindings, default is F4 + Shift F4. This mimics vscode's own references navigation.
+- Run or Debug behave tests, either from the test side bar or from inside a feature file.
+- Select to run/debug all tests, a nested folder, or just a single feature or scenario.
+- Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
+- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each workspace must have its own distinct features/steps folders.)
+- "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
+- "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
+- Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
