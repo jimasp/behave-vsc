@@ -235,7 +235,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - b. clear all test results, Run a single test
 - c. clear all test results, Run all feature tests and check that the run stop button works
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- e. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
+- e. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once or hit Shift+F5 twice)
 
 #### 3. Run change-specific manual UI tests
 
