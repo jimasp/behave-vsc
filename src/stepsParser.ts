@@ -27,12 +27,14 @@ export const getStepFileSteps = (featuresUri: vscode.Uri) => {
   return [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
 }
 
+
 export const deleteStepFileSteps = (featuresUri: vscode.Uri) => {
   const wkspStepFileSteps = getStepFileSteps(featuresUri);
   for (const [key,] of wkspStepFileSteps) {
     stepFileSteps.delete(key);
   }
 }
+
 
 export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) => {
 
@@ -128,7 +130,7 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscod
 }
 
 
-export function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
+function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
   const stepType = step[1].slice(1);
   let textAsRe = step[2].trim();
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
@@ -139,4 +141,3 @@ export function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vsc
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
   return { reKey, stepFileStep };
 }
-
