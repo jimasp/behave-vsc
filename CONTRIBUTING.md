@@ -217,29 +217,35 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - `git add .` and `git commit -m` your changes if required
 - consider if you need to clean up for a valid test run (e.g. check the output of `git clean -fdn`)
 - `npm run lint` and fix any errors or warnings
-- Run automated tests (verify behave results):
-  - Close vscode and run `npm run test`
-    - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
-    - if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-- UI testing (depending on your change - see below)
+- Test your PR before submission (see below)
 - Commit/push your changes to your forked branch.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
-  
-#### 1. Run basic manual UI tests
 
-- a. start "Debug - MultiRoot", then in "project A":
+#### Testing your PR before submission
+
+#### 1. Run automated tests (to verify behave results and step references)
+
+- Close vscode and run `npm run test`
+  - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
+  - if the tests fail, see [Debugging integration tests](#debugging-integration-tests)
+  
+#### 2. Run basic manual UI tests
+
+- a. start "Debug: multiroot workspace", then in "project A":
 - b. clear all test results, Run a single test
 - c. clear all test results, Run all feature tests and check that the run stop button works
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
 - e. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
 
-#### 2. Run change-specific manual UI tests
+#### 3. Run change-specific manual UI tests
 
-After running automated tests and the manual UI tests in (1) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
+After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
+
+Example: if you changed anything that affects step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
 
 - A. **`git add .` and `git commit -m` your changes**
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
-- C. start "Debug: MultiRoot workspace"
+- C. start "Debug: multiroot workspace"
 - Then in "project A":
 - D. edit a group1 feature file, change the name of the Feature: and save it, then:
   - check you can run the renamed feature from inside the feature file (first play button at top of feature file)
@@ -255,11 +261,20 @@ After running automated tests and the manual UI tests in (1) above, then if you 
  (the normal feature file that is open, not the diff view)
 - H. rename the table.feature file (i.e. rename the file itself), then in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
 - I. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
-- K. delete a feature file, check it gets removed from the test tree
-- L. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
-- M. copy a feature file, check it gets added to the test tree
-- N. in "project B", open the `goto_step.feature` feature file and click "go to step defintion" on some steps, including one step that spans multiple lines, and check they still work
-- O. rename the `goto_step.feature` file and check you can still use "go to step definition" for a step in that file
-- P. in the file UI remove a workspace folder (e.g. "project A") and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all remaining workspaces.
-- Q. in the file UI add the workspace folder you removed and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all workspaces.
-- I. assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
+- J. delete a feature file, check it gets removed from the test tree
+- K. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
+- L. copy a feature file, check it gets added to the test tree
+- In Project B:
+- M. open the `goto_step.feature` feature file and click "go to step defintion" on some steps, including one step that spans multiple lines, and check they still work
+- N. rename the `goto_step.feature` file and check you can still use "go to step definition" for a step in that file
+- O. in the file UI remove a workspace folder (e.g. "project A") and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all remaining workspaces.
+- P. in the file UI add the workspace folder you removed and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all workspaces.
+- Q. in "project B", open `features/steps/shared.py` click "go to step references" (or ALT+F12) on `def step_inst(context):` and check that only hits from the current workspace are returned
+- R. from the previous step, click on one of the feature files (or click F4) in the "step references" window then:
+  - comment out one of the "Given we have behave installed" steps in the feature file. save the file and check that the reference window automatically refreshes to remove the reference
+  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. "scenario 2". save the file and check that the reference window automatically refreshes to add the new scenario references
+  - copy the feature file itself to create a "xxx copy.feature" file, check that the reference window automatically refreshes to add the new feature file references
+- S. go to add a blank line above the step function `def step_inst(context):` and save the file, then right click and find all references and check it still finds references.
+- T. rename the step function `def step_inst(context):` to something else and save the file, then right click and find all references and check it still finds references.
+- U. remove the step function `def step_inst(context):`
+- Lastly, assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
