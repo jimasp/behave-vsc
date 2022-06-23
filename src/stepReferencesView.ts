@@ -18,18 +18,27 @@ export class StepReference extends vscode.TreeItem {
 
 class StepReferenceDetails extends vscode.TreeItem {
   public readonly range: vscode.Range;
-  public readonly contextValue = "StepReferenceDetails";
+  public readonly contextValue = "behave-vsc.stepReferences.navKeysEnabled";
 
   constructor(
     public readonly label: string,
-    public readonly featureStep: FeatureFileStep,
+    public readonly featureFileStep: FeatureFileStep,
     public readonly parent: StepReference
   ) {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
-    this.range = this.featureStep.range;
+    this.range = this.featureFileStep.range;
+    //this.iconPath = getThemeIcon(element.item.kind);
+    // required because treeView.OnDidChangeSelection() cannot be used because that is only called when the 
+    // selection *changes*, i.e. that would not fire when only one treeView item exists and it is clicked    
+    this.command = {
+      command: `vscode.open`,
+      title: 'Open Step Reference',
+      arguments: [this.featureFileStep.uri, <vscode.TextDocumentShowOptions>{ selection: this.range }]
+    }
   }
 }
+
 
 
 
@@ -40,22 +49,14 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
   private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
   public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
-  private _setCanNavigate(enable: boolean) {
-    vscode.commands.executeCommand('setContext', `behave-vsc.stepReferences.canNavigate`, enable);
+
+  private _setStepReferencesNavKeysEnabled(enable: boolean) {
+    // also see StepReferenceDetails.contextValue
+    vscode.commands.executeCommand('setContext', `behave-vsc.stepReferences.navKeysEnabled`, enable);
   }
 
   setTreeView(treeView: vscode.TreeView<vscode.TreeItem>) {
-
-    treeView.onDidChangeVisibility(visibilityEvent => this._setCanNavigate(visibilityEvent.visible));
-
-    treeView.onDidChangeSelection(selectionEvent => {
-      if (selectionEvent.selection.length !== 1)
-        return;
-      const current = selectionEvent.selection[0] as StepReferenceDetails;
-      showTextDocumentRange(current.featureStep.uri, current.featureStep.range);
-      this._setCanNavigate(true);
-    });
-
+    treeView.onDidChangeVisibility(visibilityEvent => this._setStepReferencesNavKeysEnabled(visibilityEvent.visible));
     this._treeView = treeView;
   }
 
@@ -63,7 +64,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     this._treeView.message = message;
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
-    this._setCanNavigate(this._treeView.visible);
+    this._setStepReferencesNavKeysEnabled(this._treeView.visible);
   }
 
   // Shift+F4 shortcut - this should mirror the behaviour of vscode's own "Find All References" window Shift+F4 shortcut
@@ -81,11 +82,11 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = children.length - 1; i2 > -1; i2--) {
-        if (urisMatch(children[i2].featureStep.uri, current.featureStep.uri)
-          && children[i2].featureStep.range.start === current.featureStep.range.start) {
+        if (urisMatch(children[i2].featureFileStep.uri, current.featureFileStep.uri)
+          && children[i2].featureFileStep.range.start === current.featureFileStep.range.start) {
           prevChild = children[i2 - 1];
           if (prevChild) {
-            showTextDocumentRange(prevChild.featureStep.uri, prevChild.featureStep.range);
+            showTextDocumentRange(prevChild.featureFileStep.uri, prevChild.featureFileStep.range);
             return this._treeView.reveal(prevChild);
           }
           prevParent = this._stepReferences[i - 1];
@@ -97,7 +98,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       prevParent = this._stepReferences[this._stepReferences.length - 1];
 
     prevChild = prevParent.children[prevParent.children.length - 1];
-    showTextDocumentRange(prevChild.featureStep.uri, prevChild.featureStep.range);
+    showTextDocumentRange(prevChild.featureFileStep.uri, prevChild.featureFileStep.range);
     this._treeView.reveal(prevParent.children[prevParent.children.length - 1]);
   }
 
@@ -116,11 +117,11 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     for (let i = 0; i < this._stepReferences.length; i++) {
       const children = this._stepReferences[i].children;
       for (let i2 = 0; i2 < children.length; i2++) {
-        if (urisMatch(children[i2].featureStep.uri, current.featureStep.uri)
-          && children[i2].featureStep.range.start === current.featureStep.range.start) {
+        if (urisMatch(children[i2].featureFileStep.uri, current.featureFileStep.uri)
+          && children[i2].featureFileStep.range.start === current.featureFileStep.range.start) {
           nextChild = children[i2 + 1];
           if (nextChild) {
-            showTextDocumentRange(nextChild.featureStep.uri, nextChild.featureStep.range);
+            showTextDocumentRange(nextChild.featureFileStep.uri, nextChild.featureFileStep.range);
             return this._treeView.reveal(nextChild);
           }
           nextParent = this._stepReferences[i + 1];
@@ -132,7 +133,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
       nextParent = this._stepReferences[0];
 
     nextChild = nextParent.children[0];
-    showTextDocumentRange(nextChild.featureStep.uri, nextChild.featureStep.range);
+    showTextDocumentRange(nextChild.featureFileStep.uri, nextChild.featureFileStep.range);
     this._treeView.reveal(nextParent.children[0]);
   }
 

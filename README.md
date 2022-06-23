@@ -150,8 +150,7 @@ paths=behave_tests/features
 - vscode always adds up test durations. For parallel runs this means the parent test node reports a longer time than the test run actually took.
 - Running debug against *multiple* test targets at once starts a fresh debug session for each test (because a separate behave process is started for each test). This can cause some minor UI side effects like having to click debug stop button multiple times. If you are running multiple debug targets at once and you want to stop them, you can either just use the test run stop button instead, or use a keyboard shortcut for debug stop and hit that a couple of times, the default is Shift+F5.
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
-  - Step matching does not always match as per behave. This is because there are a lot of ways to specify step matching and parameters in behave - `parse`;`re`;`cfparse`, and we would have to recreate these matching algorithms exactly.
-  - Step matching uses a simple regex implementation. It is not type-aware, e.g. it does not distinguish between `{param}` and `{param:d}` and `{param:f}`.
+  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
   - Step navigation only finds steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder it won't find them).
 
 ---

@@ -109,12 +109,12 @@
 			},
 			{
 				"command": "behave-vsc.stepReferences.next",
-				"when": "behave-vsc.stepReferences.canNavigate",
+				"when": "behave-vsc.stepReferences.navKeysEnabled",
 				"key": "f4"
 			},
 			{
 				"command": "behave-vsc.stepReferences.prev",
-				"when": "behave-vsc.stepReferences.canNavigate",
+				"when": "behave-vsc.stepReferences.navKeysEnabled",
 				"key": "shift+f4"
 			}
 		],

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { uriMatchString, getWorkspaceUriForFile, isStepsFile } from './common';
+import { uriMatchString, getWorkspaceUriForFile, isStepsFile, showTextDocumentRange } from './common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from './stepMappings';
 import { FeatureFileStep } from './featureParser';
@@ -10,7 +10,7 @@ import { funcRe } from './stepsParser';
 
 const treeDataProvider = new StepReferencesTree();
 export const treeView: vscode.TreeView<vscode.TreeItem> =
-  vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, treeDataProvider: treeDataProvider });
+  vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, canSelectMany: false, treeDataProvider: treeDataProvider });
 treeDataProvider.setTreeView(treeView);
 const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: undefined, lineNo: -1 };
 
@@ -77,12 +77,16 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     let refCount = 0;
     stepReferences.forEach(sr => refCount += sr.children.length);
+    //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);    
+
     const message = refCount === 0
       ? "No results"
       : `${refCount} result${refCount > 1 ? "s" : ""} in ${stepReferences.length} file${stepReferences.length > 1 ? "s" : ""}`;
 
-    //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);
     treeDataProvider.update(stepReferences, message);
+
+    if (refCount === 1)
+      showTextDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range);
 
     // keep current visibility on a refresh
     if (textEditor)

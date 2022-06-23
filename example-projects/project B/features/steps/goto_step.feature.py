@@ -37,7 +37,7 @@ def simple_step_with_more_text(context):
 
 
 @step("a CaSeD step")
-def simple_step_with_more_text(context):
+def cased_step(context):
     pass
 
 
@@ -52,22 +52,22 @@ def param_step(context, a):
 
 
 @given("{a} two param {b} no1")
-def two_param_step(context, a, b):
+def two_param_step_1(context, a, b):
     assert a == "a"   
     assert b == "step"   
 
 
 @given("{a} two param {b} no2")
-def two_param_step_with_more_text(context, a, b):
+def two_param_step_2(context, a, b):
     assert a == "a"   
     assert b == "step"   
         
 @given('a step with {num:d}')
-def step_with_typed_param(context, num:int):
+def step_with_unquoted_typed_param(context, num:int):
     assert num == 1    
    
 @given('a step with "{num:d}"')
-def step_with_typed_param2(context, num:int):
+def step_with_quoted_typed_param(context, num:int):
     assert num == 2
     
 @given('a step with or without custom type{environment_py_custom_flag:flag_here} should be {expected_result}')
