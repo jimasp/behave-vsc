@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { uriMatchString, getWorkspaceUriForFile, isStepsFile, showTextDocumentRange } from './common';
+import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from './common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from './stepMappings';
 import { FeatureFileStep } from './featureParser';
@@ -85,11 +85,13 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     treeDataProvider.update(stepReferences, message);
 
-    if (refCount === 1)
-      showTextDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range);
+    // if no textEditor, this is a refresh, so keep current visibility 
+    if (!textEditor)
+      return;
 
-    // keep current visibility on a refresh
-    if (textEditor)
+    if (refCount === 1)
+      openDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range);
+    else
       vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
   }
   catch (e: unknown) {

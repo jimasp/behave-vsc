@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "./configuration";
-import { getWorkspaceUriForFile, isFeatureFile, showTextDocumentRange } from './common';
+import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from './common';
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from './stepMappings';
 import { featureFileStepRe } from './featureParser';
 
@@ -35,7 +35,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       return;
     }
 
-    await showTextDocumentRange(stepFileStep.uri, stepFileStep.functionDefinitionRange);
+    await openDocumentRange(stepFileStep.uri, stepFileStep.functionDefinitionRange);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  

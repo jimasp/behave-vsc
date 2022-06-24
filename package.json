@@ -89,11 +89,11 @@
 			},
 			{
 				"command": "behave-vsc.stepReferences.next",
-				"title": "Step References - select next"
+				"title": "Step References: Next"
 			},
 			{
 				"command": "behave-vsc.stepReferences.prev",
-				"title": "Step References - select previous"
+				"title": "Step References: Previous"
 			}
 		],
 		"keybindings": [

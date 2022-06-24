@@ -36,11 +36,16 @@ export class WkspError extends Error {
 }
 
 
-// note currently vscode.workspace.showTextDocument(stepMatch.Uri) does not behave the same as
-// showTextDocument(vscode.Uri.file(stepMatch.uri.path))
-// e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
-export const showTextDocumentRange = async (uri: vscode.Uri, range: vscode.Range) => {
-  await vscode.window.showTextDocument(vscode.Uri.file(uri.path), { selection: range, preview: false });
+export const openDocumentRange = async (uri: vscode.Uri, range: vscode.Range, preserveFocus = true, preview = false) => {
+
+  // note that uri does not behave the same as vscode.Uri.file(uri.path)
+  // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
+  // fix for: "git reverted file no longer opens in read-only mode when go to step definition is clicked"
+  const openUri = vscode.Uri.file(uri.path);
+
+  await vscode.commands.executeCommand('vscode.open', openUri, {
+    selection: new vscode.Selection(range.start, range.end), preserveFocus: preserveFocus, preview: preview
+  });
 }
 
 
