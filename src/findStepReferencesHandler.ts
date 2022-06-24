@@ -89,10 +89,15 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     if (!textEditor)
       return;
 
-    if (refCount === 1)
+    if (refCount === 1) {
+      // single reference, open it
       openDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range);
-    else
+    }
+    else {
+      // show step references window
+      // (don't use treeView.reveal() here, it's behaviour is inconsistent for focusing on the view when flipping between files/views)
       vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
+    }
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
