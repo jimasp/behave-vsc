@@ -103,8 +103,8 @@ function _getFilteredSteps(featuresUri: vscode.Uri) {
 function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   exactSteps: Map<string, StepFileStep>, paramsSteps: Map<string, StepFileStep>): StepFileStep | null {
 
-  const findExactMatch = (stepText: string, stepType: string) => {
-    const matchText = stepType + sepr + stepText;
+  const findExactMatch = (stepSubText: string, stepType: string) => {
+    const matchText = stepType + sepr + stepSubText;
     for (const [key, value] of exactSteps) {
       const rx = new RegExp(key, "i");
       const match = rx.exec(matchText);
@@ -114,8 +114,8 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
     }
   }
 
-  const findParamsMatch = (stepText: string, stepType: string) => {
-    const matchText = stepType + sepr + stepText;
+  const findParamsMatch = (stepSubText: string, stepType: string) => {
+    const matchText = stepType + sepr + stepSubText;
     const matches = new Map<string, StepFileStep>();
     for (const [key, value] of paramsSteps) {
       const rx = new RegExp(key, "i");
@@ -145,22 +145,22 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
 
   // NOTE - THIS FUNCTION NEEDS TO BE FAST
 
-  let stepText = featureFileStep.text;
-  if (stepText.endsWith(":")) // table
-    stepText = stepText.slice(0, -1);
+  let stepSubText = featureFileStep.textWithoutType;
+  if (stepSubText.endsWith(":")) // table
+    stepSubText = stepSubText.slice(0, -1);
 
-  let exactMatch = findExactMatch(stepText, featureFileStep.stepType);
+  let exactMatch = findExactMatch(stepSubText, featureFileStep.stepType);
   if (!exactMatch && featureFileStep.stepType !== "step")
-    exactMatch = findExactMatch(stepText, "step");
+    exactMatch = findExactMatch(stepSubText, "step");
 
   // got exact match - return it
   if (exactMatch)
     return exactMatch;
 
   // look for a parameters match, e.g. {something1} {something2}
-  let paramsMatches = findParamsMatch(stepText, featureFileStep.stepType);
+  let paramsMatches = findParamsMatch(stepSubText, featureFileStep.stepType);
   if (paramsMatches.size === 0 && featureFileStep.stepType !== "step")
-    paramsMatches = findParamsMatch(stepText, "step");
+    paramsMatches = findParamsMatch(stepSubText, "step");
 
   // got single parameters match - return it
   if (paramsMatches.size === 1)

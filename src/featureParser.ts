@@ -18,9 +18,10 @@ export class FeatureFileStep {
     public readonly key: string,
     public readonly uri: vscode.Uri,
     public readonly fileName: string,
-    public readonly stepType: string,
     public readonly range: vscode.Range,
     public readonly text: string,
+    public readonly textWithoutType: string,
+    public readonly stepType: string,
   ) { }
 }
 
@@ -75,7 +76,8 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
     const step = featureFileStepRe.exec(line);
     if (step) {
-      const stepText = step[2].trim();
+      const text = step[0].trim();
+      const matchText = step[2].trim();
 
       let stepType = step[1].trim().toLowerCase();
       if (stepType === "and" || stepType === "but")
@@ -85,7 +87,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const key = `${uriMatchString(uri)}${sepr}${range.start.line}`;
-      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, stepType, range, stepText));
+      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, stepType));
       fileSteps++;
       continue;
     }
