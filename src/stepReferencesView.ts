@@ -56,19 +56,14 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
   }
 
   setTreeView(treeView: vscode.TreeView<vscode.TreeItem>) {
-    treeView.onDidChangeVisibility(visibilityEvent => {
-      if (visibilityEvent.visible)
-        this._onDidChangeTreeData.fire();
-      this._setStepReferencesNavKeysEnabled(visibilityEvent.visible);
-    });
     this._treeView = treeView;
+    this._treeView.onDidChangeVisibility(visibilityEvent => this._setStepReferencesNavKeysEnabled(visibilityEvent.visible));
   }
 
   update(stepReferences: StepReference[], message: string): void {
     this._treeView.message = message;
     this._stepReferences = stepReferences;
-    if (this._treeView.visible)
-      this._onDidChangeTreeData.fire();
+    this._onDidChangeTreeData.fire();
     this._setStepReferencesNavKeysEnabled(this._treeView.visible);
   }
 

@@ -10,7 +10,7 @@ import { funcRe } from './stepsParser';
 
 const treeDataProvider = new StepReferencesTree();
 export const treeView: vscode.TreeView<vscode.TreeItem> =
-  vscode.window.createTreeView("behave-vsc_stepReferences", { showCollapseAll: true, canSelectMany: false, treeDataProvider: treeDataProvider });
+  vscode.window.createTreeView("StepReferences", { showCollapseAll: true, canSelectMany: false, treeDataProvider: treeDataProvider });
 treeDataProvider.setTreeView(treeView);
 const refreshStore: { uri: vscode.Uri | undefined, lineNo: number } = { uri: undefined, lineNo: -1 };
 
@@ -96,7 +96,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     else {
       // show step references window
       // (don't use treeView.reveal() here, it's behaviour is inconsistent for focusing on the view when flipping between files/views)
-      vscode.commands.executeCommand(`behave-vsc_stepReferences.focus`);
+      vscode.commands.executeCommand(`StepReferences.focus`);
     }
   }
   catch (e: unknown) {

@@ -24,14 +24,14 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     const lineText = textEditor.document.lineAt(lineNo).text.trim();
     const stExec = featureFileStepRe.exec(lineText);
     if (!stExec) {
-      vscode.window.showInformationMessage(`Selected line is not a step (or file has not been saved).`);
+      vscode.window.showInformationMessage(`Selected line is not a step.`);
       return;
     }
 
     const stepFileStep = getStepFileStepForFeatureFileStep(docUri, lineNo);
 
     if (!stepFileStep) {
-      vscode.window.showInformationMessage(`Step '${lineText}' not found`)
+      vscode.window.showInformationMessage(`Step '${lineText}' not found (or file has not been saved).`);
       return;
     }
 

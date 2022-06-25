@@ -269,12 +269,12 @@ Example: if you changed anything that affects step navigation/feature file parsi
 - N. rename the `goto_step.feature` file and check you can still use "go to step definition" for a step in that file
 - O. in the file UI remove a workspace folder (e.g. "project A") and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all remaining workspaces.
 - P. in the file UI add the workspace folder you removed and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all workspaces.
-- Q. in "project B", open `features/steps/shared.py` click "go to step references" (or ALT+F12) on `def step_inst(context):` and check that only hits from the current workspace are returned
+- Q. in "project B", open `features/steps/shared.py` click "go to step references" (or ALT+F12) on `def step_inst(context):` and check that only hits from the project B workspace are returned.
 - R. from the previous step, click on one of the feature files (or click F4) in the "step references" window then:
   - comment out one of the "Given we have behave installed" steps in the feature file. save the file and check that the reference window automatically refreshes to remove the reference
   - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. "scenario 2". save the file and check that the reference window automatically refreshes to add the new scenario references
   - copy the feature file itself to create a "xxx copy.feature" file, check that the reference window automatically refreshes to add the new feature file references
-- S. go to add a blank line above the step function `def step_inst(context):` and save the file, then right click and find all references and check it still finds references.
+- S. go to add a blank line above the step function `def step_inst(context):` and save the file, then right click and find all references and check it still finds references. try clicking on a reference. then try F4 to move to next one.
 - T. rename the step function `def step_inst(context):` to something else and save the file, then right click and find all references and check it still finds references.
 - U. remove the step function `def step_inst(context):`
 - Lastly, assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.

@@ -135,16 +135,16 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "behave-vsc_stepReferences",
+					"id": "StepReferences",
 					"title": "Step References",
 					"icon": "images/behave-vsc.png"
 				}
 			]
 		},
 		"views": {
-			"behave-vsc_stepReferences": [
+			"StepReferences": [
 				{
-					"id": "behave-vsc_stepReferences",
+					"id": "StepReferences",
 					"name": "Step References",
 					"icon": "images/behave-vsc.png",
 					"contextualTitle": "Step References",
@@ -154,8 +154,8 @@
 		},
 		"viewsWelcome": [
 			{
-				"view": "behave-vsc_stepReferences",
-				"contents": "Step references will appear here when you select \"Find All Step References\" from the editor context menu inside a steps file."
+				"view": "StepReferences",
+				"contents": "Step references will appear here when you select \"Find All Step References\" from within a steps file."
 			}
 		]
 	},
