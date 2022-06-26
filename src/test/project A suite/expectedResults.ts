@@ -8,7 +8,7 @@ export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config
   const testCount = getWs1ExpectedResults(debug, wkspUri, config).length;
   return {
     tests: { nodeCount: 52, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 4,
+    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
     featureFileStepsExceptCommentedOut: 104, stepMappings: 103 // (1 diff = When we have a missing step)
   };
