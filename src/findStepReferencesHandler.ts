@@ -91,7 +91,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     if (refCount === 1) {
       // single reference, open it
-      openDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range);
+      openDocumentRange(stepReferences[0].resourceUri, stepReferences[0].children[0].range, false);
     }
     else {
       // show step references window

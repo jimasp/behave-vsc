@@ -38,9 +38,9 @@ export class WkspError extends Error {
 
 export const openDocumentRange = async (uri: vscode.Uri, range: vscode.Range, preserveFocus = true, preview = false) => {
 
-  // note that uri does not behave the same as vscode.Uri.file(uri.path)
+  // fix for: "git reverted file no longer opens in read-only mode when go to step definition is clicked":
+  // uri does not behave the same as vscode.Uri.file(uri.path)
   // e.g. in the first case, if the user discards (reverts) a git file change the file would open as readonly
-  // fix for: "git reverted file no longer opens in read-only mode when go to step definition is clicked"
   const openUri = vscode.Uri.file(uri.path);
 
   await vscode.commands.executeCommand('vscode.open', openUri, {

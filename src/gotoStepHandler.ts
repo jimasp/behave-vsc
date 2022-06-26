@@ -35,7 +35,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       return;
     }
 
-    await openDocumentRange(stepFileStep.uri, stepFileStep.functionDefinitionRange);
+    await openDocumentRange(stepFileStep.uri, stepFileStep.functionDefinitionRange, false);
   }
   catch (e: unknown) {
     // entry point function (handler) - show error  
