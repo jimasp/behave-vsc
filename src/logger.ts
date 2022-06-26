@@ -171,10 +171,10 @@ export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLog
   if (config && !config.globalSettings.xRay)
     return;
 
-  message = `[Behave VSC] ${message}`;
-
   if (wkspUri)
     message = `${wkspUri}: ${message}`;
+
+  message = `[Behave VSC] ${message}`;
 
   switch (logType) {
     case DiagLogType.error:
