@@ -4,10 +4,6 @@
 - Includes two-way step navigation
 - Built with the native Visual Studio Code Test API
 - Tested on Linux and Windows
-
-## Pre-release v0.4.0
-
-- On each update please check the release notes for any breaking changes.
 - [Release notes](https://github.com/jimasp/behave-vsc/releases)
 
 ---
