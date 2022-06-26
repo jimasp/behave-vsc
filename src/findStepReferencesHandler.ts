@@ -85,7 +85,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     treeDataProvider.update(stepReferences, message);
 
-    // if no textEditor, this is a refresh, so keep current visibility 
+    // if no textEditor, this is a refresh, so keep current focus 
     if (!textEditor)
       return;
 

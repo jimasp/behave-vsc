@@ -65,12 +65,13 @@
 1. Set up your development environment as above.
 2. Make sure you have disabled the marketplace version of the extension.
 3. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
-4. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
-5. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
-6. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
-7. Disable "raised/caught exceptions" if you have them enabled.
-8. Click one of the "Debug" targets, e.g. "Debug: Simple workspace" (if a "Debug..." is the current selection, you can just hit (`F5`) from anywhere).
-9. Tips:
+4. If you are using windows, and vscode is set to use powershell for terminal scripts, then you may need to enable powershell scripts to run, e.g. `Set-ExecutionPolicy RemoteSigned`. (You will know if this is an issue because vscode will pop up a powershell error message when you try to debug the extension when it tries to run `npm.ps1`.)
+5. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
+6. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
+7. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
+8. Disable "raised/caught exceptions" if you have them enabled.
+9. Click one of the "Debug" targets, e.g. "Debug: Simple workspace" (if a "Debug..." is the current selection, you can just hit (`F5`) from anywhere).
+10. Tips:
     - You can relaunch the extension from the debug toolbar in the (source not host) vscode environment after changing extension code. Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
     - If for some reason you need to have "uncaught exceptions" enabled in the (source, not host) vscode environment, note that you may need to hit play multiple times in the extension vscode environment to continue if it hits external code.
 

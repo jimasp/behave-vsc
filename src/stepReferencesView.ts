@@ -64,6 +64,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     this._treeView.message = message;
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
+    vscode.commands.executeCommand('setContext', 'behave-vsc.stepReferences.visible', true);
     this._setStepReferencesNavKeysEnabled(this._treeView.visible);
   }
 
@@ -99,7 +100,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
 
     prevChild = prevParent.children[prevParent.children.length - 1];
     openDocumentRange(prevChild.featureFileStep.uri, prevChild.featureFileStep.range);
-    this._treeView.reveal(prevParent.children[prevParent.children.length - 1]);
+    this._treeView.reveal(prevParent.children[prevParent.children.length - 1], { select: true });
   }
 
   // F4 shortcut - this should mirror the behaviour of vscode's own "Find All References" window F4 shortcut
@@ -134,7 +135,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
 
     nextChild = nextParent.children[0];
     openDocumentRange(nextChild.featureFileStep.uri, nextChild.featureFileStep.range);
-    this._treeView.reveal(nextParent.children[0]);
+    this._treeView.reveal(nextParent.children[0], { select: true });
   }
 
   getParent(element: vscode.TreeItem): vscode.TreeItem | undefined {
