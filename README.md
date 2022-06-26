@@ -1,9 +1,7 @@
 # Behave VSC
 
-- A test runner (and debugger) for Python behave tests in vscode
-- Includes two-way step navigation
+- A test runner, debugger and navigator for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API
-- Tested on Linux and Windows
 - [Release notes](https://github.com/jimasp/behave-vsc/releases)
 
 ---
