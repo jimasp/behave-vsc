@@ -145,7 +145,7 @@ async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceSettings) 
 
 async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceSettings) {
 
-	const stepLines = new Map<FileStep, string>();
+	const funcLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/steps/*.py`);
 	const stepFileUris = await vscode.workspace.findFiles(pattern, null);
 
@@ -153,11 +153,11 @@ async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceSett
 		if (isStepsFile(stepFileUri)) {
 			const doc = await vscode.workspace.openTextDocument(stepFileUri);
 			const content = doc.getText();
-			addStepsFromStepsFile(stepFileUri, content, stepLines);
+			addStepsFromStepsFile(stepFileUri, content, funcLines);
 		}
 	}
 
-	return [...stepLines];
+	return [...funcLines];
 }
 
 
