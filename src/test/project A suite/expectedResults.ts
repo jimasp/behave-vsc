@@ -8,8 +8,9 @@ export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config
   const testCount = getWs1ExpectedResults(debug, wkspUri, config).length;
   return {
     tests: { nodeCount: 52, testCount: testCount },
-    featureFilesExcludingEmptyOrCommentedOut: 17, stepFiles: 4,
-    stepFileSteps: 16, featureFileSteps: 104, stepMappings: 103 // (1 diff = When we have a missing step)
+    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 4,
+    stepFileStepsExceptCommentedOut: 16,
+    featureFileStepsExceptCommentedOut: 104, stepMappings: 103 // (1 diff = When we have a missing step)
   };
 }
 
@@ -571,7 +572,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureName: 'Bad step',
       scenario_getLabel: 'step with exception should show failure message',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we have a step that raises an exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
+      scenario_result: 'Failing step: When we have a step that raises a non-assertion exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
       scenario_scenarioName: 'step with exception should show failure message',
       test_children: undefined,
       test_description: undefined,

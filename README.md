@@ -47,10 +47,12 @@
   .       +-- environment.py
   .       +-- steps/  
   .       |      +-- *.py  
-  .       +-- web_tests/  
-  .       |      +-- *.feature  
   .       +-- storage_tests/  
   .       |      +-- *.feature  
+  .       +-- web_tests/  
+  .       |      +-- *.feature 
+  .       |      +-- steps/
+  .       |         +-- *.py    
 ```
 
 - If your features folder is not called "features", or is not in the workspace root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. This is a relative path to your workspace folder. Example:

@@ -16,10 +16,10 @@ import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMa
 // for integration test assertions      
 export type WkspParseCounts = {
   tests: TestCounts,
-  featureFilesExcludingEmptyOrCommentedOut: number,
-  stepFiles: number,
-  stepFileSteps: number
-  featureFileSteps: number,
+  featureFilesExceptEmptyOrCommentedOut: number,
+  stepFilesExceptEmptyOrCommentedOut: number,
+  stepFileStepsExceptCommentedOut: number
+  featureFileStepsExceptCommentedOut: number,
   stepMappings: number
 };
 
@@ -385,10 +385,10 @@ export class FileParser {
 
       return {
         tests: testCounts,
-        featureFilesExcludingEmptyOrCommentedOut: featureFileCount,
-        stepFiles: stepFileCount,
-        stepFileSteps: getStepFileSteps(wkspSettings.featuresUri).length,
-        featureFileSteps: getFeatureFileSteps(wkspSettings.featuresUri).length,
+        featureFilesExceptEmptyOrCommentedOut: featureFileCount,
+        stepFilesExceptEmptyOrCommentedOut: stepFileCount,
+        stepFileStepsExceptCommentedOut: getStepFileSteps(wkspSettings.featuresUri).length,
+        featureFileStepsExceptCommentedOut: getFeatureFileSteps(wkspSettings.featuresUri).length,
         stepMappings: getStepMappings(wkspSettings.featuresUri).length
       };
     }

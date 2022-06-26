@@ -136,7 +136,8 @@ function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
   const fileName = basename(fileUri);
-  // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we don't want to allow duplicate matches in the workspace
+  // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we 
+  // don't want to allow duplicate text matches in the workspace
   const reKey = `${uriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
   return { reKey, stepFileStep };

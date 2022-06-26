@@ -179,7 +179,7 @@ async function assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri: vscode.U
 		catch (e: unknown) {
 			debugger; // eslint-disable-line no-debugger
 			if (e instanceof assert.AssertionError)
-				throw new Error(`getStepFileStepForFeatureFileLine() could not find match for line ${uri}:${lineNo}, (step text: "${stepText}")`);
+				throw new Error(`getStepFileStepForFeatureFileLine() could not find match for line ${uri.fsPath}:${lineNo}, (step text: "${stepText}")`);
 			throw e;
 		}
 	}
@@ -192,20 +192,22 @@ async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri: vsc
 	const wkspSettings = instances.config.workspaceSettings[wkspUri.path];
 	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(wkspSettings);
 
-	for (const [step, stepText] of stepFileSteps) {
+	for (const [step, funcLine] of stepFileSteps) {
 		const uri = step.uri;
 		const lineNo = step.lineNo;
 		try {
-			const mappings = instances.getStepMappingsForStepsFileFunction(uri, lineNo);
-			assert(mappings.length > 0);
-			mappings.forEach(mapping => {
-				assert(mapping.featureFileStep);
-			});
+			if (!funcLine.includes("unreferenced_step")) {
+				const mappings = instances.getStepMappingsForStepsFileFunction(uri, lineNo);
+				assert(mappings.length > 0);
+				mappings.forEach(mapping => {
+					assert(mapping.featureFileStep);
+				});
+			}
 		}
 		catch (e: unknown) {
 			debugger; // eslint-disable-line no-debugger
 			if (e instanceof assert.AssertionError)
-				throw new Error(`getStepMappingsForStepsFileFunction() could not find mapping for line ${uri}:${lineNo}, (step text: "${stepText}")`);
+				throw new Error(`getStepMappingsForStepsFileFunction() could not find mapping for line ${uri.fsPath}:${lineNo}, (function: "${funcLine}")`);
 			throw e;
 		}
 	}
@@ -263,10 +265,10 @@ function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: str
 
 	const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
-	assert(actualCounts.featureFilesExcludingEmptyOrCommentedOut == expectedCounts.featureFilesExcludingEmptyOrCommentedOut, wkspName);
-	assert(actualCounts.stepFiles === expectedCounts.stepFiles, wkspName);
-	assert(actualCounts.stepFileSteps === expectedCounts.stepFileSteps, wkspName);
-	assert(actualCounts.featureFileSteps === expectedCounts.featureFileSteps, wkspName);
+	assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName);
+	assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName);
+	assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName);
+	assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName);
 	assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
 	assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
 

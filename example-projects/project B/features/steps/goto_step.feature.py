@@ -8,7 +8,12 @@ def non_step_function(context):
     pass
 
 
-@given("given step")
+@step("an unreferenced step")
+def unreferenced_step(context):
+    pass
+
+
+@given(u"given step")
 @given("and step")
 def given_step(context):
     print(context)
@@ -31,7 +36,7 @@ def simple_step(context):
     pass
 
 
-@step(u"a simple step with more text")
+@step("a simple step with more text")
 def simple_step_with_more_text(context):
     pass
 
@@ -61,22 +66,27 @@ def two_param_step_1(context, a, b):
 def two_param_step_2(context, a, b):
     assert a == "a"   
     assert b == "step"   
+   
         
 @given('a step with {num:d}')
 def step_with_unquoted_typed_param(context, num:int):
     assert num == 1    
    
+   
 @given('a step with "{num:d}"')
 def step_with_quoted_typed_param(context, num:int):
     assert num == 2
+    
     
 @given('a step with or without custom type{environment_py_custom_flag:flag_here} should be {expected_result}')
 def step_with_named_param(context, environment_py_custom_flag:bool, expected_result:bool):
     assert environment_py_custom_flag == (expected_result == "True")
 
+
 @given("yet another step")
 def yet_another_step(context):
     pass
+
 
 @given("'{a}' '{b}' step")
 def a_single_quoted_step(context, a, b):
