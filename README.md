@@ -8,6 +8,8 @@
 
 ## Features
 
+![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
+
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
@@ -15,8 +17,6 @@
 - "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
-
-![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
 ---
 
