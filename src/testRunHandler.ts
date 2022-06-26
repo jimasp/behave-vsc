@@ -5,7 +5,7 @@ import { Scenario, TestData, TestFile } from './testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndAlphaNumeric, rndNumeric
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
 } from './common';
 import { QueueItem } from './extension';
 import { FileParser } from './fileParser';
