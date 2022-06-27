@@ -36,6 +36,9 @@ function getFeatureReferencesToStepFileFunction(stepsFileUri: vscode.Uri, lineNo
     stepReferences.push(stepReference);
   }
 
+  // keep consistent sort order when refresh from file save
+  stepReferences.sort((a, b) => a.resourceUri.path < b.resourceUri.path ? -1 : 1);
+
   return stepReferences;
 }
 
@@ -77,7 +80,6 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     let refCount = 0;
     stepReferences.forEach(sr => refCount += sr.children.length);
-    //stepReferences.sort((a, b) => a.resourceUri < b.resourceUri ? -1 : 1);    
 
     const message = refCount === 0
       ? "No results"

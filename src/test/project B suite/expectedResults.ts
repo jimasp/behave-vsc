@@ -953,7 +953,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested1.faildupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
@@ -970,7 +970,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested/nested3.sucessdupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -987,7 +987,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested2.successdupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'passed',

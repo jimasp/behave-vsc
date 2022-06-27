@@ -263,20 +263,26 @@ function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: str
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
 	actualCounts: WkspParseCounts, hasMuliRootWkspNode: boolean) {
 
-	const expectedCounts = getExpectedCounts(debug, wkspUri, config);
+	try {
+		const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
-	assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName);
-	assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName);
-	assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName);
-	assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName);
-	assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
-	assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
+		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName);
+		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName);
+		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName);
+		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName);
+		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
+		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
 
-	if (hasMuliRootWkspNode) {
-		assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName);
+		if (hasMuliRootWkspNode) {
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName);
+		}
+		else {
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName);
+		}
 	}
-	else {
-		assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName);
+	catch (e: unknown) {
+		// UHOH - did we add a test or comment something out? do a git diff?
+		debugger; // eslint-disable-line no-debugger
 	}
 }
 

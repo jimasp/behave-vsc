@@ -1,4 +1,4 @@
-Feature: Duplicate
+Feature: Nested Duplicate
 
    Scenario: run a test
       Given we have behave installed
