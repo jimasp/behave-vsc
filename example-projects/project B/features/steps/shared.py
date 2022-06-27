@@ -19,7 +19,8 @@ def step_inst(context):
 def step_impl(context, successful_or_failing):
     assert successful_or_failing == "successful"
 
-@when("we have a step that raises an exception")
+
+@when("we have a step that raises a non-assertion exception")
 def step_impl(context):
     raise Exception("testing a step exception")
 

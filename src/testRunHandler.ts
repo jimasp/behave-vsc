@@ -4,10 +4,9 @@ import { WorkspaceSettings } from "./settings";
 import { Scenario, TestData, TestFile } from './testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, getUriMatchString,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile
+  countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
 } from './common';
-import { customAlphabet } from 'nanoid';
 import { QueueItem } from './extension';
 import { FileParser } from './fileParser';
 import { performance } from 'perf_hooks';
@@ -39,9 +38,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), so we don't want to await it except on user request (refresh click),
     // but at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
-    const ready = await parser.readyForRun(1000, "testRunHandler");
+    const ready = await parser.featureParseComplete(1000, "testRunHandler");
     if (!ready) {
-      const msg = "cannot run tests while test items are still updating, please try again";
+      const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
       vscode.window.showWarningMessage(msg);
       return;
@@ -64,8 +63,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
 
     const queue: QueueItem[] = [];
-    const run_id = customAlphabet('1234567890', 6);
-    const run = ctrl.createTestRun(request, `${run_id()}`, false);
+    const run = ctrl.createTestRun(request, rndNumeric(), false);
 
     try {
       // map of file uris to statements on each line:
@@ -88,17 +86,17 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           else {
             if (data instanceof TestFile && !data.didResolve) {
               const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-              await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, test, "queueSelectedItems");
+              await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, test, "queueSelectedItems");
             }
 
             await queueSelectedTestItems(gatherTestItems(test.children));
           }
 
-          if (test.uri && !coveredLines.has(getUriMatchString(test.uri))) {
+          if (test.uri && !coveredLines.has(uriMatchString(test.uri))) {
             try {
               const lines = (await getContentFromFilesystem(test.uri)).split('\n');
               coveredLines.set(
-                getUriMatchString(test.uri),
+                uriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>
                   // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
@@ -134,7 +132,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
 
           if (!allTestsForThisWkspIncluded) {
-            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === getUriMatchString(wkspSettings.uri)).length === 1;
+            const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === uriMatchString(wkspSettings.uri)).length === 1;
 
             if (wkspGrandParentItemIncluded)
               allTestsForThisWkspIncluded = true;
@@ -213,7 +211,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         // run each workspace queue
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
           const wkspSettings = config.workspaceSettings[wkspUri.path];
-          const idMatch = getUriMatchString(wkspSettings.featuresUri);
+          const idMatch = uriMatchString(wkspSettings.featuresUri);
           const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
 
           if (wkspQueue.length === 0)

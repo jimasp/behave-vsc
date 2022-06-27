@@ -1,58 +1,91 @@
 import * as vscode from 'vscode';
-import { isStepsFile } from './common';
+import { uriMatchString, isStepsFile, sepr, basename } from './common';
 import { getContentFromFilesystem } from './common';
 import { diagLog } from './logger';
 
-//const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)("|').*\).*$/i;
-const stepRe = /^\s*(?:@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
-const startRe = /^\s*(@step|@given|@when|@then).+/i;
 export const parseRepWildcard = ".*";
+export const funcRe = /^(async )?def/;
+const stepFileStepStartRe = /^\s*(@step|@given|@when|@then).+/i;
+const stepFileStepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
+const stepFileSteps = new Map<string, StepFileStep>();
 
-export class StepDetail {
-  constructor(public wkspFullFeaturesPath: string, public uri: vscode.Uri, public range: vscode.Range) { }
+export class StepFileStep {
+  public functionDefinitionRange: vscode.Range = new vscode.Range(0, 0, 0, 0);
+  constructor(
+    public readonly key: string,
+    public readonly uri: vscode.Uri,
+    public readonly fileName: string,
+    public readonly stepType: string,
+    public readonly stepTextRange: vscode.Range,
+    public readonly textAsRe: string
+  ) { }
 }
 
-export type StepMap = Map<string, StepDetail>;
 
-export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Uri, steps: StepMap, caller: string) => {
+export const getStepFileSteps = (featuresUri: vscode.Uri) => {
+  const featuresUriMatchString = uriMatchString(featuresUri);
+  return [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+}
 
-  if (!isStepsFile(fileUri))
-    throw new Error(`${fileUri.path} is not a steps file`);
 
-  // user may have deleted a step, so clear the steps for this uri
-  steps.forEach((value, key, map) => {
-    if (value.uri.path === fileUri.path)
-      map.delete(key);
-  });
+export const deleteStepFileSteps = (featuresUri: vscode.Uri) => {
+  const wkspStepFileSteps = getStepFileSteps(featuresUri);
+  for (const [key,] of wkspStepFileSteps) {
+    stepFileSteps.delete(key);
+  }
+}
 
-  let fileSteps = 0;
 
-  const content = await getContentFromFilesystem(fileUri);
+export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) => {
+
+  if (!isStepsFile(stepFileUri))
+    throw new Error(`${stepFileUri.path} is not a steps file`);
+
+  const content = await getContentFromFilesystem(stepFileUri);
   if (!content)
     return;
 
+  const fileUriMatchString = uriMatchString(stepFileUri);
+
+  // clear all existing stepFileSteps for this step file uri
+  for (const [key, stepFileStep] of stepFileSteps) {
+    if (uriMatchString(stepFileStep.uri) === fileUriMatchString)
+      stepFileSteps.delete(key);
+  }
+
+  let fileSteps = 0;
+  let setFuncLineKeys: string[] = [];
   let multiLineBuilding = false;
   let multiLine = "";
-  let startLine = 0;
+  let startLineNo = 0;
+  let multiLineStepType = "";
   const lines = content.trim().split('\n');
-
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 
     let line = lines[lineNo].trim();
 
-    if (line === '' || line.startsWith("#")) {
+    if (line === '' || line.startsWith("#"))
       continue;
-    }
 
     if (line.endsWith("\\"))
       line = line.slice(0, -1).trim();
 
+    if (setFuncLineKeys.length > 0 && funcRe.test(line)) {
+      setFuncLineKeys.forEach(key => {
+        const step = stepFileSteps.get(key);
+        if (!step)
+          throw `could not find step for key ${key}`;
+        step.functionDefinitionRange = new vscode.Range(lineNo, 0, lineNo, line.length);
+      });
+      setFuncLineKeys = [];
+    }
 
-    const foundStep = startRe.exec(line);
+    const foundStep = stepFileStepStartRe.exec(line);
     if (foundStep) {
       if (foundStep && line.endsWith("(")) {
-        startLine = lineNo;
+        startLineNo = lineNo;
+        multiLineStepType = foundStep[1];
         multiLineBuilding = true;
         continue;
       }
@@ -72,30 +105,40 @@ export const parseStepsFile = async (featuresUri: vscode.Uri, fileUri: vscode.Ur
 
 
     if (multiLine) {
-      line = "@step(" + multiLine + ")";
+      line = `${multiLineStepType}(${multiLine})`;
       multiLine = "";
     }
     else {
-      startLine = lineNo;
+      startLineNo = lineNo;
     }
 
 
-    const step = stepRe.exec(line);
+    const step = stepFileStepRe.exec(line);
     if (step) {
-      let stepText = step[1].trim();
-      stepText = stepText.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
-      stepText = stepText.replace(/{.*?}/g, parseRepWildcard);
-      const reKey = `${featuresUri.path}:^${stepText}$`;
-      const range = new vscode.Range(new vscode.Position(startLine, 0), new vscode.Position(lineNo, step[0].length));
-      const detail = new StepDetail(featuresUri.path, fileUri, range);
-      if (steps.get(reKey))
-        diagLog("replacing duplicate step re: " + reKey);
-      steps.set(reKey, detail); // there can be only one (per workspace)
+      const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
+      const stepFsRk = createStepFileStepAndReKey(featuresUri, stepFileUri, range, step);
+      if (stepFileSteps.get(stepFsRk.reKey))
+        diagLog("replacing duplicate step file step reKey: " + stepFsRk.reKey);
+      stepFileSteps.set(stepFsRk.reKey, stepFsRk.stepFileStep); // map.set() = no duplicate keys allowed (per workspace)
       fileSteps++;
+      setFuncLineKeys.push(stepFsRk.reKey);
     }
 
   }
 
-  diagLog(`${caller}: parsed ${fileSteps} steps from ${fileUri.path}`);
+  diagLog(`${caller}: parsed ${fileSteps} steps from ${stepFileUri.path}`);
+}
 
+
+function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
+  const stepType = step[1].slice(1);
+  let textAsRe = step[2].trim();
+  textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
+  textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
+  const fileName = basename(fileUri);
+  // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we 
+  // don't want to allow duplicate text matches in the workspace
+  const reKey = `${uriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
+  const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
+  return { reKey, stepFileStep };
 }

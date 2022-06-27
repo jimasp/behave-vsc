@@ -65,12 +65,13 @@
 1. Set up your development environment as above.
 2. Make sure you have disabled the marketplace version of the extension.
 3. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
-4. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
-5. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
-6. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
-7. Disable "raised/caught exceptions" if you have them enabled.
-8. Click one of the "Debug" targets, e.g. "Debug: Simple workspace" (if a "Debug..." is the current selection, you can just hit (`F5`) from anywhere).
-9. Tips:
+4. If you are using windows, and vscode is set to use powershell for terminal scripts, then you may need to enable powershell scripts to run, e.g. `Set-ExecutionPolicy RemoteSigned`. (You will know if this is an issue because vscode will pop up a powershell error message when you try to debug the extension when it tries to run `npm.ps1`.)
+5. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
+6. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
+7. (`Ctrl+Shift+D`) to open the Run and Debug side bar.
+8. Disable "raised/caught exceptions" if you have them enabled.
+9. Click one of the "Debug" targets, e.g. "Debug: Simple workspace" (if a "Debug..." is the current selection, you can just hit (`F5`) from anywhere).
+10. Tips:
     - You can relaunch the extension from the debug toolbar in the (source not host) vscode environment after changing extension code. Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
     - If for some reason you need to have "uncaught exceptions" enabled in the (source, not host) vscode environment, note that you may need to hit play multiple times in the extension vscode environment to continue if it hits external code.
 
@@ -109,16 +110,16 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ## Development guidelines
 
+- Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `diagLog` to log timings where needed.)
+- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and documentation updates.
 - The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
 - No reliance on other extensions except `ms-python.python`.
-- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a common concern, then please submit a feature request issue or PR.)
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions.
 - Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
-- Always consider performance.
 - Always consider multi-root workspaces, i.e. there can be different workspace settings per workspace folder, window settings can be changed in a `*.code-workspace` file, output channels are per workspace folder (to stop parallel test runs being merged and to make info and warnings contextual), workspaces folders may be added/removed by the user at run time requiring reload of the test tree, etc.
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- Always consider cross-platform, i.e. consider that windows max path is 259 characters, consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. Use `getUriMatchString()` to compare uris (do not use `uri.path` or `uri.fsPath` for equality checks). Use `uri.path` internally, and `uri.fsPath` for file operations. Use `relativePattern` for file searches. Do not use `path.join` (outside of integration tests), usee `vscode.Uri.joinPath` instead. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) Line-endings use `\n`.
+- Always consider cross-platform, i.e. consider that windows max path is 259 characters, consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. Use `getUriMatchString()` or `urisMatch()` to compare uris (do not use `uri.path` or `uri.fsPath` for equality checks). Use `uri.path` internally, and `uri.fsPath` for file operations. Use `relativePattern` for file searches. Do not use `path.join` (outside of integration tests), use `vscode.Uri.joinPath` instead. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) Line-endings use `\n`.
 - Encoding (use `utf8`).
 - While the extension is not internationalised, `Date()` should be avoided, except for `Date().toISOString()` for user output. The `performance` library is used for timings.
 - Look out for race conditions. You can have e.g. 3 workspaces running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
@@ -147,10 +148,10 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 - Stack traces will only appear if `behave-vsc.xRay` is enabled.
 - The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
-- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to stop a test run, and (b) the error only gets shown once (at the top of the stack).
-- If you are adding a `throw` or `showError`, then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly and only gets shown once.
+- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).
+- If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, only gets shown once, and has the full expected stack if `xRay` is enabled.
 - Entry point (event handlers/hooks) and background tasks (i.e. unawaited async functions/promises) should always contain a `try/catch` with a `config.showError`. Examples are `activate`,`deactivate` and any function called `...Handler` or `onDid...`, or just `on...` (e.g. `onCancellationRequested`). These are the top-level functions and so they need catches.
-- Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw my message` or `throw new WkspError(...)`. The second option (`wkspError`) should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github.
 - Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
 - Info appears in the output window. Warnings and Errors appear in the output window and the notification window. All of them will appear in console if `xRay` is enabled.
@@ -158,7 +159,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 ### Logging
 
 - You should `throw` for errors (see [Error handling](#error_handling)), and `showWarn` for warnings. This will log the error/warning and open a notification window to alert the user.
-- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` where possible.
+- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` wherever possible.
 - Log info to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *This should only be used where a workspace context does not make sense.*
 - Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg")`.
@@ -217,48 +218,77 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - `git add .` and `git commit -m` your changes if required
 - consider if you need to clean up for a valid test run (e.g. check the output of `git clean -fdn`)
 - `npm run lint` and fix any errors or warnings
-- Run automated tests (verify behave results):
-  - Close vscode and run `npm run test`
-    - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
-    - if the tests fail, see [Debugging integration tests](#debugging-integration-tests))
-- UI testing (depending on your change - see below)
+- Test your PR before submission (see below)
 - Commit/push your changes to your forked branch.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
-  
-#### 1. Run basic manual UI tests
 
-- a. start "Debug - MultiRoot", then in "project A":
+#### Testing your PR before submission
+
+#### 1. Run automated tests (to verify behave results and step references)
+
+- Make sure you do not have the marketplace version of the extension installed
+- Close vscode and run `npm run test`
+  - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
+  - if the tests fail, see [Debugging integration tests](#debugging-integration-tests)
+  
+#### 2. Run basic manual UI tests
+
+- Make sure you do not have the marketplace version of the extension installed
+- a. start "Debug: multiroot workspace", then in "project A":
 - b. clear all test results, Run a single test
 - c. clear all test results, Run all feature tests and check that the run stop button works
 - d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- e. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once)
+- e. remove the breakpoint. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once or hit Shift+F5 twice)
 
-#### 2. Run change-specific manual UI tests
+#### 3. Run change-specific manual UI tests
 
-After running automated tests and the manual UI tests in (1) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*. As an example, if you changed anything that affects feature file/step file parsing or filesystem watchers or workspace settings, then you'd want to run these manual tests as a minimum:
+After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
 
-- A. **`git add .` and `git commit -m` your changes**
+Example: if you changed anything that affects step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
+
+- A. IMPORTANT:
+  - i. make sure you do not have the marketplace version of the extension installed,
+  - ii. **`git add .` and `git commit -m` your changes** before going further.
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
-- C. start "Debug: MultiRoot workspace"
-- Then in "project A":
-- D. edit a group1 feature file, change the name of the Feature: and save it, then:
-  - check you can run the renamed feature from inside the feature file (first play button at top of feature file)
+- C. start `Debug: multiroot workspace`
+- Then in `project A`:
+- D. edit the `group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foo` and save it, then:
+  - check you can run the renamed feature from inside the feature file (first play/tick button at top of feature file)
   - check the test UI tree shows the renamed feature (you may need to reopen the node)
   - check the old feature name no longer appears in the test UI tree
   - check you can run the renamed feature from UI tree
-- E. edit a group1 outline feature file, change the name of an Scenario Outline: and save it, then:
+- E. edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo` and save it, then:
   - check you can run the changed scenario from inside the feature file
   - disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
   - check the test UI tree shows the renamed scenario (you may need to reopen the node)
-- F. open a diff comparison on the feature file you changed (leave the feature file open in another tab)
-- G. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file
- (the normal feature file that is open, not the diff view)
-- H. rename the table.feature file (i.e. rename the file itself), then in the test side bar, check the feature is not duplicated in the test UI tree, check feature tests run from the feature file, and then the test UI
-- I. rename a feature group folder (e.g. 'group1_features'), in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
-- K. delete a feature file, check it gets removed from the test tree
-- L. create a new feature file, copy/paste in a scenario, check it gets added to the test tree
-- M. copy a feature file, check it gets added to the test tree
-- N. go to a feature file, click "go to step defintion" and check at least some of them work
-- O. rename the same steps file you just used, then check you can still use "go to step definition" for a step in that file
-- P. in the file UI add/remove a workspace folder and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected before/after the add/remove.
-- Q. assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
+- F. open a diff comparison on any feature file you changed (leave the feature file open in another tab)
+- G. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
+- H. rename the `table.feature` file to `footable.feature` (i.e. rename the file itself), then in the test UI tree, check the feature is not duplicated (i.e. `Table feature` only appears once), then check feature tests run from the feature file, and from the test UI
+- I. rename `group1_features` to `group1_features_foo`, in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
+- J. delete `group1_features_foo/outline_success.feature` file, check it gets removed from the test tree
+- K. create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foo` and the first scenario, copy/paste that text into `scen_copy.feature` and check the feature gets added to the test tree under `group1_features_foo`
+- L. copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and check the feature gets added to the test tree
+- In `project B`:
+- M. open the `goto_step.feature` feature file and click "go to step definition" on a wrapped (multiline) step near the bottom of the file, and check it works
+- N. rename the `goto_step.feature` file to `goto_step_foo.feature` and check you can still use "go to step definition" for a step in that file
+- O. in the file that it opened (`features/steps/shared.py`) ALT+F12 or right-click on on `def step_inst(context):` and "Find All Step References" and check that only hits from the project B workspace are returned.
+- P. now hit F4 or click on the `basic.feature` file references in the "Step References" window then:
+  - note the number of results at the top of the step references window
+  - comment out one of the `Given we have behave installed` steps in the `basic.feature` file. save the file and check that the reference window automatically refreshes to remove the reference (the results count should decrement)
+  - uncomment the scenario, check it reappears in the step references window (the results should increment)
+  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. `scenario 2`. save the file and check that the reference window automatically refreshes to add the new scenario references (the results count should increment)
+  - copy/paste the feature file itself into the `features` folder to create a `basic copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `basic copy.feature` (and the results count increases by the amount of scenarios in the file)
+- Q. ALT+F12 (or right-click and "go to step definition") on any "given we have behave installed" line, then above `def step_inst(context):` add a couple of blank lines it and save the file. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
+  - ALT+F12 and check it finds all references again.
+  - try clicking on a reference.
+  - then try F4 to move to next one.
+- R. ALT+F12 on any "given we have behave installed" line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):` and save the file. check the step references window shows the same results. then ALT+F12 find all references and again check the results are the same.
+- S. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
+- T. go to the output window "Behave VSC: project A"
+- U. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click "Remove folder from workspace".
+  - check there are no error windows pop up. check that you have the output windows for "Behave VSC: project B" and "Behave VSC: simple".
+  - check that tests run as expected from all remaining workspaces and show their output in the output windows.
+- V. back in the file explorer UI, right-click on an empty area and "Add folder to workspace" and select "project A" to add it back.
+  - check that you have the correct output windows for Behave VSC
+  - and that tests run as expected from all workspaces.
+- Lastly, assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.

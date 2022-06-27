@@ -2,9 +2,8 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "./extension";
-import { EXTENSION_FRIENDLY_NAME, getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
+import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
 import { config } from './configuration';
-import { diagLog } from './logger';
 import { WorkspaceSettings } from './settings';
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
@@ -71,10 +70,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
   }
 
   item.scenario.result = result.status;
-
-  const rundiag = `test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`;
-  run.appendOutput(rundiag);
-  diagLog(rundiag);
+  run.appendOutput(`test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`);
 }
 
 
@@ -95,8 +91,8 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
       showDebugWindow();
     else
       config.logger.show(wkspUri);
-    const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
-    return { status: `Untested (see output in ${window}`, duration: duration };
+    const window = debug ? "debug console" : `Behave VSC output window`;
+    return { status: `Untested: see output in ${window}`, duration: duration };
   }
 
   if (status !== "failed")
@@ -214,9 +210,9 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
     tc.$.classname === className && (tc.$.name === scenarioName || tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName)
   );
 
-  if (!queueItemResults) {
-    throw `could not match queueItem to result, matching with $.classname=${className}, $.name=${queueItem.scenario.scenarioName} ` +
-    `in file ${junitFileUri.fsPath}`;
+  if (!queueItemResults || queueItemResults.length === 0) {
+    throw `could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
+    `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`;
   }
 
   let queueItemResult = queueItemResults[0];
@@ -237,7 +233,7 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
 
 
 function handleNoJunitFile(debug: boolean, wkspUri: vscode.Uri, run: vscode.TestRun, queueItem: QueueItem, actualDuration?: number) {
-  const window = debug ? "debug console" : `${EXTENSION_FRIENDLY_NAME} output window`;
+  const window = debug ? "debug console" : `Behave VSC output window`;
   const parseResult = { status: `Check output in ${window}.`, duration: actualDuration ? actualDuration : 0 };
   updateTest(run, parseResult, queueItem);
 

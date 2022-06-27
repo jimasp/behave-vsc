@@ -20,7 +20,7 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Optional key-value pairs of environment variable overrides to use when calling a behave command. This will apply to all behave tests within the workspace.",
+					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the workspace.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -82,6 +82,40 @@
 			{
 				"command": "behave-vsc.gotoStep",
 				"title": "Go to Step Definition"
+			},
+			{
+				"command": "behave-vsc.findStepReferences",
+				"title": "Find All Step References"
+			},
+			{
+				"command": "behave-vsc.stepReferences.next",
+				"title": "Step References: Next"
+			},
+			{
+				"command": "behave-vsc.stepReferences.prev",
+				"title": "Step References: Previous"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "behave-vsc.gotoStep",
+				"key": "alt+f12",
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/"
+			},
+			{
+				"command": "behave-vsc.findStepReferences",
+				"key": "alt+f12",
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/"
+			},
+			{
+				"command": "behave-vsc.stepReferences.next",
+				"when": "behave-vsc.stepReferences.navKeysEnabled",
+				"key": "f4"
+			},
+			{
+				"command": "behave-vsc.stepReferences.prev",
+				"when": "behave-vsc.stepReferences.navKeysEnabled",
+				"key": "shift+f4"
 			}
 		],
 		"menus": {
@@ -90,14 +124,45 @@
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/",
 					"command": "behave-vsc.gotoStep",
 					"group": "navigation"
+				},
+				{
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
+					"command": "behave-vsc.findStepReferences",
+					"group": "navigation"
 				}
 			]
-		}
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "StepReferences",
+					"title": "Step References",
+					"icon": "images/behave-vsc.png"
+				}
+			]
+		},
+		"views": {
+			"StepReferences": [
+				{
+					"id": "StepReferences",
+					"name": "Step References",
+					"icon": "images/behave-vsc.png",
+					"contextualTitle": "Step References",
+					"when": "behave-vsc.stepReferences.visible"
+				}
+			]
+		},
+		"viewsWelcome": [
+			{
+				"view": "StepReferences",
+				"contents": ""
+			}
+		]
 	},
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
-	"description": "Debug and Run Behave tests from Sidebar or Feature file",
-	"version": "0.3.1",
+	"description": "Debug, Run and Navigate behave tests",
+	"version": "0.4.0",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
@@ -115,7 +180,7 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.67.2"
+		"vscode": "^1.68.1"
 	},
 	"categories": [
 		"Testing",

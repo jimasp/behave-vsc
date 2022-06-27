@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from './configuration';
-import { EXTENSION_FRIENDLY_NAME, getUrisOfWkspFoldersWithFeatures } from './common';
+import { getUrisOfWkspFoldersWithFeatures } from './common';
 
 
 export class Logger {
@@ -19,7 +19,7 @@ export class Logger {
 
     const wkspPaths = wkspUris.map(u => u.path);
     if (wkspPaths.length < 2) {
-      this.channels[wkspUris[0].path] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME);
+      this.channels[wkspUris[0].path] = vscode.window.createOutputChannel("Behave VSC");
       return;
     }
 
@@ -27,7 +27,7 @@ export class Logger {
       const name = wkspPath.split("/").pop();
       if (!name)
         throw new Error("can't get workspace name from uri path");
-      this.channels[wkspPath] = vscode.window.createOutputChannel(EXTENSION_FRIENDLY_NAME + ": " + name);
+      this.channels[wkspPath] = vscode.window.createOutputChannel(`Behave VSC: ${name}`);
     });
   }
 
@@ -171,10 +171,10 @@ export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLog
   if (config && !config.globalSettings.xRay)
     return;
 
-  message = `[Behave VSC] ${message}`;
-
   if (wkspUri)
     message = `${wkspUri}: ${message}`;
+
+  message = `[Behave VSC] ${message}`;
 
   switch (logType) {
     case DiagLogType.error:

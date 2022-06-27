@@ -5,24 +5,25 @@ import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
 import {
-  EXTENSION_FULL_NAME,
-  EXTENSION_NAME,
+  basename,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
-  isStepsFile, logExtensionVersion, removeExtensionTempDirectory
+  isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepMap } from './stepsParser';
+import { StepFileStep } from './stepsParser';
 import { gotoStepHandler } from './gotoStepHandler';
-import { getStepMap, FileParser } from './fileParser';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './findStepReferencesHandler';
+import { FileParser } from './fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
+import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './stepMappings';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
-
+export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
@@ -31,7 +32,8 @@ export type TestSupport = {
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
-  getSteps: () => StepMap,
+  getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
+  getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
 };
@@ -52,8 +54,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
-    const parser = new FileParser();
-    const ctrl = vscode.tests.createTestController(`${EXTENSION_FULL_NAME}.TestController`, 'Feature Tests');
+    const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
     // any function contained in subscriptions.push() will execute immediately, 
@@ -61,14 +62,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
     // registerCommand, which is a disposable that ensures our custom command will no longer be active when the extension is deactivated).
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.
-    context.subscriptions.push(ctrl);
-    context.subscriptions.push(vscode.Disposable.from(config));
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
       const watcher = startWatchingWorkspace(wkspUri, ctrl, parser);
       wkspWatchers.set(wkspUri, watcher);
       context.subscriptions.push(watcher);
     }
-    context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_NAME}.gotoStep`, gotoStepHandler));
+
+    context.subscriptions.push(
+      ctrl,
+      treeView,
+      config,
+      vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
+      vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler)
+    );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     context.subscriptions.push(removeTempDirectoryCancelSource);
@@ -98,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const data = testData.get(item);
         if (data instanceof TestFile) {
           wkspSettings = getWorkspaceSettingsForFile(item.uri);
-          await data.updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings, testData, ctrl, item, "resolveHandler");
+          await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
         }
       }
       catch (e: unknown) {
@@ -152,7 +160,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
-        const affected = event && event.affectsConfiguration(EXTENSION_NAME);
+        const affected = event && event.affectsConfiguration("behave-vsc");
         if (!affected && !forceFullRefresh && !testCfg)
           return;
 
@@ -167,7 +175,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
-            if (testCfg.wkspUri === wkspUri) {
+            if (urisMatch(testCfg.wkspUri, wkspUri)) {
               config.reloadSettings(wkspUri, testCfg.testConfig);
             }
             continue;
@@ -213,7 +221,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       config: config,
       ctrl: ctrl,
       parser: parser,
-      getSteps: getStepMap,
+      getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
+      getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
       testData: testData,
       configurationChangedHandler: configurationChangedHandler
     };
@@ -241,39 +250,36 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const wkspSettings = config.workspaceSettings[wkspUri.path];
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+  let refreshStepMappingsTS: vscode.CancellationTokenSource;
 
-  const updater = (uri: vscode.Uri) => {
+  const updater = async (uri: vscode.Uri) => {
     try {
 
-      if (isStepsFile(uri)) {
-        parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
-        return;
-      }
+      if (isStepsFile(uri))
+        await parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
 
-      if (isFeatureFile(uri)) {
-        parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
-      }
+      if (isFeatureFile(uri))
+        await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
+      await buildStepMappings(wkspSettings.featuresUri);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
     }
+    finally {
+      refreshStepMappingsTS?.dispose();
+    }
   }
 
 
   // fires on either new file/folder creation OR rename (inc. git actions)
-  watcher.onDidCreate(uri => {
-    updater(uri)
-  });
+  watcher.onDidCreate(uri => updater(uri));
 
   // fires on file save (inc. git actions)
-  watcher.onDidChange(uri => {
-    updater(uri)
-  });
+  watcher.onDidChange(uri => updater(uri));
 
   // fires on either file/folder delete OR rename (inc. git actions)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   watcher.onDidDelete(uri => {
 
     const path = uri.path.toLowerCase();
@@ -282,13 +288,13 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
     // files, but we cannot determine if this is a file or folder deletion as:
     //   (a) it has been deleted so we can't stat it, and 
     //   (b) "." is valid in folder names so we can't determine by looking at the path
-    // but we should ignore specific file extensions or paths we know we don't care about
+    // but we can ignore specific file extensions or paths we know we don't care about
     if (path.endsWith(".tmp")) // .tmp = vscode file history file
       return;
 
     // log for extension developers in case we need to add another file type above
-    if (path.indexOf(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      diagLog("detected deletion of unanticipated file type", wkspUri, DiagLogType.warn);
+    if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+      diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
     }
 
     try {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { getContentFromFilesystem, getUriMatchString, isFeatureFile, WkspError } from './common';
+import { getContentFromFilesystem, uriMatchString, isFeatureFile, WkspError } from './common';
 import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { diagLog } from './logger';
@@ -13,33 +13,18 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async updateScenarioTestItemsFromFeatureFileOnDisk(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, item: vscode.TestItem,
-    caller: string) {
-    try {
-      if (!item.uri)
-        throw new Error("missing test item uri");
-      if (!isFeatureFile(item.uri))
-        throw new Error(`${item.uri.path} is not a feature file`);
+  public async createScenarioTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData,
+    controller: vscode.TestController, item: vscode.TestItem, caller: string) {
+    if (!item.uri)
+      throw new Error("missing test item uri");
+    if (!isFeatureFile(item.uri))
+      throw new Error(`${item.uri.path} is not a feature file`);
 
-      const content = await getContentFromFilesystem(item.uri);
-      item.error = undefined;
-      this.createScenarioTestItemsFromFeatureFileContents(wkspSettings, testData, item.uri.path, controller, content, item, caller);
-    }
-    catch (e: unknown) {
-      item.error = (e as Error).stack;
-      throw new WkspError(e, wkspSettings.uri);
-    }
-  }
+    const content = await getContentFromFilesystem(item.uri);
+    item.error = undefined;
 
-
-  public createScenarioTestItemsFromFeatureFileContents(wkspSettings: WorkspaceSettings, testData: TestData, featureFilePath: string,
-    controller: vscode.TestController, content: string, item: vscode.TestItem, caller: string) {
-
-    if (item.uri === undefined)
-      throw new Error("testitem uri is undefined");
     const featureFileWkspRelativePath = vscode.workspace.asRelativePath(item.uri, false);
-
-    const featureFilename = featureFilePath.split('/').pop();
+    const featureFilename = item.uri.path.split('/').pop();
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
 
@@ -76,13 +61,13 @@ export class TestFile {
       const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
       if (!item.uri)
         throw new WkspError(`no uri for item ${item.id}`, wkspSettings.uri);
-      const id = `${getUriMatchString(item.uri)}/${data.getLabel()}`;
+      const id = `${uriMatchString(item.uri)}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
       testData.set(tcase, data);
       tcase.range = range;
       parent.item.label = featureName;
       parent.children.push(tcase);
-      diagLog(`created child test item scenario ${tcase.id} from ${featureFilePath}`);
+      diagLog(`created child test item scenario ${tcase.id} from ${item.uri.path}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {
@@ -90,7 +75,7 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(wkspSettings, featureFilePath, item.label, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(wkspSettings, item.uri, item.label, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

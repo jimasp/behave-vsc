@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { ParseCounts } from "../../fileParser";
+import { WkspParseCounts } from "../../fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): ParseCounts {
+export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(debug, wkspUri, config).length;
-  return { tests: { nodeCount: 80, testCount: testCount }, featureFileCountExcludingEmptyOrCommentedOut: 18, stepFiles: 4, stepMappings: 31 };
+  return {
+    tests: { nodeCount: 84, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 18, stepFilesExceptEmptyOrCommentedOut: 4,
+    stepFileStepsExceptCommentedOut: 38,
+    featureFileStepsExceptCommentedOut: 142, stepMappings: 141  // (1 diff = When we have a missing step)
+  };
 }
 
 export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
@@ -930,8 +935,25 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
 
     new TestResult({
       scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'wrapped step 4',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'wrapped step 4',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/wrapped step 4',
+      test_label: 'wrapped step 4',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested1.faildupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
@@ -948,7 +970,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested/nested3.sucessdupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -965,7 +987,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested2.successdupe.feature',
-      scenario_featureName: 'Duplicate',
+      scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -985,7 +1007,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       scenario_featureName: 'Bad step',
       scenario_getLabel: 'step with exception should show failure message',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we have a step that raises an exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
+      scenario_result: 'Failing step: When we have a step that raises a non-assertion exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
       scenario_scenarioName: 'step with exception should show failure message',
       test_children: undefined,
       test_description: undefined,
@@ -994,6 +1016,74 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       test_label: 'step with exception should show failure message',
       test_parent: '.../project B/features/step_exception.feature',
       test_uri: '.../project B/features/step_exception.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'step types 1',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'step types 1',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/step types 1',
+      test_label: 'step types 1',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'step types 2',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'step types 2',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/step types 2',
+      test_label: 'step types 2',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'a cased step2',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'a cased step2',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/a cased step2',
+      test_label: 'a cased step2',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'step with param2',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'step with param2',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/step with param2',
+      test_label: 'step with param2',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
     }),
 
   ];

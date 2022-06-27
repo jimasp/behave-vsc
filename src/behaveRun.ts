@@ -4,7 +4,7 @@ import { config } from "./configuration";
 import { WorkspaceSettings } from "./settings";
 import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
 import { QueueItem } from './extension';
-import { cleanBehaveText, getUriMatchString, isBehaveExecutionError } from './common';
+import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from './common';
 import { diagLog } from './logger';
 import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';
@@ -29,27 +29,14 @@ export async function runScenario(async: boolean, wkspSettings: WorkspaceSetting
 async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
 
-  const wkspUri = wkspSettings.uri;
-
   // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI, 
   // so we set up a watcher so we can update results as they come in, i.e. as the test files are updated on disk
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
+  const wkspUri = wkspSettings.uri;
   if (runAllAsOne) {
-
-    const subDir = junitDirUri.path.split("/").pop();
-    if (!subDir)
-      throw `unable to determine subdirectory name for junit directory`;
     await vscode.workspace.fs.createDirectory(junitDirUri);
     diagLog(`run ${run.name} - created junit directory ${junitDirUri.fsPath}`, wkspUri);
-
-    // TODO: there is a problem here which is difficult to fix correctly, as it is INTERMITTENT.
-    // the watcher seems to occasionally (<1%) have issues on linux detecting changes to the junit directory, and so 
-    // the test results are not updated correctly, it may be caused by some kind of race condition between the filesystem and the watcher
-    // because sticking a wait between creating the directory and creating the watcher SEEMS? to fix the issue.
-    // we need to try and recreate the problem consistently BEFORE modifying this code.
-    // IF WE SEE THIS ISSUE AGAIN, CHECK THE DIAGNOSTICS LOGS FIRST
-    await new Promise(resolve => setTimeout(resolve, 100));
 
     updatesComplete = new Promise(function (resolve, reject) {
       diagLog(`run ${run.name} - creating filesystemwatcher for junit directory ${junitDirUri.fsPath}`, wkspUri);
@@ -58,9 +45,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
   }
 
 
-
   let cp: ChildProcess;
-
   const cancellationHandler = runToken.onCancellationRequested(() => {
     cp?.kill();
   });
@@ -105,13 +90,18 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     });
     cp.stdout?.on('data', chunk => {
       const str = chunk.toString();
+      // some errors come via stdout, e.g. ParserError if you have no feature before a scenario
+      if (isBehaveExecutionError(str)) {
+        // fatal behave error (i.e. there will be no junit output)
+        behaveExecutionError = true;
+        config.logger.show(wkspUri);
+      }
       log(str);
     });
 
-    if (!async) {
-      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
-    }
 
+    if (!async)
+      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri, run);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
@@ -170,7 +160,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       diagLog(`${run.name} - updateResult called for uri ${uri.path}`, wkspSettings.uri);
 
-      const matches = map.filter(m => getUriMatchString(m.junitFileUri) === getUriMatchString(uri));
+      const matches = map.filter(m => uriMatchString(m.junitFileUri) === uriMatchString(uri));
       if (matches.length === 0)
         throw `could not find any matching test items for junit file ${uri.fsPath}`;
 
@@ -178,8 +168,8 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
       for (const match of matches) {
         await parseAndUpdateTestResults(false, false, wkspSettings, match.junitFileUri, run, match.queueItem, runToken);
         match.updated = true;
-        diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
         updated++;
+        diagLog(`run ${run.name} - updated result for ${match.queueItem.test.id}, updated count=${updated}, total queue ${map.length}`, wkspSettings.uri);
       }
       if (updated === map.length)
         resolve("");
@@ -192,14 +182,13 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     }
   }
 
+
   let updated = 0;
   const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
-  const pattern = new vscode.RelativePattern(junitDirUri, '**/*.xml');
-  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-
+  const pattern = new vscode.RelativePattern(junitDirUri, '*.xml');
+  const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, true, true);
   watcher.onDidCreate(uri => updateResult(uri));
-  watcher.onDidChange(uri => updateResult(uri));
 
-  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri}/**/*.xml}`, wkspSettings.uri);
+  diagLog(`${run.name} - filesystemwatcher watching junit directory ${junitDirUri.fsPath}/*.xml`, wkspSettings.uri);
   return watcher;
 }
