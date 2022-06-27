@@ -92,7 +92,7 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
     else
       config.logger.show(wkspUri);
     const window = debug ? "debug console" : `Behave VSC output window`;
-    return { status: `Untested (see output in ${window}`, duration: duration };
+    return { status: `Untested: see output in ${window}`, duration: duration };
   }
 
   if (status !== "failed")
