@@ -13,10 +13,10 @@
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each workspace must have its own distinct features/steps folders.)
 - "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
+- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each workspace must have its own distinct features/steps folders.)
 
 ---
 

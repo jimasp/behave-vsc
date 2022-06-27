@@ -244,7 +244,7 @@ After running automated tests and the manual UI tests in (2) above, then if you 
 
 Example: if you changed anything that affects step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
 
-- A. **`git add .` and `git commit -m` your changes**
+- A. IMPORTANT: **`git add .` and `git commit -m` your changes** before going further.
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - C. start `Debug: multiroot workspace`
 - Then in `project A`:
@@ -268,13 +268,23 @@ Example: if you changed anything that affects step navigation/feature file parsi
 - M. open the `goto_step.feature` feature file and click "go to step definition" on a wrapped (multiline) step near the bottom of the file, and check it works
 - N. rename the `goto_step.feature` file to `goto_step_foo.feature` and check you can still use "go to step definition" for a step in that file
 - O. in the file that it opened (`features/steps/shared.py`) ALT+F12 or right-click on on `def step_inst(context):` and "Find All Step References" and check that only hits from the project B workspace are returned.
-- P. now hit F4 or click on one of the feature file refrences in the "step references" window then:
-  - comment out one of the `Given we have behave installed` steps in the feature file. save the file and check that the reference window automatically refreshes to remove the reference
-  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. `scenario 2`. save the file and check that the reference window automatically refreshes to add the new scenario references
-  - copy the feature file itself to create a "xxx copy.feature" file, check that the reference window automatically refreshes to add the new feature file references
-- Q. go to add a blank line above the step function `def step_inst(context):` and save the file, then right click and find all references and check it still finds references. try clicking on a reference. then try F4 to move to next one.
-- R. rename the step function `def step_inst(context):` to something else and save the file, then right click and find all references and check it still finds references.
-- S. remove the step function `def step_inst(context):`
-- T. in the file UI, right click `project A` a workspace folder (e.g. "project A") and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all remaining workspaces.
-- U. in the file UI add the workspace folder you removed and check there are no errors, that you have the correct output windows for Behave VSC and that tests run as expected from all workspaces.
+- P. now hit F4 or click on the `basic.feature` file references in the "Step References" window then:
+  - note the number of results at the top of the step references window
+  - comment out one of the `Given we have behave installed` steps in the `basic.feature` file. save the file and check that the reference window automatically refreshes to remove the reference (the results count should decrement)
+  - uncomment the scenario, check it reappears in the step references window (the results should increment)
+  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. `scenario 2`. save the file and check that the reference window automatically refreshes to add the new scenario references (the results count should increment)
+  - copy/paste the feature file itself into the `features` folder to create a `basic copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `basic copy.feature` (and the results count increases by the amount of scenarios in the file)
+- Q. ALT+F12 (or right-click and "go to step definition") on any "given we have behave installed" line, then above `def step_inst(context):` add a couple of blank lines it and save the file. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
+  - ALT+F12 and check it finds all references again.
+  - try clicking on a reference.
+  - then try F4 to move to next one.
+- R. ALT+F12 on any "given we have behave installed" line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):` and save the file. check the step references window shows the same results. then ALT+F12 find all references and again check the results are the same.
+- S. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
+- T. go to the output window "Behave VSC: project A"
+- U. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click "Remove folder from workspace".
+  - check there are no error windows pop up. check that you have the output windows for "Behave VSC: project B" and "Behave VSC: simple".
+  - check that tests run as expected from all remaining workspaces and show their output in the output windows.
+- V. back in the file explorer UI, right-click on an empty area and "Add folder to workspace" and select "project A" to add it back.
+  - check that you have the correct output windows for Behave VSC
+  - and that tests run as expected from all workspaces.
 - Lastly, assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
