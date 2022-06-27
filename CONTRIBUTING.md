@@ -226,12 +226,14 @@ If you have a customised fork and you want to distribute it to your team, you wi
 
 #### 1. Run automated tests (to verify behave results and step references)
 
+- Make sure you do not have the marketplace version of the extension installed
 - Close vscode and run `npm run test`
   - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
   - if the tests fail, see [Debugging integration tests](#debugging-integration-tests)
   
 #### 2. Run basic manual UI tests
 
+- Make sure you do not have the marketplace version of the extension installed
 - a. start "Debug: multiroot workspace", then in "project A":
 - b. clear all test results, Run a single test
 - c. clear all test results, Run all feature tests and check that the run stop button works
@@ -244,7 +246,9 @@ After running automated tests and the manual UI tests in (2) above, then if you 
 
 Example: if you changed anything that affects step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
 
-- A. IMPORTANT: **`git add .` and `git commit -m` your changes** before going further.
+- A. IMPORTANT:
+  - i. make sure you do not have the marketplace version of the extension installed,
+  - ii. **`git add .` and `git commit -m` your changes** before going further.
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - C. start `Debug: multiroot workspace`
 - Then in `project A`:
