@@ -2,6 +2,7 @@
 
 - A test runner, debugger and navigator for Python behave tests in vscode
 - Built with the native Visual Studio Code Test API
+- Please see [troubleshooting](#troubleshooting) if you have any problems
 - [Release notes](https://github.com/jimasp/behave-vsc/releases)
 
 ---
@@ -16,22 +17,22 @@
 - "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
-- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each workspace must have its own distinct features/steps folders.)
+- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ---
 
-## Project requirements
+## Workspace requirements
 
-- Extension activation requires at least one `*.feature` file somewhere in a workspace
 - No conflicting behave extension is enabled
+- Extension activation requires at least one `*.feature` file somewhere in the workspace
 - A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
-### Required workspace directory structure
+### Required project directory structure
 
-- A single (per workspace) `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps".
+- A single `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
 - A *behave-conformant* directory structure, for example:
 
 ```text
@@ -49,16 +50,16 @@
   .       |         +-- *.py    
 ```
 
-- If your features folder is not called "features", or is not in the workspace root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings. This is a relative path to your workspace folder. Example:
+- If your features folder is not called "features", or is not in the workspace root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your workspace folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
 
 ```text
 # behave.ini
 [behave]
-paths=behave_tests/features
+paths=my_tests/behave_features
 
 // settings.json
 { 
-  "behave-vsc.featuresPath": "behave_tests/features" 
+  "behave-vsc.featuresPath": "my_tests/behave_features" 
 }
 ```
 
@@ -120,11 +121,11 @@ paths=behave_tests/features
   
 ### Otherwise
 
-- Does your project meet the [Project Requirements](#project-requirements) and have the [Required workspace directory structure](#required-workspace-directory-structure)?
+- Does your project meet the [workspace requirements](#workspace-requirements) and have the [required project directory structure](#required-project-directory-structure)?
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
-- If you are getting different results running all tests vs running a test separately, it's probably down to lack of test isolation.
+- If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
 - If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#Q&A) for information on how to see your effective settings.)
 - Does restarting vscode solve your issue?
