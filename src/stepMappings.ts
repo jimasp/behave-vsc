@@ -89,12 +89,9 @@ export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number
 
 function _getFilteredSteps(featuresUri: vscode.Uri) {
   const featureFileSteps = getFeatureFileSteps(featuresUri);
-  const wkspSteps = getStepFileSteps(featuresUri);
-  // remove the fileUri prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [afterFirstSepr(k), v]));
-  // return the filtered steps
-  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
-  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+  const wkspStepFileSteps = getStepFileSteps(featuresUri);
+  const exactSteps = new Map(wkspStepFileSteps.filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map(wkspStepFileSteps.filter(([k,]) => k.includes(parseRepWildcard)));
   return { featureFileSteps, exactSteps, paramsSteps };
 }
 

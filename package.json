@@ -118,6 +118,19 @@
 				"key": "shift+f4"
 			}
 		],
+		"languages": [
+			{
+				"id": "feature",
+				"aliases": [
+					"Feature",
+					"feature"
+				],
+				"extensions": [
+					".feature"
+				],
+				"configuration": "./language-configuration.json"
+			}
+		],
 		"menus": {
 			"editor/context": [
 				{

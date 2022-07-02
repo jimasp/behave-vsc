@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { uriMatchString, isStepsFile, sepr, basename } from './common';
+import { uriMatchString, isStepsFile, sepr, basename, afterFirstSepr } from './common';
 import { getContentFromFilesystem } from './common';
 import { diagLog } from './logger';
 
@@ -22,13 +22,17 @@ export class StepFileStep {
 }
 
 
-export const getStepFileSteps = (featuresUri: vscode.Uri) => {
+export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
   const featuresUriMatchString = uriMatchString(featuresUri);
-  return [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+  let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+  if (!removeFileUriPrefix)
+    return steps;
+  steps = [...new Map([...steps].map(([k, v]) => [afterFirstSepr(k), v]))];
+  return steps;
 }
 
 
-export const deleteStepFileSteps = (featuresUri: vscode.Uri) => {
+export function deleteStepFileSteps(featuresUri: vscode.Uri) {
   const wkspStepFileSteps = getStepFileSteps(featuresUri);
   for (const [key,] of wkspStepFileSteps) {
     stepFileSteps.delete(key);
@@ -36,7 +40,7 @@ export const deleteStepFileSteps = (featuresUri: vscode.Uri) => {
 }
 
 
-export const parseStepsFile = async (featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) => {
+export async function parseStepsFile(featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) {
 
   if (!isStepsFile(stepFileUri))
     throw new Error(`${stepFileUri.path} is not a steps file`);

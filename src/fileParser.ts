@@ -424,8 +424,11 @@ export class FileParser {
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
       `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
-      `\nIgnore times if any of these are true: (a) time taken was during vscode startup contention, (b) busy cpu due to background processes, " + 
-      "(c) another test extension is also refreshing, (d) you are debugging the extension itself or running an extension integration test.` +
+      `\nIgnore times if any of these are true:` +
+      `\n  (a) time taken was during vscode startup contention, ` +
+      `\n  (b) busy cpu due to background processes, ` +
+      `\n  (c) another test extension is also refreshing, ` +
+      `\n  (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
       `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
       `\n(Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
       `\n==================`

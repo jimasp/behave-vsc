@@ -9,7 +9,7 @@ const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
-export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 

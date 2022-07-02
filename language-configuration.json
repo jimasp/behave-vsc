@@ -1,0 +1,19 @@
+{
+    "comments": {
+        "lineComment": "#",
+    },
+    "wordPattern": "[^\\s]", // this determines how autocomplete is triggered, e.g. try with quotes like: 'And "we" have'
+    "indentationRules": {
+        "increaseIndentPattern": "^\\s*(Feature|Scenario|Scenario Outline):.*",
+        "decreaseIndentPattern": "^\\s+$", // won't outdent with this pattern, but a pattern is required for indent to work
+    },
+    "onEnterRules": [
+        {
+            "beforeText": "^\\s+$",
+            "previousLineText": "^(?!\\s*Feature:).*$", // (does not match)
+            "action": {
+                "indent": "outdent"
+            }
+        }
+    ],
+}

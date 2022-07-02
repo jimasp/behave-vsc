@@ -19,6 +19,7 @@ import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './behaveDebug';
 import { performance } from 'perf_hooks';
 import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './stepMappings';
+import { completionItemProvider } from './autoComplete';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -75,7 +76,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
-      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler)
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
+      vscode.languages.registerCompletionItemProvider('feature', completionItemProvider)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
