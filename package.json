@@ -120,15 +120,26 @@
 		],
 		"languages": [
 			{
-				"id": "feature",
-				"aliases": [
-					"Feature",
+				"id": "behave",
+				"icon": {
+					"light": "./images/behave-vsc.png",
+					"dark": "./images/behave-vsc.png"
+				},
+				"extensions": [
 					"feature"
 				],
-				"extensions": [
-					".feature"
+				"aliases": [
+					"Behave",
+					"Feature"
 				],
 				"configuration": "./language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "behave",
+				"scopeName": "behave.grammar",
+				"path": "./grammar.json"
 			}
 		],
 		"menus": {

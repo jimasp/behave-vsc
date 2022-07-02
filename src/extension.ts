@@ -3,23 +3,24 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
+import { BehaveTestData, Scenario, TestData, TestFile } from './parsing/testFile';
 import {
   basename,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepFileStep } from './stepsParser';
-import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './findStepReferencesHandler';
-import { FileParser } from './fileParser';
-import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
+import { StepFileStep } from './parsing/stepsParser';
+import { gotoStepHandler } from './handlers/gotoStepHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
+import { FileParser } from './parsing/fileParser';
+import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
-import { getDebugAdapterTrackerFactory } from './behaveDebug';
+import { getDebugAdapterTrackerFactory } from './runners/behaveDebug';
 import { performance } from 'perf_hooks';
-import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './stepMappings';
-import { completionItemProvider } from './autoComplete';
+import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsing/stepMappings';
+import { autoCompleteProvider } from './handlers/autoCompleteProvider';
+import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -77,7 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
-      vscode.languages.registerCompletionItemProvider('feature', completionItemProvider)
+      vscode.languages.registerCompletionItemProvider('behave', autoCompleteProvider),
+      vscode.languages.registerDocumentRangeFormattingEditProvider('behave', formatFeatureProvider)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();

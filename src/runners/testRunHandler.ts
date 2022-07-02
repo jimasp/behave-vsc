@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
-import { Scenario, TestData, TestFile } from './testFile';
+import { performance } from 'perf_hooks';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
+import { Scenario, TestData, TestFile } from '../parsing/testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
-} from './common';
-import { QueueItem } from './extension';
-import { FileParser } from './fileParser';
-import { performance } from 'perf_hooks';
-import { diagLog, DiagLogType } from './logger';
+} from '../common';
+import { QueueItem } from '../extension';
+import { FileParser } from '../parsing/fileParser';
+import { diagLog, DiagLogType } from '../logger';
 
 
 // cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,

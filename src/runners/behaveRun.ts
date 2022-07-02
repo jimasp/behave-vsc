@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
-import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from './junitParser';
-import { QueueItem } from './extension';
-import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from './common';
-import { diagLog } from './logger';
-import { cancelTestRun } from './testRunHandler';
 import { performance } from 'perf_hooks';
+import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
+import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from '../parsing/junitParser';
+import { QueueItem } from '../extension';
+import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from '../common';
+import { diagLog } from '../logger';
+import { cancelTestRun } from './testRunHandler';
+
 
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],

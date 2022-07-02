@@ -18,6 +18,8 @@
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
+- Smart feature step autocompletion. (When editing a feature file, only steps valid in the context will be shown, for example "But" after "Given" will only show `@given` or `@step` step suggestions.)
+- Feature file auto-indentation formatting and keyword highlighting.
 
 ---
 

@@ -1,0 +1,29 @@
+{
+    "scopeName": "behave.grammar",
+    "patterns": [
+        {
+            "match": "^\\s*#.*",
+            "captures": {
+                "1": {
+                    "name": "comment.line.number-sign"
+                }
+            }
+        },
+        {
+            "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template|Examples):",
+            "captures": {
+                "1": {
+                    "name": "keyword"
+                }
+            }
+        },
+        {
+            "match": "(?i)^\\s*(Given|When|Then|And|But) ",
+            "captures": {
+                "1": {
+                    "name": "keyword"
+                }
+            }
+        }
+    ]
+}

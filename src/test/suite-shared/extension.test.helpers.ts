@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
+import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
 import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { WkspParseCounts } from '../../fileParser';
+import { WkspParseCounts } from '../../parsing/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile } from '../../common';
-import { performance } from 'perf_hooks';
-import { featureFileStepRe } from '../../featureParser';
-import { funcRe } from '../../stepsParser';
+import { featureFileStepRe } from '../../parsing/featureParser';
+import { funcRe } from '../../parsing/stepsParser';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {

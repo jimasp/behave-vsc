@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
+import { performance } from 'perf_hooks';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
 import { getFeatureFileSteps, getFeatureNameFromFile } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
-} from './common';
+} from '../common';
 import { parseStepsFile, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
-import { performance } from 'perf_hooks';
-import { diagLog } from './logger';
+import { diagLog } from '../logger';
 import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMappings';
 
 

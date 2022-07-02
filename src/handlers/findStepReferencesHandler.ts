@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from './common';
+import { config } from "../configuration";
+import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from './stepMappings';
-import { FeatureFileStep } from './featureParser';
-import { funcRe } from './stepsParser';
+import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsing/stepMappings';
+import { FeatureFileStep } from '../parsing/featureParser';
+import { funcRe } from '../parsing/stepsParser';
 
 
 

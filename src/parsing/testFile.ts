@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { getContentFromFilesystem, uriMatchString, isFeatureFile, WkspError } from './common';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
-import { diagLog } from './logger';
+import { getContentFromFilesystem, uriMatchString, isFeatureFile, WkspError } from '../common';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
+import { diagLog } from '../logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Feature | Scenario;

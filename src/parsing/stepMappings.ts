@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { afterFirstSepr, sepr, urisMatch } from './common';
-import { parser } from './extension';
-import { diagLog, DiagLogType } from './logger';
+import { sepr, urisMatch } from '../common';
+import { parser } from '../extension';
+import { diagLog, DiagLogType } from '../logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
-import { refreshStepReferencesView } from './findStepReferencesHandler';
+import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 
 

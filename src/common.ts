@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { Scenario, TestData } from './testFile';
+import { Scenario, TestData } from './parsing/testFile';
 import { WorkspaceSettings } from './settings';
-import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
 
 

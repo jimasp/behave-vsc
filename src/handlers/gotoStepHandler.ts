@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from './common';
-import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from './stepMappings';
-import { featureFileStepRe } from './featureParser';
+import { config } from "../configuration";
+import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from '../common';
+import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsing/stepMappings';
+import { featureFileStepRe } from '../parsing/featureParser';
 
 
 

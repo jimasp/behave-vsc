@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
-import { parseAndUpdateTestResults } from './junitParser';
-import { QueueItem } from './extension';
-import { diagLog } from './logger';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
+import { parseAndUpdateTestResults } from '../parsing/junitParser';
+import { QueueItem } from '../extension';
+import { diagLog } from '../logger';
 import { cancelTestRun } from './testRunHandler';
-import { isBehaveExecutionError } from './common';
+import { isBehaveExecutionError } from '../common';
 import { performance } from 'perf_hooks';
 
 
