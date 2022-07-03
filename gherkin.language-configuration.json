@@ -2,17 +2,20 @@
     "comments": {
         "lineComment": "#",
     },
-    "wordPattern": "[^\\s]", // this determines how autocomplete is triggered, e.g. try with quotes like: 'And "we" have'
-    "indentationRules": {
-        "increaseIndentPattern": "^\\s*(\\||@||Feature:|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:|Examples:).*",
-        "decreaseIndentPattern": "^\\s+$", // won't outdent with this pattern, but a pattern is required for indent to work
-    },
+    "wordPattern": "[^\\s]", // this determines how autocomplete is triggered, e.g. test with quotes like: 'And "we" have'
     "onEnterRules": [
+        // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#on-enter-rules
         {
             "beforeText": "^\\s+$",
             "previousLineText": "^(?!\\s*Feature:).*$", // (does not match)
             "action": {
                 "indent": "outdent"
+            }
+        },
+        {
+            "beforeText": "^\\s*(Feature:|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:|Examples:).*",
+            "action": {
+                "indent": "indent"
             }
         },
     ],
