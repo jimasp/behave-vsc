@@ -52,17 +52,13 @@ export async function waitOnReadyForStepsNavigation() {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
     vscode.window.showWarningMessage(msg);
-    return false;
   }
-  if (!hasStepMappings)
-    await new Promise(t => setTimeout(t, 100));
-  return hasStepMappings;
+
+  return ready;
 }
 
 
-let hasStepMappings = false;
-export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number> {
-  hasStepMappings = false;
+export function rebuildStepMappings(featuresUri: vscode.Uri): number {
 
   const start = performance.now();
   deleteStepMappings(featuresUri);
@@ -78,7 +74,6 @@ export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number
     processed++;
   }
 
-  hasStepMappings = true;
   refreshStepReferencesView();
 
   diagLog(`rebuilding step mappings for ${featuresUri.path} took ${performance.now() - start} ms`);
@@ -95,7 +90,8 @@ function _getFilteredSteps(featuresUri: vscode.Uri) {
   return { featureFileSteps, exactSteps, paramsSteps };
 }
 
-// any feature file step must map to a single python step function 
+
+// any feature file step MUST map to a single python step function (or none)
 // so this function should return the SINGLE best match
 function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   exactSteps: Map<string, StepFileStep>, paramsSteps: Map<string, StepFileStep>): StepFileStep | null {
@@ -139,11 +135,8 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
     return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion    
   }
 
-
-  // NOTE - THIS FUNCTION NEEDS TO BE FAST
-
   let textWithoutType = featureFileStep.textWithoutType;
-  if (textWithoutType.endsWith(":")) // table
+  if (textWithoutType.endsWith(":")) // behave will match e.g. "Given some table:" to "Given some table"
     textWithoutType = textWithoutType.slice(0, -1);
 
   let exactMatch = findExactMatch(textWithoutType, featureFileStep.stepType);

@@ -4,7 +4,7 @@
     },
     "wordPattern": "[^\\s]", // this determines how autocomplete is triggered, e.g. try with quotes like: 'And "we" have'
     "indentationRules": {
-        "increaseIndentPattern": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template|Examples):.*",
+        "increaseIndentPattern": "^\\s*(\\||@||Feature:|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:|Examples:).*",
         "decreaseIndentPattern": "^\\s+$", // won't outdent with this pattern, but a pattern is required for indent to work
     },
     "onEnterRules": [
@@ -14,6 +14,6 @@
             "action": {
                 "indent": "outdent"
             }
-        }
+        },
     ],
 }

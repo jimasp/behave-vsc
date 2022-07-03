@@ -18,7 +18,7 @@ import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspac
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './runners/behaveDebug';
 import { performance } from 'perf_hooks';
-import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsing/stepMappings';
+import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsing/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 
@@ -247,7 +247,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 } // end activate()
 
 
-
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
@@ -257,14 +256,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
   const updater = async (uri: vscode.Uri) => {
     try {
-
-      if (isStepsFile(uri))
-        await parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
-
-      if (isFeatureFile(uri))
-        await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
-
-      buildStepMappings(wkspSettings.featuresUri);
+      await parser.reparseFile(uri, wkspSettings, testData, ctrl);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

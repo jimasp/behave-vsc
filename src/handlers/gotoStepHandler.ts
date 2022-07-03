@@ -17,6 +17,8 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
+    // save file to update mappings
+    await textEditor.document.save();
     if (!await waitOnReadyForStepsNavigation())
       return;
 
@@ -31,7 +33,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     const stepFileStep = getStepFileStepForFeatureFileStep(docUri, lineNo);
 
     if (!stepFileStep) {
-      vscode.window.showInformationMessage(`Step '${lineText}' not found (or file has not been saved).`);
+      vscode.window.showInformationMessage(`Step '${lineText}' not found.`);
       return;
     }
 

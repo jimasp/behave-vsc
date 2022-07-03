@@ -32,9 +32,16 @@ export class FileParser {
   private _finishedStepsParseForWorkspace: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
+  private _reparsingFile = false;
 
   async featureParseComplete(timeout: number, caller: string) {
     const interval = 100;
+    if (timeout < 150)
+      timeout = 150;
+
+    // parsing is a background task, ensure things had a chance to start to avoid false positives
+    await new Promise(t => setTimeout(t, 50));
+    timeout = timeout - 50;
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedFeaturesParseForAllWorkspaces) {
@@ -58,9 +65,15 @@ export class FileParser {
 
   async stepsParseComplete(timeout: number, caller: string) {
     const interval = 100;
+    if (timeout < 150)
+      timeout = 150;
+
+    // parsing is a background task, ensure things had a chance to start to avoid false positives
+    await new Promise(t => setTimeout(t, 50));
+    timeout = timeout - 50;
 
     const check = (resolve: (value: boolean) => void) => {
-      if (this._finishedStepsParseForAllWorkspaces) {
+      if (this._finishedStepsParseForAllWorkspaces && !this._reparsingFile) {
         diagLog(`stepsParseComplete (${caller}) - good to go (all steps parsed)`);
         resolve(true);
       }
@@ -348,6 +361,8 @@ export class FileParser {
       }
 
 
+      let mappingsCount = 0;
+      let buildMappingsTime = 0;
       const stepsStart = performance.now();
       const stepFileCount = await this._parseStepsFiles(wkspSettings, this._cancelTokenSources[wkspPath].token, callName);
       const stepsTime = performance.now() - stepsStart;
@@ -361,15 +376,15 @@ export class FileParser {
       if (wkspsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllWorkspaces = true;
         diagLog(`${callName}: steps loaded for all workspaces`);
+        const updateMappingsStart = performance.now();
+        mappingsCount = rebuildStepMappings(wkspSettings.featuresUri);
+        buildMappingsTime = performance.now() - updateMappingsStart;
+        diagLog(`${callName}: stepmappings built`);
       }
       else {
         diagLog(`${callName}: waiting on steps parse for ${wkspsStillParsingSteps.map(w => w.path)}`)
       }
 
-
-      const updateMappingsStart = performance.now();
-      const mappingsCount = await rebuildStepMappings(wkspSettings.featuresUri);
-      const buildMappingsTime = performance.now() - updateMappingsStart;
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
@@ -413,6 +428,25 @@ export class FileParser {
       delete this._cancelTokenSources[wkspPath];
       cancellationHandler?.dispose();
     }
+  }
+
+
+
+  async reparseFile(fileUri: vscode.Uri, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
+    this._reparsingFile = true;
+
+    if (!isStepsFile(fileUri) && !isFeatureFile(fileUri))    
+      return;
+
+    if (isStepsFile(fileUri))
+      await this.updateStepsFromStepsFile(wkspSettings.featuresUri, fileUri, "updater");
+
+    if (isFeatureFile(fileUri))
+      await this.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, fileUri, "updater");
+
+    rebuildStepMappings(wkspSettings.featuresUri);
+
+    this._reparsingFile = false;
   }
 
 
