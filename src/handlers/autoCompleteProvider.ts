@@ -43,8 +43,6 @@ export const autoCompleteProvider = {
           itemText = itemText.replaceAll("\\\\", "#@slash@#").replaceAll("\\", "").replaceAll("#@slash@#", "\\");
           const item = new vscode.CompletionItem(itemText, vscode.CompletionItemKind.Snippet);
           item.detail = vscode.workspace.asRelativePath(value.uri);
-          // save file to cause file reparse so that step mapping is updated to support immediate "go to stop definition"
-          item.command = { command: 'workbench.action.files.save', title: '', arguments: [] };
           items.push(item);
         }
       }

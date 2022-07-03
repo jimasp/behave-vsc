@@ -10,7 +10,7 @@ import {
 import { parseStepsFile, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
-import { deleteStepMappings, buildStepMappings, getStepMappings } from './stepMappings';
+import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
 
 // for integration test assertions      
@@ -368,7 +368,7 @@ export class FileParser {
 
 
       const updateMappingsStart = performance.now();
-      const mappingsCount = await buildStepMappings(wkspSettings.featuresUri);
+      const mappingsCount = await rebuildStepMappings(wkspSettings.featuresUri);
       const buildMappingsTime = performance.now() - updateMappingsStart;
 
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {

@@ -1,5 +1,5 @@
 {
-    "scopeName": "behave.grammar",
+    "scopeName": "gherkin.grammar",
     "patterns": [
         {
             "match": "^\\s*#.*",

@@ -120,7 +120,7 @@
 		],
 		"languages": [
 			{
-				"id": "behave",
+				"id": "gherkin",
 				"icon": {
 					"light": "./images/behave-vsc.png",
 					"dark": "./images/behave-vsc.png"
@@ -129,17 +129,18 @@
 					"feature"
 				],
 				"aliases": [
-					"Behave",
+					"Gherkin",
+					"behave",
 					"Feature"
 				],
-				"configuration": "./language-configuration.json"
+				"configuration": "./gherkin.language-configuration.json"
 			}
 		],
 		"grammars": [
 			{
-				"language": "behave",
-				"scopeName": "behave.grammar",
-				"path": "./grammar.json"
+				"language": "gherkin",
+				"scopeName": "gherkin.grammar",
+				"path": "./gherkin.grammar.json"
 			}
 		],
 		"menus": {

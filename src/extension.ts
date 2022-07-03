@@ -78,8 +78,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
-      vscode.languages.registerCompletionItemProvider('behave', autoCompleteProvider),
-      vscode.languages.registerDocumentRangeFormattingEditProvider('behave', formatFeatureProvider)
+      vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider),
+      vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
@@ -254,7 +254,6 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const wkspSettings = config.workspaceSettings[wkspUri.path];
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-  let refreshStepMappingsTS: vscode.CancellationTokenSource;
 
   const updater = async (uri: vscode.Uri) => {
     try {
@@ -265,14 +264,11 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
       if (isFeatureFile(uri))
         await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
 
-      await buildStepMappings(wkspSettings.featuresUri);
+      buildStepMappings(wkspSettings.featuresUri);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
-    }
-    finally {
-      refreshStepMappingsTS?.dispose();
     }
   }
 

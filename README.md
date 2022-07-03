@@ -1,25 +1,21 @@
 # Behave VSC
 
-- A test runner, debugger and navigator for Python behave tests in vscode
-- Built with the native Visual Studio Code Test API
-- Please see [troubleshooting](#troubleshooting) if you have any problems
-- [Release notes](https://github.com/jimasp/behave-vsc/releases)
-
----
+A test runner, debugger and navigator for Python behave tests, built with the native Visual Studio Code Test API.
 
 ## Features
-
-![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
+- Test runs log executed behaved commands in the output window so they can be inspected or run manually.
 - "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
+- Smart feature step auto-completion. (When editing a feature file, only steps that are valid in the context will be suggested, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.)
+- Feature file auto-indentation and keyword highlighting.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Smart feature step autocompletion. (When editing a feature file, only steps valid in the context will be shown, for example "But" after "Given" will only show `@given` or `@step` step suggestions.)
-- Feature file auto-indentation formatting and keyword highlighting.
+
+![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
 ---
 
@@ -106,8 +102,8 @@ paths=my_tests/behave_features
 
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
 - *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
-- *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your behave.ini file specifies `show_skipped=False`.
-- *How can I only execute specific tags while using the extension?* You can use the `tags=` setting in your behave.ini file. However this will not avoid the overhead associated with starting a behave process for each test, i.e. it will only be faster when either (a) you have runAllAsOne enabled and you run all tests in the workspace at once, or (b) you are effectively skipping slow tests. (If you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run a folder from the test tree in the UI instead.)
+- *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
+- *How can I only execute specific tags while using the extension?* You can use the `tags=` setting in your behave.ini file. However this will not avoid the overhead associated with starting a behave process for each test, i.e. it will only be faster when either (a) you have `runAllAsOne` enabled and you run all tests in the workspace at once, or (b) you are effectively skipping slow tests. (If you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run a folder from the test tree in the UI instead.)
 - *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the the outputted command and run it manually (or run `python -m behave` for all test output).
 - *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test, because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
@@ -119,7 +115,7 @@ paths=my_tests/behave_features
 
 ### If you have used a previous version of this extension
 
-- Please read through the [release notes](#release-notes) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues).
+- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues).
   
 ### Otherwise
 
