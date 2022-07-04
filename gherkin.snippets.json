@@ -12,7 +12,7 @@
     "Scenario Outline": {
         "prefix": "Scenario Outline",
         "body": [
-            "Scenario: name",
+            "Scenario Outline: name",
             "    Given \"<input>\"",
             "    When ",
             "    Then \"<output>\"",
@@ -24,6 +24,18 @@
             "    Examples: ex2",
             "        | in3 | out3 |",
             "        | in4 | out4 |",
+            "\n"
+        ]
+    },
+    "Scenario with result Table": {
+        "prefix": "Scenario Table",
+        "body": [
+            "Scenario: name",
+            "    Given ",
+            "    When ",
+            "    Then results are",
+            "        | out1 |",
+            "        | out2 |",
             "\n"
         ]
     }
