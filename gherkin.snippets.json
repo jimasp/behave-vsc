@@ -1,0 +1,30 @@
+{
+    "Scenario": {
+        "prefix": "Scenario",
+        "body": [
+            "Scenario: name",
+            "    Given ",
+            "    When ",
+            "    Then ",
+            "\n"
+        ]
+    },
+    "Scenario Outline": {
+        "prefix": "Scenario Outline",
+        "body": [
+            "Scenario: name",
+            "    Given \"<input>\"",
+            "    When ",
+            "    Then \"<output>\"",
+            "",
+            "    Examples: ex1",
+            "        | in1 | out1 |",
+            "        | in2 | out2 |",
+            "",
+            "    Examples: ex2",
+            "        | in3 | out3 |",
+            "        | in4 | out4 |",
+            "\n"
+        ]
+    }
+}

@@ -143,6 +143,12 @@
 				"path": "./gherkin.grammar.json"
 			}
 		],
+		"snippets": [
+			{
+				"language": "gherkin",
+				"path": "./gherkin.snippets.json"
+			}
+		],
 		"menus": {
 			"editor/context": [
 				{

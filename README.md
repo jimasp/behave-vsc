@@ -11,7 +11,7 @@ A test runner, debugger and navigator for Python behave tests, built with the na
 - "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
 - Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file auto-indentation and keyword highlighting.
+- Feature file formatting (Default keybinding Ctrl+K,Ctrl+F), auto-indentation, keyword highlighting and snippets.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
