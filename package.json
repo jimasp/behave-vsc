@@ -219,9 +219,10 @@
 	],
 	"keywords": [
 		"behave",
-		"feature",
 		"debug",
 		"python",
+		"feature",
+		"bdd",
 		"multi-root ready"
 	],
 	"qna": false,

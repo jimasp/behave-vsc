@@ -1,41 +1,61 @@
 {
     "Scenario": {
-        "prefix": "Scenario",
+        "prefix": [
+            "Scenario"
+        ],
         "body": [
-            "Scenario: name",
-            "    Given ",
-            "    When ",
-            "    Then ",
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\tWhen ",
+            "\tThen ",
             "\n"
         ]
     },
     "Scenario Outline": {
-        "prefix": "Scenario Outline",
+        "prefix": [
+            "Scenario Outline"
+        ],
         "body": [
-            "Scenario Outline: name",
-            "    Given \"<input>\"",
-            "    When ",
-            "    Then \"<output>\"",
+            "Scenario Outline: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven \"<input>\"",
+            "\tWhen ",
+            "\tThen \"<output>\"",
             "",
-            "    Examples: ex1",
-            "        | in1 | out1 |",
-            "        | in2 | out2 |",
+            "\tExamples: ex1",
+            "\t\t| in1 | out1 |",
+            "\t\t| in2 | out2 |",
             "",
-            "    Examples: ex2",
-            "        | in3 | out3 |",
-            "        | in4 | out4 |",
+            "\tExamples: ex2",
+            "\t\t| in3 | out3 |",
+            "\t\t| in4 | out4 |",
             "\n"
         ]
     },
-    "Scenario with result Table": {
-        "prefix": "Scenario Table",
+    "Scenario with Given Table": {
+        "prefix": [
+            "Scenario GT"
+        ],
         "body": [
-            "Scenario: name",
-            "    Given ",
-            "    When ",
-            "    Then results are",
-            "        | out1 |",
-            "        | out2 |",
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\t\t| a | b |",
+            "\t\t| c | d |",
+            "\tWhen ",
+            "\tThen ",
+            "\n"
+        ]
+    },
+    "Scenario with Then Table": {
+        "prefix": [
+            "Scenario TT"
+        ],
+        "body": [
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\tWhen ",
+            "\tThen the results are",
+            "\t\t| out1 |",
+            "\t\t| out2 |",
             "\n"
         ]
     }

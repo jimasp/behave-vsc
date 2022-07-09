@@ -24,12 +24,15 @@ export const autoCompleteProvider = {
       const matchText2 = `^step${sepr}${textWithoutType}`;
 
       if (stepType === "and" || stepType === "but") {
-        const lcPrevLine = document.lineAt(position.line - 1).text.trimStart().toLowerCase();
-        const prevStep = featureFileStepRe.exec(lcPrevLine);
-        if (!prevStep)
-          return;
-        const prevStepType = prevStep[1].trim();
-        matchText1 = `^${prevStepType}${sepr}${textWithoutType}`;
+        for (let i = position.line - 1; i > -1; i--) {
+          const lcPrevLine = document.lineAt(i).text.trimStart().toLowerCase();
+          const prevStep = featureFileStepRe.exec(lcPrevLine);
+          if (prevStep && prevStep[1].trim() !== "and" && prevStep[1].trim() !== "but") {
+            const prevStepType = prevStep[1].trim();
+            matchText1 = `^${prevStepType}${sepr}${textWithoutType}`;
+            break;
+          }
+        }
       }
 
       const stepFileSteps = getStepFileSteps(wkspSettings.featuresUri);
@@ -38,9 +41,13 @@ export const autoCompleteProvider = {
       for (const [key, value] of stepFileSteps) {
         const lcKey = key.toLowerCase();
         if (lcKey.startsWith(matchText1) || lcKey.startsWith(matchText2)) {
-          let itemText = value.textAsRe.replaceAll(".*", "?");
+          let itemText = value.textAsRe.startsWith(".*") ? " " + value.textAsRe.slice(1) : value.textAsRe;
+          itemText = value.textAsRe.replaceAll(".*", "?");
           // deal with e.g \( escapes in textAsRe
           itemText = itemText.replaceAll("\\\\", "#@slash@#").replaceAll("\\", "").replaceAll("#@slash@#", "\\");
+          itemText = itemText.replace(textWithoutType, "");
+          if (!itemText.startsWith(" "))
+            itemText = " " + itemText;
           const item = new vscode.CompletionItem(itemText, vscode.CompletionItemKind.Snippet);
           item.detail = vscode.workspace.asRelativePath(value.uri);
           items.push(item);

@@ -2,7 +2,6 @@
     "comments": {
         "lineComment": "#",
     },
-    "wordPattern": "[^\\s]", // this determines how autocomplete is triggered, e.g. test with quotes like: 'And "we" have'
     "onEnterRules": [
         // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#on-enter-rules
         {

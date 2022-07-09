@@ -1,17 +1,17 @@
 # Behave VSC
 
-A test runner, debugger and navigator for Python behave tests, built with the native Visual Studio Code Test API.
+Provides a test explorer/runner, debugging, step navigation/autocompletion, autoformatting and snippets for Python behave tests. Built with the native Visual Studio Code Test API.
 
 ## Features
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-- "Go to Step Definition" from inside a feature file. (Default keybinding Alt+F12.)
-- "Find All Step References" from inside a step file. (Default keybinding Alt+F12.)
-- Quickly navigate between steps in the Step References Window. (Default keybindings F4 + Shift F4.)
+- "Go to Step Definition" from inside a feature file. (Default Alt+F12.)
+- "Find All Step References" from inside a step file. (Default Alt+F12.)
+- Quickly navigate between steps in the Step References Window. (Default F4 + Shift F4.)
 - Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file formatting (Default keybinding Ctrl+K,Ctrl+F), auto-indentation, keyword highlighting and snippets.
+- Feature file formatting (Default Ctrl+K,Ctrl+F), auto-indentation, keyword highlighting and snippets.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
