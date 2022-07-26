@@ -104,8 +104,8 @@ export class Logger {
 
     if (error instanceof Error) {
       text = error.message;
-      if (config && config.globalSettings && config.globalSettings.xRay)
-        text += `\n${error.stack?.split("\n").slice(1).join("\n")}`;
+      if (error.stack && config && config.globalSettings && config.globalSettings.xRay)
+        text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
     }
     else {
       text = `${error}`;
