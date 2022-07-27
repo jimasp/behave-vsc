@@ -1,27 +1,34 @@
 {
     "scopeName": "gherkin.grammar",
+    "reference": "https://macromates.com/manual/en/language_grammars",
     "patterns": [
         {
             "match": "^\\s*#.*",
+            "name": "comment.line.number-sign"
+        },
+        {
+            "match": "^\\s*@.*",
+            "name": "keyword.control"
+        },
+        {
+            "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
             "captures": {
                 "1": {
-                    "name": "comment.line.number-sign"
+                    "name": "markup.bold"
+                },
+                "2": {
+                    "name": "entity.name.function"
                 }
             }
         },
         {
-            "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template|Examples):",
+            "match": "(?i)^\\s*(Given|When|Then|And|But|Examples)(?:\\:)?(.*)",
             "captures": {
                 "1": {
                     "name": "keyword"
-                }
-            }
-        },
-        {
-            "match": "(?i)^\\s*(Given|When|Then|And|But) ",
-            "captures": {
-                "1": {
-                    "name": "keyword"
+                },
+                "2": {
+                    "name": "string.interpolated"
                 }
             }
         }

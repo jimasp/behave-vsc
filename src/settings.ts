@@ -92,7 +92,7 @@ export class WorkspaceSettings {
       this.workspaceRelativeFeaturesPath = "features";
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
     if (this.workspaceRelativeFeaturesPath === ".")
-      this._fatalErrors.push(`Invalid "behave-vsc.featuresPath" value: "${featuresPathCfg}" is not a path to a features folder.`);
+      this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
       // note - this error should never happen or some logic/hooks are wrong 
       // (or the user has actually deleted/moved the features path since loading)
