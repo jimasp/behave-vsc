@@ -242,10 +242,10 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTestSuites.js --stable",
+		"test": "node ./out/_integrationTests/runTestSuites.js --stable",
 		"pretest": "npm run compile && npm run compile-tests && npm run lint",
 		"pretestinsiders": "npm run pretest",
-		"testinsiders": "node ./out/test/runTestSuites.js --insiders",
+		"testinsiders": "node ./out/_integrationTests/runTestSuites.js --insiders",
 		"rimraf": "./node_modules/rimraf/bin.js",
 		"clean-output": "rimraf out/ dist/"
 	},

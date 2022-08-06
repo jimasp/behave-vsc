@@ -114,7 +114,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project A",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/project A suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/project A suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -129,7 +129,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/project B suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/project B suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -144,7 +144,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/simple suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/simple suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -159,7 +159,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/multiroot.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/test/multiroot suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiroot suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

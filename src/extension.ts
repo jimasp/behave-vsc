@@ -14,7 +14,7 @@ import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsing/fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './runners/behaveDebug';
 import { performance } from 'perf_hooks';
