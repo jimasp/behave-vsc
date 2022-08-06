@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { uriMatchString, isStepsFile, sepr, basename, afterFirstSepr } from '../common';
+import { uriMatchString, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common';
 import { getContentFromFilesystem } from '../common';
 import { diagLog } from '../logger';
 
@@ -63,7 +63,7 @@ export async function parseStepsFile(featuresUri: vscode.Uri, stepFileUri: vscod
   let multiLine = "";
   let startLineNo = 0;
   let multiLineStepType = "";
-  const lines = content.trim().split('\n');
+  const lines = getLines(content.trim());
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 

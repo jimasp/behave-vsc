@@ -1,17 +1,19 @@
 # Behave VSC
 
-Provides a test explorer/runner, debugging, step navigation/autocompletion, autoformatting and snippets for Python behave tests. Built with the native Visual Studio Code Test API.
+This extension allows you to debug and run Python [behave](https://behave.readthedocs.io/) tests using the native Visual Studio Code Test API.  
+It also provides step navigation, autocompletion, syntax highlighting, autoformatting and snippets.
 
 ## Features
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
+- Review test run results in code lens in feature file.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - "Go to Step Definition" from inside a feature file. (Default Alt+F12.)
 - "Find All Step References" from inside a step file. (Default Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default F4 + Shift F4.)
 - Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file formatting (Default Ctrl+K,Ctrl+F), auto-indentation, keyword highlighting and snippets.
+- Feature file formatting (Default Ctrl+K,Ctrl+F), auto-indentation, syntax highlighting and snippets.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
@@ -128,9 +130,9 @@ paths=my_tests/behave_features
 - Does restarting vscode solve your issue?
 - Do you have runParallel turned on? Try turning it off.
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
-- Check if the problem is in [Known Issues](#known-issues-and-limitations)
+- Check if the problem is in [Known Issues](#known-issues-and-limitations) below
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
 - Try temporarily disabling other extensions.
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues).
 - Does your environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 - The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)

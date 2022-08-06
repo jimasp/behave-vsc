@@ -21,6 +21,7 @@ import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsing/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
+import { semHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -79,7 +80,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
       vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, " "),
-      vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider)
+      vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
+      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new semHighlightProvider(), semLegend)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();

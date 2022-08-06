@@ -11,24 +11,36 @@
             "name": "keyword.control"
         },
         {
+            "match": "\\|",
+            "name": "support.type"
+        },
+        {
             "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
             "captures": {
                 "1": {
                     "name": "markup.bold"
                 },
                 "2": {
-                    "name": "entity.name.function"
+                    "name": "variable.parameter"
                 }
             }
         },
         {
-            "match": "(?i)^\\s*(Given|When|Then|And|But|Examples)(?:\\:)?(.*)",
+            "match": "(?i)^\\s*(Given|When|Then|And|But)(?:\\:)?(.*)",
             "captures": {
                 "1": {
                     "name": "keyword"
                 },
                 "2": {
                     "name": "string.interpolated"
+                }
+            }
+        },
+        {
+            "match": "(?i)^\\s*(Examples):(.*)",
+            "captures": {
+                "1": {
+                    "name": "support.type"
                 }
             }
         }

@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsing/testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getLines
 } from '../common';
 import { QueueItem } from '../extension';
 import { FileParser } from '../parsing/fileParser';
@@ -94,7 +94,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
           if (test.uri && !coveredLines.has(uriMatchString(test.uri))) {
             try {
-              const lines = (await getContentFromFilesystem(test.uri)).split('\n');
+              const lines = getLines(await getContentFromFilesystem(test.uri));
               coveredLines.set(
                 uriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>

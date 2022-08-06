@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getWorkspaceUriForFile } from '../common';
+import { getWorkspaceUriForFile, getLines } from '../common';
 import { config } from '../configuration';
 
 
@@ -9,7 +9,7 @@ export const formatFeatureProvider = {
     try {
 
       const result = [];
-      const lines = document.getText().split("\n");
+      const lines = getLines(document.getText());
       let indent = "";
 
       for (let lineNo = 0; lineNo < lines.length; lineNo++) {

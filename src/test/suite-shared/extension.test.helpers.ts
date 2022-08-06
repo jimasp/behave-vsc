@@ -8,7 +8,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../parsing/fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile, getLines } from '../../common';
 import { featureFileStepRe } from '../../parsing/featureParser';
 import { funcRe } from '../../parsing/stepsParser';
 
@@ -101,7 +101,7 @@ type FileStep = {
 }
 
 function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
-	const lines = content.trim().split('\n');
+	const lines = getLines(content.trim());
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
 		const stExec = featureFileStepRe.exec(line);
@@ -113,7 +113,7 @@ function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps:
 }
 
 function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<FileStep, string>) {
-	const lines = content.trim().split('\n');
+	const lines = getLines(content.trim());
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
 		const prevLine = lineNo === 0 ? "" : lines[lineNo - 1].trim();

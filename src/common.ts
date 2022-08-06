@@ -327,3 +327,7 @@ export function basename(uri: vscode.Uri) {
     throw "could not determine file name from uri";
   return basename;
 }
+
+export function getLines(text: string) {
+  return text.split(/\r\n|\r|\n/);
+}
