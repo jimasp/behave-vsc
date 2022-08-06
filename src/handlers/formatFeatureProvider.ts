@@ -63,12 +63,12 @@ function getIndent(prevIndent: string, lineNo: number, lines: string[]): string 
   // note - behaviour should basically match up 
   // with gherkin.language-configuration.json - which is used for autoformat while typing
   const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
-  const oneIndent = /^\s*(@|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
+  const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
   const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
   const threeIndent = /^\s*\|.*/;
 
 
-  const line = lines[lineNo];
+  const line = lines[lineNo].trim();
   const nextLine = lineNo + 1 < lines.length ? lines[lineNo + 1] : undefined;
   if (nextLine && (line.startsWith("#") || line.startsWith("@")))
     return getIndent("", lineNo + 1, lines);
