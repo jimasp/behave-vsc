@@ -79,7 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
-      vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, " "),
+      vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
       vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
       vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new semHighlightProvider(), semLegend)
     );

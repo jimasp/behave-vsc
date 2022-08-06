@@ -222,9 +222,13 @@ If you have a customised fork and you want to distribute it to your team, you wi
 - Commit/push your changes to your forked branch.
 - Raise an issue describing the problem that the PR is resolving and link the PR in the issue.
 
-#### Testing your PR before submission
+### Testing your PR before submission
 
-#### 1. Run automated tests (to verify behave results and step references)
+Depending on the nature and size of your PR, you'll normally want to run some tests:
+
+#### 1. Run automated tests
+
+Note that the automated tests currently *only* verify the most important functionality, i.e. behave results and step references. They do not verify other built-in convenience features like automatic feature file reparsing, file autoformatting, autocompletion, syntax highlighting, etc. which should be tested manually if you have touched those or related areas.
 
 - Make sure you do not have the marketplace version of the extension installed
 - Close vscode and run `npm run test`
@@ -244,7 +248,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 
 After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
 
-Example: if you changed anything that affects step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
+Example: if you changed anything that affects any of step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
 
 - A. IMPORTANT:
   - i. make sure you do not have the marketplace version of the extension installed,

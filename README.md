@@ -1,7 +1,7 @@
 # Behave VSC
 
-This extension allows you to debug and run Python [behave](https://behave.readthedocs.io/) tests using the native Visual Studio Code Test API.  
-It also provides step navigation, autocompletion, syntax highlighting, autoformatting and snippets.
+This extension allows you to debug and run Python [behave](https://behave.readthedocs.io/) BDD tests using the native Visual Studio Code Test API.  
+It also provides two-way step navigation, Gherkin syntax highlighting, autoformatting, autocompletion, and a few snippets.
 
 ## Features
 
@@ -13,7 +13,7 @@ It also provides step navigation, autocompletion, syntax highlighting, autoforma
 - "Find All Step References" from inside a step file. (Default Alt+F12.)
 - Quickly navigate between steps in the Step References Window. (Default F4 + Shift F4.)
 - Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file formatting (Default Ctrl+K,Ctrl+F), auto-indentation, syntax highlighting and snippets.
+- Feature file formatting (Default Ctrl+K,Ctrl+F), syntax highlighting (including smart parameter highlighting) and some snippets.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
@@ -23,6 +23,7 @@ It also provides step navigation, autocompletion, syntax highlighting, autoforma
 ## Workspace requirements
 
 - No conflicting behave extension is enabled
+- No conflicting feature/gherkin formatter/autocomplete extension is enabled (alternatively, disable in this extension)
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
 - A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
