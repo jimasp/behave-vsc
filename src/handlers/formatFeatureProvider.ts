@@ -26,8 +26,8 @@ export const formatFeatureProvider = {
           continue;
         }
 
-        indent = getIndent(indent, line);
-        replacement = line.replace(/^\s*/, indent);
+        indent = getIndent(indent, lineNo, lines);
+        replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent);
         result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length)), replacement));
       }
 
@@ -47,19 +47,31 @@ export const formatFeatureProvider = {
 }
 
 
+function getLF(indent: string, lineNo: number, lines: string[]): string {
+  if (lineNo === 0)
+    return "";
+  const prevLine = lines[lineNo - 1].trim();
+  if (prevLine === "" || prevLine.startsWith("#") || prevLine.startsWith("@"))
+    return "";
+  return indent.length === indentSpaces.length ? "\n" : "";
+}
 
-function getIndent(prevIndent: string, line: string) {
 
-  // note - behaviour should basically match up with 
-  // gherkin.language-configuration.json - which is used for autoformat while typing
+const indentSpaces = "   ";
+function getIndent(prevIndent: string, lineNo: number, lines: string[]): string {
+
+  // note - behaviour should basically match up 
+  // with gherkin.language-configuration.json - which is used for autoformat while typing
   const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
   const oneIndent = /^\s*(@|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
   const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
   const threeIndent = /^\s*\|.*/;
-  const indentSpaces = "   ";
 
-  if (line.startsWith("#"))
-    return prevIndent;
+
+  const line = lines[lineNo];
+  const nextLine = lineNo + 1 < lines.length ? lines[lineNo + 1] : undefined;
+  if (nextLine && (line.startsWith("#") || line.startsWith("@")))
+    return getIndent("", lineNo + 1, lines);
 
   if (zeroIndent.test(line))
     return "";
