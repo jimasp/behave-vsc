@@ -50,7 +50,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
   try {
 
-    if ((!fileUri || !isStepsFile(fileUri) && textEditor)) {
+    if (textEditor && (!fileUri || !isStepsFile(fileUri))) {
       // this should never happen - command availability context is controlled by package.json editor/context
       throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }

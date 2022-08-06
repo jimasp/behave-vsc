@@ -105,15 +105,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
       let wkspSettings;
+
       try {
-        if (!item)
+        if (!item || !item.uri || item.uri?.scheme !== 'file')
           return;
 
         const data = testData.get(item);
-        if (data instanceof TestFile) {
-          wkspSettings = getWorkspaceSettingsForFile(item.uri);
-          await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
-        }
+        if (!(data instanceof TestFile))
+          return;
+
+        wkspSettings = getWorkspaceSettingsForFile(item.uri);
+        await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error
@@ -257,7 +259,11 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
   const updater = async (uri: vscode.Uri) => {
+    if (uri.scheme !== "file")
+      return;
+
     try {
+      console.log(`updater: ${uri.fsPath}`);
       await parser.reparseFile(uri, wkspSettings, testData, ctrl);
     }
     catch (e: unknown) {
@@ -275,23 +281,25 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
   // fires on either file/folder delete OR rename (inc. git actions)
   watcher.onDidDelete(uri => {
-
-    const path = uri.path.toLowerCase();
-
-    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
-    // files, but we cannot determine if this is a file or folder deletion as:
-    //   (a) it has been deleted so we can't stat it, and 
-    //   (b) "." is valid in folder names so we can't determine by looking at the path
-    // but we can ignore specific file extensions or paths we know we don't care about
-    if (path.endsWith(".tmp")) // .tmp = vscode file history file
+    if (uri.scheme !== "file")
       return;
 
-    // log for extension developers in case we need to add another file type above
-    if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
-    }
-
     try {
+      const path = uri.path.toLowerCase();
+
+      // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
+      // files, but we cannot determine if this is a file or folder deletion as:
+      //   (a) it has been deleted so we can't stat it, and 
+      //   (b) "." is valid in folder names so we can't determine by looking at the path
+      // but we can ignore specific file extensions or paths we know we don't care about
+      if (path.endsWith(".tmp")) // .tmp = vscode file history file
+        return;
+
+      // log for extension developers in case we need to add another file type above
+      if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+        diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
+      }
+
       parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {
