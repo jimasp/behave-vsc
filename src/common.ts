@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { Scenario, TestData } from './parsing/testFile';
+import { Scenario, TestData } from './parsers/testFile';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
 

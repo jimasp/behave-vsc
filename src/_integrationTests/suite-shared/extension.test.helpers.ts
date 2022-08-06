@@ -7,10 +7,10 @@ import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { WkspParseCounts } from '../../parsing/fileParser';
+import { WkspParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile, getLines } from '../../common';
-import { featureFileStepRe } from '../../parsing/featureParser';
-import { funcRe } from '../../parsing/stepsParser';
+import { featureFileStepRe } from '../../parsers/featureParser';
+import { funcRe } from '../../parsers/stepsParser';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { getWorkspaceUriForFile, getLines } from '../common';
 import { config } from '../configuration';
-import { featureFileStepRe } from '../parsing/featureParser';
-import { getStepFileStepForFeatureFileStep } from '../parsing/stepMappings';
-import { parseRepWildcard } from '../parsing/stepsParser';
+import { featureFileStepRe } from '../parsers/featureParser';
+import { getStepFileStepForFeatureFileStep } from '../parsers/stepMappings';
+import { parseRepWildcard } from '../parsers/stepsParser';
 
 const tokenTypes = new Map<string, number>();
 

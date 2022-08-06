@@ -2,14 +2,14 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { Scenario, TestData, TestFile } from '../parsing/testFile';
+import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getLines
 } from '../common';
 import { QueueItem } from '../extension';
-import { FileParser } from '../parsing/fileParser';
+import { FileParser } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../logger';
 
 

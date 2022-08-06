@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from '../parsing/junitParser';
+import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from '../parsers/junitParser';
 import { QueueItem } from '../extension';
 import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from '../common';
 import { diagLog } from '../logger';

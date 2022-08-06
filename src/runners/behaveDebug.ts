@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { parseAndUpdateTestResults } from '../parsing/junitParser';
+import { parseAndUpdateTestResults } from '../parsers/junitParser';
 import { QueueItem } from '../extension';
 import { diagLog } from '../logger';
 import { cancelTestRun } from './testRunHandler';

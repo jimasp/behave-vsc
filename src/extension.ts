@@ -3,22 +3,22 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { BehaveTestData, Scenario, TestData, TestFile } from './parsing/testFile';
+import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   basename,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepFileStep } from './parsing/stepsParser';
+import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
-import { FileParser } from './parsing/fileParser';
+import { FileParser } from './parsers/fileParser';
 import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
 import { getDebugAdapterTrackerFactory } from './runners/behaveDebug';
 import { performance } from 'perf_hooks';
-import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsing/stepMappings';
+import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { semHighlightProvider, semLegend } from './handlers/semHighlightProvider';

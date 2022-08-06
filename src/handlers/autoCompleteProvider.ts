@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, sepr } from '../common';
 import { config } from '../configuration';
-import { featureFileStepRe } from "../parsing/featureParser";
-import { getStepFileSteps } from '../parsing/stepsParser';
+import { featureFileStepRe } from "../parsers/featureParser";
+import { getStepFileSteps } from '../parsers/stepsParser';
 
 
 export const autoCompleteProvider = {

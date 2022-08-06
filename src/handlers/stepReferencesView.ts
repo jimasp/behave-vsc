@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { openDocumentRange, urisMatch } from '../common';
-import { FeatureFileStep } from '../parsing/featureParser';
+import { FeatureFileStep } from '../parsers/featureParser';
 
 
 export class StepReference extends vscode.TreeItem {

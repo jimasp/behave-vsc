@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { WkspParseCounts } from "../../parsing/fileParser";
+import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 
