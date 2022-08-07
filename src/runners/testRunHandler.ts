@@ -199,7 +199,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       const runTestQueue = async (request: vscode.TestRunRequest) => {
 
         if (!debug)
-          run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
+          run.appendOutput(`\r\n=== starting test run ${run.name} @${new Date().toISOString()} ===\r\n`);
 
         if (queue.length === 0) {
           throw "empty queue - nothing to do";
@@ -230,7 +230,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           await Promise.all(wkspRunPromises);
 
         if (!debug)
-          run.appendOutput(`\n=== test run ${run.name} complete @${new Date().toISOString()} ===\n`);
+          run.appendOutput(`\r\n=== test run ${run.name} complete @${new Date().toISOString()} ===\r\n`);
       };
 
 

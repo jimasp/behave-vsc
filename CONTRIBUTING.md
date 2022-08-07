@@ -162,7 +162,7 @@ If you want to add a test, they should go somewhere in `src/test`.
 - Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` wherever possible.
 - Log info to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *This should only be used where a workspace context does not make sense.*
 - Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
-- Log only to the vscode test run output: `run.appendOutput("msg")`.
+- Log only to the vscode test run output: `run.appendOutput("msg\r\n")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 
 ---

@@ -60,7 +60,7 @@ export class Logger {
     }
 
     if (run)
-      run.appendOutput(text + "\n");
+      run.appendOutput(text + "\r\n");
   };
 
 
@@ -69,7 +69,7 @@ export class Logger {
 
     this.channels[wkspUri.path].appendLine(text);
     if (run)
-      run.appendOutput(text + "\n");
+      run.appendOutput(text + "\r\n");
   };
 
   // log info without a line feed (used for logging behave output)
@@ -89,7 +89,7 @@ export class Logger {
     this.channels[wkspUri.path].show(true);
 
     if (run)
-      run.appendOutput(text + "\n");
+      run.appendOutput(text + "\r\n");
   };
 
 
@@ -159,7 +159,7 @@ export class Logger {
 
     //vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
-      run.appendOutput(text + "\n");
+      run.appendOutput(text.replace("\n", "\r\n") + "\r\n");
   }
 }
 
