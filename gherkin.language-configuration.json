@@ -1,9 +1,9 @@
 {
+    // https://code.visualstudio.com/api/language-extensions/language-configuration-guide
     "comments": {
         "lineComment": "#",
     },
     "onEnterRules": [
-        // https://code.visualstudio.com/api/language-extensions/language-configuration-guide#on-enter-rules
         {
             "beforeText": "^\\s+$",
             "previousLineText": "^(?!\\s*Feature:).*$", // (does not match)
@@ -16,6 +16,6 @@
             "action": {
                 "indent": "indent"
             }
-        },
+        }
     ],
 }

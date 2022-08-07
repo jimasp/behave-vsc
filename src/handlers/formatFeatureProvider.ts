@@ -15,8 +15,6 @@ export const formatFeatureProvider = {
       for (let lineNo = 0; lineNo < lines.length; lineNo++) {
         const line = document.lineAt(lineNo).text;
 
-        let replacement = "";
-
         if (line.trim() === "") {
           if (lineNo > 0) {
             const before = document.lineAt(lineNo - 1).text;
@@ -27,7 +25,7 @@ export const formatFeatureProvider = {
         }
 
         indent = getIndent(indent, lineNo, lines);
-        replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent);
+        const replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent);
         result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length)), replacement));
       }
 
@@ -51,13 +49,15 @@ function getLF(indent: string, lineNo: number, lines: string[]): string {
   if (lineNo === 0)
     return "";
   const prevLine = lines[lineNo - 1].trim();
+  const line = lines[lineNo].trim();
   if (prevLine === "" || prevLine.startsWith("#") || prevLine.startsWith("@"))
     return "";
-  return indent.length === indentSpaces.length ? "\n" : "";
+  if (line.startsWith("Examples:"))
+    return "\n";
+  return indent.length === 1 ? "\n" : "";
 }
 
 
-const indentSpaces = "   ";
 function getIndent(prevIndent: string, lineNo: number, lines: string[]): string {
 
   // note - behaviour should basically match up 
@@ -66,7 +66,7 @@ function getIndent(prevIndent: string, lineNo: number, lines: string[]): string 
   const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
   const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
   const threeIndent = /^\s*\|.*/;
-
+  const indent = "\t";
 
   const line = lines[lineNo].trim();
   const nextLine = lineNo + 1 < lines.length ? lines[lineNo + 1] : undefined;
@@ -77,13 +77,13 @@ function getIndent(prevIndent: string, lineNo: number, lines: string[]): string 
     return "";
 
   if (oneIndent.test(line))
-    return indentSpaces;
+    return indent;
 
   if (twoIndent.test(line))
-    return indentSpaces.repeat(2);
+    return indent.repeat(2);
 
   if (threeIndent.test(line))
-    return indentSpaces.repeat(3);
+    return indent.repeat(3);
 
   return prevIndent;
 }

@@ -7,8 +7,7 @@
             "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
             "\tGiven ",
             "\tWhen ",
-            "\tThen ",
-            "\n"
+            "\tThen "
         ]
     },
     "Scenario Outline": {
@@ -27,8 +26,7 @@
             "",
             "\tExamples: ex2",
             "\t\t| in3 | out3 |",
-            "\t\t| in4 | out4 |",
-            "\n"
+            "\t\t| in4 | out4 |"
         ]
     },
     "Scenario with Given Table": {
@@ -41,8 +39,7 @@
             "\t\t| a | b |",
             "\t\t| c | d |",
             "\tWhen ",
-            "\tThen ",
-            "\n"
+            "\tThen "
         ]
     },
     "Scenario with Then Table": {
@@ -55,8 +52,17 @@
             "\tWhen ",
             "\tThen the results are",
             "\t\t| out1 |",
-            "\t\t| out2 |",
-            "\n"
+            "\t\t| out2 |"
+        ]
+    },
+    "Examples": {
+        "prefix": [
+            "Examples"
+        ],
+        "body": [
+            "\nExamples: ${1:ex_${TM_LINE_NUMBER}}$0",
+            "\t| in1 | out1 |",
+            "\t| in2 | out2 |"
         ]
     }
 }

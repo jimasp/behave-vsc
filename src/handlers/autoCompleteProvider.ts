@@ -45,9 +45,7 @@ export const autoCompleteProvider = {
           itemText = value.textAsRe.replaceAll(".*", "?");
           // deal with e.g \( escapes in textAsRe
           itemText = itemText.replaceAll("\\\\", "#@slash@#").replaceAll("\\", "").replaceAll("#@slash@#", "\\");
-          itemText = itemText.replace(textWithoutType, "");
-          // if (!itemText.startsWith(" "))
-          //   itemText = " " + itemText;
+          itemText = itemText.replace(textWithoutType, "").trim();
           const item = new vscode.CompletionItem(itemText, vscode.CompletionItemKind.Snippet);
           item.detail = vscode.workspace.asRelativePath(value.uri);
           items.push(item);
