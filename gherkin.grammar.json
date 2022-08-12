@@ -21,7 +21,7 @@
                     "name": "markup.bold"
                 },
                 "2": {
-                    "name": "variable.parameter"
+                    "name": "string.interpolated"
                 }
             }
         },
@@ -32,7 +32,7 @@
                     "name": "keyword"
                 },
                 "2": {
-                    "name": "string.interpolated"
+                    "name": "variable.parameter"
                 }
             }
         },

@@ -8,7 +8,15 @@ import { parseRepWildcard } from '../parsers/stepsParser';
 const tokenTypes = new Map<string, number>();
 
 export const semLegend = (function () {
-	const tokenTypesLegend = ['function'];
+	const tokenTypesLegend = [
+		"keyword",
+		"function",
+		"class",
+		"variable.parameter",
+		"string.interpolated",
+		"keyword.control.flow",
+		"comment.line.number-sign"
+	];
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 	return new vscode.SemanticTokensLegend(tokenTypesLegend);
 })();
