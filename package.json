@@ -108,8 +108,8 @@
 			{
 				"id": "gherkin",
 				"icon": {
-					"light": "./images/behave-vsc.png",
-					"dark": "./images/behave-vsc.png"
+					"light": "./images/gherkin.png",
+					"dark": "./images/gherkin.png"
 				},
 				"extensions": [
 					"feature"
