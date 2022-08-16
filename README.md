@@ -1,7 +1,7 @@
 # Behave VSC
 
-This extension allows you to debug and run Python [behave](https://behave.readthedocs.io/) BDD tests using the native Visual Studio Code Test API.  
-It also provides two-way step navigation, Gherkin syntax highlighting, autoformatting, autocompletion, and a few snippets.
+Debug and run Python [behave](https://behave.readthedocs.io/) BDD tests using the native Visual Studio Code Test API.  
+Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, autocompletion, and a few basic snippets.
 
 ## Features
 
@@ -9,11 +9,12 @@ It also provides two-way step navigation, Gherkin syntax highlighting, autoforma
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
 - Review test run results in code lens in feature file.
 - Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
-- "Go to Step Definition" from inside a feature file. (Default Alt+F12.)
-- "Find All Step References" from inside a step file. (Default Alt+F12.)
-- Quickly navigate between steps in the Step References Window. (Default F4 + Shift F4.)
+- Two-way step navigation:
+  - "Go to Step Definition" from inside a feature file (default Alt+F12).
+  - "Find All Step References" from inside a step file (default Alt+F12).
+  - Quickly navigate between steps in the Step References Window (default F4 + Shift F4).
 - Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file formatting (Default Ctrl+K,Ctrl+F), syntax highlighting (including smart parameter highlighting) and some snippets.
+- Feature file formatting (default Ctrl+K,Ctrl+F), automatic Gherkin syntax highlighting (including smart parameter highlighting), and some snippets thrown in.
 - Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
