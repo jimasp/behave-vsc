@@ -179,7 +179,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug, Run and Navigate Python behave tests",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
