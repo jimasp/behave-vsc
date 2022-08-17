@@ -108,7 +108,7 @@ paths=my_tests/behave_features
 - *How can I only execute specific tags while using the extension?* You have (at least) four options. The first two options will not avoid the overhead associated with starting a behave process for each test, i.e. the first two will only be notably faster when either (a) you have `runAllAsOne` enabled (the default) and you run are running all tests in the workspace at once, or (b) you are skipping slow tests.
 
   - (slow, simple) use the `default_tags=` setting in your behave.ini file.
-  - (slow, highly flexible) use the `envVarOverrides` extension setting to set an environment variable. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, or (c) to control `scenario.skip()`.
+  - (slow, highly flexible) use the `envVarOverrides` extension setting to set an environment variable. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, (c) to control `scenario.skip()`, or (d) to control a behave `before_all` for a completely custom setup.
   - (fast, simple) use the `fastSkipTags` extension setting. (For the inverse case of "do not run these tags".)
   - (fast, flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.  
   
