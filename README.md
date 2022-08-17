@@ -105,12 +105,12 @@ paths=my_tests/behave_features
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
 - *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
-- *How can I only execute specific tags while using the extension?* You have (at least) four options (below). The first two options will not avoid the overhead associated with starting a behave process for each test, i.e. these will only be notably faster when either (a) you have `runAllAsOne` enabled (the default) and you run are running all tests in the workspace, or (b) you are skipping slow tests.
+- *How can I only execute specific tags while using the extension?* You have (at least) four options. The first two options will not avoid the overhead associated with starting a behave process for each test, i.e. the first two will only be notably faster when either (a) you have `runAllAsOne` enabled (the default) and you run are running all tests in the workspace at once, or (b) you are skipping slow tests.
 
-  - (Slow) use the `default_tags=` setting in your behave.ini file.
-  - (Slow and highly flexible) use the `envVarOverrides` extension setting to set an environment variable. This adds endless possibilities, but the most obvious approach is to control a behave `active_tag_value_provider`.
-  - (Fast) use the `fastSkipTags` extension setting. (For the inverse case of "do not run these tags".)
-  - (Fast and flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.  
+  - (slow, simple) use the `default_tags=` setting in your behave.ini file.
+  - (slow, highly flexible) use the `envVarOverrides` extension setting to set an environment variable. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, or (c) to control `scenario.skip()`.
+  - (fast, simple) use the `fastSkipTags` extension setting. (For the inverse case of "do not run these tags".)
+  - (fast, flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.  
   
 - *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the outputted command and run it manually (or run `python -m behave` for all test output).
