@@ -10,12 +10,14 @@ const tokenTypes = new Map<string, number>();
 export const semLegend = (function () {
 	const tokenTypesLegend = [
 		"keyword",
+		"keyword.control",
 		"function",
 		"class",
+		"markup.bold",
 		"variable.parameter",
 		"string.interpolated",
-		"keyword.control.flow",
-		"comment.line.number-sign"
+		"comment.line",
+		"constant.numeric"
 	];
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 	return new vscode.SemanticTokensLegend(tokenTypesLegend);

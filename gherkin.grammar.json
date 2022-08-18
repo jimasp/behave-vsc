@@ -4,7 +4,7 @@
     "patterns": [
         {
             "match": "^\\s*#.*",
-            "name": "comment.line.number-sign"
+            "name": "comment.line"
         },
         {
             "match": "^\\s*@.*",
@@ -37,10 +37,13 @@
             }
         },
         {
-            "match": "(?i)^\\s*(Examples):(.*)",
+            "match": "(?i)^\\s*(Examples?):(.*)",
             "captures": {
                 "1": {
                     "name": "support.type"
+                },
+                "2": {
+                    "name": "constant.numeric"
                 }
             }
         }
