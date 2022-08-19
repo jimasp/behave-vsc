@@ -64,8 +64,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 	if (match.length !== 1) {
 		console.log(actualResult);
-		// eslint-disable-next-line no-debugger
-		debugger; // UHOH (did you add a new scenario that hasn't been added to expected results yet? IF a new scenario has been added: see debug console and copy/paste into ws?.expectedResults.ts)
+		// UHOH (did you add a new scenario that hasn't been added to expected results yet? 
+		// IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
+		debugger; // eslint-disable-line no-debugger
 		throw `match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`;
 	}
 
@@ -266,18 +267,18 @@ function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: str
 	try {
 		const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
-		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName);
-		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName);
-		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName);
-		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName);
-		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
-		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
+		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName + ": featureFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName + ": stepFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName + ": stepFileStepsExceptCommentedOut");
+		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName + ": featureFileStepsExceptCommentedOut");
+		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName + ": stepMappings");
+		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName + ": testCount");
 
 		if (hasMuliRootWkspNode) {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName);
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName + ": nodeCount");
 		}
 		else {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName);
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName + ": nodeCount");
 		}
 	}
 	catch (e: unknown) {

@@ -10,7 +10,7 @@ export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config
     tests: { nodeCount: 52, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 104, stepMappings: 103 // (1 diff = When we have a missing step)
+    featureFileStepsExceptCommentedOut: 104, stepMappings: 103 // (1 diff = "When we have a missing step")
   };
 }
 

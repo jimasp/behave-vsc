@@ -6,10 +6,10 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(debug, wkspUri, config).length;
   return {
-    tests: { nodeCount: 84, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 18, stepFilesExceptEmptyOrCommentedOut: 4,
-    stepFileStepsExceptCommentedOut: 38,
-    featureFileStepsExceptCommentedOut: 142, stepMappings: 141  // (1 diff = When we have a missing step)
+    tests: { nodeCount: 87, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 19, stepFilesExceptEmptyOrCommentedOut: 5,
+    stepFileStepsExceptCommentedOut: 44,
+    featureFileStepsExceptCommentedOut: 149, stepMappings: 148  // (1 diff = "When we have a missing step")
   };
 }
 
@@ -1085,6 +1085,40 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       test_parent: '.../project B/features/goto_step.feature',
       test_uri: '.../project B/features/goto_step.feature'
     }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/background.feature',
+      scenario_featureName: 'With background',
+      scenario_getLabel: 'add',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'add',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/background.feature/add',
+      test_label: 'add',
+      test_parent: '.../project B/features/background.feature',
+      test_uri: '.../project B/features/background.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/background.feature',
+      scenario_featureName: 'With background',
+      scenario_getLabel: 'multiply',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'multiply',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/background.feature/multiply',
+      test_label: 'multiply',
+      test_parent: '.../project B/features/background.feature',
+      test_uri: '.../project B/features/background.feature'
+    })
 
   ];
 
