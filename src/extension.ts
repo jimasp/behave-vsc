@@ -77,12 +77,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
 
-      // this isn't a great idea, however it should be fine as long as the function "cancelTestRun" returns fast and cannot fail
+      // this isn't the best solution, but its the best for now.
+      // it should be fine as long as the function "cancelTestRun" returns fast and cannot fail.
       // (unfortunately its currently impossible using a debugpy debug tracker to distinguish between a user clicking 
       // a debug stop or a normal automatic debug session termination that will work cross plaform, i.e. on both windows and linux.
       // on the plus side this reacts much faster than using a debug tracker and so it gives a better user experience)
       // see: https://github.com/microsoft/vscode/issues/145159
-      vscode.commands.registerCommand("workbench.action.debug.stop", () => cancelTestRun("workbench.action.debug.stop"))
+      vscode.commands.registerCommand("workbench.action.debug.stop", () => cancelTestRun("debug stop clicked"))
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
