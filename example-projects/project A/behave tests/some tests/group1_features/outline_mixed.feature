@@ -1,6 +1,6 @@
 Feature: Mixed outline
 
-Scenario Outline: Blenders Success
+Scenario Outline: Blenders Success <thing>
    Given I put "<thing>" in a blender
     when I switch the blender on
     then it should transform into "<other thing>"
@@ -14,7 +14,23 @@ Examples: Consumer Electronics
    | iPhone        | toxic waste |
    | Galaxy Nexus  | toxic waste |
 
-Scenario Outline: Blenders Fail
+
+Scenario Outline: Blenders Success paramless
+   Given I put "<thing>" in a blender
+    when I switch the blender on
+    then it should transform into "<other thing>"
+
+Examples: Amphibians
+   | thing         | other thing |
+   | Red Tree Frog | mush        |
+
+Examples: Consumer Electronics
+   | thing         | other thing |
+   | iPhone        | toxic waste |
+   | Galaxy Nexus  | toxic waste |   
+
+
+Scenario Outline: Blenders Fail <thing>
    Given I put "<thing>" in a blender
     when I switch the blender on
     then it should transform into "<other thing>"
@@ -31,7 +47,7 @@ Examples: Consumer Electronics
 
 
 @normal_skip
-Scenario Outline: Blenders Skip
+Scenario Outline: Blenders Skip <thing>
    Given I put "<thing>" in a blender
     when I switch the blender on
     then it should transform into "<other thing>"
@@ -46,7 +62,7 @@ Examples: Consumer Electronics
    | Galaxy Nexus  | toxic waste |      
 
 
-Scenario Outline: Blenders Fail 2
+Scenario Outline: Blenders Fail paramless
    Given I put "<thing>" in a blender
     when I switch the blender on
     then it should transform into "<other thing>"
@@ -78,7 +94,7 @@ Examples: Consumer Electronics
    | Galaxy Nexus  | toxic waste |   
 
 
-Scenario Outline: Blenders Success 2
+Scenario Outline: Blenders Success "<thing>"
    Given I put "<thing>" in a blender
     when I switch the blender on
     then it should transform into "<other thing>"

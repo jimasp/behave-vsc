@@ -7,10 +7,10 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getWs1ExpectedResults(debug, wkspUri, config).length;
   return {
-    tests: { nodeCount: 52, testCount: testCount },
+    tests: { nodeCount: 53, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 104, stepMappings: 103 // (1 diff = When we have a missing step)
+    featureFileStepsExceptCommentedOut: 107, stepMappings: 106 // (1 diff = When we have a missing step)
   };
 }
 
@@ -33,6 +33,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -49,6 +50,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -65,6 +67,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -81,6 +84,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -97,6 +101,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -113,6 +118,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Basic',
@@ -163,6 +169,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/fastskip_feature.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/fastskip_feature.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'skipped feature',
@@ -179,6 +186,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/skipped.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/skipped.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
@@ -195,6 +203,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/contains_regexchars.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/contains_regexchars.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
@@ -211,6 +220,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
@@ -227,6 +237,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
@@ -243,6 +254,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed skip scenarios',
@@ -259,6 +271,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed skip scenarios',
@@ -275,6 +288,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/mixed_skip.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Duplicate',
@@ -291,6 +305,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group2_features/duplicate.feature',
       test_uri: '.../project A/{{featurePath}}/group2_features/duplicate.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Table feature',
@@ -307,6 +322,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/table.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/table.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Table feature',
@@ -323,6 +339,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/table.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/table.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Text block',
@@ -355,70 +372,92 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/textblock.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/textblock.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Success',
+      scenario_getLabel: 'Blenders Success <thing>',
       scenario_isOutline: true,
       scenario_result: 'passed',
-      scenario_scenarioName: 'Blenders Success',
+      scenario_scenarioName: 'Blenders Success <thing>',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success',
-      test_label: 'Blenders Success',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success <thing>',
+      test_label: 'Blenders Success <thing>',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Fail',
+      scenario_getLabel: 'Blenders Success paramless',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success paramless',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success paramless',
+      test_label: 'Blenders Success paramless',
+      test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Fail <thing>',
       scenario_isOutline: true,
       scenario_result: 'Failing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
-      scenario_scenarioName: 'Blenders Fail',
+      scenario_scenarioName: 'Blenders Fail <thing>',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail',
-      test_label: 'Blenders Fail',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail <thing>',
+      test_label: 'Blenders Fail <thing>',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Skip',
+      scenario_getLabel: 'Blenders Skip <thing>',
       scenario_isOutline: true,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'Blenders Skip',
+      scenario_scenarioName: 'Blenders Skip <thing>',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Skip',
-      test_label: 'Blenders Skip',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Skip <thing>',
+      test_label: 'Blenders Skip <thing>',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Fail 2',
+      scenario_getLabel: 'Blenders Fail paramless',
       scenario_isOutline: true,
       scenario_result: 'Failing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
-      scenario_scenarioName: 'Blenders Fail 2',
+      scenario_scenarioName: 'Blenders Fail paramless',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail 2',
-      test_label: 'Blenders Fail 2',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Fail paramless',
+      test_label: 'Blenders Fail paramless',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed outline',
@@ -435,22 +474,24 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Success 2',
+      scenario_getLabel: 'Blenders Success "<thing>"',
       scenario_isOutline: true,
       scenario_result: 'passed',
-      scenario_scenarioName: 'Blenders Success 2',
+      scenario_scenarioName: 'Blenders Success "<thing>"',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success 2',
-      test_label: 'Blenders Success 2',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success "<thing>"',
+      test_label: 'Blenders Success "<thing>"',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: true,
       scenario_featureName: 'Mixed outline',
@@ -467,6 +508,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Duplicate',
@@ -483,6 +525,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/duplicate.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/duplicate.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Outline success',
@@ -499,6 +542,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_success.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_success.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureName: 'Outline success',
@@ -515,6 +559,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_success.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_success.feature'
     }),
+
     new TestResult({
       scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',

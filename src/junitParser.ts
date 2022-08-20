@@ -206,18 +206,37 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
   const fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
   const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
   const scenarioName = queueItem.scenario.scenarioName;
-  const queueItemResults = junitContents.testsuite.testcase.filter(tc =>
-    tc.$.classname === className && (tc.$.name === scenarioName || tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName)
+
+  // normal scenario
+  let queueItemResults = junitContents.testsuite.testcase.filter(tc =>
+    tc.$.classname === className && tc.$.name === scenarioName
   );
 
-  if (!queueItemResults || queueItemResults.length === 0) {
+  // scenario outline
+  if (queueItemResults.length === 0) {
+    queueItemResults = junitContents.testsuite.testcase.filter(tc =>
+      tc.$.classname === className && tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName
+    );
+  }
+
+  // scenario outline with <param> in scenario outline name
+  if (queueItemResults.length === 0 && scenarioName.includes("<")) {
+    queueItemResults = junitContents.testsuite.testcase.filter(tc => {
+      const jScenName = tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @"));
+      const rx = new RegExp(scenarioName.replace(/<.*>/g, ".*"));
+      return tc.$.classname === className && rx.test(jScenName);
+    });
+  }
+
+
+  if (queueItemResults.length === 0) {
     throw `could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
     `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`;
   }
 
   let queueItemResult = queueItemResults[0];
 
-  // outline
+  // scenario outline
   if (queueItemResults.length > 1) {
     for (const qir of queueItemResults) {
       if (qir.$.status === "failed") {
