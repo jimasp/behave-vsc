@@ -78,7 +78,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
 
       // this isn't the best solution, but its the best for now.
-      // it should be fine as long as the function "cancelTestRun" returns fast and cannot fail.
+      // it should be just fine as long as the function "cancelTestRun" returns fast and cannot fail.
       // (unfortunately its currently impossible using a debugpy debug tracker to distinguish between a user clicking 
       // a debug stop or a normal automatic debug session termination that will work cross plaform, i.e. on both windows and linux.
       // on the plus side this reacts much faster than using a debug tracker and so it gives a better user experience)
