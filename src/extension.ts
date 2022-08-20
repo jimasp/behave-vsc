@@ -77,7 +77,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
 
-      // this isn't the best solution for detecting debug stop, but its the best we can do for now.
+      // this isn't the best mechanism for detecting debug stop, but its the best we can do for now.
       // it should work just fine as long as the function "cancelTestRun" returns fast and cannot fail.
       // (unfortunately since changes to debugpy, its currently impossible using a debug tracker to distinguish between a user clicking 
       // a debug stop or a normal automatic debug session termination on windows.
