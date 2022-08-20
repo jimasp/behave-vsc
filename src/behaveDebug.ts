@@ -45,9 +45,11 @@ export function getDebugAdapterTrackerFactory() {
 
             if (m.event === "exited") {
               if (!threadExit) {
-                // exit, but not a thread exit, so we need to stop the run
-                // (most likely debug was stopped by user)
-                cancelTestRun("onDidSendMessage (debug stop)");
+                if (m.body?.exitCode !== 1) {
+                  // successful exit, but not a thread exit, so we need to stop the run
+                  // (i.e. most likely debug was stopped by user)
+                  cancelTestRun("onDidSendMessage (debug stop)");
+                }
               }
             }
           }
