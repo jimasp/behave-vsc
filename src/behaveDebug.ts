@@ -37,7 +37,7 @@ export function getDebugAdapterTrackerFactory() {
               return;
             }
 
-            if (m.body?.reason === "exited" && m.body?.threadId) {
+            if (m.event === "terminated" || (m.body?.reason === "exited" && m.body?.threadId)) {
               // mark threadExit for subsequent calls
               threadExit = true;
               return;
