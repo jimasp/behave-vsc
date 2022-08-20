@@ -9,17 +9,14 @@ import { isBehaveExecutionError } from './common';
 import { performance } from 'perf_hooks';
 
 
+// debug tracker to set behaveExecutionError flag so we can terminate and 
+// mark tests failed for behave execution errors
 let behaveExecutionError = false;
-
-// onDidTerminateDebugSession doesn't provide a reason for the termination,
-// so we need to check the reason from the debug adapter protocol
-// secondary purpose is to set behaveExecutionError flag so we can mark test as failed
 export function getDebugAdapterTrackerFactory() {
   return vscode.debug.registerDebugAdapterTrackerFactory('*', {
 
     // this function will get called for each debug session
     createDebugAdapterTracker() {
-      let threadExit = false;
 
       return {
         onDidSendMessage: (m) => {
@@ -37,17 +34,6 @@ export function getDebugAdapterTrackerFactory() {
               return;
             }
 
-            if (m.event === "terminated" || (m.body?.reason === "exited" && m.body?.threadId)) {
-              // mark threadExit for subsequent calls
-              threadExit = true;
-              return;
-            }
-
-            if (m.body?.exitCode && !threadExit) {
-              // disconnect, but not a thread exit, so we need to stop the run
-              // (i.e. most likely debug was stopped by user)
-              cancelTestRun("onDidSendMessage (debug stop)");
-            }
           }
           catch (e: unknown) {
             cancelTestRun("onDidSendMessage (error)");
@@ -102,7 +88,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
     return await new Promise((resolve, reject) => {
       // debug stopped or completed    
-      const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
+      const terminateEvent = vscode.debug.onDidTerminateDebugSession(async (e) => {
         try {
           if (!cancelToken.isCancellationRequested) {
             // the test run will have been terminated, so we cannot update the test result             
