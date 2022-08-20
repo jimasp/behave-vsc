@@ -88,7 +88,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
     return await new Promise((resolve, reject) => {
       // debug stopped or completed    
-      const terminateEvent = vscode.debug.onDidTerminateDebugSession(async (e) => {
+      const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
           if (!cancelToken.isCancellationRequested) {
             // the test run will have been terminated, so we cannot update the test result             
