@@ -26,7 +26,7 @@ export function getDebugAdapterTrackerFactory() {
           try {
             // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
 
-            //diagLog(JSON.stringify(m));
+            diagLog(JSON.stringify(m));
 
             // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
             // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle in parseAndUpdateTestResults         
@@ -43,7 +43,7 @@ export function getDebugAdapterTrackerFactory() {
               return;
             }
 
-            if (m.command === "disconnect" && !threadExit) {
+            if (m.body?.exitCode && !threadExit) {
               // disconnect, but not a thread exit, so we need to stop the run
               // (i.e. most likely debug was stopped by user)
               cancelTestRun("onDidSendMessage (debug stop)");
