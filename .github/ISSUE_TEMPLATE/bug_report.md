@@ -14,6 +14,7 @@ Please note that I can only support issues with the latest release (https://gith
 **Describe the bug (required):**
 A clear and concise description of what the bug is.
 Include the expected behaviour.
+What happened instead? Did you get an error, if so, what did it say?
 
 **To Reproduce (required):**
 The hardest thing when fixing bugs is reproducing the problem...
