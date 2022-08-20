@@ -79,7 +79,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
       // this isn't the best mechanism for detecting debug stop, but its the best we can do for now.
       // it should work just fine as long as the function "cancelTestRun" returns fast and cannot fail.
-      // (unfortunately since changes to debugpy, its currently impossible using a debug tracker to distinguish between a user clicking 
+      // (since changes to debugpy, its currently impossible using a debug tracker to distinguish between a user clicking 
       // a debug stop or a normal automatic debug session termination on windows.
       // on the plus side this reacts much faster than using a debug tracker and so it gives a much better user experience)
       // see: https://github.com/microsoft/vscode/issues/145159
