@@ -43,14 +43,10 @@ export function getDebugAdapterTrackerFactory() {
               return;
             }
 
-            if (m.event === "exited") {
-              if (!threadExit) {
-                if (m.body?.exitCode !== 1) {
-                  // successful exit, but not a thread exit, so we need to stop the run
-                  // (i.e. most likely debug was stopped by user)
-                  cancelTestRun("onDidSendMessage (debug stop)");
-                }
-              }
+            if (m.event === "exited" && !threadExit && m.body?.exitCode !== 1) {
+              // successful exit, but not a thread exit, so we need to stop the run
+              // (i.e. most likely debug was stopped by user)
+              cancelTestRun("onDidSendMessage (debug stop)");
             }
           }
           catch (e: unknown) {
