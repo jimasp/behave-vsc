@@ -31,8 +31,7 @@ export const getFeatureFileSteps = (featuresUri: vscode.Uri) => {
 }
 
 
-export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
-  const content = await getContentFromFilesystem(uri);
+export const getFeatureNameFromContent = async (content: string): Promise<string | null> => {
   const featureName = featureReFile.exec(content);
 
   if (featureName === null)

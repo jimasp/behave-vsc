@@ -13,6 +13,7 @@ import { FileParser } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../logger';
 
 
+
 // cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,
 // so cancelTestRun() does not affect subsequent runs
 let internalCancelSource: vscode.CancellationTokenSource;
@@ -86,7 +87,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           else {
             if (data instanceof TestFile && !data.didResolve) {
               const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-              await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, test, "queueSelectedItems");
+              const content = await getContentFromFilesystem(test.uri);
+              await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
             }
 
             await queueSelectedTestItems(gatherTestItems(test.children));
@@ -190,6 +192,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         }
         catch (e: unknown) {
           cancelTestRun("runWorkspaceQueue");
+          run.end();
           // unawaited (if multiRootRunWorkspacesInParallel) async function - show error
           config.logger.showError(e, wkspSettings.uri, run);
         }
@@ -302,7 +305,3 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
   collection.forEach((item: vscode.TestItem) => items.push(item));
   return items;
 }
-
-
-
-

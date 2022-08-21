@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { getFeatureFileSteps, getFeatureNameFromFile } from './featureParser';
+import { getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem
 } from '../common';
-import { parseStepsFile, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
+import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
@@ -92,7 +92,7 @@ export class FileParser {
   }
 
 
-  _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
+  private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
@@ -116,7 +116,8 @@ export class FileParser {
     for (const uri of featureFiles) {
       if (cancelToken.isCancellationRequested)
         break;
-      await this.updateTestItemFromFeatureFile(wkspSettings, testData, controller, uri, caller);
+      const content = await getContentFromFilesystem(uri);
+      await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller);
       processed++;
     }
 
@@ -147,7 +148,8 @@ export class FileParser {
     for (const uri of stepFiles) {
       if (cancelToken.isCancellationRequested)
         break;
-      await this.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, caller);
+      const content = await getContentFromFilesystem(uri);
+      await this._updateStepsFromStepsFileContent(wkspSettings.featuresUri, content, uri, caller);
       processed++;
     }
 
@@ -160,23 +162,28 @@ export class FileParser {
   }
 
 
-  async updateStepsFromStepsFile(featuresUri: vscode.Uri, fileUri: vscode.Uri, caller: string) {
+  private async _updateStepsFromStepsFileContent(featuresUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(fileUri))
       throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFile(featuresUri, fileUri, caller);
+    await parseStepsFileContent(featuresUri, content, fileUri, caller);
   }
 
-  async updateTestItemFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string) {
+
+  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData, controller: vscode.TestController,
+    uri: vscode.Uri, caller: string) {
 
     if (!isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
 
-    const item = await this.getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings, testData, controller, uri, caller);
+    if (!content)
+      return;
+
+    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData, controller, uri, caller);
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
-      await item.testFile.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, controller, item.testItem, caller);
+      await item.testFile.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
     }
     else {
       diagLog(`${caller}: no scenarios found in ${uri.path}`);
@@ -184,11 +191,14 @@ export class FileParser {
   }
 
 
-  async getOrCreateFeatureTestItemAndParentFolderTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
-    uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+    controller: vscode.TestController, uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
     if (!isFeatureFile(uri))
       throw new Error(`${uri.path} is not a feature file`);
+
+    if (!content)
+      return;
 
     const existingItem = controller.items.get(uri.path);
     if (existingItem) {
@@ -196,7 +206,7 @@ export class FileParser {
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
     }
 
-    const featureName = await getFeatureNameFromFile(uri);
+    const featureName = await getFeatureNameFromContent(content);
     if (featureName === null)
       return undefined;
 
@@ -432,21 +442,30 @@ export class FileParser {
 
 
 
-  async reparseFile(fileUri: vscode.Uri, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
-    this._reparsingFile = true;
+  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
+    try {
+      this._reparsingFile = true;
 
-    if (!isStepsFile(fileUri) && !isFeatureFile(fileUri))    
-      return;
+      if (!isStepsFile(fileUri) && !isFeatureFile(fileUri))
+        return;
 
-    if (isStepsFile(fileUri))
-      await this.updateStepsFromStepsFile(wkspSettings.featuresUri, fileUri, "updater");
+      if (!content)
+        content = await getContentFromFilesystem(fileUri);
 
-    if (isFeatureFile(fileUri))
-      await this.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, fileUri, "updater");
+      if (isStepsFile(fileUri))
+        await this._updateStepsFromStepsFileContent(wkspSettings.featuresUri, content, fileUri, "reparseFile");
 
-    rebuildStepMappings(wkspSettings.featuresUri);
+      if (isFeatureFile(fileUri))
+        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile");
 
-    this._reparsingFile = false;
+      rebuildStepMappings(wkspSettings.featuresUri);
+
+      this._reparsingFile = false;
+    }
+    catch (e: unknown) {
+      // unawaited async func, must log the error
+      config.logger.showError(e, wkspSettings.uri);
+    }
   }
 
 

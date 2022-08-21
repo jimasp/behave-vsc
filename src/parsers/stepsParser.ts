@@ -40,12 +40,11 @@ export function deleteStepFileSteps(featuresUri: vscode.Uri) {
 }
 
 
-export async function parseStepsFile(featuresUri: vscode.Uri, stepFileUri: vscode.Uri, caller: string) {
+export async function parseStepsFileContent(featuresUri: vscode.Uri, content: string, stepFileUri: vscode.Uri, caller: string) {
 
   if (!isStepsFile(stepFileUri))
     throw new Error(`${stepFileUri.path} is not a steps file`);
 
-  const content = await getContentFromFilesystem(stepFileUri);
   if (!content)
     return;
 

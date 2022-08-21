@@ -6,6 +6,7 @@ import { config, Configuration } from "./configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   basename,
+  getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
@@ -21,7 +22,7 @@ import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
-import { semHighlightProvider, semLegend } from './handlers/semHighlightProvider';
+import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -81,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
       vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
       vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
-      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new semHighlightProvider(), semLegend)
+      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
@@ -115,7 +116,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           return;
 
         wkspSettings = getWorkspaceSettingsForFile(item.uri);
-        await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
+        const content = await getContentFromFilesystem(item.uri);
+        await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, item, "resolveHandler");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error
@@ -135,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     };
 
 
-    // called when a user renames, adds or removes a workspace folder
+    // called when a user renames, adds or removes a workspace folder.
     // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -150,8 +152,63 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
+    // called when a user edits a file.
+    // we want to reparse on edit (not just on disk changes) because:
+    // a. the user may run a file they just edited without saving,
+    // b. the semantic highlighting while typing requires the stepmappings to be up to date as the user types,
+    // c. instant test tree updates is a nice bonus for user experience
+    // d. to keep stepmappings in sync in case user clicks go to step def/ref before file save
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
+      try {
+        const uri = event.document.uri;
+        if (!isFeatureFile(uri) && !isStepsFile(uri))
+          return;
+        const wkspSettings = getWorkspaceSettingsForFile(uri);
+        parser.reparseFile(uri, event.document.getText(), wkspSettings, testData, ctrl);
+      }
+      catch (e: unknown) {
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
+      }
+    }));
+
+
+    // called when the user opens a file OR switches tabs and the file regains focus (switching tabs), or when vscode starts up with open files.
+    // used to trigger the semantic highlighting 
+    // because the steps file (i.e. step mappings) may have been edited since the document last had focus
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async (document) => {
+      try {
+        if (isFeatureFile(document.uri, true)) {
+
+          // horrible hack, make document dirty - needed to retrigger semantic highlighting for a document
+          const isDirty = document.isDirty;
+          const line = document.lineAt(0);
+          if (!line)
+            return;
+
+          await vscode.window.activeTextEditor?.edit(ed => {
+            ed.insert(new vscode.Position(0, line.text.length), " ");
+          });
+
+          await vscode.window.activeTextEditor?.edit(ed => {
+            ed.delete(new vscode.Range(new vscode.Position(0, line.text.length), new vscode.Position(0, line.text.length + 1)));
+          });
+
+          // preserve original state (x vs o icon in document tab title bar)
+          if (!isDirty)
+            await document.save();
+        }
+      }
+      catch (e: unknown) {
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
+      }
+    }));
+
+
+
     // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
-    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg)
+    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
@@ -264,7 +321,7 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
     try {
       console.log(`updater: ${uri.fsPath}`);
-      await parser.reparseFile(uri, wkspSettings, testData, ctrl);
+      parser.reparseFile(uri, undefined, wkspSettings, testData, ctrl);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

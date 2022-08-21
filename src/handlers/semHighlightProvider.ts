@@ -9,15 +9,9 @@ const tokenTypes = new Map<string, number>();
 
 export const semLegend = (function () {
 	const tokenTypesLegend = [
-		"keyword",
-		"keyword.control",
+		"comment",
 		"function",
-		"class",
-		"markup.bold",
-		"variable.parameter",
-		"string.interpolated",
-		"comment.line",
-		"constant.numeric"
+
 	];
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 	return new vscode.SemanticTokensLegend(tokenTypesLegend);
@@ -32,8 +26,15 @@ interface ParsedToken {
 
 // atm this is just used for colourising step parameters 
 // (most colourising is done via gherkin.grammar.json)
-export class semHighlightProvider implements vscode.DocumentSemanticTokensProvider {
+export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
+
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
+
+		// line numbers and contents shift for compares, so wouldn't match up 
+		// with current step mappings, so skip semhighlight for git scheme
+		if (document.uri.scheme === "git")
+			return new vscode.SemanticTokens(new Uint32Array(0));
+
 		try {
 			const allTokens = this._parseDoc(document, cancelToken);
 			const builder = new vscode.SemanticTokensBuilder();
@@ -68,8 +69,10 @@ export class semHighlightProvider implements vscode.DocumentSemanticTokensProvid
 	}
 
 	private _parseDoc(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): ParsedToken[] {
+
 		const r: ParsedToken[] = [];
 		const lines = getLines(document.getText());
+
 		for (let i = 0; i < lines.length; i++) {
 
 			if (cancelToken.isCancellationRequested)
@@ -78,16 +81,26 @@ export class semHighlightProvider implements vscode.DocumentSemanticTokensProvid
 			const line = lines[i];
 			const stepFileStep = getStepFileStepForFeatureFileStep(document.uri, i);
 
+			if (!stepFileStep && featureFileStepRe.test(line)) {
+
+				r.push({
+					line: i,
+					startCharacter: 0,
+					length: line.length,
+					tokenType: "comment"
+				});
+
+				continue;
+			}
+
 			if (stepFileStep && stepFileStep.textAsRe.includes(parseRepWildcard)) {
-
 				const grpWldText = stepFileStep.textAsRe.replaceAll(parseRepWildcard, `(${parseRepWildcard})`);
-				const matches = new RegExp(grpWldText).exec(line);
+				const wcMatches = new RegExp(grpWldText).exec(line);
 
-				if (matches && matches.length > 1) {
+				if (wcMatches && wcMatches.length > 1) {
 
-					matches.shift();
-					matches.forEach((match) => {
-
+					wcMatches.shift();
+					wcMatches.forEach((match) => {
 						if (stepFileStep.textAsRe.startsWith(parseRepWildcard)) {
 							const m = featureFileStepRe.exec(line);
 							if (m)
@@ -103,7 +116,6 @@ export class semHighlightProvider implements vscode.DocumentSemanticTokensProvid
 
 					});
 				}
-
 			}
 
 		}

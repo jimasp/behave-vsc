@@ -55,11 +55,6 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
       throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }
 
-    // save file to update mappings
-    await textEditor?.document.save();
-    if (!await refreshStepsNavigation())
-      return;
-
     if (textEditor) {
       const lineNo = textEditor.selection.active.line;
       const lineText = textEditor.document.lineAt(lineNo).text.trim();

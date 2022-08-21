@@ -180,6 +180,8 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
 
 export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
+  if (fileorFolderUri?.scheme !== "file")
+    throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   if (!fileorFolderUri) // handling this here for caller convenience
     throw new Error("uri is undefined");
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
@@ -204,20 +206,30 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string> => {
+export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
+  if (!uri) // handling this here for caller convenience
+    throw new Error("uri is undefined");
   const data = await vwfs.readFile(uri);
   return Buffer.from(data).toString('utf8');
 };
 
 
-export const isStepsFile = (uri: vscode.Uri): boolean => {
+export const isStepsFile = (uri: vscode.Uri, allowGit = false): boolean => {
   const path = uri.path.toLowerCase();
-  return path.includes("/steps/") && path.endsWith(".py") && !path.endsWith("/__init__.py");
+
+  if (!path.includes("/steps/"))
+    return false;
+
+  if (allowGit && path.endsWith(".py.git") && !path.endsWith("/__init__.py.git"))
+    return true;
+
+  return path.endsWith(".py") && !path.endsWith("/__init__.py");
 }
 
 
-export const isFeatureFile = (uri: vscode.Uri) => {
-  return uri.path.toLowerCase().endsWith(".feature");
+export const isFeatureFile = (uri: vscode.Uri, allowGit = false): boolean => {
+  const path = uri.path.toLowerCase();
+  return path.endsWith(".feature") || (allowGit && path.endsWith(".feature.git"));
 }
 
 

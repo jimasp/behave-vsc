@@ -7,21 +7,26 @@
             "name": "comment.line"
         },
         {
-            "match": "^\\s*@.*",
-            "name": "keyword.control"
+            "begin": "^\\s*(\"\"\")",
+            "end": "^\\s*(\"\"\")",
+            "name": "comment.line"
         },
         {
-            "match": "\\|",
-            "name": "support.type"
+            "match": "^\\s*(@.*)",
+            "captures": {
+                "1": {
+                    "name": "keyword.control"
+                }
+            }
         },
         {
-            "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
+            "match": "(?i)^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
             "captures": {
                 "1": {
                     "name": "markup.bold"
                 },
                 "2": {
-                    "name": "string.interpolated"
+                    "name": "string"
                 }
             }
         },
@@ -32,7 +37,7 @@
                     "name": "keyword"
                 },
                 "2": {
-                    "name": "variable.parameter"
+                    "name": "variable"
                 }
             }
         },
@@ -46,6 +51,10 @@
                     "name": "constant.numeric"
                 }
             }
+        },
+        {
+            "match": "\\|",
+            "name": "support.type"
         }
     ]
 }

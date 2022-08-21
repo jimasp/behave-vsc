@@ -13,14 +13,13 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async createScenarioTestItemsFromFeatureFile(wkspSettings: WorkspaceSettings, testData: TestData,
+  public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     if (!item.uri)
       throw new Error("missing test item uri");
     if (!isFeatureFile(item.uri))
       throw new Error(`${item.uri.path} is not a feature file`);
 
-    const content = await getContentFromFilesystem(item.uri);
     item.error = undefined;
 
     const featureFileWkspRelativePath = vscode.workspace.asRelativePath(item.uri, false);

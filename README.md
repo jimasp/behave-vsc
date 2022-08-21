@@ -23,7 +23,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Workspace requirements
 
-- No conflicting behave extension is enabled
+- No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
 - A compatible directory structure (see below)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
@@ -50,7 +50,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   .       |         +-- *.py    
 ```
 
-- If your features folder is not called "features", or is not in the workspace root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
+- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
 
 ```text
 # behave.ini
