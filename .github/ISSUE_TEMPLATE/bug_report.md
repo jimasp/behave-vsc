@@ -14,6 +14,7 @@ Please note that I can only support issues with the latest release (<https://git
 **Describe the bug (required):**
 A clear and concise description of what the bug is.
 Include the expected behaviour.
+What happened instead? Did you get an error, if so, what did it say?
 
 **To Reproduce (required):**
 If I can't recreate the problem, I can't fix it.

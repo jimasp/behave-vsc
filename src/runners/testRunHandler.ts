@@ -13,7 +13,6 @@ import { FileParser } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../logger';
 
 
-
 // cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,
 // so cancelTestRun() does not affect subsequent runs
 let internalCancelSource: vscode.CancellationTokenSource;

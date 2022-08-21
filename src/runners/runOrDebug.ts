@@ -45,7 +45,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     const scenario = queueItem.scenario;
     const scenarioName = scenario.scenarioName;
     const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
-    const escapedScenarioName = formatScenarioName(scenarioName, queueItem.scenario.isOutline);
+    const escapedScenarioName = getScenarioRunName(scenarioName, queueItem.scenario.isOutline);
     const friendlyEnvVars = getFriendlyEnvVars(wkspSettings);
 
     let ps1 = "", ps2 = "";
@@ -108,13 +108,14 @@ function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   return envVars;
 }
 
-function formatScenarioName(string: string, isOutline: boolean) {
-  const escapeRegEx = string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function getScenarioRunName(scenName: string, isOutline: boolean) {
+  let escapeRegExChars = scenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  if (isOutline)
-    return "^" + escapeRegEx + " -- @";
+  // scenario outline with a <param> in its name
+  if (isOutline && escapeRegExChars.includes("<"))
+    escapeRegExChars = escapeRegExChars.replace(/<.*>/g, ".*");
 
-  return "^" + escapeRegEx + "$";
+  return "^" + escapeRegExChars + (isOutline ? " -- @" : "$");
 }
 
 function getJunitWkspRunDirUri(runName: string | undefined, wkspName: string): vscode.Uri {
