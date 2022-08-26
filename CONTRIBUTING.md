@@ -239,10 +239,12 @@ Note that the automated tests currently *only* verify the most important functio
 
 - Make sure you do not have the marketplace version of the extension installed
 - a. start "Debug: multiroot workspace", then in "project A":
-- b. clear all test results, Run a single test
-- c. clear all test results, Run all feature tests and check that the run stop button works
-- d. clear all test results, Set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- e. remove the breakpoint. clear all test results, Start a debug run of group 1 features and check that debug stop works (you may have to click it more than once or hit Shift+F5 twice)
+- b. clear all test results, run a single test
+- c. clear all test results, run all feature tests and check that the run stop button works
+- d. clear all test results, debug all feature tests and check that the run stop (not the debug stop) button works
+- e. clear all test results, set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
+- f. remove the breakpoint. clear all test results, start a debug run of group 1 features and check that the debug stop button works
+- g. start a debug run of unit tests and check that debug stop button works
 
 #### 3. Run change-specific manual UI tests
 

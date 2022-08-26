@@ -1,18 +1,24 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
+from time import sleep
 import unittest
 
 # standard unit tests added to show
 # they don't interfere with behave tests
 
 class TestStringMethods(unittest.TestCase):
+    
+    def test_slow(self):
+        sleep(3)
+        self.assertTrue(True)
+        
     def test_upper(self):
         self.assertEqual("foo".upper(), "FOO")
 
     def test_isupper(self):
         self.assertTrue("FOO".isupper())
-        self.assertFalse("Foo".isupper())
+        self.assertFalse("Foo".isupper())    
 
     def test_split(self):
         txt = "hello world"

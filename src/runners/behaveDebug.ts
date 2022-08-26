@@ -9,6 +9,8 @@ import { isBehaveExecutionError } from '../common';
 import { performance } from 'perf_hooks';
 
 
+let disconnected = false;
+
 // debug tracker to set behaveExecutionError flag so we can terminate and 
 // mark tests failed for behave execution errors
 let behaveExecutionError = false;
@@ -17,6 +19,7 @@ export function getDebugAdapterTrackerFactory() {
 
     // this function will get called for each debug session
     createDebugAdapterTracker() {
+      disconnected = false;
 
       return {
         onDidSendMessage: (m) => {
@@ -24,6 +27,9 @@ export function getDebugAdapterTrackerFactory() {
             // https://github.com/microsoft/vscode-debugadapter-node/blob/main/debugProtocol.json
 
             // diagLog(JSON.stringify(m));
+
+            if (m.command === "disconnect")
+              disconnected = true;
 
             // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
             // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle in parseAndUpdateTestResults         
@@ -53,6 +59,15 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
   // handle test run stop 
   const cancellationHandler = cancelToken.onCancellationRequested(async () => {
     await vscode.debug.stopDebugging();
+  });
+
+  // detect debug stop click by user
+  const customEventHandler = vscode.debug.onDidReceiveDebugSessionCustomEvent(async (event: vscode.DebugSessionCustomEvent) => {
+    // determine by order of events (i.e. if this event is exited and it's disconnected)
+    if (event.event === "exited" && disconnected) {
+      diagLog("debug stopped by user");
+      cancelTestRun("onDidReceiveDebugSessionCustomEvent");
+    }
   });
 
   behaveExecutionError = false;
@@ -108,6 +123,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
 
   }
   finally {
+    customEventHandler.dispose();
     cancellationHandler.dispose();
   }
 }
