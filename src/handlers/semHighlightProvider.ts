@@ -124,3 +124,21 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 	}
 
 }
+
+
+const tmpLegend = new vscode.SemanticTokensLegend([]);
+const tmpSemHighlightProvider = new class tmpSemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
+	onDidChangeSemanticTokens?: vscode.Event<void> | undefined;
+	provideDocumentSemanticTokens(): never { throw new Error('this should never be called'); }
+	provideDocumentSemanticTokensEdits?(): never { throw new Error('this should never be called'); }
+}
+
+// TODO: is there a better way to retrigger sem highlighting? ask MS. this works well for now.
+// retrigger semantic highlighting so that all currently open document tabs containing feature files are refreshed with changes to step mappings
+// i.e. when you change a steps file, the semantic highlighting should be immediately updated in place in all open feature files for any 
+// new missing/valid steps as the result of the step file edit.
+// (using a fake language id and tmpProvider here to minimize processing, we just want to cause a trigger of the existing semHighlightProvider)
+export function retriggerSemanticHighlighting() {
+	const dis = vscode.languages.registerDocumentSemanticTokensProvider({ language: '-not-a-language-' }, tmpSemHighlightProvider, tmpLegend);
+	dis.dispose();
+}

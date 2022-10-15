@@ -6,6 +6,7 @@ import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser'
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
+import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
 
 
 let stepMappings: StepMapping[] = [];
@@ -57,7 +58,6 @@ export async function waitOnReadyForStepsNavigation() {
   return ready;
 }
 
-
 export function rebuildStepMappings(featuresUri: vscode.Uri): number {
 
   const start = performance.now();
@@ -74,6 +74,7 @@ export function rebuildStepMappings(featuresUri: vscode.Uri): number {
     processed++;
   }
 
+  retriggerSemanticHighlighting();
   refreshStepReferencesView();
 
   diagLog(`rebuilding step mappings for ${featuresUri.path} took ${performance.now() - start} ms`);

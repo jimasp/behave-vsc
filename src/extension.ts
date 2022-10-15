@@ -173,40 +173,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
-    // called when the user opens a file OR switches tabs and the file regains focus (switching tabs), or when vscode starts up with open files.
-    // used to trigger the semantic highlighting 
-    // because the steps file (i.e. step mappings) may have been edited since the document last had focus
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(async (document) => {
-      try {
-        if (isFeatureFile(document.uri, true)) {
-
-          // horrible hack, make document dirty - needed to retrigger semantic highlighting for a document
-          const isDirty = document.isDirty;
-          const line = document.lineAt(0);
-          if (!line)
-            return;
-
-          await vscode.window.activeTextEditor?.edit(ed => {
-            ed.insert(new vscode.Position(0, line.text.length), " ");
-          });
-
-          await vscode.window.activeTextEditor?.edit(ed => {
-            ed.delete(new vscode.Range(new vscode.Position(0, line.text.length), new vscode.Position(0, line.text.length + 1)));
-          });
-
-          // preserve original state (x vs o icon in document tab title bar)
-          if (!isDirty)
-            await document.save();
-        }
-      }
-      catch (e: unknown) {
-        // entry point function (handler) - show error        
-        config.logger.showError(e, undefined);
-      }
-    }));
-
-
-
     // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
