@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { uriMatchString, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common';
-import { getContentFromFilesystem } from '../common';
 import { diagLog } from '../logger';
 
 export const parseRepWildcard = ".*";

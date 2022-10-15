@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { getWorkspaceUriForFile, getLines } from '../common';
 import { config } from '../configuration';
+import { parser } from '../extension';
 import { featureFileStepRe } from '../parsers/featureParser';
 import { getStepFileStepForFeatureFileStep } from '../parsers/stepMappings';
 import { parseRepWildcard } from '../parsers/stepsParser';
@@ -9,9 +10,8 @@ const tokenTypes = new Map<string, number>();
 
 export const semLegend = (function () {
 	const tokenTypesLegend = [
-		"comment",
+		"missing_step",
 		"function",
-
 	];
 	tokenTypesLegend.forEach((tokenType, index) => tokenTypes.set(tokenType, index));
 	return new vscode.SemanticTokensLegend(tokenTypesLegend);
@@ -29,6 +29,9 @@ interface ParsedToken {
 export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
+
+		// wait for any parsing to complete (e.g. on startup)
+		const ready = await parser.stepsParseComplete(5000, "provideDocumentSemanticTokens");
 
 		// line numbers and contents shift for compares, so wouldn't match up 
 		// with current step mappings, so skip semhighlight for git scheme
@@ -87,7 +90,7 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 					line: i,
 					startCharacter: 0,
 					length: line.length,
-					tokenType: "comment"
+					tokenType: "missing_step",
 				});
 
 				continue;

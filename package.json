@@ -135,6 +135,13 @@
 				"path": "./gherkin.snippets.json"
 			}
 		],
+		"configurationDefaults": {
+			"editor.semanticTokenColorCustomizations": {
+				"rules": {
+					"missing_step": "#cf1036"
+				}
+			}
+		},
 		"menus": {
 			"editor/context": [
 				{
