@@ -13,7 +13,7 @@ class UserDept:
         self.dept = dept
 
 
-@given("we add a set of users")
+@given(u"we add a set of users")
 def spec_users(context):
     context.userDepts = [UserDept]
     for row in context.table:
@@ -25,7 +25,7 @@ def do_nothing(context):
     pass
 
 
-@then('we will find {count} people in "{dept}"')
+@then(u'we will find {count} people in "{dept}"')
 def find_count(context, count, dept):
     assert int(count) == sum(1 for ud in context.userDepts if ud.dept == dept)
 

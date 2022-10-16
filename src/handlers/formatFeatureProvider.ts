@@ -2,6 +2,12 @@ import * as vscode from 'vscode';
 import { getWorkspaceUriForFile, getLines } from '../common';
 import { config } from '../configuration';
 
+const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
+const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
+const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
+const threeIndent = /^\s*\|.*/;
+const allIndents = [oneIndent, twoIndent, threeIndent].map(r => r.source).join("|");
+const indent = "\t";
 
 // this fires on format document or format selection
 export const formatFeatureProvider = {
@@ -9,6 +15,7 @@ export const formatFeatureProvider = {
     try {
 
       const result = [];
+      let featFound = false;
       const lines = getLines(document.getText());
       let indent = "";
 
@@ -24,7 +31,15 @@ export const formatFeatureProvider = {
           continue;
         }
 
-        indent = getIndent(indent, lineNo, lines);
+        if (!featFound) {
+          const feat = /^\s*Feature:.*/;
+          if (feat.test(line))
+            featFound = true;
+        }
+
+        if (featFound)
+          indent = getIndent(indent, lineNo, lines);
+
         const replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent);
         result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length)), replacement));
       }
@@ -46,32 +61,31 @@ export const formatFeatureProvider = {
 
 
 function getLF(indent: string, lineNo: number, lines: string[]): string {
+
   if (lineNo === 0)
     return "";
-  const prevLine = lines[lineNo - 1].trim();
+
   const line = lines[lineNo].trim();
+  const prevLine = lines[lineNo - 1].trim();
+
   if (prevLine === "" || prevLine.startsWith("#") || prevLine.startsWith("@"))
     return "";
-  if (line.startsWith("Examples:"))
+  if (oneIndent.test(line) || line.toLowerCase().startsWith("given ") || line.toLowerCase().startsWith("examples:") || line.startsWith("@"))
     return "\n";
-  return indent.length === 1 ? "\n" : "";
+
+  return "";
 }
 
 
-function getIndent(prevIndent: string, lineNo: number, lines: string[]): string {
+function getIndent(currentIndent: string, lineNo: number, lines: string[]): string {
 
-  // note - behaviour should basically match up 
-  // with gherkin.language-configuration.json - which is used for autoformat while typing
-  const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
-  const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
-  const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
-  const threeIndent = /^\s*\|.*/;
-  const indent = "\t";
+  // NOTE: behaviour should be roughly consistent with 
+  // gherkin.language-configuration.json (which is used for autoformat while typing). 
+  // the difference here is that we enforce the indent based on the current line content, 
+  // rather than just on the previous line content.
 
-  const line = lines[lineNo].trim();
-  const nextLine = lineNo + 1 < lines.length ? lines[lineNo + 1] : undefined;
-  if (nextLine && (line.startsWith("#") || line.startsWith("@")))
-    return getIndent("", lineNo + 1, lines);
+  const lineRaw = lines[lineNo];
+  const line = lineRaw.trim();
 
   if (zeroIndent.test(line))
     return "";
@@ -85,6 +99,26 @@ function getIndent(prevIndent: string, lineNo: number, lines: string[]): string 
   if (threeIndent.test(line))
     return indent.repeat(3);
 
-  return prevIndent;
+  // unmatched, so must be a comment line, or a tag line, or a multiline string
+  return getNextIndent(currentIndent, lineNo, lines);
+}
+
+
+
+function getNextIndent(currentIndent: string, lineNum: number, lines: string[]): string {
+
+  let next = 0;
+  for (let lineNo = lineNum + 1; lineNo < lines.length; lineNo++) {
+    const nextLine = lines[lineNo].trim();
+    if (nextLine.match(allIndents)) {
+      next = lineNo;
+      break;
+    }
+  }
+
+  if (next === 0)
+    return currentIndent;
+
+  return getIndent(currentIndent, next, lines);
 }
 

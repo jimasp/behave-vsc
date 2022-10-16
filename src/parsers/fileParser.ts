@@ -459,12 +459,13 @@ export class FileParser {
         await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile");
 
       rebuildStepMappings(wkspSettings.featuresUri);
-
-      this._reparsingFile = false;
     }
     catch (e: unknown) {
       // unawaited async func, must log the error
       config.logger.showError(e, wkspSettings.uri);
+    }
+    finally {
+      this._reparsingFile = false;
     }
   }
 

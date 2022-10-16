@@ -5,7 +5,7 @@ import { diagLog } from '../logger';
 export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
 const stepFileStepStartRe = /^\s*(@step|@given|@when|@then).+/i;
-const stepFileStepRe = /^\s*(@step|@given|@when|@then)\((?:u?"|')(.+)(?:"|').*\).*$/i;
+const stepFileStepRe = /^\s*(@step|@given|@when|@then)\(u?(?:"|')(.+)(?:"|').*\).*$/i;
 const stepFileSteps = new Map<string, StepFileStep>();
 
 export class StepFileStep {

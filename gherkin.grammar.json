@@ -7,6 +7,10 @@
             "name": "comment.line"
         },
         {
+            "match": "^\\s*(\"\"\").*(\"\"\")",
+            "name": "comment.line"
+        },
+        {
             "begin": "^\\s*(\"\"\")",
             "end": "^\\s*(\"\"\")",
             "name": "comment.line"

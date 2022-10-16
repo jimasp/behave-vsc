@@ -3,7 +3,13 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=unused-argument
 import time
+
 from behave import *
+
+# while not referenced here, we need to import them so behave can find steps in the other folder e.g. "Given I put "xxx" in a blender".
+# (this isn't best practice for this setup, but we need to test it works)
+from features.grouped.steps import outline_feature_steps, table_feature_steps
+
 
 @given("we have behave installed")
 @given("we have (behave) installed")

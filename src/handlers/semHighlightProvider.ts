@@ -24,8 +24,9 @@ interface ParsedToken {
 	tokenType: string;
 }
 
-// atm this is just used for colourising step parameters 
-// (most colourising is done via gherkin.grammar.json)
+// NOTE: most colourising is done via gherkin.grammar.json,
+// this is only to do advanced custom highlighting 
+// i.e. to highlight step {parameters} and missing steps, by comparing feature file steps against parsed stepmappings
 export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
