@@ -214,22 +214,19 @@ export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Pro
 };
 
 
-export const isStepsFile = (uri: vscode.Uri, allowGit = false): boolean => {
+export const isStepsFile = (uri: vscode.Uri): boolean => {
   const path = uri.path.toLowerCase();
 
   if (!path.includes("/steps/"))
     return false;
 
-  if (allowGit && path.endsWith(".py.git") && !path.endsWith("/__init__.py.git"))
-    return true;
-
-  return path.endsWith(".py") && !path.endsWith("/__init__.py");
+  return path.endsWith(".py");
 }
 
 
-export const isFeatureFile = (uri: vscode.Uri, allowGit = false): boolean => {
+export const isFeatureFile = (uri: vscode.Uri): boolean => {
   const path = uri.path.toLowerCase();
-  return path.endsWith(".feature") || (allowGit && path.endsWith(".feature.git"));
+  return path.endsWith(".feature");
 }
 
 
