@@ -17,8 +17,6 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
-      return;
     const lineNo = textEditor.selection.active.line;
     const lineText = textEditor.document.lineAt(lineNo).text.trim();
     const stExec = featureFileStepRe.exec(lineText);
@@ -26,6 +24,9 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       vscode.window.showInformationMessage(`Selected line is not a step.`);
       return;
     }
+
+    if (!await waitOnReadyForStepsNavigation())
+      return;
 
     const stepFileStep = getStepFileStepForFeatureFileStep(docUri, lineNo);
 

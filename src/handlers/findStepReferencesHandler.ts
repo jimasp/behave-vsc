@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { config } from "../configuration";
 import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation as refreshStepsNavigation } from '../parsers/stepMappings';
+import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation as refreshStepsNavigation, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { FeatureFileStep } from '../parsers/featureParser';
 import { funcRe } from '../parsers/stepsParser';
 
@@ -72,6 +72,9 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     if (!refreshStore.uri)
       return;
+
+    if (!await waitOnReadyForStepsNavigation())
+      return;      
 
     const stepReferences = getFeatureReferencesToStepFileFunction(refreshStore.uri, refreshStore.lineNo);
 
