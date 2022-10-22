@@ -6,10 +6,10 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(debug, wkspUri, config).length;
   return {
-    tests: { nodeCount: 87, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 19, stepFilesExceptEmptyOrCommentedOut: 5,
-    stepFileStepsExceptCommentedOut: 44,
-    featureFileStepsExceptCommentedOut: 149, stepMappings: 148  // (1 diff = "When we have a missing step")
+    tests: { nodeCount: 88, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 19, stepFilesExceptEmptyOrCommentedOut: 6,
+    stepFileStepsExceptCommentedOut: 45,
+    featureFileStepsExceptCommentedOut: 150, stepMappings: 149  // (1 diff = "When we have a missing step")
   };
 }
 
@@ -1118,7 +1118,25 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       test_label: 'multiply',
       test_parent: '.../project B/features/background.feature',
       test_uri: '.../project B/features/background.feature'
-    })
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'u string with foo',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'u string with foo',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/u string with foo',
+      test_label: 'u string with foo',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
 
   ];
 

@@ -380,12 +380,12 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_getLabel: 'Blenders Success <thing>',
       scenario_isOutline: true,
       scenario_result: 'passed',
-      scenario_scenarioName: 'Blenders Success',
+      scenario_scenarioName: 'Blenders Success <thing>',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success',
-      test_label: 'Blenders Success',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success <thing>',
+      test_label: 'Blenders Success <thing>',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
@@ -422,6 +422,23 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       test_label: 'Blenders Skip <thing>',
       test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
       test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'behave tests/some tests/group1_features/outline_mixed.feature',
+      scenario_featureName: 'Mixed outline',
+      scenario_getLabel: 'Blenders Success paramless',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success paramless',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature/Blenders Success paramless',
+      test_label: 'Blenders Success paramless',
+      test_parent: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature',
+      test_uri: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature'
     }),
 
     new TestResult({
