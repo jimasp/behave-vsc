@@ -1,7 +1,7 @@
 {
     "Scenario": {
         "prefix": [
-            "Scenario"
+            "scen"
         ],
         "body": [
             "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
@@ -12,7 +12,7 @@
     },
     "Scenario Outline": {
         "prefix": [
-            "Scenario Outline"
+            "sceo"
         ],
         "body": [
             "Scenario Outline: ${1:name_${TM_LINE_NUMBER}}$0",
@@ -31,7 +31,7 @@
     },
     "Scenario with Given Table": {
         "prefix": [
-            "Scenario GT"
+            "scgt"
         ],
         "body": [
             "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
@@ -44,7 +44,7 @@
     },
     "Scenario with Then Table": {
         "prefix": [
-            "Scenario TT"
+            "sctt"
         ],
         "body": [
             "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
@@ -57,7 +57,7 @@
     },
     "Examples": {
         "prefix": [
-            "Examples"
+            "exam"
         ],
         "body": [
             "\nExamples: ${1:ex_${TM_LINE_NUMBER}}$0",

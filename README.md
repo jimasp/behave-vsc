@@ -7,15 +7,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
 - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-- Review test run results in code lens in feature file.
-- Run customisation via extension settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
+- See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
+- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default Alt+F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
-  - Quickly navigate between steps in the Step References Window (default F4 + Shift F4).
-- Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions.
-- Feature file formatting (default Ctrl+K,Ctrl+F), automatic Gherkin syntax highlighting (including smart parameter highlighting), and some snippets thrown in.
-- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
+  - Quick navigate in the Step References Window (default F4 + Shift F4).
+- Smart feature step auto-completion, for example typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. Also some snippets are thrown in.
+- Feature file formatting (default Ctrl+K,Ctrl+F).
+- Automatic Gherkin syntax highlighting (including smart parameter highlighting).
+- This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -103,16 +104,17 @@ paths=my_tests/behave_features
 ## Q&A
 
 - *How can I see all effective settings for the extension?* On starting vscode, look in the Behave VSC output window.
-- *How can I see the active behave config being used for behave execution?* In your behave config file, set `verbose=true`.
+- *How can I see the active behave configuration being used for behave execution?* In your behave config file, set `verbose=true`.
 - *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
 - *How can I only execute specific tags while using the extension?* There are a lot of options here, but there are four examples below. The first two options will not avoid the overhead associated with starting a behave process for each test, i.e. the first two will only be notably faster when either (a) you have `runAllAsOne` enabled (the default) and you run are running all tests in the workspace at once, or (b) you are skipping slow tests.
 
   - (slow, simple, inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup)
   - (slow, highly flexible) use the `envVarOverrides` extension setting to set an environment variable that is only set when running from the extension. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, (c) to control `scenario.skip()`, or (d) to control a behave `before_all` for a completely custom setup.
-  - (fast, simple) use the `fastSkipTags` extension setting. (For the inverse case of do *not* run these tags.)
+  - (fast, simple) use the `fastSkipTags` extension setting. (i.e. applying the inverse - do *not* run these tags.)
   - (fast, flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.  
-  
+- *How do I disable feature file snippets?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showSnippets": false }`
+- *How do I disable autocomplete for feature file steps?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showFunctions": false }`
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the outputted command and run it manually (or run `python -m behave` for all test output).
 - *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test, because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
 - *When will this extension have a release version?* When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.

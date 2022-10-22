@@ -138,6 +138,17 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 - Any disposable object should either be added to `context.subscriptions.push` or disposed in a `finally` block or in the `deactivate()`. (The most common disposables are event handlers, filesystemwatchers, and cancelllation token sources.)
 
+## How autocompletion, highlighting and snippets are hooked up
+
+- autocompletion is provided by:
+  - autoCompleteProvider.ts
+feature file syntax highlighting is provided by:
+  - gherkin.grammar.json
+  - semHighlightProvider.ts. (only for step parameters and missing steps called by vscode on-demand as required.)
+feature file formatting is provided by:
+  - formatFeatureProvider.ts - (sets indentation on user request - CTRL K+F, inc. file save if set)
+  - language-configuration.ts - (sets indentation used on typing out a feature file, e.g. pressing enter)
+
 ### Diagnostics
 
 - Diagnostic logs are controlled via the extension setting `behave-vsc.xRay` (this is enabled by default in the example projects and for most integration tests).
