@@ -200,9 +200,9 @@ export class FileParser {
     if (!content)
       return;
 
-    const existingItem = controller.items.get(uri.path);
+    const existingItem = controller.items.get(uriMatchString(uri));
     if (existingItem) {
-      diagLog(`${caller}: found existing test item for ${uri.path}`);
+      diagLog(`${caller}: found existing feature test item for file ${uri.path}`);
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
     }
 
@@ -434,6 +434,12 @@ export class FileParser {
       return;
     }
     finally {
+
+      this._finishedFeaturesParseForAllWorkspaces = true;
+      this._finishedStepsParseForAllWorkspaces = true;
+      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
+      this._finishedStepsParseForWorkspace[wkspPath] = true;
+
       this._cancelTokenSources[wkspPath]?.dispose();
       delete this._cancelTokenSources[wkspPath];
       cancellationHandler?.dispose();

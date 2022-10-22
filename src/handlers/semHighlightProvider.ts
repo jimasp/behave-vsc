@@ -31,8 +31,7 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
 
-		// wait for any parsing to complete (e.g. on startup)
-		const ready = await parser.stepsParseComplete(5000, "provideDocumentSemanticTokens");
+		await parser.stepsParseComplete(2000, "provideDocumentSemanticTokens");
 
 		// line numbers and contents shift for compares, so wouldn't match up 
 		// with current step mappings, so skip semhighlight for git scheme

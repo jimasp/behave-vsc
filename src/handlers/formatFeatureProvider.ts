@@ -11,7 +11,7 @@ const indent = "\t";
 
 // this fires on format document or format selection
 export const formatFeatureProvider = {
-  provideDocumentRangeFormattingEdits(document: vscode.TextDocument) {
+  async provideDocumentRangeFormattingEdits(document: vscode.TextDocument) {
     try {
 
       const result = [];
@@ -45,6 +45,7 @@ export const formatFeatureProvider = {
       }
 
       return result;
+
     }
     catch (e: unknown) {
       // entry point function (handler) - show error  
@@ -70,7 +71,7 @@ function getLF(indent: string, lineNo: number, lines: string[]): string {
 
   if (prevLine === "" || prevLine.startsWith("#") || prevLine.startsWith("@"))
     return "";
-  if (oneIndent.test(line) || line.toLowerCase().startsWith("given ") || line.toLowerCase().startsWith("examples:") || line.startsWith("@"))
+  if (oneIndent.test(line) || line.toLowerCase().startsWith("examples:") || line.startsWith("@"))
     return "\n";
 
   return "";
