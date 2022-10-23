@@ -269,43 +269,57 @@ Example: if you changed anything that affects any of step navigation/feature fil
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - C. start `Debug: multiroot workspace`
 - Then in `project A`:
-- D. edit the `group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foo` and save it, then:
+- D. edit the `behave_tests/some_tests/group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foo`, then:
   - check you can run the renamed feature from inside the feature file (first play/tick button at top of feature file)
-  - check the test UI tree shows the renamed feature (you may need to reopen the node)
-  - check the old feature name no longer appears in the test UI tree
+  - right click the play button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
+  - type in "Basic" in the text explorer filter box, check the old feature name only appears for project B
   - check you can run the renamed feature from UI tree
-- E. edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo` and save it, then:
+- E. edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo`, then:
   - check you can run the changed scenario from inside the feature file
-  - disable raised exceptions if required, put a breakpoint in environment.py and check you can debug the renamed scenario from inside the feature file
-  - check the test UI tree shows the renamed scenario (you may need to reopen the node)
-- F. open a diff comparison on any feature file you changed (leave the feature file open in another tab)
-- G. close vscode, open it again, check that having a feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
-- H. rename the `table.feature` file to `footable.feature` (i.e. rename the file itself), then in the test UI tree, check the feature is not duplicated (i.e. `Table feature` only appears once), then check feature tests run from the feature file, and from the test UI
-- I. rename `group1_features` to `group1_features_foo`, in the UI check the folder is renamed and not duplicated, check the renamed feature group tests run from test ui tree
+  - disable raised exceptions if required, put a breakpoint in `behave_tests/some_tests/environment.py`
+  - right click the play button and "Debug Test" check you can debug the renamed scenario from inside the feature file
+  - right click the play button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed scenario outline
+- F. open a diff comparison on any feature file you changed (leave the associated feature file open in another tab, and open that tab)
+- G. close vscode, open it again, check that while having the previous feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
+- H. rename the `table.feature` file to `foo.table.feature` (i.e. rename the file itself)
+  - in the test UI tree, filter by "table" and check that only one "Table feature" appears for project A
+  - check renamed feature runs from the test UI
+  - check renamed feature runs from the feature file
+- I. rename `group1_features` to `group1_features_foo`,
+  - in the test UI filter by "group1", check that the folder is renamed and not duplicated
+  - check the renamed feature group folder runs from test ui tree
+  - right click on a step check in one of the group 1 feature files, check "go to step definition" works
 - J. delete `group1_features_foo/outline_success.feature` file, check it gets removed from the test tree
-- K. create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foo` and the first scenario, copy/paste that text into `scen_copy.feature` and check the feature gets added to the test tree under `group1_features_foo`
-- L. copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and check the feature gets added to the test tree
-- In `project B`:
-- M. open the `goto_step.feature` feature file and click "go to step definition" on a wrapped (multiline) step near the bottom of the file, and check it works
-- N. rename the `goto_step.feature` file to `goto_step_foo.feature` and check you can still use "go to step definition" for a step in that file
-- O. in the file that it opened (`features/steps/shared.py`) ALT+F12 or right-click on on `def step_inst(context):` and "Find All Step References" and check that only hits from the project B workspace are returned.
-- P. now hit F4 or click on the `basic.feature` file references in the "Step References" window then:
+- K. create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foo` and the first scenario, copy/paste that text into `scen_copy.feature` and check the feature gets added to the test tree under `group1_features_foo`, i.e. you should see 2x Foo
+- L. copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and check the feature gets added to the test tree, i.e. you should see 3x Foo
+- SWITCHING to `project B`:
+- M. open the `features/goto_step.feature` feature file and click "go to step definition" on one of the "wrapped step" steps near the bottom of the file, and check it goes to the definition
+- N. rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use "go to step definition" for a step in that file
+- O. open `features\steps\__init__.py` ALT+F12 or right-click and "Find All Step References" on `def step_inst(context):`  and check that only hits from the project B workspace are returned.
+- P. now click on the `basic.feature` file references in the "Step References" window then:
   - note the number of results at the top of the step references window
-  - comment out one of the `Given we have behave installed` steps in the `basic.feature` file. save the file and check that the reference window automatically refreshes to remove the reference (the results count should decrement)
-  - uncomment the scenario, check it reappears in the step references window (the results should increment)
-  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. `scenario 2`. save the file and check that the reference window automatically refreshes to add the new scenario references (the results count should increment)
+  - comment out one of the `Given we have behave installed` steps in the `basic.feature` file.
+  - check that the reference window automatically refreshes to remove the reference (the results count should decrement)
+  - uncomment the step, check it reappears in the step references window (the results should increment)
+  - duplicate (copy/paste) a scenario in the feature file and rename it in the feature file to e.g. `scenario 2`
+  - check that the reference window automatically refreshes to add the step reference in the new scenario (the results count should increment)
+  - check you can F4 (or click) through the step references for basic.feature
   - copy/paste the feature file itself into the `features` folder to create a `basic copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `basic copy.feature` (and the results count increases by the amount of scenarios in the file)
-- Q. ALT+F12 (or right-click and "go to step definition") on any "given we have behave installed" line, then above `def step_inst(context):` add a couple of blank lines it and save the file. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
-  - ALT+F12 and check it finds all references again.
+- Q. choose any "given we have behave installed" line, ALT+F12 (or right-click and "go to step definition"), then a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
+  - ALT+F12 or right-click and "find all step references" on the `def step_inst(context):` line and check it finds all step references again.
   - try clicking on a reference.
   - then try F4 to move to next one.
-- R. ALT+F12 on any "given we have behave installed" line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):` and save the file. check the step references window shows the same results. then ALT+F12 find all references and again check the results are the same.
+- R. ALT+F12 on any "given we have behave installed" line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then ALT+F12 find all references and again check the results are the same.
 - S. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
 - T. go to the output window "Behave VSC: project A"
 - U. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click "Remove folder from workspace".
-  - check there are no error windows pop up. check that you have the output windows for "Behave VSC: project B" and "Behave VSC: simple".
-  - check that tests run as expected from all remaining workspaces and show their output in the output windows.
-- V. back in the file explorer UI, right-click on an empty area and "Add folder to workspace" and select "project A" to add it back.
-  - check that you have the correct output windows for Behave VSC
-  - and that tests run as expected from all workspaces.
-- Lastly, assuming you committed at step A, use e.g. `git reset --hard` and `git clean -fd` to undo the file changes created by these manual tests.
+  - the original "project A" output window should close
+  - check there are no error windows pop up. check that the dropdown has the output windows for "Behave VSC: simple" and "Behave VSC: project B" (but not "project A").
+  - check that tests run as expected from `simple` and `project B`
+  - check that tests show their output in the output windows "Behave VSC: project B" and "Behave VSC: simple"
+- V. click vscode's "File" menu and "Add folder to workspace...", double click "project A" to add it back.
+  - check that you have output windows "Behave VSC: project A", "Behave VSC: project B" and "Behave VSC: simple"
+  - check that tests run from `simple` and `project B`
+
+- Lastly, we need to undo the file changes created by these manual tests
+  - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`.
