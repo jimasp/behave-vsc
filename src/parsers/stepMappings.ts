@@ -47,8 +47,8 @@ export function deleteStepMappings(featuresUri: vscode.Uri) {
 }
 
 
-export async function waitOnReadyForStepsNavigation() {
-  const ready = await parser.stepsParseComplete(500, "waitOnReadyForStepsNavigation");
+export async function waitOnReadyForStepsNavigation(waitMs: number) {
+  const ready = await parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);

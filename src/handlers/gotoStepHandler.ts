@@ -25,7 +25,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       return;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
+    if (!await waitOnReadyForStepsNavigation(500))
       return;
 
     const stepFileStep = getStepFileStepForFeatureFileStep(docUri, lineNo);
