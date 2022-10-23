@@ -380,16 +380,19 @@ export class FileParser {
         diagLog(`${callName}: cancellation complete`);
         return;
       }
+
       this._finishedStepsParseForWorkspace[wkspPath] = true;
       diagLog(`${callName}: steps loaded`);
+
+      const updateMappingsStart = performance.now();
+      mappingsCount = rebuildStepMappings(wkspSettings.featuresUri);
+      buildMappingsTime = performance.now() - updateMappingsStart;
+      diagLog(`${callName}: stepmappings built`);
+
       const wkspsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForWorkspace[uri.path])
       if (wkspsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllWorkspaces = true;
         diagLog(`${callName}: steps loaded for all workspaces`);
-        const updateMappingsStart = performance.now();
-        mappingsCount = rebuildStepMappings(wkspSettings.featuresUri);
-        buildMappingsTime = performance.now() - updateMappingsStart;
-        diagLog(`${callName}: stepmappings built`);
       }
       else {
         diagLog(`${callName}: waiting on steps parse for ${wkspsStillParsingSteps.map(w => w.path)}`)
@@ -420,6 +423,11 @@ export class FileParser {
     catch (e: unknown) {
       // unawaited async func, must log the error 
 
+      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
+      this._finishedStepsParseForWorkspace[wkspPath] = true;
+      this._finishedFeaturesParseForAllWorkspaces = true;
+      this._finishedStepsParseForAllWorkspaces = true;
+
       // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
       Object.keys(this._cancelTokenSources).forEach(k => {
         this._cancelTokenSources[k].cancel();
@@ -431,14 +439,10 @@ export class FileParser {
         this._errored = true;
         config.logger.showError(e, wkspUri);
       }
+
       return;
     }
     finally {
-
-      this._finishedFeaturesParseForAllWorkspaces = true;
-      this._finishedStepsParseForAllWorkspaces = true;
-      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
-      this._finishedStepsParseForWorkspace[wkspPath] = true;
 
       this._cancelTokenSources[wkspPath]?.dispose();
       delete this._cancelTokenSources[wkspPath];
