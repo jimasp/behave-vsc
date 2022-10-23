@@ -40,7 +40,7 @@ export const formatFeatureProvider = {
         if (featFound)
           indent = getIndent(indent, lineNo, lines);
 
-        const replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent);
+        const replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent).trimEnd();
         result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length)), replacement));
       }
 
