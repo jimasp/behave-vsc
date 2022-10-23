@@ -106,8 +106,13 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
       if (!reasons)
         return;
       reasons.forEach(reason => {
-        //let reasonBlock = `${reason.$.type}: ${reason.$.message}\n`;
-        const reasonBlock = reason._.trim();
+        let reasonBlock = "";
+        if (reason.$.type && reason.$.type !== "NoneType")
+          reasonBlock += `${reason.$.type.replace("\n", "")}\n`;
+        if (reason.$.message)
+          reasonBlock += `${reason.$.message.replace("\n", "")}\n`;
+        if (reason._)
+          reasonBlock += reason._.trim();
         reasonBlocks.push(reasonBlock);
       });
     }
