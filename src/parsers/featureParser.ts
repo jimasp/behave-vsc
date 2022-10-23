@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "../settings";
-import { getContentFromFilesystem, uriMatchString, sepr, basename, getLines } from '../common';
+import { uriMatchString, sepr, basename, getLines } from '../common';
 import { diagLog } from '../logger';
 
 
