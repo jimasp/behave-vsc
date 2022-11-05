@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { getContentFromFilesystem, uriMatchString, isFeatureFile, WkspError } from '../common';
+import { uriMatchString, isFeatureFile, WkspError } from '../common';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
 import { diagLog } from '../logger';
