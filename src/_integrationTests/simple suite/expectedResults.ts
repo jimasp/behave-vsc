@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { WkspParseCounts } from "../../fileParser";
+import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
@@ -38,7 +38,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a failing test',
       test_children: undefined,
       test_description: undefined,

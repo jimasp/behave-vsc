@@ -3,7 +3,7 @@ import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { Configuration } from '../../configuration';
 import { TestResult } from './expectedResults.helpers';
-import { WkspParseCounts } from '../../fileParser';
+import { WkspParseCounts } from '../../parsers/fileParser';
 
 
 const envVarOverrides = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { WorkspaceSettings } from "./settings";
-import { getContentFromFilesystem, uriMatchString, sepr, basename } from './common';
-import { diagLog } from './logger';
+import { WorkspaceSettings } from "../settings";
+import { uriMatchString, sepr, basename, getLines } from '../common';
+import { diagLog } from '../logger';
 
 
 const featureReStr = /^(\s*)Feature:(\s*)(.+)$/;
@@ -9,7 +9,7 @@ const featureReLine = new RegExp(featureReStr);
 const featureReFile = new RegExp(featureReStr, "im");
 const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
 const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
-export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.+)/i;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 
@@ -31,8 +31,7 @@ export const getFeatureFileSteps = (featuresUri: vscode.Uri) => {
 }
 
 
-export const getFeatureNameFromFile = async (uri: vscode.Uri): Promise<string | null> => {
-  const content = await getContentFromFilesystem(uri);
+export const getFeatureNameFromContent = async (content: string): Promise<string | null> => {
   const featureName = featureReFile.exec(content);
 
   if (featureName === null)
@@ -48,7 +47,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   onFeatureLine: (range: vscode.Range) => void) => {
 
   const fileName = basename(uri);
-  const lines = content.split('\n');
+  const lines = getLines(content);
   let fastSkipFeature = false;
   let fileScenarios = 0;
   let fileSteps = 0;

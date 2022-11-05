@@ -3,20 +3,6 @@
 		"configuration": {
 			"title": "behave-vsc",
 			"properties": {
-				"behave-vsc.envVarList": {
-					"type": "string",
-					"default": "",
-					"description": "DEPRECATED: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.envVarOverrides#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"deprecationMessage": "behave-vsc.envVarList is deprecated: Please use behave-vsc.envVarOverrides instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
-				},
-				"behave-vsc.fastSkipList": {
-					"type": "string",
-					"default": "",
-					"description": "DEPRECATED: Please use behave-vsc.fastSkipTags instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"markdownDeprecationMessage": "**Deprecated**: Please use `#behave-vsc.fastSkipTags#` instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)",
-					"deprecationMessage": "behave-vsc.fastSkipList is deprecated: Please use behave-vsc.fastSkipTags instead. (You can use both settings as your team migrates, but the new setting will override the old one, so they should have the same values.)"
-				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
@@ -118,6 +104,44 @@
 				"key": "shift+f4"
 			}
 		],
+		"languages": [
+			{
+				"id": "gherkin",
+				"icon": {
+					"light": "./images/gherkin.png",
+					"dark": "./images/gherkin.png"
+				},
+				"extensions": [
+					"feature"
+				],
+				"aliases": [
+					"Gherkin",
+					"behave",
+					"Feature"
+				],
+				"configuration": "./gherkin.language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "gherkin",
+				"scopeName": "gherkin.grammar",
+				"path": "./gherkin.grammar.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "gherkin",
+				"path": "./gherkin.snippets.json"
+			}
+		],
+		"configurationDefaults": {
+			"editor.semanticTokenColorCustomizations": {
+				"rules": {
+					"missing_step": "#cf1036"
+				}
+			}
+		},
 		"menus": {
 			"editor/context": [
 				{
@@ -161,8 +185,8 @@
 	},
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
-	"description": "Debug, Run and Navigate behave tests",
-	"version": "0.4.2",
+	"description": "Debug, Run and Navigate Python behave tests",
+	"version": "0.5.0",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
@@ -180,7 +204,7 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.68.1"
+		"vscode": "^1.72.2"
 	},
 	"categories": [
 		"Testing",
@@ -188,9 +212,10 @@
 	],
 	"keywords": [
 		"behave",
-		"feature",
 		"debug",
 		"python",
+		"feature",
+		"bdd",
 		"multi-root ready"
 	],
 	"qna": false,
@@ -210,10 +235,10 @@
 		"compile-tests": "tsc -p . --outDir out",
 		"watch-tests": "tsc -p . -w --outDir out",
 		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTestSuites.js --stable",
+		"test": "node ./out/_integrationTests/runTestSuites.js --stable",
 		"pretest": "npm run compile && npm run compile-tests && npm run lint",
 		"pretestinsiders": "npm run pretest",
-		"testinsiders": "node ./out/test/runTestSuites.js --insiders",
+		"testinsiders": "node ./out/_integrationTests/runTestSuites.js --insiders",
 		"rimraf": "./node_modules/rimraf/bin.js",
 		"clean-output": "rimraf out/ dist/"
 	},

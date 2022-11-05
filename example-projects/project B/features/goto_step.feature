@@ -74,3 +74,6 @@ Scenario: wrapped step 3
 
 Scenario: wrapped step 4
     Given wrapped step4 blaha no params blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+
+Scenario: u string with foo
+    Given we have a u string with a param foo

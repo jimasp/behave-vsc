@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
-import { Scenario, TestData, TestFile } from './testFile';
+import { performance } from 'perf_hooks';
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
+import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runBehaveAll, runOrDebugBehaveScenario } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriMatchString,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
-} from './common';
-import { QueueItem } from './extension';
-import { FileParser } from './fileParser';
-import { performance } from 'perf_hooks';
-import { diagLog, DiagLogType } from './logger';
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getLines
+} from '../common';
+import { QueueItem } from '../extension';
+import { FileParser } from '../parsers/fileParser';
+import { diagLog, DiagLogType } from '../logger';
 
 
 // cancellation tokens are one-shot, but this is new'd in each run, then disposed in the finally,
@@ -86,7 +86,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           else {
             if (data instanceof TestFile && !data.didResolve) {
               const wkspSettings = getWorkspaceSettingsForFile(test.uri);
-              await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, test, "queueSelectedItems");
+              const content = await getContentFromFilesystem(test.uri);
+              await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
             }
 
             await queueSelectedTestItems(gatherTestItems(test.children));
@@ -94,7 +95,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
           if (test.uri && !coveredLines.has(uriMatchString(test.uri))) {
             try {
-              const lines = (await getContentFromFilesystem(test.uri)).split('\n');
+              const lines = getLines(await getContentFromFilesystem(test.uri));
               coveredLines.set(
                 uriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>
@@ -190,6 +191,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         }
         catch (e: unknown) {
           cancelTestRun("runWorkspaceQueue");
+          run.end();
           // unawaited (if multiRootRunWorkspacesInParallel) async function - show error
           config.logger.showError(e, wkspSettings.uri, run);
         }
@@ -199,7 +201,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       const runTestQueue = async (request: vscode.TestRunRequest) => {
 
         if (!debug)
-          run.appendOutput(`\n=== starting test run ${run.name} @${new Date().toISOString()} ===\n`);
+          run.appendOutput(`\r\n=== starting test run ${run.name} @${new Date().toISOString()} ===\r\n`);
 
         if (queue.length === 0) {
           throw "empty queue - nothing to do";
@@ -230,7 +232,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           await Promise.all(wkspRunPromises);
 
         if (!debug)
-          run.appendOutput(`\n=== test run ${run.name} complete @${new Date().toISOString()} ===\n`);
+          run.appendOutput(`\r\n=== test run ${run.name} complete @${new Date().toISOString()} ===\r\n`);
       };
 
 
@@ -302,7 +304,3 @@ function gatherTestItems(collection: vscode.TestItemCollection) {
   collection.forEach((item: vscode.TestItem) => items.push(item));
   return items;
 }
-
-
-
-

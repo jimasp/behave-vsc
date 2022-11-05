@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { config } from "./configuration";
-import { WorkspaceSettings } from "./settings";
+import { config } from "../configuration";
+import { WorkspaceSettings } from "../settings";
 import { runAllAsOne, runScenario } from './behaveRun';
 import { debugScenario } from './behaveDebug';
-import { QueueItem } from './extension';
-import { getJunitFileUri, updateTest } from './junitParser';
-import { rndAlphaNumeric, WIN_MAX_PATH, WkspError } from './common';
+import { QueueItem } from '../extension';
+import { getJunitFileUri, updateTest } from '../parsers/junitParser';
+import { rndAlphaNumeric, WIN_MAX_PATH, WkspError } from '../common';
 import { cancelTestRun } from './testRunHandler';
 
 

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from './common';
-import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from './stepMappings';
-import { featureFileStepRe } from './featureParser';
+import { config } from "../configuration";
+import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from '../common';
+import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
+import { featureFileStepRe } from '../parsers/featureParser';
 
 
 
@@ -17,9 +17,6 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
-      return;
-
     const lineNo = textEditor.selection.active.line;
     const lineText = textEditor.document.lineAt(lineNo).text.trim();
     const stExec = featureFileStepRe.exec(lineText);
@@ -28,10 +25,13 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
       return;
     }
 
+    if (!await waitOnReadyForStepsNavigation(500))
+      return;
+
     const stepFileStep = getStepFileStepForFeatureFileStep(docUri, lineNo);
 
     if (!stepFileStep) {
-      vscode.window.showInformationMessage(`Step '${lineText}' not found (or file has not been saved).`);
+      vscode.window.showInformationMessage(`Step '${lineText}' not found.`);
       return;
     }
 

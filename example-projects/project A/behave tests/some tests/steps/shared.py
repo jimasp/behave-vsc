@@ -19,7 +19,7 @@ def step_impl(context, successful_or_failing):
     
 @when("we have a step that raises a non-assertion exception")
 def step_impl(context):
-    raise Exception("testing a step exception")    
+    raise Exception("Testing a step exception")    
 
 
 @when("we implement a test that takes {secs} seconds")

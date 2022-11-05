@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
-import { afterFirstSepr, sepr, urisMatch } from './common';
-import { parser } from './extension';
-import { diagLog, DiagLogType } from './logger';
+import { sepr, urisMatch } from '../common';
+import { parser } from '../extension';
+import { diagLog, DiagLogType } from '../logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
-import { refreshStepReferencesView } from './findStepReferencesHandler';
+import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
+import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
 
 
 let stepMappings: StepMapping[] = [];
@@ -46,23 +47,18 @@ export function deleteStepMappings(featuresUri: vscode.Uri) {
 }
 
 
-export async function waitOnReadyForStepsNavigation() {
-  const ready = await parser.stepsParseComplete(500, "waitOnReadyForStepsNavigation");
+export async function waitOnReadyForStepsNavigation(waitMs: number) {
+  const ready = await parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
     vscode.window.showWarningMessage(msg);
-    return false;
   }
-  if (!hasStepMappings)
-    await new Promise(t => setTimeout(t, 100));
-  return hasStepMappings;
+
+  return ready;
 }
 
-
-let hasStepMappings = false;
-export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number> {
-  hasStepMappings = false;
+export function rebuildStepMappings(featuresUri: vscode.Uri): number {
 
   const start = performance.now();
   deleteStepMappings(featuresUri);
@@ -78,7 +74,7 @@ export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number
     processed++;
   }
 
-  hasStepMappings = true;
+  retriggerSemanticHighlighting();
   refreshStepReferencesView();
 
   diagLog(`rebuilding step mappings for ${featuresUri.path} took ${performance.now() - start} ms`);
@@ -89,16 +85,14 @@ export async function buildStepMappings(featuresUri: vscode.Uri): Promise<number
 
 function _getFilteredSteps(featuresUri: vscode.Uri) {
   const featureFileSteps = getFeatureFileSteps(featuresUri);
-  const wkspSteps = getStepFileSteps(featuresUri);
-  // remove the fileUri prefix from the keys
-  const steps = new Map([...wkspSteps].map(([k, v]) => [afterFirstSepr(k), v]));
-  // return the filtered steps
-  const exactSteps = new Map([...steps].filter(([k,]) => !k.includes(parseRepWildcard)));
-  const paramsSteps = new Map([...steps].filter(([k,]) => k.includes(parseRepWildcard)));
+  const wkspStepFileSteps = getStepFileSteps(featuresUri);
+  const exactSteps = new Map(wkspStepFileSteps.filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map(wkspStepFileSteps.filter(([k,]) => k.includes(parseRepWildcard)));
   return { featureFileSteps, exactSteps, paramsSteps };
 }
 
-// any feature file step must map to a single python step function 
+
+// any feature file step MUST map to a single python step function (or none)
 // so this function should return the SINGLE best match
 function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   exactSteps: Map<string, StepFileStep>, paramsSteps: Map<string, StepFileStep>): StepFileStep | null {
@@ -142,11 +136,8 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
     return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion    
   }
 
-
-  // NOTE - THIS FUNCTION NEEDS TO BE FAST
-
   let textWithoutType = featureFileStep.textWithoutType;
-  if (textWithoutType.endsWith(":")) // table
+  if (textWithoutType.endsWith(":")) // behave will match e.g. "Given some table:" to "Given some table"
     textWithoutType = textWithoutType.slice(0, -1);
 
   let exactMatch = findExactMatch(textWithoutType, featureFileStep.stepType);

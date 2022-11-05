@@ -1,0 +1,25 @@
+{
+    // https://code.visualstudio.com/api/language-extensions/language-configuration-guide
+    "comments": {
+        "lineComment": "#",
+        "blockComment": [
+            "\"\"\"",
+            "\"\"\""
+        ]
+    },
+    "onEnterRules": [
+        {
+            "beforeText": "^\\s+$",
+            "previousLineText": "^(?!\\s*Feature:).*$", // (does not match)
+            "action": {
+                "indent": "outdent"
+            }
+        },
+        {
+            "beforeText": "^\\s*(Feature:|Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:|Examples:).*",
+            "action": {
+                "indent": "indent"
+            }
+        }
+    ],
+}

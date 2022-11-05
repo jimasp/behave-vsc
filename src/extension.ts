@@ -3,22 +3,26 @@
 // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
+import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   basename,
+  getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, removeExtensionTempDirectory, urisMatch
 } from './common';
-import { StepFileStep } from './stepsParser';
-import { gotoStepHandler } from './gotoStepHandler';
-import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './findStepReferencesHandler';
-import { FileParser } from './fileParser';
-import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './testRunHandler';
-import { TestWorkspaceConfigWithWkspUri } from './test/suite-shared/testWorkspaceConfig';
+import { StepFileStep } from './parsers/stepsParser';
+import { gotoStepHandler } from './handlers/gotoStepHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
+import { FileParser } from './parsers/fileParser';
+import { cancelTestRun, disposeCancelTestRunSource, testRunHandler } from './runners/testRunHandler';
+import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog, DiagLogType } from './logger';
-import { getDebugAdapterTrackerFactory } from './behaveDebug';
+import { getDebugAdapterTrackerFactory } from './runners/behaveDebug';
 import { performance } from 'perf_hooks';
-import { buildStepMappings, StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './stepMappings';
+import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
+import { autoCompleteProvider } from './handlers/autoCompleteProvider';
+import { formatFeatureProvider } from './handlers/formatFeatureProvider';
+import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -75,7 +79,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
-      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler)
+      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
+      vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
+      vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
+      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
     );
 
     const removeTempDirectoryCancelSource = new vscode.CancellationTokenSource();
@@ -99,15 +106,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
       let wkspSettings;
+
       try {
-        if (!item)
+        if (!item || !item.uri || item.uri?.scheme !== 'file')
           return;
 
         const data = testData.get(item);
-        if (data instanceof TestFile) {
-          wkspSettings = getWorkspaceSettingsForFile(item.uri);
-          await data.createScenarioTestItemsFromFeatureFile(wkspSettings, testData, ctrl, item, "resolveHandler");
-        }
+        if (!(data instanceof TestFile))
+          return;
+
+        wkspSettings = getWorkspaceSettingsForFile(item.uri);
+        const content = await getContentFromFilesystem(item.uri);
+        await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, item, "resolveHandler");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error
@@ -127,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     };
 
 
-    // called when a user renames, adds or removes a workspace folder
+    // called when a user renames, adds or removes a workspace folder.
     // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -142,8 +152,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     }));
 
 
+    // called when a user edits a file.
+    // we want to reparse on edit (not just on disk changes) because:
+    // a. the user may run a file they just edited without saving,
+    // b. the semantic highlighting while typing requires the stepmappings to be up to date as the user types,
+    // c. instant test tree updates is a nice bonus for user experience
+    // d. to keep stepmappings in sync in case user clicks go to step def/ref before file save
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
+      try {
+        const uri = event.document.uri;
+        if (!isFeatureFile(uri) && !isStepsFile(uri))
+          return;
+        const wkspSettings = getWorkspaceSettingsForFile(uri);
+        parser.reparseFile(uri, event.document.getText(), wkspSettings, testData, ctrl);
+      }
+      catch (e: unknown) {
+        // entry point function (handler) - show error        
+        config.logger.showError(e, undefined);
+      }
+    }));
+
+
     // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
-    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg)
+    // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
@@ -243,32 +274,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 } // end activate()
 
 
-
 function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, parser: FileParser) {
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
   const wkspSettings = config.workspaceSettings[wkspUri.path];
   const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-  let refreshStepMappingsTS: vscode.CancellationTokenSource;
 
   const updater = async (uri: vscode.Uri) => {
+    if (uri.scheme !== "file")
+      return;
+
     try {
-
-      if (isStepsFile(uri))
-        await parser.updateStepsFromStepsFile(wkspSettings.featuresUri, uri, "updater");
-
-      if (isFeatureFile(uri))
-        await parser.updateTestItemFromFeatureFile(wkspSettings, testData, ctrl, uri, "updater");
-
-      await buildStepMappings(wkspSettings.featuresUri);
+      console.log(`updater: ${uri.fsPath}`);
+      parser.reparseFile(uri, undefined, wkspSettings, testData, ctrl);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
       config.logger.showError(e, wkspUri);
-    }
-    finally {
-      refreshStepMappingsTS?.dispose();
     }
   }
 
@@ -281,23 +304,25 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
 
   // fires on either file/folder delete OR rename (inc. git actions)
   watcher.onDidDelete(uri => {
-
-    const path = uri.path.toLowerCase();
-
-    // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
-    // files, but we cannot determine if this is a file or folder deletion as:
-    //   (a) it has been deleted so we can't stat it, and 
-    //   (b) "." is valid in folder names so we can't determine by looking at the path
-    // but we can ignore specific file extensions or paths we know we don't care about
-    if (path.endsWith(".tmp")) // .tmp = vscode file history file
+    if (uri.scheme !== "file")
       return;
 
-    // log for extension developers in case we need to add another file type above
-    if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
-      diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
-    }
-
     try {
+      const path = uri.path.toLowerCase();
+
+      // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
+      // files, but we cannot determine if this is a file or folder deletion as:
+      //   (a) it has been deleted so we can't stat it, and 
+      //   (b) "." is valid in folder names so we can't determine by looking at the path
+      // but we can ignore specific file extensions or paths we know we don't care about
+      if (path.endsWith(".tmp")) // .tmp = vscode file history file
+        return;
+
+      // log for extension developers in case we need to add another file type above
+      if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
+        diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
+      }
+
       parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
     }
     catch (e: unknown) {

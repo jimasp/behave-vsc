@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { Scenario, TestData } from './testFile';
+import { Scenario, TestData } from './parsers/testFile';
 import { WorkspaceSettings } from './settings';
-import { performance } from 'perf_hooks';
 import { diagLog } from './logger';
 
 
@@ -180,6 +180,8 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
 
 export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
+  if (fileorFolderUri?.scheme !== "file")
+    throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   if (!fileorFolderUri) // handling this here for caller convenience
     throw new Error("uri is undefined");
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
@@ -204,7 +206,9 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string> => {
+export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
+  if (!uri) // handling this here for caller convenience
+    throw new Error("uri is undefined");
   const data = await vwfs.readFile(uri);
   return Buffer.from(data).toString('utf8');
 };
@@ -212,12 +216,17 @@ export const getContentFromFilesystem = async (uri: vscode.Uri): Promise<string>
 
 export const isStepsFile = (uri: vscode.Uri): boolean => {
   const path = uri.path.toLowerCase();
-  return path.includes("/steps/") && path.endsWith(".py") && !path.endsWith("/__init__.py");
+
+  if (!path.includes("/steps/"))
+    return false;
+
+  return path.endsWith(".py");
 }
 
 
-export const isFeatureFile = (uri: vscode.Uri) => {
-  return uri.path.toLowerCase().endsWith(".feature");
+export const isFeatureFile = (uri: vscode.Uri): boolean => {
+  const path = uri.path.toLowerCase();
+  return path.endsWith(".feature");
 }
 
 
@@ -326,4 +335,8 @@ export function basename(uri: vscode.Uri) {
   if (!basename)
     throw "could not determine file name from uri";
   return basename;
+}
+
+export function getLines(text: string) {
+  return text.split(/\r\n|\r|\n/);
 }

@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
+import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
 import { WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { WkspParseCounts } from '../../fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile } from '../../common';
-import { performance } from 'perf_hooks';
-import { featureFileStepRe } from '../../featureParser';
-import { funcRe } from '../../stepsParser';
+import { WkspParseCounts } from '../../parsers/fileParser';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile, getLines } from '../../common';
+import { featureFileStepRe } from '../../parsers/featureParser';
+import { funcRe } from '../../parsers/stepsParser';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -64,8 +64,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 	if (match.length !== 1) {
 		console.log(actualResult);
-		// eslint-disable-next-line no-debugger
-		debugger; // UHOH (did you add a new scenario that hasn't been added to expected results yet? IF a new scenario has been added: see debug console and copy/paste into ws?.expectedResults.ts)
+		// UHOH (did you add a new scenario that hasn't been added to expected results yet? 
+		// IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
+		debugger; // eslint-disable-line no-debugger
 		throw `match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`;
 	}
 
@@ -101,7 +102,7 @@ type FileStep = {
 }
 
 function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
-	const lines = content.trim().split('\n');
+	const lines = getLines(content.trim());
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
 		const stExec = featureFileStepRe.exec(line);
@@ -113,7 +114,7 @@ function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps:
 }
 
 function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<FileStep, string>) {
-	const lines = content.trim().split('\n');
+	const lines = getLines(content.trim());
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
 		const prevLine = lineNo === 0 ? "" : lines[lineNo - 1].trim();
@@ -266,18 +267,18 @@ function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: str
 	try {
 		const expectedCounts = getExpectedCounts(debug, wkspUri, config);
 
-		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName);
-		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName);
-		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName);
-		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName);
-		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName);
-		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName);
+		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName + ": featureFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName + ": stepFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName + ": stepFileStepsExceptCommentedOut");
+		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName + ": featureFileStepsExceptCommentedOut");
+		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName + ": stepMappings");
+		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName + ": testCount");
 
 		if (hasMuliRootWkspNode) {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName);
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName + ": nodeCount");
 		}
 		else {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName);
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName + ": nodeCount");
 		}
 	}
 	catch (e: unknown) {

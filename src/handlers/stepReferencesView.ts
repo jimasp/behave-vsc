@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { openDocumentRange, urisMatch } from './common';
-import { FeatureFileStep } from './featureParser';
+import { openDocumentRange, urisMatch } from '../common';
+import { FeatureFileStep } from '../parsers/featureParser';
 
 
 export class StepReference extends vscode.TreeItem {
@@ -13,7 +13,7 @@ export class StepReference extends vscode.TreeItem {
     super(featureFileName, vscode.TreeItemCollapsibleState.Expanded);
     this.description = vscode.workspace.asRelativePath(resourceUri).replace(featureFileName, "").slice(0, -1);
     this.children = this.featureRefDetails.map(featureStep => new StepReferenceDetails(featureStep.text, featureStep, this));
-    this.iconPath = new vscode.ThemeIcon('list-selection'); // TODO: find better icon
+    this.iconPath = new vscode.ThemeIcon('file');
   }
 }
 

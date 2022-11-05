@@ -6,5 +6,8 @@ Please link to the issue that this resolves here.
 **Description of changes**
 Short description of your changes, or any other info not detailed in the issue.
 
+**Testing**
+Please indicate how you have tested your changes, and on which OS.
+
 **Declaration**
-By submitting this pull request, I confirm that my contribution is made under the terms of the repository's parent license, and requires no license modification or attribution.
+By submitting this pull request, I confirm that my contribution is made under the terms of the parent repository's license, and requires no attribution or license modification.

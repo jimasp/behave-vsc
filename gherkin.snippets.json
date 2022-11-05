@@ -1,0 +1,68 @@
+{
+    "Scenario": {
+        "prefix": [
+            "scen"
+        ],
+        "body": [
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\tWhen ",
+            "\tThen "
+        ]
+    },
+    "Scenario Outline": {
+        "prefix": [
+            "sceo"
+        ],
+        "body": [
+            "Scenario Outline: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven \"<input>\"",
+            "\tWhen ",
+            "\tThen \"<output>\"",
+            "",
+            "\tExamples: ex1",
+            "\t\t| in1 | out1 |",
+            "\t\t| in2 | out2 |",
+            "",
+            "\tExamples: ex2",
+            "\t\t| in3 | out3 |",
+            "\t\t| in4 | out4 |"
+        ]
+    },
+    "Scenario with Given Table": {
+        "prefix": [
+            "scgt"
+        ],
+        "body": [
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\t\t| a | b |",
+            "\t\t| c | d |",
+            "\tWhen ",
+            "\tThen "
+        ]
+    },
+    "Scenario with Then Table": {
+        "prefix": [
+            "sctt"
+        ],
+        "body": [
+            "Scenario: ${1:name_${TM_LINE_NUMBER}}$0",
+            "\tGiven ",
+            "\tWhen ",
+            "\tThen the results are",
+            "\t\t| out1 |",
+            "\t\t| out2 |"
+        ]
+    },
+    "Examples": {
+        "prefix": [
+            "exam"
+        ],
+        "body": [
+            "\nExamples: ${1:ex_${TM_LINE_NUMBER}}$0",
+            "\t| in1 | out1 |",
+            "\t| in2 | out2 |"
+        ]
+    }
+}

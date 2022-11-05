@@ -91,6 +91,8 @@ export class WorkspaceSettings {
     if (!this.workspaceRelativeFeaturesPath)
       this.workspaceRelativeFeaturesPath = "features";
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
+    if (this.workspaceRelativeFeaturesPath === ".")
+      this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
       // note - this error should never happen or some logic/hooks are wrong 
       // (or the user has actually deleted/moved the features path since loading)
@@ -156,21 +158,6 @@ export class WorkspaceSettings {
     }
 
 
-    if (!config.integrationTestRun) {
-      // TODO remove deprecated
-      if (this.fastSkipTags.length === 0) {
-        const warning = tryDeprecatedFastSkipList(this, wkspConfig);
-        if (warning)
-          this._warnings.push(warning);
-      }
-
-      if (Object.keys(this.envVarOverrides).length === 0) {
-        const warning = tryDeprecatedEnvVarList(this, wkspConfig);
-        if (warning)
-          this._warnings.push(warning);
-      }
-    }
-
     if (this.runParallel && this.runAllAsOne)
       this._warnings.push(`behave-vsc.runParallel is overridden by behave-vsc.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
 
@@ -230,67 +217,11 @@ export class WorkspaceSettings {
     }
 
     if (this._fatalErrors.length > 0) {
-      logger.logSettingsWarning(`\n${this._warnings.map(err => "FATAL ERROR: " + err).join("\n")}`, this.uri);
-      throw new WkspError(`Fatal error due to invalid workspace setting in workspace "${this.name}", cannot continue.`, this.uri);
+      throw new WkspError(`\nFATAL error due to invalid workspace setting in workspace "${this.name}". Extension cannot continue. ` +
+        `${this._fatalErrors.join("\n")}\n` +
+        `NOTE: fatal errors may require you to restart vscode after correcting the problem.) `, this.uri);
     }
   }
 
 }
 
-
-
-function tryDeprecatedFastSkipList(wkspSettings: WorkspaceSettings, wkspConfig: vscode.WorkspaceConfiguration): string | undefined {
-
-  const fastSkipListCfg: string | undefined = wkspConfig.get("fastSkipList");
-
-  if (fastSkipListCfg) {
-    if (fastSkipListCfg.indexOf("@") === -1 || fastSkipListCfg.length < 2)
-      return `Invalid behave-vsc.fastSkipList setting ignored.`;
-
-    try {
-      const skipList = fastSkipListCfg.replace(/\s*,\s*/g, ",").trim().split(",");
-      let invalid = false;
-      skipList.forEach(s => { s = s.trim(); if (s !== "" && !s.trim().startsWith("@")) invalid = true; });
-      if (invalid)
-        return `Invalid behave-vsc.fastSkipList setting ignored.`;
-      wkspSettings.fastSkipTags = skipList.filter(s => s !== "");
-    }
-    catch {
-      return `Invalid behave-vsc.fastSkipList setting ignored.`;
-    }
-
-    return `behave-vsc.fastSkipList setting is deprecated and will be removed in a future release. Please use behave-vsc.fastSkipTags instead.` +
-      ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
-  }
-
-}
-
-
-function tryDeprecatedEnvVarList(wkspSettings: WorkspaceSettings, wkspConfig: vscode.WorkspaceConfiguration): string | undefined {
-
-  const envVarListCfg: string | undefined = wkspConfig.get("envVarList");
-
-  if (envVarListCfg) {
-    if (envVarListCfg.indexOf(":") === -1 || envVarListCfg.indexOf("'") === -1 || envVarListCfg.length < 7)
-      return `Invalid behave-vsc.envVarList setting ignored.`;
-
-    try {
-      const escape = "#^@";
-      const envList = envVarListCfg.replace(/'\s*:\s*'/g, "':'").replace(/'\s*,\s*'/g, "','").trim();
-      envList.split("',").filter(s => s.trim() !== "").map(s => {
-        s = s.replace(/\\'/g, escape);
-        const e = s.split("':");
-        const name = e[0].trim().replace(/'/g, "").replace(escape, "'");
-        const value = e[1].trim().replace(/'/g, "").replace(escape, "'");
-        console.log(`${name}='${value}'`)
-        wkspSettings.envVarOverrides[name] = value;
-      });
-    }
-    catch {
-      return `Invalid behave-vsc.envVarList setting ignored.`;
-    }
-
-    return `behave-vsc.envVarList setting is deprecated and will be removed in a future release. Please use behave-vsc.envVarOverrides instead.` +
-      ` More information is available here: https://github.com/jimasp/behave-vsc/releases/tag/v0.3.0.`;
-  }
-}

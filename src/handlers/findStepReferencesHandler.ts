@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { config } from "./configuration";
-import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from './common';
+import { config } from "../configuration";
+import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
-import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from './stepMappings';
-import { FeatureFileStep } from './featureParser';
-import { funcRe } from './stepsParser';
+import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
+import { FeatureFileStep } from '../parsers/featureParser';
+import { funcRe } from '../parsers/stepsParser';
 
 
 
@@ -55,9 +55,6 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
       throw `Find All Step References must be used from a steps file, uri was: ${fileUri}`;
     }
 
-    if (!await waitOnReadyForStepsNavigation())
-      return;
-
     if (textEditor) {
       const lineNo = textEditor.selection.active.line;
       const lineText = textEditor.document.lineAt(lineNo).text.trim();
@@ -74,6 +71,10 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     }
 
     if (!refreshStore.uri)
+      return;
+
+    const waitMs = textEditor ? 500 : 5000;
+    if (!await waitOnReadyForStepsNavigation(waitMs))
       return;
 
     const stepReferences = getFeatureReferencesToStepFileFunction(refreshStore.uri, refreshStore.lineNo);

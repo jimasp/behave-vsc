@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
-import { QueueItem } from "./extension";
-import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from './common';
-import { config } from './configuration';
-import { WorkspaceSettings } from './settings';
+import { QueueItem } from "../extension";
+import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
+import { config } from '../configuration';
+import { WorkspaceSettings } from '../settings';
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
@@ -70,7 +70,7 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
   }
 
   item.scenario.result = result.status;
-  run.appendOutput(`test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}`);
+  run.appendOutput(`test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}\r\n`);
 }
 
 
@@ -106,8 +106,13 @@ function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCa
       if (!reasons)
         return;
       reasons.forEach(reason => {
-        //let reasonBlock = `${reason.$.type}: ${reason.$.message}\n`;
-        const reasonBlock = reason._.trim();
+        let reasonBlock = "";
+        if (reason.$.type && reason.$.type !== "NoneType")
+          reasonBlock += `${reason.$.type.replace("\n", "")}\n`;
+        if (reason.$.message)
+          reasonBlock += `${reason.$.message.replace("\n", "")}\n`;
+        if (reason._)
+          reasonBlock += reason._.trim();
         reasonBlocks.push(reasonBlock);
       });
     }

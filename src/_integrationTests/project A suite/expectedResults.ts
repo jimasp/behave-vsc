@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { WkspParseCounts } from "../../fileParser";
+import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 
@@ -10,7 +10,7 @@ export function getWs1ExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config
     tests: { nodeCount: 53, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 107, stepMappings: 106 // (1 diff = When we have a missing step)
+    featureFileStepsExceptCommentedOut: 107, stepMappings: 106 // (1 diff = "When we have a missing step")
   };
 }
 
@@ -74,7 +74,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a failing test',
       test_children: undefined,
       test_description: undefined,
@@ -261,7 +261,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: "don't skip and fail",
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: "don't skip and fail",
       test_children: undefined,
       test_description: undefined,
@@ -278,7 +278,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/mixed_skip.feature',
       scenario_getLabel: 'fast skip a failing test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'fast skip a failing test',
       test_children: undefined,
       test_description: undefined,
@@ -295,7 +295,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group2_features/duplicate.feature',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a test',
       test_children: undefined,
       test_description: undefined,
@@ -329,7 +329,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/table.feature',
       scenario_getLabel: 'Use a table (fail)',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: Then we will find 25 people in "Testers" ... failed\nTraceback (most recent call last):\n  File -snip- assert int(count) == sum(1 for ud in context.userDepts if ud.dept == dept)\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: Then we will find 25 people in "Testers" ... failed\nTraceback (most recent call last):\n  File -snip- assert int(count) == sum(1 for ud in context.userDepts if ud.dept == dept)\nAssertionError',
       scenario_scenarioName: 'Use a table (fail)',
       test_children: undefined,
       test_description: undefined,
@@ -362,7 +362,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/textblock.feature',
       scenario_getLabel: 'run a failing textblock test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a failing textblock test',
       test_children: undefined,
       test_description: undefined,
@@ -394,26 +394,9 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
-      scenario_getLabel: 'Blenders Success paramless',
-      scenario_isOutline: true,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'Blenders Success paramless',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success paramless',
-      test_label: 'Blenders Success paramless',
-      test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
-      test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureName: 'Mixed outline',
-      scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fail <thing>',
       scenario_isOutline: true,
-      scenario_result: 'Failing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
       scenario_scenarioName: 'Blenders Fail <thing>',
       test_children: undefined,
       test_description: undefined,
@@ -443,11 +426,28 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
 
     new TestResult({
       scenario_fastSkipTag: false,
+      scenario_featureFileRelativePath: 'behave tests/some tests/group1_features/outline_mixed.feature',
+      scenario_featureName: 'Mixed outline',
+      scenario_getLabel: 'Blenders Success paramless',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success paramless',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature/Blenders Success paramless',
+      test_label: 'Blenders Success paramless',
+      test_parent: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature',
+      test_uri: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_fastSkipTag: false,
       scenario_featureName: 'Mixed outline',
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fail paramless',
       scenario_isOutline: true,
-      scenario_result: 'Failing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
       scenario_scenarioName: 'Blenders Fail paramless',
       test_children: undefined,
       test_description: undefined,
@@ -498,7 +498,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_getLabel: 'Blenders Fast Skip a Failure',
       scenario_isOutline: true,
-      scenario_result: 'Failing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
       scenario_scenarioName: 'Blenders Fast Skip a Failure',
       test_children: undefined,
       test_description: undefined,
@@ -515,7 +515,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureFileRelativePath: '{{featurePath}}/group1_features/duplicate.feature',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a test',
       test_children: undefined,
       test_description: undefined,
@@ -583,7 +583,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
       scenario_scenarioName: 'run a test',
       test_children: undefined,
       test_description: undefined,
@@ -617,7 +617,7 @@ export function getWs1ExpectedResults(debug: boolean, wkspUri: vscode.Uri, confi
       scenario_featureName: 'Bad step',
       scenario_getLabel: 'step with exception should show failure message',
       scenario_isOutline: false,
-      scenario_result: 'Failing step: When we have a step that raises a non-assertion exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("testing a step exception")\nException: testing a step exception',
+      scenario_result: 'Exception\nTesting a step exception\nFailing step: When we have a step that raises a non-assertion exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("Testing a step exception")\nException: Testing a step exception',
       scenario_scenarioName: 'step with exception should show failure message',
       test_children: undefined,
       test_description: undefined,

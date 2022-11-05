@@ -1,4 +1,9 @@
 {
+    "[gherkin]": {
+        "editor.suggest.showSnippets": true,
+        "editor.suggest.showFunctions": true,
+        "editor.formatOnSave": true
+    },
     "python.testing.unittestArgs": [
         "-v",
         "-s",

@@ -31,7 +31,7 @@ def then_step(context):
     pass
 
 
-@step("a simple step")
+@step(u"a simple step")
 def simple_step(context):
     pass
 
@@ -137,3 +137,8 @@ def wrapped_step3(context, a, b):
 )    
 def wrapped_step4(context):
     pass
+
+
+@step(u'we have a u string with a param {param}')
+def find_count(context, param):
+    assert param == "foo"
