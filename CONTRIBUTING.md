@@ -249,15 +249,22 @@ Note that the automated tests currently *only* verify the most important functio
 #### 2. Run basic manual UI tests
 
 - Make sure you do not have the marketplace version of the extension installed
-- a. start "Debug: multiroot workspace", then in "project A":
-- b. clear all test results, run a single test
-- c. clear all test results, run all feature tests and check that the run stop button works
-- d. clear all test results, debug all feature tests and check that the run stop (not the debug stop) button works
-- e. clear all test results, set a breakpoint, debug a single test and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- f. remove the breakpoint. clear all test results, start a debug run of group 1 features and check that the debug stop button works
-- g. start a debug run of unit tests and check that debug stop button works
+- a. start "Debug: multiroot workspace", then in the test UI (i.e. the side panel), in `project A`:
+- b. clear all test results, run a single test in `project A` from the test UI
+- c. clear all test results, debug a single test in `project A` from the test UI
+- d. clear all test results, run a single test in `project A` from the button from inside the feature file
+- e. clear all test results, debug a single test in `project A` from the button from inside the feature file
+- f. clear all test results, run `project A` node, check success/fail/skip (ignore fastskip in `project A`, as it is set to run all as one)
+- g. clear all test results, run `project B` node, check success/fail/skip/fast skip
+- h. clear all test results, run `Feature Tests` node and check that the run stop button works (this may take two seconds, but you should only have to press it once)
+- i. clear all test results, debug `Feature Tests` node, click back to the testing panel, and check that the run stop (not the debug stop) button works (this may take two seconds, but you should only have to press it once). Note - if you have actually changed the debug stop functionality, it's important to test this on all platforms.
+- j. clear all test results, go to `project A/behave tests/some tests/steps/shared.py` set a breakpoint in `step_inst` function on the `pass` line, debug a single test in `project A` and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
+- k. remove the breakpoint. clear all test results, start a debug run of group 1 features and check that the debug stop button works
+- l. start a debug run of unit tests (not feature tests) and check that debug stop button works
+- m. go to any feature file, check that `go to step` works
+- n. go to any steps file, check that `find all step references` works
 
-#### 3. Run change-specific manual UI tests
+#### 3. Run *change-specific* manual UI tests
 
 After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
 
