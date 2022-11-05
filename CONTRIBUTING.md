@@ -241,17 +241,17 @@ Depending on the nature and size of your PR, you'll normally want to run some te
 
 Note that the automated tests currently *only* verify the most important functionality, i.e. behave results and step references. They do not verify other built-in convenience features like automatic feature file reparsing, file autoformatting, autocompletion, syntax highlighting, etc. which should be tested manually if you have touched those or related areas.
 
-- First to make sure the tests are running with a clean install, make sure you have committed all your changes, then run the following commands:
+- First to make sure the tests are running with a clean install, *make sure you have committed all your changes*, then run the following commands:
   
   ```bash
   git status
-  git reset --hard
+  git clean -fdx
   git pull origin main
   npm install 
   npm audit fix 
   npm run test
   ```
-  
+
 - Make sure you do not have the marketplace version of the extension installed
 - Close vscode and run `npm run test`
   - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
