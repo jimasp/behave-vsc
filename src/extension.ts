@@ -58,7 +58,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     diagLog("activate called, node pid:" + process.pid);
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
-    const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
+    const ctrl = vscode.tests.createTestController(`behave-vsc-tid.TestController`, 'Feature Tests');
     parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
     // any function contained in subscriptions.push() will execute immediately,
@@ -76,10 +76,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       ctrl,
       treeView,
       config,
-      vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
-      vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
-      vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
-      vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
+      vscode.commands.registerTextEditorCommand(`behave-vsc-tid.gotoStep`, gotoStepHandler),
+      vscode.commands.registerTextEditorCommand(`behave-vsc-tid.findStepReferences`, findStepReferencesHandler),
+      vscode.commands.registerCommand(`behave-vsc-tid.stepReferences.prev`, prevStepReferenceHandler),
+      vscode.commands.registerCommand(`behave-vsc-tid.stepReferences.next`, nextStepReferenceHandler),
       vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
       vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
       vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
@@ -191,7 +191,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
-        const affected = event && event.affectsConfiguration("behave-vsc");
+        const affected = event && event.affectsConfiguration("behave-vsc-tid");
         if (!affected && !forceFullRefresh && !testCfg)
           return;
 

@@ -33,7 +33,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		) {
 
 			if (expectedResult.test_id === actualResult.test_id) {
-				debugger; // eslint-disable-line no-debugger 
+				debugger; // eslint-disable-line no-debugger
 				throw `test ids matched but properties were different:\n` +
 				`expectedResult:${JSON.stringify(expectedResult)}\n` +
 				`actualResult:${JSON.stringify(actualResult)}\n`;
@@ -45,7 +45,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		// now match shortened expected result string:
 
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
-			debugger; // eslint-disable-line no-debugger	
+			debugger; // eslint-disable-line no-debugger
 			if (actualResult.scenario_result) {
 				throw `test ids matched but result did not match expected result\n` +
 				`expectedResult:${JSON.stringify(expectedResult)}\n` +
@@ -64,7 +64,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 	if (match.length !== 1) {
 		console.log(actualResult);
-		// UHOH (did you add a new scenario that hasn't been added to expected results yet? 
+		// UHOH (did you add a new scenario that hasn't been added to expected results yet?
 		// IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
 		debugger; // eslint-disable-line no-debugger
 		throw `match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`;
@@ -362,7 +362,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	if (extInstances)
 		return extInstances;
 
-	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
+	const extension = vscode.extensions.getExtension("jimasp.behave-vsc-tid");
 	assert(extension);
 	assert(extension.isActive);
 
@@ -372,7 +372,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	const tookMs = performance.now() - start;
 	console.log(`activate call time: ${tookMs} ms`);
 
-	// unless there is a breakpoint in activate, then activate should take < 1ms on most machines as it is uncontested at this point, 
+	// unless there is a breakpoint in activate, then activate should take < 1ms on most machines as it is uncontested at this point,
 	// (i.e. it may be considerably slower than this during normal vscode startup contention when vscode is loading itself and other extensions)
 	// but if it goes over 5ms here and there is no breakpoint in activate, then we've messed something up
 	// (for a more realistic contested startup time, filter the debug console log by "perf info:" in this source environment and look for "activate"
@@ -392,7 +392,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 
 
 // NOTE: when workspace-multiroot suite/index.ts is run (in order to test parallel workspace runs) this
-// function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
+// function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace,
 // so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
 export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string, testConfig: TestWorkspaceConfig,
 	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
@@ -429,13 +429,13 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	console.log(`${consoleName}: testData = ${JSON.stringify(instances.testData)}`);
 	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
-	// included tests (scenarios) and expected tests lengths should be equal, but 
-	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
+	// included tests (scenarios) and expected tests lengths should be equal, but
+	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added
 	assert(include.length >= expectedResults.length, consoleName + ", (see counts above)");
 	console.log(`${consoleName}: initialised`);
 
 
-	// run behave tests - we kick the runHandler off inside the lock to ensure that readyForRun() will 
+	// run behave tests - we kick the runHandler off inside the lock to ensure that readyForRun() will
 	// pass, i.e. no other parsing gets kicked off until it has begun.
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
@@ -448,7 +448,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 
 	if (debug) {
-		// timeout hack to show test ui during debug testing so we can see progress		
+		// timeout hack to show test ui during debug testing so we can see progress
 		await new Promise(t => setTimeout(t, 1000));
 		await vscode.commands.executeCommand("workbench.view.testing.focus");
 	}

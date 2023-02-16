@@ -8,20 +8,20 @@
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
-    "behave-vsc.envVarOverrides": {
+    "behave-vsc-tid.envVarOverrides": {
         "some_var": "double qu\"oted",
         "some_var2": "single qu'oted",
         "space_var": " ",
         "USERNAME": "bob-163487",
     },
-    "behave-vsc.fastSkipTags": [
+    "behave-vsc-tid.fastSkipTags": [
         "@fast-skip-me",
         "@fast-skip-me-too"
     ],
-    "behave-vsc.featuresPath": "behave tests/some tests/",
-    "behave-vsc.justMyCode": true,
-    "behave-vsc.runAllAsOne": true,
-    "behave-vsc.runParallel": false,
-    "behave-vsc.showSettingsWarnings": true,
-    "behave-vsc.xRay": true
+    "behave-vsc-tid.featuresPath": "behave tests/some tests/",
+    "behave-vsc-tid.justMyCode": true,
+    "behave-vsc-tid.runAllAsOne": true,
+    "behave-vsc-tid.runParallel": false,
+    "behave-vsc-tid.showSettingsWarnings": true,
+    "behave-vsc-tid.xRay": true
 }

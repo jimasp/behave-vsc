@@ -17,7 +17,7 @@ export class StepReference extends vscode.TreeItem {
 
 class StepReferenceDetails extends vscode.TreeItem {
   public readonly range: vscode.Range;
-  public readonly contextValue = "behave-vsc.stepReferences.navKeysEnabled";
+  public readonly contextValue = "behave-vsc-tid.stepReferences.navKeysEnabled";
 
   constructor(
     public readonly label: string,
@@ -46,7 +46,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
   public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
   private _setStepReferencesNavKeysEnabled(enable: boolean) {
     // also see StepReferenceDetails.contextValue
-    vscode.commands.executeCommand('setContext', `behave-vsc.stepReferences.navKeysEnabled`, enable);
+    vscode.commands.executeCommand('setContext', `behave-vsc-tid.stepReferences.navKeysEnabled`, enable);
   }
 
   setTreeView(treeView: vscode.TreeView<vscode.TreeItem>) {
@@ -58,7 +58,7 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
     this._treeView.message = message;
     this._stepReferences = stepReferences;
     this._onDidChangeTreeData.fire();
-    vscode.commands.executeCommand('setContext', 'behave-vsc.stepReferences.visible', true);
+    vscode.commands.executeCommand('setContext', 'behave-vsc-tid.stepReferences.visible', true);
     this._setStepReferencesNavKeysEnabled(this._treeView.visible);
   }
 

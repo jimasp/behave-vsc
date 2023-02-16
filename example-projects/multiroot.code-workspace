@@ -26,8 +26,8 @@
 		},
 	],
 	"settings": {
-		"behave-vsc.multiRootRunWorkspacesInParallel": true,
-		"behave-vsc.showSettingsWarnings": true,
-		"behave-vsc.xRay": true
+		"behave-vsc-tid.multiRootRunWorkspacesInParallel": true,
+		"behave-vsc-tid.showSettingsWarnings": true,
+		"behave-vsc-tid.xRay": true
 	}
 }

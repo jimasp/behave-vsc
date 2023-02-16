@@ -1,9 +1,9 @@
 {
 	"contributes": {
 		"configuration": {
-			"title": "behave-vsc",
+			"title": "behave-vsc-tid",
 			"properties": {
-				"behave-vsc.envVarOverrides": {
+				"behave-vsc-tid.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
 					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the workspace.",
@@ -11,58 +11,58 @@
 						"type": "string"
 					}
 				},
-				"behave-vsc.fastSkipTags": {
+				"behave-vsc-tid.fastSkipTags": {
 					"scope": "resource",
 					"type": "array",
-					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and `#behave-vsc.runAllAsOne#` is enabled (or when debugging).",
+					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and `#behave-vsc-tid.runAllAsOne#` is enabled (or when debugging).",
 					"items": {
 						"type": "string",
 						"pattern": "@.+"
 					}
 				},
-				"behave-vsc.featuresPath": {
+				"behave-vsc-tid.featuresPath": {
 					"scope": "resource",
 					"type": "string",
 					"markdownDescription": "*workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
 					"default": "features"
 				},
-				"behave-vsc.justMyCode": {
+				"behave-vsc-tid.justMyCode": {
 					"scope": "resource",
 					"type": "boolean",
 					"markdownDescription": "If set to false (disabled), the debugger will step into external code when debugging a behave test.",
 					"default": true
 				},
-				"behave-vsc.multiRootRunWorkspacesInParallel": {
+				"behave-vsc-tid.multiRootRunWorkspacesInParallel": {
 					"scope": "window",
 					"type": "boolean",
 					"markdownDescription": "For multi-root workspaces only. If enabled, then when behave tests are run from more than one workspace, behave tests from those workspaces are run at the same time. This setting should be in your `*.code-workspace` file.",
 					"default": true
 				},
-				"behave-vsc.runAllAsOne": {
+				"behave-vsc-tid.runAllAsOne": {
 					"scope": "resource",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable `#behave-vsc.runParallel#`. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
+					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable `#behave-vsc-tid.runParallel#`. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
 					"default": true
 				},
-				"behave-vsc.runParallel": {
+				"behave-vsc-tid.runParallel": {
 					"scope": "resource",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable `#behave-vsc.runAllAsOne#` so running all tests (not just selected/grouped tests) will use runParallel.",
+					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable `#behave-vsc-tid.runAllAsOne#` so running all tests (not just selected/grouped tests) will use runParallel.",
 					"default": false
 				},
-				"behave-vsc.showSettingsWarnings": {
+				"behave-vsc-tid.showSettingsWarnings": {
 					"scope": "window",
 					"type": "boolean",
 					"markdownDescription": "Specifies whether the Behave VSC output window displays warnings about configuration settings. For multi-root workspaces, you may wish to set this in your `*.code-workspace` file.",
 					"default": true
 				},
-				"behave-vsc.xRay": {
+				"behave-vsc-tid.xRay": {
 					"scope": "window",
 					"type": "boolean",
 					"markdownDescription": "Specifies whether extension errors have stack traces and diagnostics are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools`. Diagnostic logs are noisy, and may have a small performance impact.",
 					"default": false
 				},
-				"behave-vsc.runFileAsOne": {
+				"behave-vsc-tid.runFileAsOne": {
 					"scope": "resource",
 					"type": "boolean",
 					"markdownDescription": "Specifies whether all tests in a file are run in the same  behave instance when clicked on file or folder. Enabling this setting will behave exactly for a file or folder as running all your tests",
@@ -72,41 +72,41 @@
 		},
 		"commands": [
 			{
-				"command": "behave-vsc.gotoStep",
+				"command": "behave-vsc-tid.gotoStep",
 				"title": "Go to Step Definition"
 			},
 			{
-				"command": "behave-vsc.findStepReferences",
+				"command": "behave-vsc-tid.findStepReferences",
 				"title": "Find All Step References"
 			},
 			{
-				"command": "behave-vsc.stepReferences.next",
+				"command": "behave-vsc-tid.stepReferences.next",
 				"title": "Step References: Next"
 			},
 			{
-				"command": "behave-vsc.stepReferences.prev",
+				"command": "behave-vsc-tid.stepReferences.prev",
 				"title": "Step References: Previous"
 			}
 		],
 		"keybindings": [
 			{
-				"command": "behave-vsc.gotoStep",
+				"command": "behave-vsc-tid.gotoStep",
 				"key": "alt+f12",
 				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/"
 			},
 			{
-				"command": "behave-vsc.findStepReferences",
+				"command": "behave-vsc-tid.findStepReferences",
 				"key": "alt+f12",
 				"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/"
 			},
 			{
-				"command": "behave-vsc.stepReferences.next",
-				"when": "behave-vsc.stepReferences.navKeysEnabled",
+				"command": "behave-vsc-tid.stepReferences.next",
+				"when": "behave-vsc-tid.stepReferences.navKeysEnabled",
 				"key": "f4"
 			},
 			{
-				"command": "behave-vsc.stepReferences.prev",
-				"when": "behave-vsc.stepReferences.navKeysEnabled",
+				"command": "behave-vsc-tid.stepReferences.prev",
+				"when": "behave-vsc-tid.stepReferences.navKeysEnabled",
 				"key": "shift+f4"
 			}
 		],
@@ -152,12 +152,12 @@
 			"editor/context": [
 				{
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/",
-					"command": "behave-vsc.gotoStep",
+					"command": "behave-vsc-tid.gotoStep",
 					"group": "navigation"
 				},
 				{
 					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
-					"command": "behave-vsc.findStepReferences",
+					"command": "behave-vsc-tid.findStepReferences",
 					"group": "navigation"
 				}
 			]
@@ -167,7 +167,7 @@
 				{
 					"id": "StepReferences",
 					"title": "Step References",
-					"icon": "images/behave-vsc.png"
+					"icon": "images/behave-vsc-tid.png"
 				}
 			]
 		},
@@ -176,9 +176,9 @@
 				{
 					"id": "StepReferences",
 					"name": "Step References",
-					"icon": "images/behave-vsc.png",
+					"icon": "images/behave-vsc-tid.png",
 					"contextualTitle": "Step References",
-					"when": "behave-vsc.stepReferences.visible"
+					"when": "behave-vsc-tid.stepReferences.visible"
 				}
 			]
 		},
@@ -189,11 +189,11 @@
 			}
 		]
 	},
-	"name": "behave-vsc",
+	"name": "behave-vsc-tid",
 	"displayName": "Behave VSC",
 	"description": "Debug, Run and Navigate Python behave tests",
 	"version": "0.5.1",
-	"icon": "images/behave-vsc.png",
+	"icon": "images/behave-vsc-tid.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
 		"theme": "dark"
@@ -201,13 +201,13 @@
 	"publisher": "jimasp",
 	"private": true,
 	"license": "SEE LICENSE IN LICENSE.txt",
-	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
+	"homepage": "https://github.com/jimasp/behave-vsc-tid/blob/main/README.md",
 	"bugs": {
-		"url": "https://github.com/jimasp/behave-vsc/issues"
+		"url": "https://github.com/jimasp/behave-vsc-tid/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/jimasp/behave-vsc.git"
+		"url": "https://github.com/jimasp/behave-vsc-tid.git"
 	},
 	"engines": {
 		"vscode": "^1.72.2"

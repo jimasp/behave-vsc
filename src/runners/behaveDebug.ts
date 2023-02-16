@@ -77,7 +77,7 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
     const env = { ...process.env, ...wkspSettings.envVarOverrides };
 
     const debugLaunchConfig = {
-      name: `behave-vsc-debug`,
+      name: `behave-vsc-tid-debug`,
       console: "internalConsole",
       type: "python",
       cwd: wkspSettings.uri.fsPath,

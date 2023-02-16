@@ -10,7 +10,7 @@
 - Before starting any development, please make sure to *fully read through both the [README](README.md) and this document*. It may save you some development pain and/or solve your issue.
 - If you are going to be developing/debugging this extension, then disable the installed (marketplace) version of the extension. Leaving the extension enabled while debugging the extension can cause confusing side-effects via background execution.
 - If you want to contribute to this extension, please read through everything below, then fork the repo, make your changes, and submit a pull request.
-- This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
+- This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc-tid).
 - Bug fixes are great. New features will be considered, but see [Development guidelines](#development-guidelines).
 
 ---
@@ -36,13 +36,13 @@
 4. ***Close visual studio code***
 5. Open a command line window, go to your source folder, and clone the extension source code, example:
     - `cd mysourcedir`
-    - `git clone https://github.com/jimasp/behave-vsc.git`
+    - `git clone https://github.com/jimasp/behave-vsc-tid.git`
 6. Change to the cloned directory, and install required node packages:
-    - `cd mysourcedir/behave-vsc`
+    - `cd mysourcedir/behave-vsc-tid`
     - `npm install`
-7. Install behave 1.2.6 if required:  
+7. Install behave 1.2.6 if required:
     - `python -m pip install behave==1.2.6`
-8. Install required extensions for developing the extension:  
+8. Install required extensions for developing the extension:
     - `code --install-extension ms-python.python` (if not already installed)
     - `code --install-extension dbaeumer.vscode-eslint`
     - `code --install-extension amodio.tsl-problem-matcher`
@@ -64,7 +64,7 @@
 
 1. Set up your development environment as above.
 2. Make sure you have disabled the marketplace version of the extension.
-3. Open vscode, and open the behave-vsc source folder (close any other folders you have open).
+3. Open vscode, and open the behave-vsc-tid source folder (close any other folders you have open).
 4. If you are using windows, and vscode is set to use powershell for terminal scripts, then you may need to enable powershell scripts to run, e.g. `Set-ExecutionPolicy RemoteSigned`. (You will know if this is an issue because vscode will pop up a powershell error message when you try to debug the extension when it tries to run `npm.ps1`.)
 5. (`Ctrl+Shift+B`) to build and kick off a watch (this is optional as it will happen anyway, but you should do it if it's your first-ever debug).
 6. (Optional) set breakpoints in the extension code, e.g. start with a breakpoint in `src/extension.ts activate` function.
@@ -80,7 +80,7 @@
 - Remember to disable the extension.
 - Open `.vscode/launch.json` in the extension repo project and change the `args` setting that contains `"${workspaceFolder}/../my-project"` to repoint it at your project path.
 - Then it's the same steps as above, just click "Debug - MY workspace"
-- You probably want to enable `behave-vsc.xRay` in your settings.json so you get diagnostic logs in debug console
+- You probably want to enable `behave-vsc-tid.xRay` in your settings.json so you get diagnostic logs in debug console
 
 ---
 
@@ -89,7 +89,7 @@
 Either:
 
 - a. (`Ctrl+Shift+D`) and click one of the "Run Test Suite" targets (if a "Run Tests..." is the current selection, you can just hit (`F5`) from anywhere)
-OR  
+OR
 - b. Close vscode and excecute `npm run test` from a command line.
 
 ---
@@ -101,7 +101,7 @@ OR
 3. Optionally add a breakpoint in e.g. `runAllTestsAndAssertTheResults`.
 4. Hit play or press `F5` to run the tests in a new window with your extension loaded.
 5. See the output of the test result in the debug console (in your original source environment, not the host environment).
-6. To debug `npm run test` itself (as opposed the test suite), see the comment in `runTestSuites.ts`.  
+6. To debug `npm run test` itself (as opposed the test suite), see the comment in `runTestSuites.ts`.
 If you want to add a test, they should go somewhere in `src/test`.
     - The provided test runner will only consider files matching the name pattern `**.test.ts`.
     - You can create folders inside the `test` folder to structure your tests.
@@ -151,13 +151,13 @@ feature file formatting is provided by:
 
 ### Diagnostics
 
-- Diagnostic logs are controlled via the extension setting `behave-vsc.xRay` (this is enabled by default in the example projects and for most integration tests).
+- Diagnostic logs are controlled via the extension setting `behave-vsc-tid.xRay` (this is enabled by default in the example projects and for most integration tests).
 - Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 
 ### Error handling
 
-- Stack traces will only appear if `behave-vsc.xRay` is enabled.
+- Stack traces will only appear if `behave-vsc-tid.xRay` is enabled.
 - The most common error handling stack is: `throw "msg"` -> `throw WkspError` -> `config.showError`.
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).
 - If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, only gets shown once, and has the full expected stack if `xRay` is enabled.
@@ -180,7 +180,7 @@ feature file formatting is provided by:
 
 ## Troubleshooting
 
-- See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
+- See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.
 - ***Most extension development problems can be resolved by either:***
   - ***(a) removing all breakpoints, or***
   - ***(b) restarting the watch tasks in terminal window, or***
@@ -209,7 +209,7 @@ feature file formatting is provided by:
 If you have a customised fork and you want to distribute it to your team, you will want to create your own .vsix file:
 
 1. `npm install -g vsce` (installs latest version of packaging tool)
-2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the tests, if you've already run them you can just close vscode windows when they appear)
+2. `vsce package -o ../mypackagefolder/my-behave-vsc-tid.vsix`  (this will also run the tests, if you've already run them you can just close vscode windows when they appear)
 
 ---
 
@@ -242,13 +242,13 @@ Depending on the nature and size of your PR, you'll normally want to run some te
 Note that the automated tests currently *only* verify the most important functionality, i.e. behave results and step references. They do not verify other built-in convenience features like automatic feature file reparsing, file autoformatting, autocompletion, syntax highlighting, etc. which should be tested manually if you have touched those or related areas.
 
 - First to make sure the tests are running with a clean install, *make sure you have committed all your changes*, then run the following commands:
-  
+
   ```bash
   git status
   git clean -fdx
   git pull origin main
-  npm install 
-  npm audit fix 
+  npm install
+  npm audit fix
   npm run test
   ```
 
@@ -256,7 +256,7 @@ Note that the automated tests currently *only* verify the most important functio
 - Close vscode and run `npm run test`
   - if the tests get stuck on debug, disable the "uncaught exceptions" breakpoint in the host vscode environment
   - if the tests fail, see [Debugging integration tests](#debugging-integration-tests)
-  
+
 #### 2. Run basic manual UI tests
 
 - Make sure you do not have the marketplace version of the extension installed

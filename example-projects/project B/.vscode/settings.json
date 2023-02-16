@@ -13,12 +13,12 @@
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
-    "behave-vsc.fastSkipTags": [
+    "behave-vsc-tid.fastSkipTags": [
         "@fast-skip-me",
         "@fast-skip-me-too"
     ],
-    "behave-vsc.featuresPath": "",
-    "behave-vsc.runParallel": true,
-    "behave-vsc.runAllAsOne": false,
-    "behave-vsc.xRay": true
+    "behave-vsc-tid.featuresPath": "",
+    "behave-vsc-tid.runParallel": true,
+    "behave-vsc-tid.runAllAsOne": false,
+    "behave-vsc-tid.xRay": true
 }

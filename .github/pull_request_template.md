@@ -1,4 +1,4 @@
-**PLEASE READ [CONTRIBUTING.md](https://github.com/jimasp/behave-vsc/blob/main/CONTRIBUTING.md) BEFORE SUBMITTING A PULL REQUEST**
+**PLEASE READ [CONTRIBUTING.md](https://github.com/jimasp/behave-vsc-tid/blob/main/CONTRIBUTING.md) BEFORE SUBMITTING A PULL REQUEST**
 
 **Issue #**
 Please link to the issue that this resolves here.

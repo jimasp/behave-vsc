@@ -1,5 +1,5 @@
 {
     /* see README.md in parent folder */
-    "behave-vsc.runAllAsOne": true,
-    "behave-vsc.justMyCode": true,
+    "behave-vsc-tid.runAllAsOne": true,
+    "behave-vsc-tid.justMyCode": true,
 }

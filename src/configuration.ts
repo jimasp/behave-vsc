@@ -28,7 +28,7 @@ class ExtensionConfiguration implements Configuration {
   private constructor() {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
-    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
+    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc-tid");
     diagLog("Configuration singleton constructed (this should only fire once)");
   }
 
@@ -50,16 +50,16 @@ class ExtensionConfiguration implements Configuration {
       this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri, testConfig, this._windowSettings, this.logger);
     }
     else {
-      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
+      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc-tid"));
       this._resourceSettings[wkspUri.path] = new WorkspaceSettings(wkspUri,
-        vscode.workspace.getConfiguration("behave-vsc", wkspUri), this._windowSettings, this.logger);
+        vscode.workspace.getConfiguration("behave-vsc-tid", wkspUri), this._windowSettings, this.logger);
     }
   }
 
   public get globalSettings(): WindowSettings {
     return this._windowSettings
       ? this._windowSettings
-      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
+      : this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc-tid"));
   }
 
   public get workspaceSettings(): { [wkspUriPath: string]: WorkspaceSettings } {
@@ -67,7 +67,7 @@ class ExtensionConfiguration implements Configuration {
     getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
       if (!this._resourceSettings[wkspUri.path]) {
         this._resourceSettings[wkspUri.path] =
-          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration("behave-vsc", wkspUri), winSettings, this.logger);
+          new WorkspaceSettings(wkspUri, vscode.workspace.getConfiguration("behave-vsc-tid", wkspUri), winSettings, this.logger);
       }
     });
     return this._resourceSettings;

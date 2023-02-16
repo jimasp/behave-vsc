@@ -97,7 +97,7 @@ export class WorkspaceSettings {
       this.workspaceRelativeFeaturesPath = "features";
     this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
     if (this.workspaceRelativeFeaturesPath === ".")
-      this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
+      this._fatalErrors.push(`"." is not a valid "behave-vsc-tid.featuresPath" value. The features folder must be a subfolder.`);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
       // note - this error should never happen or some logic/hooks are wrong
       // (or the user has actually deleted/moved the features path since loading)
@@ -164,13 +164,13 @@ export class WorkspaceSettings {
 
 
     if (this.runParallel && this.runAllAsOne)
-      this._warnings.push(`behave-vsc.runParallel is overridden by behave-vsc.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
+      this._warnings.push(`behave-vsc-tid.runParallel is overridden by behave-vsc-tid.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
 
-    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to behave-vsc.fastSkipTags when deprecated settings removed
-      this._warnings.push(`fast skip has no effect whenever you run all tests at once and behave-vsc.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
+    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to behave-vsc-tid.fastSkipTags when deprecated settings removed
+      this._warnings.push(`fast skip has no effect whenever you run all tests at once and behave-vsc-tid.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
 
     if (!this.runParallel && !this.runAllAsOne)
-      this._warnings.push(`behave-vsc.runParallel and behave-vsc.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
+      this._warnings.push(`behave-vsc-tid.runParallel and behave-vsc-tid.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
 
 
     this.logUserSettings(logger, winSettings);
@@ -217,7 +217,7 @@ export class WorkspaceSettings {
       if (this._warnings.length > 0) {
         logger.logSettingsWarning(`\n${this._warnings.map(warn => "WARNING: " + warn).join("\n")}`, this.uri);
         logger.logInfo(`If you are happy with your settings, you can disable these warnings via the extension ` +
-          `setting 'behave-vsc.showSettingsWarnings'.\n`, this.uri);
+          `setting 'behave-vsc-tid.showSettingsWarnings'.\n`, this.uri);
       }
     }
 

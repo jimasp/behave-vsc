@@ -1,6 +1,6 @@
 # Behave VSC
 
-Debug and run Python [behave](https://behave.readthedocs.io/) BDD tests using the native Visual Studio Code Test API.  
+Debug and run Python [behave](https://behave.readthedocs.io/) BDD tests using the native Visual Studio Code Test API.
 Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, autocompletion, and a few basic snippets.
 
 ## Features
@@ -18,7 +18,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter recognition.
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
-![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
+![Behave VSC demo gif](https://github.com/jimasp/behave-vsc-tid/raw/main/images/behave-vsc-tid.gif)
 
 ---
 
@@ -39,16 +39,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ```text
   . my-project
   .    +-- behave.ini
-  .    +-- features/  
+  .    +-- features/
   .       +-- environment.py
-  .       +-- steps/  
-  .       |      +-- *.py  
-  .       +-- storage_tests/  
-  .       |      +-- *.feature  
-  .       +-- web_tests/  
-  .       |      +-- *.feature 
+  .       +-- steps/
+  .       |      +-- *.py
+  .       +-- storage_tests/
+  .       |      +-- *.feature
+  .       +-- web_tests/
+  .       |      +-- *.feature
   .       |      +-- steps/
-  .       |         +-- *.py    
+  .       |         +-- *.py
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
@@ -59,8 +59,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 paths=my_tests/behave_features
 
 // settings.json
-{ 
-  "behave-vsc.featuresPath": "my_tests/behave_features" 
+{
+  "behave-vsc-tid.featuresPath": "my_tests/behave_features"
 }
 ```
 
@@ -81,10 +81,10 @@ paths=my_tests/behave_features
 
 - The python path is obtained via the `ms-python.python` extension (exported settings) and is read before each run, so it is kept in sync with your project.
 
-- When running all tests *and* the "RunAllAsOne" extension setting is enabled (the default), it runs this command:  
+- When running all tests *and* the "RunAllAsOne" extension setting is enabled (the default), it runs this command:
 `python -m behave --show-skipped`
 
-- When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:  
+- When running tests one at a time, the extension builds up a separate command for each test and runs it. For example:
 `python -m behave --show-skipped -i "features/myfeaturegroup/myfeature.feature" -n "^my scenario$"`
 
 - For each run, the *equivalent* behave command to run the test manually appears in the Behave VSC output window. (The *actual* command run includes `--junit` and `--junit-directory` parameters, but these are not displayed.)
@@ -95,7 +95,7 @@ paths=my_tests/behave_features
 ### How debug works
 
 - It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
-- You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
+- You can control whether debug steps into external code via the extension setting `behave-vsc-tid.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 - Behave error output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 - The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
@@ -112,7 +112,7 @@ paths=my_tests/behave_features
   - (slow, simple, inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup)
   - (slow, highly flexible) use the `envVarOverrides` extension setting to set an environment variable that is only set when running from the extension. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, (c) to control `scenario.skip()`, or (d) to control a behave `before_all` for a completely custom setup.
   - (fast, simple) use the `fastSkipTags` extension setting. (i.e. applying the inverse - do *not* run these tags.)
-  - (fast, flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.  
+  - (fast, flexible) if you regularly execute a subset of tests, consider if you can group them into folders, not just by tag, then you can select to run just that folder from the test tree in the UI instead.
 - *How do I disable feature file snippets?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showSnippets": false }`
 - *How do I disable autocomplete for feature file steps?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showFunctions": false }`
 - *How do I enable automatic feature file formatting on save?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.formatOnSave": true }`
@@ -126,8 +126,8 @@ paths=my_tests/behave_features
 
 ### If you have used a previous version of this extension
 
-- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues).
-  
+- Please read through the [release notes](https://github.com/jimasp/behave-vsc-tid/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc-tid/issues).
+
 ### Otherwise
 
 - Does your project meet the [workspace requirements](#workspace-requirements) and have the [required project directory structure](#required-project-directory-structure)?
@@ -141,9 +141,9 @@ paths=my_tests/behave_features
 - Do you have runParallel turned on? Try turning it off.
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Check if the problem is in [Known Issues](#known-issues-and-limitations) below
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc-tid/issues?q=is%3Aissue).
 - Try temporarily disabling other extensions.
-- Does your environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
+- Does your environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc-tid/releases) and downgrade as required.
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 - The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
 

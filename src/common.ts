@@ -128,7 +128,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
     // check if featuresPath specified in settings.json
     // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
-    const wkspConfig = vscode.workspace.getConfiguration("behave-vsc", folder.uri);
+    const wkspConfig = vscode.workspace.getConfiguration("behave-vsc-tid", folder.uri);
     const featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
     if (!featuresPath && !hasDefaultFeaturesFolder) {
       return false; // probably a workspace with no behave requirements
@@ -165,12 +165,12 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0) {
-    if (folders.length === 1 && folders[0].name === "behave-vsc")
+    if (folders.length === 1 && folders[0].name === "behave-vsc-tid")
       throw `Please disable the marketplace Behave VSC extension before beginning development!`;
     else
       throw `Extension was activated because a '*.feature' file was found in a workspace folder, but ` +
-      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid 'behave-vsc.featuresPath'.\n` +
-      `Please add a valid 'behave-vsc.featuresPath' property to your workspace settings.json file and then restart vscode.`;
+      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid 'behave-vsc-tid.featuresPath'.\n` +
+      `Please add a valid 'behave-vsc-tid.featuresPath' property to your workspace settings.json file and then restart vscode.`;
   }
 
   return workspaceFoldersWithFeatures;
