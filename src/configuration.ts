@@ -96,8 +96,6 @@ class ExtensionConfiguration implements Configuration {
 
 }
 
-
-
 // global = stop the constructor getting called twice in extension integration tests
 declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 if (!global.config)

@@ -13,7 +13,7 @@ import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
 
-// for integration test assertions      
+// for integration test assertions
 export type WkspParseCounts = {
   tests: TestCounts,
   featureFilesExceptEmptyOrCommentedOut: number,
@@ -135,7 +135,7 @@ export class FileParser {
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     deleteStepFileSteps(wkspSettings.featuresUri);
 
-    // replaced with custom findFiles function for now (see comment in findFiles function)    
+    // replaced with custom findFiles function for now (see comment in findFiles function)
     //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
     //let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
     let stepFiles = await findFiles(wkspSettings.featuresUri, "steps", ".py", cancelToken);
@@ -229,8 +229,6 @@ export class FileParser {
       }
     }
 
-
-
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.
     // note that the id is based on the file path so a new node is created if the folder is renamed
@@ -296,7 +294,7 @@ export class FileParser {
     this._finishedFeaturesParseForAllWorkspaces = false;
     this._errored = false;
 
-    // this function is called e.g. when a workspace gets added/removed/renamed, so 
+    // this function is called e.g. when a workspace gets added/removed/renamed, so
     // clear everything up-front so that we rebuild the top level nodes
     diagLog("clearTestItemsAndParseFilesForAllWorkspaces - removing all test nodes/items for all workspaces");
     const items = getAllTestItems(null, ctrl.items);
@@ -313,7 +311,7 @@ export class FileParser {
 
   // NOTE:
   // - This is normally a BACKGROUND task. It should only be await-ed on user request, i.e. when called by the refreshHandler.
-  // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled. 
+  // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled.
   async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
     callerCancelToken?: vscode.CancellationToken): Promise<WkspParseCounts | undefined> {
 
@@ -339,7 +337,7 @@ export class FileParser {
 
       diagLog(`\n===== ${callName}: started =====`);
 
-      // this function is not generally awaited, and therefore re-entrant, so 
+      // this function is not generally awaited, and therefore re-entrant, so
       // cancel any existing parseFiles call for this workspace
       if (this._cancelTokenSources[wkspPath]) {
         diagLog(`cancelling previous parseFiles call for ${wkspName}`);
@@ -421,7 +419,7 @@ export class FileParser {
       };
     }
     catch (e: unknown) {
-      // unawaited async func, must log the error 
+      // unawaited async func, must log the error
 
       this._finishedFeaturesParseForWorkspace[wkspPath] = true;
       this._finishedStepsParseForWorkspace[wkspPath] = true;
@@ -449,8 +447,6 @@ export class FileParser {
       cancellationHandler?.dispose();
     }
   }
-
-
 
   async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
     try {

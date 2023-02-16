@@ -55,7 +55,7 @@ export const autoCompleteProvider = {
       return items;
     }
     catch (e: unknown) {
-      // entry point function (handler) - show error  
+      // entry point function (handler) - show error
       try {
         const wkspUri = getWorkspaceUriForFile(document.uri);
         config.logger.showError(e, wkspUri);

@@ -7,11 +7,9 @@ import { diagLog } from '../logger';
 import { cancelTestRun } from './testRunHandler';
 import { isBehaveExecutionError } from '../common';
 import { performance } from 'perf_hooks';
-
-
 let disconnected = false;
 
-// debug tracker to set behaveExecutionError flag so we can terminate and 
+// debug tracker to set behaveExecutionError flag so we can terminate and
 // mark tests failed for behave execution errors
 let behaveExecutionError = false;
 export function getDebugAdapterTrackerFactory() {
@@ -31,8 +29,8 @@ export function getDebugAdapterTrackerFactory() {
             if (m.command === "disconnect")
               disconnected = true;
 
-            // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
-            // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle in parseAndUpdateTestResults         
+            // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI,
+            // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle in parseAndUpdateTestResults
             const stderr = m.body?.category === "stderr";
             if (stderr && isBehaveExecutionError(m.body.output)) {
               behaveExecutionError = true;
@@ -51,12 +49,10 @@ export function getDebugAdapterTrackerFactory() {
     }
   })
 }
-
-
 export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queueItem: QueueItem,
   args: string[], cancelToken: vscode.CancellationToken, friendlyCmd: string, junitFileUri: vscode.Uri): Promise<void> {
 
-  // handle test run stop 
+  // handle test run stop
   const cancellationHandler = cancelToken.onCancellationRequested(async () => {
     await vscode.debug.stopDebugging();
   });
@@ -99,14 +95,12 @@ export async function debugScenario(wkspSettings: WorkspaceSettings, run: vscode
       diagLog("unable to start debug session, was debug stop button clicked?", wkspSettings.uri);
       return;
     }
-
-
     return await new Promise((resolve, reject) => {
-      // debug stopped or completed    
+      // debug stopped or completed
       const terminateEvent = vscode.debug.onDidTerminateDebugSession(async () => {
         try {
           if (!cancelToken.isCancellationRequested) {
-            // the test run will have been terminated, so we cannot update the test result             
+            // the test run will have been terminated, so we cannot update the test result
             const debugDuration = performance.now() - start;
             await parseAndUpdateTestResults(true, behaveExecutionError, wkspSettings, junitFileUri, run, queueItem, cancelToken, debugDuration);
           }

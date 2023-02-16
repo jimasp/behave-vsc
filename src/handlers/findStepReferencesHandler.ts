@@ -6,8 +6,6 @@ import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } fr
 import { FeatureFileStep } from '../parsers/featureParser';
 import { funcRe } from '../parsers/stepsParser';
 
-
-
 const treeDataProvider = new StepReferencesTree();
 export const treeView: vscode.TreeView<vscode.TreeItem> =
   vscode.window.createTreeView("StepReferences", { showCollapseAll: true, canSelectMany: false, treeDataProvider: treeDataProvider });
@@ -88,7 +86,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     treeDataProvider.update(stepReferences, message);
 
-    // if no textEditor, this is a refresh, so keep current focus 
+    // if no textEditor, this is a refresh, so keep current focus
     if (!textEditor)
       return;
 
@@ -103,7 +101,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     }
   }
   catch (e: unknown) {
-    // entry point function (handler) - show error  
+    // entry point function (handler) - show error
     try {
       const wkspUri = getWorkspaceUriForFile(fileUri);
       config.logger.showError(e, wkspUri);
@@ -127,7 +125,7 @@ export function prevStepReferenceHandler() {
     treeDataProvider.prev();
   }
   catch (e: unknown) {
-    // entry point function (handler) - show error   
+    // entry point function (handler) - show error
     config.logger.showError(e);
   }
 }
@@ -137,7 +135,7 @@ export function nextStepReferenceHandler() {
     treeDataProvider.next();
   }
   catch (e: unknown) {
-    // entry point function (handler) - show error   
+    // entry point function (handler) - show error
     config.logger.showError(e);
   }
 }

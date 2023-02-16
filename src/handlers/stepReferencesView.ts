@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import { openDocumentRange, urisMatch } from '../common';
 import { FeatureFileStep } from '../parsers/featureParser';
-
-
 export class StepReference extends vscode.TreeItem {
   public readonly children: StepReferenceDetails[];
   constructor(
@@ -29,8 +27,8 @@ class StepReferenceDetails extends vscode.TreeItem {
     super(label, vscode.TreeItemCollapsibleState.None);
     this.tooltip = undefined;
     this.range = this.featureFileStep.range;
-    // note that treeView.OnDidChangeSelection() cannot be used instead, because that is only called when the 
-    // selection *changes*, i.e. that would not fire when only one treeView item exists and it is clicked    
+    // note that treeView.OnDidChangeSelection() cannot be used instead, because that is only called when the
+    // selection *changes*, i.e. that would not fire when only one treeView item exists and it is clicked
     this.command = {
       command: "vscode.open", // see comment in node_modules/@types/vscode/index.d.ts - TreeItem - command
       title: "Open Step Reference",
@@ -40,16 +38,12 @@ class StepReferenceDetails extends vscode.TreeItem {
 }
 
 
-
-
 export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeItem> {
 
   private _stepReferences: StepReference[] = [];
   private _treeView!: vscode.TreeView<vscode.TreeItem>;
   private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
   public readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
-
-
   private _setStepReferencesNavKeysEnabled(enable: boolean) {
     // also see StepReferenceDetails.contextValue
     vscode.commands.executeCommand('setContext', `behave-vsc.stepReferences.navKeysEnabled`, enable);
@@ -161,6 +155,4 @@ export class StepReferencesTree implements vscode.TreeDataProvider<vscode.TreeIt
 
     return [];
   }
-
-
 }

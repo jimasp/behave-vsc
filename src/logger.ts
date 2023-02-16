@@ -81,7 +81,7 @@ export class Logger {
       run.appendOutput(text);
   };
 
-  // used by settings.ts 
+  // used by settings.ts
   logSettingsWarning = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text, wkspUri, DiagLogType.warn);
 

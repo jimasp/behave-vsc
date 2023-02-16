@@ -4,8 +4,6 @@ import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from '../com
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { featureFileStepRe } from '../parsers/featureParser';
 
-
-
 export async function gotoStepHandler(textEditor: vscode.TextEditor) {
 
   const docUri = textEditor.document.uri;
@@ -38,7 +36,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     await openDocumentRange(stepFileStep.uri, stepFileStep.functionDefinitionRange, false);
   }
   catch (e: unknown) {
-    // entry point function (handler) - show error  
+    // entry point function (handler) - show error
     try {
       const wkspUri = getWorkspaceUriForFile(docUri);
       config.logger.showError(e, wkspUri);

@@ -25,7 +25,7 @@ interface ParsedToken {
 }
 
 // NOTE: most colourising is done via gherkin.grammar.json,
-// this is only to do advanced custom highlighting 
+// this is only to do advanced custom highlighting
 // i.e. to highlight step {parameters} and missing steps, by comparing feature file steps against parsed stepmappings
 export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
 
@@ -33,7 +33,7 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 
 		await parser.stepsParseComplete(2000, "provideDocumentSemanticTokens");
 
-		// line numbers and contents shift for compares, so wouldn't match up 
+		// line numbers and contents shift for compares, so wouldn't match up
 		// with current step mappings, so skip semhighlight for git scheme
 		if (document.uri.scheme === "git")
 			return new vscode.SemanticTokens(new Uint32Array(0));
@@ -127,8 +127,6 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 	}
 
 }
-
-
 const tmpLegend = new vscode.SemanticTokensLegend([]);
 const tmpSemHighlightProvider = new class tmpSemHighlightProvider implements vscode.DocumentSemanticTokensProvider {
 	onDidChangeSemanticTokens?: vscode.Event<void> | undefined;
@@ -138,7 +136,7 @@ const tmpSemHighlightProvider = new class tmpSemHighlightProvider implements vsc
 
 // TODO: is there a better way to retrigger sem highlighting? ask MS. this works well for now.
 // retrigger semantic highlighting so that all currently open document tabs containing feature files are refreshed with changes to step mappings
-// i.e. when you change a steps file, the semantic highlighting should be immediately updated in place in all open feature files for any 
+// i.e. when you change a steps file, the semantic highlighting should be immediately updated in place in all open feature files for any
 // new missing/valid steps as the result of the step file edit.
 // (using a fake language id and tmpProvider here to minimize processing, we just want to cause a trigger of the existing semHighlightProvider)
 export function retriggerSemanticHighlighting() {

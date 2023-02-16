@@ -20,11 +20,11 @@ export const pathSepr = "////"; // separator that cannot exist in file paths, sa
 export const afterPathSepr = (str: string) => str.split(pathSepr)[1];
 
 
-// the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
+// the main purpose of WkspError is that it enables us to have an error containing a workspace uri that
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can use the workspace name in the notification window
 // - the logger can log to the specific workspace output window
-// - the error is only logged/displayed once 
+// - the error is only logged/displayed once
 // - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
 export class WkspError extends Error {
   constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
@@ -59,7 +59,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 
 
 // these two uri match functions are here to highlight why uri.toString() is needed:
-// 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
+// 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:")
 // whether uri1.path === uri2.path or uri1.fsPath === uri2.fsPath depends on whether both uris are being set/read on
 // a similar code stack (i.e. whether both used "C" or "c" when the value was set).
 // at any rate, for matching one uri path or fsPath to another we can use toString() to provide consistent casing.
@@ -99,8 +99,6 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
   }
 }
 
-
-
 // get the actual value in the file or return undefined, this is
 // for cases where we need to distinguish between an unset value and the default value
 export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfiguration, name: string): T => {
@@ -109,7 +107,7 @@ export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfigu
 }
 
 
-// THIS FUNCTION MUST BE FAST (ideally < 1ms) 
+// THIS FUNCTION MUST BE FAST (ideally < 1ms)
 // (check performance if you change it)
 let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
@@ -234,7 +232,7 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
   const items: vscode.TestItem[] = [];
 
   // get all test items if wkspUri is null, or
-  // just the ones in the current workspace if wkspUri is supplied 
+  // just the ones in the current workspace if wkspUri is supplied
   collection.forEach((item: vscode.TestItem) => {
     if (wkspUri === null || item.id.includes(uriMatchString(wkspUri))) {
       items.push(item);
@@ -307,7 +305,7 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 // we can't distinguish behave execution errors by exit code
 // a normal assertion failure gives an exit code of 1, but so do lots of other issues
 // so we need to check the stdout/stderr.
-// we do this so that we know whether we can expect junit files to 
+// we do this so that we know whether we can expect junit files to
 // be created (just an assertion failure) or stop the run and mark tests as failed in the UI
 export function isBehaveExecutionError(outputStr: string) {
   const errRe = /^(Traceback|ParserError:|ConfigError:)/;

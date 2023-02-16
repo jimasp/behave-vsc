@@ -48,7 +48,7 @@ export const formatFeatureProvider = {
 
     }
     catch (e: unknown) {
-      // entry point function (handler) - show error  
+      // entry point function (handler) - show error
       try {
         const wkspUri = getWorkspaceUriForFile(document.uri);
         config.logger.showError(e, wkspUri);
@@ -80,9 +80,9 @@ function getLF(indent: string, lineNo: number, lines: string[]): string {
 
 function getIndent(currentIndent: string, lineNo: number, lines: string[]): string {
 
-  // NOTE: behaviour should be roughly consistent with 
-  // gherkin.language-configuration.json (which is used for autoformat while typing). 
-  // the difference here is that we enforce the indent based on the current line content, 
+  // NOTE: behaviour should be roughly consistent with
+  // gherkin.language-configuration.json (which is used for autoformat while typing).
+  // the difference here is that we enforce the indent based on the current line content,
   // rather than just on the previous line content.
 
   const lineRaw = lines[lineNo];
@@ -103,8 +103,6 @@ function getIndent(currentIndent: string, lineNo: number, lines: string[]): stri
   // unmatched, so must be a comment line, or a tag line, or a multiline string
   return getNextIndent(currentIndent, lineNo, lines);
 }
-
-
 
 function getNextIndent(currentIndent: string, lineNum: number, lines: string[]): string {
 

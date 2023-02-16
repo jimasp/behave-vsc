@@ -12,10 +12,10 @@ import { cancelTestRun } from './testRunHandler';
 
 // hard-code any settings we MUST have (i.e. override user behave.ini file only where absolutely necessary)
 const override_args = [
-  "--show-skipped" // required for skipped tests to produce junit output 
+  "--show-skipped" // required for skipped tests to produce junit output
 ];
 
-export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[],
+export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.TestRun, queue: QueueItem[], filterByQueue: boolean,
   cancelToken: vscode.CancellationToken): Promise<void> {
 
   const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
@@ -29,12 +29,21 @@ export async function runBehaveAll(wkspSettings: WorkspaceSettings, run: vscode.
 
   const friendlyCmd = `${ps1}cd "${wkspSettings.uri.fsPath}"\n${friendlyEnvVars}${ps2}"${pythonExec}" -m behave ${override_args.join(" ")}`;
   const junitDirUri = getJunitWkspRunDirUri(run.name, wkspSettings.name);
+
   const args = [...override_args, "--junit", "--junit-directory", junitDirUri.fsPath];
+
+  if(filterByQueue) {
+    const uniqueFiles: Set<string> = new Set()
+
+    queue.forEach((item) => {
+      uniqueFiles.add(item.test?.uri?.path ?? '')
+    })
+
+    args.push(...Array.from(uniqueFiles.keys()))
+  }
 
   await runAllAsOne(wkspSettings, pythonExec, run, queue, args, cancelToken, friendlyCmd, junitDirUri);
 }
-
-
 
 export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, wkspSettings: WorkspaceSettings, run: vscode.TestRun,
   queueItem: QueueItem, cancelToken: vscode.CancellationToken): Promise<void> {
@@ -58,7 +67,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
     // a junit xml file is per feature, so when each scenario is run separately the same file is updated several times.
     // behave writes "skipped" into the junit file for any scenario not included in each behave execution.
     // this approach works ok when tests are run sequentially and we read the junit file after each test is run, but
-    // for async we need to use a different path for each scenario so we can determine which file contains 
+    // for async we need to use a different path for each scenario so we can determine which file contains
     // the actual result for that scenario.
     if (async)
       junitDirUri = getJunitUriDirForAsyncScenario(queueItem, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri, scenarioName);
@@ -88,7 +97,7 @@ export async function runOrDebugBehaveScenario(debug: boolean, async: boolean, w
   }
   catch (e: unknown) {
     cancelTestRun("runOrDebugBehaveScenario");
-    // unawaited (if runParallel) async func, must log the error 
+    // unawaited (if runParallel) async func, must log the error
     throw new WkspError(e, wkspSettings.uri, run);
   }
 
@@ -121,6 +130,7 @@ function getScenarioRunName(scenName: string, isOutline: boolean) {
 function getJunitWkspRunDirUri(runName: string | undefined, wkspName: string): vscode.Uri {
   if (!runName)
     throw "runName is undefined";
+
   return vscode.Uri.joinPath(config.extensionTempFilesUri, "junit", runName, wkspName);
 }
 
@@ -131,7 +141,7 @@ function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeatur
   const allPlatformsValidFolderNameChars = /[^ a-zA-Z0-9_.-]/g;
   if (allPlatformsValidFolderNameChars.test(scenarioFolderName)) {
     scenarioFolderName = scenarioFolderName.replace(allPlatformsValidFolderNameChars, "X");
-    scenarioFolderName += nidSuffix; // ensure unique after replacing invalid folder name characters    
+    scenarioFolderName += nidSuffix; // ensure unique after replacing invalid folder name characters
   }
 
 
@@ -149,7 +159,7 @@ function getJunitUriDirForAsyncScenario(queueItem: QueueItem, wkspRelativeFeatur
   scenarioFolderName = scenarioFolderName.replace(nidSuffix, "");
 
   // see if shortening the scenario folder name could fix the path length issue
-  // (+1 because the suffix includes "_" and if the scenarioFolderName starts or ends with "_" it gets removed below)  
+  // (+1 because the suffix includes "_" and if the scenarioFolderName starts or ends with "_" it gets removed below)
   if (filePathDiff >= scenarioFolderName.length + nidSuffix.length + 1)
     throw `windows max path exceeded while trying to build path to junit file: ${junitFileUri.fsPath} `;
 

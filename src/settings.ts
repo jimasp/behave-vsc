@@ -6,8 +6,8 @@ import { Logger } from './logger';
 
 
 export class WindowSettings {
-  // class for package.json "window" settings 
-  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
+  // class for package.json "window" settings
+  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly showSettingsWarnings: boolean;
@@ -34,7 +34,7 @@ export class WindowSettings {
 
 export class WorkspaceSettings {
   // class for package.json "resource" settings in settings.json
-  // these apply to a single workspace 
+  // these apply to a single workspace
 
   // user-settable
   public envVarOverrides: { [name: string]: string } = {}; // TODO - make readonly when deprecated setting is removed
@@ -42,6 +42,7 @@ export class WorkspaceSettings {
   public readonly justMyCode: boolean;
   public readonly runAllAsOne: boolean;
   public readonly runParallel: boolean;
+  public readonly runFileAsOne: boolean;
   public readonly workspaceRelativeFeaturesPath: string;
   // convenience properties
   public readonly uri: vscode.Uri;
@@ -74,10 +75,14 @@ export class WorkspaceSettings {
     const runParallelCfg: boolean | undefined = wkspConfig.get("runParallel");
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
+    const runFileAsOneCfg: boolean | undefined = wkspConfig.get("runFileAsOne");
+    if (runFileAsOneCfg === undefined)
+      throw "runFileAsOne is undefined";
 
 
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
+    this.runFileAsOne = runFileAsOneCfg
 
     const runAllAsOneCfg: boolean | undefined = getActualWorkspaceSetting(wkspConfig, "runAllAsOne");
     if (this.runParallel && runAllAsOneCfg === undefined)
@@ -94,10 +99,10 @@ export class WorkspaceSettings {
     if (this.workspaceRelativeFeaturesPath === ".")
       this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
     if (!fs.existsSync(this.featuresUri.fsPath)) {
-      // note - this error should never happen or some logic/hooks are wrong 
+      // note - this error should never happen or some logic/hooks are wrong
       // (or the user has actually deleted/moved the features path since loading)
       // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
-      // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
+      // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)
       this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 

@@ -61,6 +61,12 @@
 					"type": "boolean",
 					"markdownDescription": "Specifies whether extension errors have stack traces and diagnostics are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools`. Diagnostic logs are noisy, and may have a small performance impact.",
 					"default": false
+				},
+				"behave-vsc.runFileAsOne": {
+					"scope": "resource",
+					"type": "boolean",
+					"markdownDescription": "Specifies whether all tests in a file are run in the same  behave instance when clicked on file or folder. Enabling this setting will behave exactly for a file or folder as running all your tests",
+					"default": false
 				}
 			}
 		},
@@ -186,7 +192,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug, Run and Navigate Python behave tests",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",

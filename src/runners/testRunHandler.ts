@@ -99,7 +99,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
               coveredLines.set(
                 uriMatchString(test.uri),
                 lines.map((lineText, lineNo) =>
-                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment                
+                  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                   // @ts-ignore: '"vscode"' has no exported member 'StatementCoverage'
                   lineText.trim().length ? new vscode.StatementCoverage(0, new vscode.Position(lineNo, 0)) : undefined
                 )
@@ -144,18 +144,21 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
             }
           }
 
+          const runAllAsOneAfterConditions = wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded
 
-          if (wkspSettings.runAllAsOne && !debug && allTestsForThisWkspIncluded) {
+          const runFileAsOne = wkspSettings.runFileAsOne && wkspQueue.length > 1
+
+          if (runAllAsOneAfterConditions || runFileAsOne) {
             wkspQueue.forEach(wkspQueueItem => run.started(wkspQueueItem.test));
-            await runBehaveAll(wkspSettings, run, wkspQueue, combinedToken);
+
+            await runBehaveAll(wkspSettings, run, wkspQueue, runAllAsOneAfterConditions ? false : runFileAsOne, combinedToken);
+
             for (const qi of wkspQueue) {
               updateRun(qi.test, coveredLines, run);
             }
             logComplete();
             return;
           }
-
-
 
           for (const wkspQueueItem of wkspQueue) {
 
@@ -234,8 +237,6 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         if (!debug)
           run.appendOutput(`\r\n=== test run ${run.name} complete @${new Date().toISOString()} ===\r\n`);
       };
-
-
 
       let completed = 0;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

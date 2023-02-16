@@ -61,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
 
-    // any function contained in subscriptions.push() will execute immediately, 
+    // any function contained in subscriptions.push() will execute immediately,
     // as well as registering it for disposal on extension deactivation
     // i.e. startWatchingWorkspace will execute immediately, as will registerCommand, but gotoStepHandler will not (as it is a parameter to
     // registerCommand, which is a disposable that ensures our custom command will no longer be active when the extension is deactivated).
@@ -131,22 +131,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
       }
       catch (e: unknown) {
-        // entry point function (handler) - show error        
+        // entry point function (handler) - show error
         config.logger.showError(e, undefined);
       }
     };
 
 
     // called when a user renames, adds or removes a workspace folder.
-    // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
-    // process will start, this host process will terminate, and activate() will be called shortly after    
+    // NOTE: the first time a new not-previously recognised workspace gets added a new node host
+    // process will start, this host process will terminate, and activate() will be called shortly after
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
         await configurationChangedHandler(undefined, undefined, true);
       }
       catch (e: unknown) {
-        // entry point function (handler) - show error        
+        // entry point function (handler) - show error
         config.logger.showError(e, undefined);
       }
     }));
@@ -167,28 +167,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         parser.reparseFile(uri, event.document.getText(), wkspSettings, testData, ctrl);
       }
       catch (e: unknown) {
-        // entry point function (handler) - show error        
+        // entry point function (handler) - show error
         config.logger.showError(e, undefined);
       }
     }));
 
 
-    // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
+    // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
-    // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
+    // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
     const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
       forceFullRefresh?: boolean) => {
 
-      // for integration test runAllTestsAndAssertTheResults, 
+      // for integration test runAllTestsAndAssertTheResults,
       // only reload config on request (i.e. when testCfg supplied)
       if (config.integrationTestRun && !testCfg)
         return;
 
       try {
 
-        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want 
-        // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from 
+        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want
+        // that behaviour because we want to distinguish between some properties (e.g. runAllAsOne) being set vs being absent from
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting from *.code-workspace file)
         const affected = event && event.affectsConfiguration("behave-vsc");
@@ -234,7 +234,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
       }
       catch (e: unknown) {
-        // entry point function (handler) - show error        
+        // entry point function (handler) - show error
         config.logger.showError(e, undefined);
       }
     }
@@ -260,7 +260,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
   }
   catch (e: unknown) {
-    // entry point function (handler) - show error    
+    // entry point function (handler) - show error
     if (config && config.logger) {
       config.logger.showError(e, undefined);
     }
@@ -310,9 +310,9 @@ function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController
     try {
       const path = uri.path.toLowerCase();
 
-      // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
+      // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child
       // files, but we cannot determine if this is a file or folder deletion as:
-      //   (a) it has been deleted so we can't stat it, and 
+      //   (a) it has been deleted so we can't stat it, and
       //   (b) "." is valid in folder names so we can't determine by looking at the path
       // but we can ignore specific file extensions or paths we know we don't care about
       if (path.endsWith(".tmp")) // .tmp = vscode file history file

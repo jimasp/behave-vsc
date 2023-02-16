@@ -132,5 +132,3 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, wkspSettings.uri);
 };
 
-
-

@@ -133,7 +133,7 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
 
     // return longest
     const stepMatch = paramsMatches.get(longestKey);
-    return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion    
+    return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
   }
 
   let textWithoutType = featureFileStep.textWithoutType;
@@ -157,7 +157,7 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   if (paramsMatches.size === 1)
     return paramsMatches.values().next().value;
 
-  // more than one parameters match - get longest matched key      
+  // more than one parameters match - get longest matched key
   if (paramsMatches.size > 1) {
     return findLongestParamsMatch(paramsMatches);
   }

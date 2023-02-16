@@ -1,15 +1,13 @@
-import * as vscode from 'vscode';
-import { performance } from 'perf_hooks';
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
-import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from '../parsers/junitParser';
+import { performance } from 'perf_hooks';
+import * as vscode from 'vscode';
+import { cleanBehaveText, isBehaveExecutionError, uriMatchString } from '../common';
+import { config } from '../configuration';
 import { QueueItem } from '../extension';
-import { cleanBehaveText, uriMatchString, isBehaveExecutionError } from '../common';
 import { diagLog } from '../logger';
+import { getJunitFileUriToQueueItemMap, parseAndUpdateTestResults } from '../parsers/junitParser';
+import { WorkspaceSettings } from '../settings';
 import { cancelTestRun } from './testRunHandler';
-
-
 
 export async function runAllAsOne(wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   cancellation: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri): Promise<void> {
@@ -26,11 +24,11 @@ export async function runScenario(async: boolean, wkspSettings: WorkspaceSetting
 
 
 // note - (via logic in runWorkspaceQueue) runAllAsOne will also be true here if the runAllAsOne
-// workspace setting is true and there is only a single test in the entire workspace 
+// workspace setting is true and there is only a single test in the entire workspace
 async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: WorkspaceSettings, pythonExec: string, run: vscode.TestRun, queue: QueueItem[], args: string[],
   runToken: vscode.CancellationToken, friendlyCmd: string, junitDirUri: vscode.Uri, junitFileUri?: vscode.Uri): Promise<void> {
 
-  // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI, 
+  // in the case of runAllAsOne, we don't want to wait until the end of the run to update the tests results in the UI,
   // so we set up a watcher so we can update results as they come in, i.e. as the test files are updated on disk
   let watcher: vscode.FileSystemWatcher | undefined;
   let updatesComplete: Promise<unknown> | undefined;
@@ -81,7 +79,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
     cp.stderr?.on('data', chunk => {
       const str = chunk.toString();
       log(str);
-      // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI, 
+      // most stderr is stuff like "SKIP", "HOOK-ERROR", or missing step definitions, which will be visible in the UI,
       // but if there's an execution error with a test, we won't get any junit output, so we set a flag which we handle later
       if (isBehaveExecutionError(str)) {
         // fatal behave error (i.e. there will be no junit output)
@@ -114,7 +112,7 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
     if (runToken.isCancellationRequested) {
       config.logger.logInfo(`\n-- TEST RUN ${run.name} CANCELLED --`, wkspUri, run);
-      // the test run will have been terminated, so we cannot update the test result                  
+      // the test run will have been terminated, so we cannot update the test result
       return;
     }
 
@@ -127,8 +125,8 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
         }
       }
       else {
-        // because the run ends when all instances of this function have returned, we need to make sure 
-        // that all tests have been updated before returning (you can't update a test when the run has ended)              
+        // because the run ends when all instances of this function have returned, we need to make sure
+        // that all tests have been updated before returning (you can't update a test when the run has ended)
         diagLog(`run ${run.name} - waiting for all junit results to update from filesystemwatcher...`, wkspUri);
         await updatesComplete;
         diagLog(`run ${run.name} - all junit result updates complete`, wkspUri);
@@ -152,7 +150,6 @@ async function runBehave(runAllAsOne: boolean, async: boolean, wkspSettings: Wor
 
 }
 
-
 function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (value: unknown) => void,
   queue: QueueItem[], run: vscode.TestRun, wkspSettings: WorkspaceSettings,
   junitDirUri: vscode.Uri, runToken: vscode.CancellationToken): vscode.FileSystemWatcher {
@@ -161,7 +158,20 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
     try {
       diagLog(`${run.name} - updateResult called for uri ${uri.path}`, wkspSettings.uri);
 
+      if(uri.path.startsWith(junitDirUri.path + '/TESTS-features.')){
+        map.forEach((m) => {
+          const {junitFileUri} = m
+
+          const uriPath = junitFileUri.path
+
+          const fixedPath = uriPath.replace(junitDirUri.path + '/TESTS-', junitDirUri.path + '/TESTS-features.')
+
+          m.junitFileUri = vscode.Uri.from({...junitFileUri.toJSON(), path:fixedPath} )
+        })
+      }
+
       const matches = map.filter(m => uriMatchString(m.junitFileUri) === uriMatchString(uri));
+
       if (matches.length === 0)
         throw `could not find any matching test items for junit file ${uri.fsPath}`;
 
@@ -176,7 +186,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
         resolve("");
     }
     catch (e: unknown) {
-      // entry point function (handler) - show error   
+      // entry point function (handler) - show error
       cancelTestRun("startWatchingJunitFolder (error)");
       config.logger.showError(e, wkspSettings.uri);
       reject(e);
@@ -187,6 +197,7 @@ function startWatchingJunitFolder(resolve: (value: unknown) => void, reject: (va
   let updated = 0;
   const map = getJunitFileUriToQueueItemMap(queue, wkspSettings.workspaceRelativeFeaturesPath, junitDirUri);
   const pattern = new vscode.RelativePattern(junitDirUri, '*.xml');
+
   const watcher = vscode.workspace.createFileSystemWatcher(pattern, false, true, true);
   watcher.onDidCreate(uri => updateResult(uri));
 

@@ -73,8 +73,6 @@ export function updateTest(run: vscode.TestRun, result: ParseResult, item: Queue
   run.appendOutput(`test item ${item.test.id} result: ${result.status === "passed" || result.status === "skipped" ? result.status : "failed"}\r\n`);
 }
 
-
-
 function CreateParseResult(debug: boolean, wkspUri: vscode.Uri, testCase: TestCase, actualDuration?: number): ParseResult {
 
   let duration = testCase.$.time * 1000;
@@ -148,9 +146,6 @@ function getjUnitClassName(queueItem: QueueItem, wskpRelativeFeaturesPath: strin
   return `${dotSubFolders}${featureFileStem}`;
 }
 
-
-
-
 export function getJunitFileUri(queueItem: QueueItem, wkspRelativeFeaturesPath: string, junitDirUri: vscode.Uri, ignoreWinMaxPath = false): vscode.Uri {
   const classname = getjUnitClassName(queueItem, wkspRelativeFeaturesPath);
   const junitFilename = `TESTS-${classname}.xml`;
@@ -208,9 +203,16 @@ export async function parseAndUpdateTestResults(debug: boolean, behaveExecutionE
     throw new WkspError(`Unable to parse junit file ${junitFileUri.fsPath}`, wkspSettings.uri);
   }
 
-  const fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
-  const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
+  let fullFeatureName = getjUnitClassName(queueItem, wkspSettings.workspaceRelativeFeaturesPath);
+  let className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
+
   const scenarioName = queueItem.scenario.scenarioName;
+
+  if(junitFileUri.path.includes('TESTS-features.') && junitFileUri.path.endsWith(`TESTS-features.${fullFeatureName}.xml`)) {
+    fullFeatureName = 'features.' + fullFeatureName
+
+    className = 'features.' + className
+  }
 
   // normal scenario
   let queueItemResults = junitContents.testsuite.testcase.filter(tc =>
