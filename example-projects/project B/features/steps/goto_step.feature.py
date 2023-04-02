@@ -47,12 +47,12 @@ def cased_step(context):
 
 
 @step("{a} param step")
-def param_step(context, a):
+def param_step1(context, a):
     assert a == "a"
 
 
 @step("{a} param step with more text")
-def param_step(context, a):
+def param_step2(context, a):
     assert a == "a"
 
 

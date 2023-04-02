@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { uriMatchString, isFeatureFile, WkspError } from '../common';
+import { uriId, isFeatureFile } from '../common';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
 import { diagLog } from '../logger';
 
 let generationCounter = 0;
-export type BehaveTestData = TestFile | Feature | Scenario;
+export type BehaveTestData = TestFile | Scenario;
 export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 
 
@@ -22,8 +22,10 @@ export class TestFile {
 
     item.error = undefined;
 
-    const featureFileWkspRelativePath = vscode.workspace.asRelativePath(item.uri, false);
-    const featureFilename = item.uri.path.split('/').pop();
+    const featureUri = item.uri;
+    const featureName = item.label;
+    const featureFileWkspRelativePath = vscode.workspace.asRelativePath(featureUri, false);
+    const featureFilename = featureUri.path.split('/').pop();
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
 
@@ -54,19 +56,17 @@ export class TestFile {
       }
     };
 
-    const onScenarioLine = (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => {
+    const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
       const parent = ancestors[ancestors.length - 1];
 
-      const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline, fastSkip);
-      if (!item.uri)
-        throw new WkspError(`no uri for item ${item.id}`, wkspSettings.uri);
-      const id = `${uriMatchString(item.uri)}/${data.getLabel()}`;
-      const tcase = controller.createTestItem(id, data.getLabel(), item.uri);
+      const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline);
+      const id = `${uriId(featureUri)}/${data.getLabel()}`;
+      const tcase = controller.createTestItem(id, data.getLabel(), featureUri);
       testData.set(tcase, data);
       tcase.range = range;
       parent.item.label = featureName;
       parent.children.push(tcase);
-      diagLog(`created child test item scenario ${tcase.id} from ${item.uri.path}`);
+      diagLog(`created child test item scenario ${tcase.id} from ${featureUri.path}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {
@@ -74,29 +74,15 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(wkspSettings, item.uri, item.label, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(wkspSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }
 
 }
 
-export class Feature {
-  constructor(public generation: number) { }
-}
 
-export interface IScenario {
-  readonly featureFileName: string;
-  readonly featureFileWorkspaceRelativePath: string;
-  readonly featureName: string;
-  scenarioName: string;
-  generation: number;
-  readonly isOutline: boolean;
-  readonly fastSkipTag: boolean;
-  getLabel(): string;
-}
-
-export class Scenario implements IScenario {
+export class Scenario {
   public result: string | undefined;
   constructor(
     public readonly featureFileName: string,
@@ -105,12 +91,13 @@ export class Scenario implements IScenario {
     public scenarioName: string,
     public generation: number,
     public readonly isOutline: boolean,
-    public readonly fastSkipTag: boolean,
   ) { }
 
   getLabel() {
     return `${this.scenarioName}`;
   }
 }
+
+
 
 

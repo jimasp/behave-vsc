@@ -3,8 +3,8 @@ import { Configuration } from "../../configuration";
 import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
-  const testCount = getExpectedResults(debug, wkspUri, config).length;
+export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
+  const testCount = getExpectedResults(wkspUri, config).length;
   return {
     tests: { nodeCount: 4, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 1,
@@ -12,11 +12,10 @@ export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: C
   };
 }
 
-export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a successful test',
@@ -33,12 +32,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'run a failing test',
       test_children: undefined,
       test_description: undefined,
@@ -50,7 +48,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a skipped test',
@@ -70,7 +67,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
 
 
   const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(debug, wkspSettings, expectedResults);
+  return applyTestConfiguration(wkspSettings, expectedResults);
 }
 
 

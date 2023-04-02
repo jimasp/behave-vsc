@@ -3,21 +3,20 @@ import { Configuration } from "../../configuration";
 import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getExpectedCounts(debug: boolean, wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
-  const testCount = getExpectedResults(debug, wkspUri, config).length;
+export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
+  const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 88, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 19, stepFilesExceptEmptyOrCommentedOut: 6,
-    stepFileStepsExceptCommentedOut: 45,
-    featureFileStepsExceptCommentedOut: 150, stepMappings: 149  // (1 diff = "When we have a missing step")
+    tests: { nodeCount: 80, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 7,
+    stepFileStepsExceptCommentedOut: 47,
+    featureFileStepsExceptCommentedOut: 128, stepMappings: 127  // (1 diff = "When we have a missing step")
   };
 }
 
-export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a successful test',
@@ -34,7 +33,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a slow test for async testing',
@@ -51,7 +49,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another slow test for async testing',
@@ -68,12 +65,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'run a failing test',
       test_children: undefined,
       test_description: undefined,
@@ -85,7 +81,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another successful test',
@@ -102,12 +97,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a test with a missing steps',
       scenario_isOutline: false,
-      scenario_result: "Failing step: When we have a missing step ... undefined",
+      scenario_result: "failed",
       scenario_scenarioName: 'run a test with a missing steps',
       test_children: undefined,
       test_description: undefined,
@@ -119,7 +113,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a skipped test',
@@ -135,9 +128,7 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       test_uri: '.../project B/{{featurePath}}/basic.feature'
     }),
 
-
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/contains_regexchars.feature',
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
       scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
@@ -154,107 +145,22 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
-      scenario_featureName: 'Mixed skip scenarios',
-      scenario_getLabel: 'normal skip',
-      scenario_isOutline: false,
-      scenario_result: 'skipped',
-      scenario_scenarioName: 'normal skip',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/mixed_skip.feature/normal skip',
-      test_label: 'normal skip',
-      test_parent: '.../project B/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project B/{{featurePath}}/mixed_skip.feature'
-    }),
-    new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
-      scenario_getLabel: "don't skip and success",
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: "don't skip and success",
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: ".../project B/{{featurePath}}/mixed_skip.feature/don't skip and success",
-      test_label: "don't skip and success",
-      test_parent: '.../project B/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project B/{{featurePath}}/mixed_skip.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: true,
-      scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
-      scenario_getLabel: 'fast skip a successful test',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'fast skip a successful test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/mixed_skip.feature/fast skip a successful test',
-      test_label: 'fast skip a successful test',
-      test_parent: '.../project B/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project B/{{featurePath}}/mixed_skip.feature'
-    }),
-    new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
-      scenario_getLabel: "don't skip and fail",
-      scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
-      scenario_scenarioName: "don't skip and fail",
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: ".../project B/{{featurePath}}/mixed_skip.feature/don't skip and fail",
-      test_label: "don't skip and fail",
-      test_parent: '.../project B/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project B/{{featurePath}}/mixed_skip.feature'
-    }),
-    new TestResult({
-      scenario_fastSkipTag: true,
-      scenario_featureName: 'Mixed skip scenarios',
-      scenario_featureFileRelativePath: '{{featurePath}}/mixed_skip.feature',
-      scenario_getLabel: 'fast skip a failing test',
-      scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
-      scenario_scenarioName: 'fast skip a failing test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/mixed_skip.feature/fast skip a failing test',
-      test_label: 'fast skip a failing test',
-      test_parent: '.../project B/{{featurePath}}/mixed_skip.feature',
-      test_uri: '.../project B/{{featurePath}}/mixed_skip.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: '{{featurePath}}/skipped.feature',
+      scenario_featureFileRelativePath: 'features/skipped.feature',
       scenario_featureName: 'skipped feature',
-      scenario_getLabel: 'normal skip',
+      scenario_getLabel: 'scenario that will be skipped',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'normal skip',
+      scenario_scenarioName: 'scenario that will be skipped',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/skipped.feature/normal skip',
-      test_label: 'normal skip',
-      test_parent: '.../project B/{{featurePath}}/skipped.feature',
-      test_uri: '.../project B/{{featurePath}}/skipped.feature'
+      test_id: '.../project B/features/skipped.feature/scenario that will be skipped',
+      test_label: 'scenario that will be skipped',
+      test_parent: '.../project B/features/skipped.feature',
+      test_uri: '.../project B/features/skipped.feature'
     }),
 
-
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
@@ -271,29 +177,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: true,
-      scenario_featureFileRelativePath: '{{featurePath}}/fastskip_feature.feature',
-      scenario_featureName: 'fast skip feature',
-      scenario_getLabel: 'fast skip by feature',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'fast skip by feature',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/fastskip_feature.feature/fast skip by feature',
-      test_label: 'fast skip by feature',
-      test_parent: '.../project B/{{featurePath}}/fastskip_feature.feature',
-      test_uri: '.../project B/{{featurePath}}/fastskip_feature.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'run a test',
       test_children: undefined,
       test_description: undefined,
@@ -305,7 +193,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success',
@@ -322,12 +209,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail',
       scenario_isOutline: true,
-      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'Blenders Fail',
       test_children: undefined,
       test_description: undefined,
@@ -339,12 +225,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail 2',
       scenario_isOutline: true,
-      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'Blenders Fail 2',
       test_children: undefined,
       test_description: undefined,
@@ -356,41 +241,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: true,
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
-      scenario_featureName: 'Mixed outline',
-      scenario_getLabel: 'Blenders Fast Skip a Failure',
-      scenario_isOutline: true,
-      scenario_result: 'AssertionError\nFailing step: Then it should transform into "FAIL" ... failed\nTraceback (most recent call last):\n  File -snip- assert context.blender.result == other_thing\nAssertionError',
-      scenario_scenarioName: 'Blenders Fast Skip a Failure',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Failure',
-      test_label: 'Blenders Fast Skip a Failure',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: true,
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
-      scenario_featureName: 'Mixed outline',
-      scenario_getLabel: 'Blenders Fast Skip a Success',
-      scenario_isOutline: true,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'Blenders Fast Skip a Success',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fast Skip a Success',
-      test_label: 'Blenders Fast Skip a Success',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
-    }),
-
-    new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Skip',
@@ -407,7 +257,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success 2',
@@ -424,7 +273,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success',
@@ -441,7 +289,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success 2',
@@ -458,12 +305,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (fail)',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: Then we will find 25 people in "Testers" ... failed\nTraceback (most recent call last):\n  File -snip- assert int(count) == sum(1 for ud in context.userDepts if ud.dept == dept)\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'Use a table (fail)',
       test_children: undefined,
       test_description: undefined,
@@ -475,7 +321,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (success)',
@@ -492,12 +337,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a failing textblock test',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'run a failing textblock test',
       test_children: undefined,
       test_description: undefined,
@@ -509,7 +353,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a successful textblock test',
@@ -526,12 +369,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error',
       scenario_isOutline: false,
-      scenario_result: 'Exception\nHOOK-ERROR in before_scenario: Exception: error in before_scenario hook\nTraceback:\n  File -snip- raise Exception("error in before_scenario hook")',
+      scenario_result: 'failed',
       scenario_scenarioName: 'create a before hook-error',
       test_children: undefined,
       test_description: undefined,
@@ -543,24 +385,22 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
-      scenario_getLabel: 'normal skip',
+      scenario_getLabel: 'scenario in with a hook-error feature that will be skipped',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'normal skip',
+      scenario_scenarioName: 'scenario in with a hook-error feature that will be skipped',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/normal skip',
-      test_label: 'normal skip',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_id: '.../project B/features/feature_with_hook_error.feature/scenario in with a hook-error feature that will be skipped',
+      test_label: 'scenario in with a hook-error feature that will be skipped',
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip a before hook-error',
@@ -577,12 +417,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error again',
       scenario_isOutline: false,
-      scenario_result: 'Exception\nHOOK-ERROR in before_scenario: Exception: error in before_scenario hook\nTraceback:\n  File -snip- raise Exception("error in before_scenario hook")',
+      scenario_result: 'failed',
       scenario_scenarioName: 'create a before hook-error again',
       test_children: undefined,
       test_description: undefined,
@@ -594,12 +433,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error',
       scenario_isOutline: false,
-      scenario_result: 'Exception\nHOOK-ERROR in after_scenario: Exception: error in after_scenario hook\nTraceback:\n  File -snip- raise Exception("error in after_scenario hook")',
+      scenario_result: 'failed',
       scenario_scenarioName: 'create an after hook-error',
       test_children: undefined,
       test_description: undefined,
@@ -611,24 +449,22 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
-      scenario_getLabel: 'another normal skip',
+      scenario_getLabel: 'another scenario in with a hook-error feature that will be skipped',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'another normal skip',
+      scenario_scenarioName: 'another scenario in with a hook-error feature that will be skipped',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/another normal skip',
-      test_label: 'another normal skip',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_id: '.../project B/features/feature_with_hook_error.feature/anoter scenario in with a hook-error feature that will be skipped',
+      test_label: 'another scenario in with a hook-error feature that will be skipped',
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip an after hook-error',
@@ -645,12 +481,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error again',
       scenario_isOutline: false,
-      scenario_result: 'Exception\nHOOK-ERROR in after_scenario: Exception: error in after_scenario hook\nTraceback:\n  File -snip- raise Exception("error in after_scenario hook")',
+      scenario_result: 'failed',
       scenario_scenarioName: 'create an after hook-error again',
       test_children: undefined,
       test_description: undefined,
@@ -662,7 +497,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step',
@@ -679,7 +513,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step with more text',
@@ -696,7 +529,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'a cased step',
@@ -713,7 +545,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step',
@@ -730,7 +561,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step with more text',
@@ -747,7 +577,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no1',
@@ -764,7 +593,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no2',
@@ -781,7 +609,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with param',
@@ -798,7 +625,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step without custom flag type',
@@ -815,7 +641,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with custom flag type present',
@@ -832,7 +657,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'yet another step',
@@ -849,7 +673,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: '"yet" "another" step double quoted',
@@ -866,7 +689,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: "'yet' 'another' step single quoted",
@@ -883,7 +705,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 1',
@@ -900,7 +721,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 2',
@@ -917,7 +737,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 3',
@@ -934,7 +753,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 4',
@@ -951,12 +769,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested1.faildupe.feature',
       scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
-      scenario_result: 'AssertionError\nFailing step: When we implement a failing test ... failed\nTraceback (most recent call last):\n  File -snip- assert successful_or_failing == "successful"\nAssertionError',
+      scenario_result: 'failed',
       scenario_scenarioName: 'run a test',
       test_children: undefined,
       test_description: undefined,
@@ -968,7 +785,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested/nested3.sucessdupe.feature',
       scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
@@ -985,7 +801,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/nested/nested/nested2.successdupe.feature',
       scenario_featureName: 'Nested Duplicate',
       scenario_getLabel: 'run a test',
@@ -1002,12 +817,11 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/step_exception.feature',
       scenario_featureName: 'Bad step',
       scenario_getLabel: 'step with exception should show failure message',
       scenario_isOutline: false,
-      scenario_result: 'Exception\nTesting a step exception\nFailing step: When we have a step that raises a non-assertion exception ... failed\nTraceback (most recent call last):\n  File -snip- raise Exception("Testing a step exception")\nException: Testing a step exception',
+      scenario_result: 'failed',
       scenario_scenarioName: 'step with exception should show failure message',
       test_children: undefined,
       test_description: undefined,
@@ -1019,7 +833,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step types 1',
@@ -1036,7 +849,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step types 2',
@@ -1053,7 +865,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'a cased step2',
@@ -1070,7 +881,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with param2',
@@ -1087,7 +897,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/background.feature',
       scenario_featureName: 'With background',
       scenario_getLabel: 'add',
@@ -1104,7 +913,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/background.feature',
       scenario_featureName: 'With background',
       scenario_getLabel: 'multiply',
@@ -1121,7 +929,6 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
     }),
 
     new TestResult({
-      scenario_fastSkipTag: false,
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'u string with foo',
@@ -1137,12 +944,43 @@ export const getExpectedResults = (debug: boolean, wkspUri: vscode.Uri, config: 
       test_uri: '.../project B/features/goto_step.feature'
     }),
 
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: '@behave style',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@behave style',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/@behave style',
+      test_label: '@behave style',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: '@behave style wrapped',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@behave style wrapped',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/@behave style wrapped',
+      test_label: '@behave style wrapped',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
+    }),
 
   ];
 
 
   const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(debug, wkspSettings, expectedResults);
+  return applyTestConfiguration(wkspSettings, expectedResults);
 }
 
 

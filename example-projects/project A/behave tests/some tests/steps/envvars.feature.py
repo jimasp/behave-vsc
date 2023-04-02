@@ -2,10 +2,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 import os
-from platform import platform
-import time
-from behave import *
-
+from behave import given
 
 @given("we need envvars")
 def envvars(context):

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getActualWorkspaceSetting, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, WkspError } from './common';
+import { getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
 
@@ -10,7 +10,6 @@ export class WindowSettings {
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
-  public readonly showSettingsWarnings: boolean;
   public readonly xRay: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
@@ -19,15 +18,11 @@ export class WindowSettings {
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
-    const showSettingsWarningsCfg: boolean | undefined = winConfig.get("showSettingsWarnings");
-    if (showSettingsWarningsCfg === undefined)
-      throw "showSettingsWarnings is undefined";
     const xRayCfg: boolean | undefined = winConfig.get("xRay");
     if (xRayCfg === undefined)
       throw "xRay is undefined";
 
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
-    this.showSettingsWarnings = showSettingsWarningsCfg;
     this.xRay = xRayCfg;
   }
 }
@@ -37,13 +32,12 @@ export class WorkspaceSettings {
   // these apply to a single workspace 
 
   // user-settable
-  public envVarOverrides: { [name: string]: string } = {}; // TODO - make readonly when deprecated setting is removed
-  public fastSkipTags: string[] = []; // TODO - make readonly when deprecated setting is removed
+  public readonly envVarOverrides: { [name: string]: string } = {};
   public readonly justMyCode: boolean;
-  public readonly runAllAsOne: boolean;
   public readonly runParallel: boolean;
   public readonly workspaceRelativeFeaturesPath: string;
   // convenience properties
+  public readonly id: string;
   public readonly uri: vscode.Uri;
   public readonly name: string;
   public readonly featuresUri: vscode.Uri;
@@ -55,6 +49,7 @@ export class WorkspaceSettings {
   constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
 
     this.uri = wkspUri;
+    this.id = uriId(wkspUri);
     const wsFolder = getWorkspaceFolder(wkspUri);
     this.name = wsFolder.name;
 
@@ -62,9 +57,6 @@ export class WorkspaceSettings {
     const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
     if (envVarOverridesCfg === undefined)
       throw "envVarOverrides is undefined";
-    const fastSkipTagsCfg: string[] | undefined = wkspConfig.get("fastSkipTags");
-    if (fastSkipTagsCfg === undefined)
-      throw "fastSkipTags is undefined";
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
@@ -78,12 +70,6 @@ export class WorkspaceSettings {
 
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
-
-    const runAllAsOneCfg: boolean | undefined = getActualWorkspaceSetting(wkspConfig, "runAllAsOne");
-    if (this.runParallel && runAllAsOneCfg === undefined)
-      this.runAllAsOne = false;
-    else
-      this.runAllAsOne = runAllAsOneCfg === undefined ? true : runAllAsOneCfg;
 
 
     this.workspaceRelativeFeaturesPath = featuresPathCfg.replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
@@ -101,32 +87,6 @@ export class WorkspaceSettings {
       this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 
-    if (fastSkipTagsCfg) {
-      const err = `Invalid fastSkipTags setting ${JSON.stringify(fastSkipTagsCfg)} will be ignored.`;
-      try {
-        if (typeof fastSkipTagsCfg !== "object") {
-          this._warnings.push(err);
-        }
-        else {
-          for (const tag of fastSkipTagsCfg) {
-            if (typeof tag !== "string") {
-              this._warnings.push(`${err} ${tag} is not a string.`);
-              break;
-            }
-            if (!tag.startsWith("@")) {
-              this._warnings.push(`${err} ${tag} does not start with @`);
-              break;
-            }
-            else {
-              this.fastSkipTags.push(tag);
-            }
-          }
-        }
-      }
-      catch {
-        this._warnings.push(err);
-      }
-    }
 
     if (envVarOverridesCfg) {
       const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
@@ -156,16 +116,6 @@ export class WorkspaceSettings {
         this._warnings.push(err);
       }
     }
-
-
-    if (this.runParallel && this.runAllAsOne)
-      this._warnings.push(`behave-vsc.runParallel is overridden by behave-vsc.runAllAsOne whenever you run all tests at once. (This may or may not be your desired set up.)`);
-
-    if (this.fastSkipTags.length > 0 && this.runAllAsOne) // TODO change 'fast skip' in string below to behave-vsc.fastSkipTags when deprecated settings removed
-      this._warnings.push(`fast skip has no effect whenever you run all tests at once and behave-vsc.runAllAsOne is enabled. (This may or may not be your desired set up.)`);
-
-    if (!this.runParallel && !this.runAllAsOne)
-      this._warnings.push(`behave-vsc.runParallel and behave-vsc.runAllAsOne are both disabled. This will run each test sequentially and give the slowest performance.`);
 
 
     this.logUserSettings(logger, winSettings);
@@ -206,15 +156,6 @@ export class WorkspaceSettings {
       logger.logInfoAllWksps(`\ninstance settings:\n${JSON.stringify(winSettingsDic, null, 2)}`);
 
     logger.logInfo(`\n${this.name} workspace settings:\n${JSON.stringify(rscSettingsDic, null, 2)}`, this.uri);
-
-    if (winSettings.showSettingsWarnings) {
-
-      if (this._warnings.length > 0) {
-        logger.logSettingsWarning(`\n${this._warnings.map(warn => "WARNING: " + warn).join("\n")}`, this.uri);
-        logger.logInfo(`If you are happy with your settings, you can disable these warnings via the extension ` +
-          `setting 'behave-vsc.showSettingsWarnings'.\n`, this.uri);
-      }
-    }
 
     if (this._fatalErrors.length > 0) {
       throw new WkspError(`\nFATAL error due to invalid workspace setting in workspace "${this.name}". Extension cannot continue. ` +

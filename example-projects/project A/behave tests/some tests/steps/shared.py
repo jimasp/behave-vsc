@@ -2,7 +2,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 import time
-from behave import *
+from behave import given, when, then
 
 
 @given(u"we have behave installed")
@@ -18,7 +18,7 @@ def step_impl(context, successful_or_failing):
 
     
 @when("we have a step that raises a non-assertion exception")
-def step_impl(context):
+def step_impl2(context):
     raise Exception("Testing a step exception")    
 
 

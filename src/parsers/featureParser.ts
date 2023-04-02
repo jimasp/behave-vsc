@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "../settings";
-import { uriMatchString, sepr, basename, getLines } from '../common';
+import { uriId, sepr, basename, getLines } from '../common';
 import { diagLog } from '../logger';
 
 
@@ -26,10 +26,16 @@ export class FeatureFileStep {
 }
 
 export const getFeatureFileSteps = (featuresUri: vscode.Uri) => {
-  const featuresUriMatchString = uriMatchString(featuresUri);
+  const featuresUriMatchString = uriId(featuresUri);
   return [...featureFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
 }
 
+export const deleteFeatureFileSteps = (featuresUri: vscode.Uri) => {
+  const wkspFeatureFileSteps = getFeatureFileSteps(featuresUri);
+  for (const [key,] of wkspFeatureFileSteps) {
+    featureFileSteps.delete(key);
+  }
+}
 
 export const getFeatureNameFromContent = async (content: string): Promise<string | null> => {
   const featureName = featureReFile.exec(content);
@@ -42,22 +48,21 @@ export const getFeatureNameFromContent = async (content: string): Promise<string
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode.Uri, featureName: string, content: string, caller: string,
-  onScenarioLine: (range: vscode.Range, featureName: string, scenarioName: string, isOutline: boolean, fastSkip: boolean) => void,
+export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode.Uri, content: string, caller: string,
+  onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
   const fileName = basename(uri);
   const lines = getLines(content);
-  let fastSkipFeature = false;
   let fileScenarios = 0;
   let fileSteps = 0;
   let lastStepType = "given";
 
-  const fileUriMatchString = uriMatchString(uri);
+  const fileUriMatchString = uriId(uri);
 
   // clear all existing featureFileSteps for this step file uri
   for (const [key, featureFileStep] of featureFileSteps) {
-    if (uriMatchString(featureFileStep.uri) === fileUriMatchString)
+    if (uriId(featureFileStep.uri) === fileUriMatchString)
       featureFileSteps.delete(key);
   }
 
@@ -85,7 +90,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
         lastStepType = stepType;
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
-      const key = `${uriMatchString(uri)}${sepr}${range.start.line}`;
+      const key = `${uriId(uri)}${sepr}${range.start.line}`;
       featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, stepType));
       fileSteps++;
       continue;
@@ -93,22 +98,10 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
 
     const scenario = scenarioReLine.exec(line);
     if (scenario) {
-      let fastSkipScenario = false;
-      if (fastSkipFeature) {
-        fastSkipScenario = true;
-      }
-      else {
-        wkspSettings.fastSkipTags.forEach(skipStr => {
-          if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
-            fastSkipScenario = true;
-          }
-        });
-      }
-
       const scenarioName = scenario[3].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
-      onScenarioLine(range, featureName, scenarioName, isOutline, fastSkipScenario);
+      onScenarioLine(range, scenarioName, isOutline);
       fileScenarios++;
       continue;
     }
@@ -117,14 +110,6 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
     if (feature) {
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
       onFeatureLine(range);
-
-      if (lineNo > 0) {
-        wkspSettings.fastSkipTags.forEach(skipStr => {
-          if (skipStr.startsWith("@") && lines[lineNo - 1].includes(skipStr)) {
-            fastSkipFeature = true;
-          }
-        });
-      }
     }
 
   }

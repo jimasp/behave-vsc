@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
+import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, uriMatchString, getWorkspaceFolder,
+  countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem
 } from '../common';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
@@ -45,12 +45,12 @@ export class FileParser {
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedFeaturesParseForAllWorkspaces) {
-        diagLog(`featureParseComplete (${caller}) - good to go (all features parsed, steps parsing may continue in background)`);
+        diagLog(`featureParseComplete (${caller}) - is good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        diagLog(`featureParseComplete (${caller}) timeout remaining:` + timeout);
+        diagLog(`featureParseComplete  (${caller}) waiting - ${timeout} left until timeout`);
         if (timeout < interval) {
           diagLog(`featureParseComplete (${caller})  - timed out`);
           return resolve(false);
@@ -74,14 +74,14 @@ export class FileParser {
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedStepsParseForAllWorkspaces && !this._reparsingFile) {
-        diagLog(`stepsParseComplete (${caller}) - good to go (all steps parsed)`);
+        diagLog(`stepsParseComplete (${caller}) - is good to go (all steps parsed)`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        diagLog(`stepsParseComplete (${caller}) timeout remaining:` + timeout);
+        diagLog(`stepsParseComplete (${caller}) waiting - ${timeout} left until timeout`);
         if (timeout < interval) {
-          diagLog(`stepsParseComplete (${caller})  - timed out`);
+          diagLog(`stepsParseComplete (${caller}) - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -96,12 +96,13 @@ export class FileParser {
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
-    const items = getAllTestItems(wkspSettings.uri, controller.items);
+    const items = getAllTestItems(wkspSettings.id, controller.items);
     for (const item of items) {
       testData.delete(item);
       controller.items.delete(item.id);
     }
 
+    deleteFeatureFileSteps(wkspSettings.featuresUri);
     deleteStepMappings(wkspSettings.featuresUri);
 
     // replaced with custom findFiles function for now (see comment in findFiles function)
@@ -200,7 +201,7 @@ export class FileParser {
     if (!content)
       return;
 
-    const existingItem = controller.items.get(uriMatchString(uri));
+    const existingItem = controller.items.get(uriId(uri));
     if (existingItem) {
       diagLog(`${caller}: found existing feature test item for file ${uri.path}`);
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
@@ -210,7 +211,7 @@ export class FileParser {
     if (featureName === null)
       return undefined;
 
-    const testItem = controller.createTestItem(uriMatchString(uri), featureName, uri);
+    const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
     const testFile = new TestFile();
@@ -218,12 +219,11 @@ export class FileParser {
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
     let wkspGrandParent: vscode.TestItem | undefined;
-    const wkspTestItemId = uriMatchString(wkspSettings.uri);
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-      wkspGrandParent = controller.items.get(wkspTestItemId);
+      wkspGrandParent = controller.items.get(wkspSettings.id);
       if (!wkspGrandParent) {
         const wkspName = wkspSettings.name;
-        wkspGrandParent = controller.createTestItem(wkspTestItemId, wkspName);
+        wkspGrandParent = controller.createTestItem(wkspSettings.id, wkspName);
         wkspGrandParent.canResolveChildren = true;
         controller.items.add(wkspGrandParent);
       }
@@ -245,7 +245,7 @@ export class FileParser {
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
         const folderName = "\uD83D\uDCC1 " + folders[i]; // folder icon
-        const folderTestItemId = `${uriMatchString(wkspSettings.featuresUri)}/${path}`;
+        const folderTestItemId = `${uriId(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)
           parent = wkspGrandParent;
@@ -253,8 +253,8 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderTestItemId);
 
-        if (!current) { // TODO: put getAllTestItems above loop (needs thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getAllTestItems(wkspSettings.uri, controller.items);
+        if (!current) { // TODO: move getAllTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
+          const allTestItems = getAllTestItems(wkspSettings.id, controller.items);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
 
@@ -334,6 +334,7 @@ export class FileParser {
 
       this._parseFilesCallCounts++;
       const wkspName = getWorkspaceFolder(wkspUri).name;
+      const wkspId = uriId(wkspUri);
       const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
@@ -405,7 +406,7 @@ export class FileParser {
       }
 
       diagLog(`${callName}: complete`);
-      testCounts = countTestItemsInCollection(wkspUri, testData, ctrl.items);
+      testCounts = countTestItemsInCollection(wkspId, testData, ctrl.items);
       this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
 
       if (!config.integrationTestRun)
