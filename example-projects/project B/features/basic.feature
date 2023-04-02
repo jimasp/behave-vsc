@@ -30,6 +30,6 @@ Feature: Basic
 		When we have a missing step
 		Then we will see the result
 
-	@normal_skip
+	@skip
 	Scenario: run a skipped test
 		Given we have behave installed

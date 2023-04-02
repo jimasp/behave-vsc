@@ -8,7 +8,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../parsers/fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriMatchString, isFeatureFile, isStepsFile, getLines } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
 
@@ -28,8 +28,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 			expectedResult.scenario_isOutline !== actualResult.scenario_isOutline ||
 			expectedResult.scenario_getLabel !== actualResult.scenario_getLabel ||
 			expectedResult.scenario_featureName !== actualResult.scenario_featureName ||
-			expectedResult.scenario_scenarioName !== actualResult.scenario_scenarioName ||
-			expectedResult.scenario_fastSkipTag !== actualResult.scenario_fastSkipTag
+			expectedResult.scenario_scenarioName !== actualResult.scenario_scenarioName
 		) {
 
 			if (expectedResult.test_id === actualResult.test_id) {
@@ -80,18 +79,15 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	if (!(global as any).multiRootTest) {
 		const winSettings = config.globalSettings;
 		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
-		assert.strictEqual(winSettings.showSettingsWarnings, testConfig.getExpected("showSettingsWarnings"), wkspName);
 		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), wkspName);
 	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
-	assert.deepStrictEqual(wkspSettings.fastSkipTags, testConfig.getExpected("fastSkipTags"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"), wkspName);
 	assert.strictEqual(wkspSettings.featuresUri.path, testConfig.getExpected("featuresUri.path", wkspUri), wkspName);
 	assert.strictEqual(wkspSettings.featuresUri.fsPath, testConfig.getExpected("featuresUri.fsPath", wkspUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
-	assert.strictEqual(wkspSettings.runAllAsOne, testConfig.getExpected("runAllAsOne"), wkspName);
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
 }
 
@@ -260,12 +256,12 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 	return arrChildrenIds.join();
 }
 
-function assertExpectedCounts(debug: boolean, wkspUri: vscode.Uri, wkspName: string, config: Configuration,
-	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+function assertExpectedCounts(wkspUri: vscode.Uri, wkspName: string, config: Configuration,
+	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
 	actualCounts: WkspParseCounts, hasMuliRootWkspNode: boolean) {
 
 	try {
-		const expectedCounts = getExpectedCounts(debug, wkspUri, config);
+		const expectedCounts = getExpectedCounts(wkspUri, config);
 
 		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName + ": featureFilesExceptEmptyOrCommentedOut");
 		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName + ": stepFilesExceptEmptyOrCommentedOut");
@@ -355,9 +351,10 @@ async function setLock(consoleName: string, acquireOrRelease: string) {
 }
 
 
+// returns instances of vars initialised by the extension's activate() function, wrapped in a "TestSupport" type
 // activate only once for parallel (multiroot) calls and get the same instances
 let extInstances: TestSupport | undefined = undefined;
-async function getExtensionInstances(): Promise<TestSupport> {
+async function getTestSupportFromExtension(): Promise<TestSupport> {
 
 	if (extInstances)
 		return extInstances;
@@ -365,6 +362,7 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension);
 	assert(extension.isActive);
+
 
 	// call activate() to get instances
 	const start = performance.now();
@@ -382,8 +380,8 @@ async function getExtensionInstances(): Promise<TestSupport> {
 	assertInstances(extInstances);
 	extInstances.config.integrationTestRun = true;
 
-	// wait for any initial parse to complete
-	await extInstances.parser.featureParseComplete(5000, "getExtensionInstances");
+	// give the extension a chance to do any async initialisation it needs to do
+	await new Promise(t => setTimeout(t, 3000));
 
 	await vscode.commands.executeCommand("testing.clearTestResults");
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -391,23 +389,25 @@ async function getExtensionInstances(): Promise<TestSupport> {
 }
 
 
-// NOTE: when workspace-multiroot suite/index.ts is run (in order to test parallel workspace runs) this
+// A user can kick off one project and then another and then another, (i.e. staggered), they do not have to wait for the first to complete,
+// so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
-// so example project workspaces 1 & 2 & simple can run in parallel, but not e.g. 1&1)
+// so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
 export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string, testConfig: TestWorkspaceConfig,
-	getExpectedCounts: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-	getExpectedResults: (debug: boolean, wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
+	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+	getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
 	const wkspUri = getTestWorkspaceUri(wskpFileSystemFolderName);
+	const wkspId = uriId(wkspUri);
 
 	await setLock(consoleName, "acquire");
 	console.log(`${consoleName} initialising`);
 
-	const instances = await getExtensionInstances();
+	const instances = await getTestSupportFromExtension();
 
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
-	// we  we need call it manually to insert a test config
+	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
 	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig, instances.config);
@@ -415,10 +415,10 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "runAllTestsAndAssertTheResults");
 	assert(actualCounts, "actualCounts was undefined");
-	const allWkspItems = getAllTestItems(wkspUri, instances.ctrl.items);
+	const allWkspItems = getAllTestItems(wkspId, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
 	assert(allWkspItems.length > 0, "allWkspItems.length was 0");
-	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriMatchString(wkspUri)) !== undefined;
+	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriId(wkspUri)) !== undefined;
 
 	// check all steps can be matched
 	await assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri, instances);
@@ -426,24 +426,26 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allWkspItems);
-	console.log(`${consoleName}: testData = ${JSON.stringify(instances.testData)}`);
-	const expectedResults = getExpectedResults(debug, wkspUri, instances.config);
+	const expectedResults = getExpectedResults(wkspUri, instances.config);
+	if (include.length !== expectedResults.length)
+		debugger; // eslint-disable-line no-debugger
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
 	// included tests (scenarios) and expected tests lengths should be equal, but 
-	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if tests have been added	
+	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if new
+	// tests have recently been added	
 	assert(include.length >= expectedResults.length, consoleName + ", (see counts above)");
 	console.log(`${consoleName}: initialised`);
 
 
-	// run behave tests - we kick the runHandler off inside the lock to ensure that readyForRun() will 
-	// pass, i.e. no other parsing gets kicked off until it has begun.
+	// run behave tests - we kick the runHandler off inside the lock to ensure that featureParseComplete() check
+	// will inside the runHandler, i.e. so no other parsing gets kicked off until it has begun.
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
-	const runRequest = new vscode.TestRunRequest(include, undefined, undefined);
-	assert(await instances.parser.featureParseComplete(0, consoleName));
-	const fakeTestRunStopButtonToken = new vscode.CancellationTokenSource().token;
-	const resultsPromise = instances.runHandler(debug, runRequest, fakeTestRunStopButtonToken);
+	const runRequest = new vscode.TestRunRequest(include);
+	const resultsPromise = instances.runHandler(debug, runRequest);
 
+	// give run handler a chance to pass the featureParseComplete() check, then release the lock
+	await (new Promise(t => setTimeout(t, 50)));
 	await setLock(consoleName, "release");
 
 
@@ -457,8 +459,10 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 	// validate results
 
-	if (!results || results.length === 0)
-		throw new Error(`${consoleName}: no results returned from runHandler`);
+	if (!results || results.length === 0) {
+		debugger; // eslint-disable-line no-debugger
+		throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
+	}
 
 	results.forEach(result => {
 
@@ -475,7 +479,6 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 			scenario_featureFileRelativePath: result.scenario.featureFileWorkspaceRelativePath,
 			scenario_featureName: result.scenario.featureName,
 			scenario_scenarioName: result.scenario.scenarioName,
-			scenario_fastSkipTag: result.scenario.fastSkipTag,
 			scenario_result: standardiseResult(result.scenario.result)
 		});
 
@@ -485,7 +488,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(debug, wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
+	assertExpectedCounts(wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

@@ -6,26 +6,30 @@ import { config } from "./configuration";
 import { Scenario, TestData } from './parsers/testFile';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
+import { getJunitDirUri } from './watchers/junitWatcher';
+
 
 
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
 
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
+export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
+export const FOLDERNAME_CHARS_VALID_ON_ALLPLATFORMS = /[^ a-zA-Z0-9_.-]/g;
+export const BEHAVE_EXECUTION_ERROR_MESSAGE = "--- BEHAVE EXECUTION ERROR DETECTED ---"
 
-export const sepr = "::"; // standard separator (unsafe for splitting)
+export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));
 export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
-export const pathSepr = "////"; // separator that cannot exist in file paths, safe for splitting in a path context
-export const afterPathSepr = (str: string) => str.split(pathSepr)[1];
 
 
 // the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
-// - the logger can use the workspace name in the notification window
 // - the logger can log to the specific workspace output window
+// - the logger can use the workspace name in the notification window
 // - the error is only logged/displayed once 
 // - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
+// for more info on error handling, see contributing.md
 export class WkspError extends Error {
   constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
     const msg = errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string;
@@ -58,28 +62,28 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
 }
 
 
-// these two uri match functions are here to highlight why uri.toString() is needed:
-// 1. both uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
+// these two uri functions are here to highlight why uri.toString() is needed:
+// 1. uri.path and uri.fsPath BOTH give inconsistent casing of the drive letter on windows ("C:" vs "c:") 
 // whether uri1.path === uri2.path or uri1.fsPath === uri2.fsPath depends on whether both uris are being set/read on
 // a similar code stack (i.e. whether both used "C" or "c" when the value was set).
-// at any rate, for matching one uri path or fsPath to another we can use toString() to provide consistent casing.
+// at any rate, we can use toString() to provide consistent casing for matching one uri path or fsPath to another.
 // 2. separately, two uris that point to the same path (regardless of casing) may not be the same object, so uri1 === uri2 would fail
 // so whenever we plan to use a uri in an equals comparison we should use one of these functions
-export function uriMatchString(uri: vscode.Uri) {
+export function uriId(uri: vscode.Uri) {
   return uri.toString();
 }
-
 export function urisMatch(uri1: vscode.Uri, uri2: vscode.Uri) {
   return uri1.toString() === uri2.toString();
 }
 
 
-export async function removeExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
-  await removeDirectoryRecursive(config.extensionTempFilesUri, cancelToken);
-}
+export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
 
+  const dirUri = config.extensionTempFilesUri;
+  const junitDirUri = getJunitDirUri();
 
-export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: vscode.CancellationToken) {
+  // note - this function runs asynchronously, and we do not wait for it to complete before we start 
+  // the junitWatcher, this is why we don't want to delete the (watched) junit directory itself (only its contents)
 
   try {
     const children = await vwfs.readDirectory(dirUri);
@@ -87,12 +91,16 @@ export async function removeDirectoryRecursive(dirUri: vscode.Uri, cancelToken: 
     for (const [name,] of children) {
       if (!cancelToken.isCancellationRequested) {
         const curUri = vscode.Uri.joinPath(dirUri, name);
+        if (urisMatch(curUri, junitDirUri)) {
+          const jChildren = await vwfs.readDirectory(curUri);
+          for (const [jName,] of jChildren) {
+            await vwfs.delete(vscode.Uri.joinPath(curUri, jName), { recursive: true, useTrash: true });
+          }
+          continue;
+        }
         await vwfs.delete(curUri, { recursive: true, useTrash: true });
       }
     }
-
-    if (!cancelToken.isCancellationRequested)
-      await vwfs.delete(dirUri, { recursive: true, useTrash: true });
   }
   catch (e: unknown) {
     // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
@@ -230,16 +238,16 @@ export const isFeatureFile = (uri: vscode.Uri): boolean => {
 }
 
 
-export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getAllTestItems = (wkspId: string | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
   // get all test items if wkspUri is null, or
   // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspUri === null || item.id.includes(uriMatchString(wkspUri))) {
+    if (wkspId === null || item.id.includes(wkspId)) {
       items.push(item);
       if (item.children)
-        items.push(...getAllTestItems(wkspUri, item.children));
+        items.push(...getAllTestItems(wkspId, item.children));
     }
   });
 
@@ -247,8 +255,8 @@ export const getAllTestItems = (wkspUri: vscode.Uri | null, collection: vscode.T
 }
 
 
-export const countTestItemsInCollection = (wkspUri: vscode.Uri | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
-  const arr = getAllTestItems(wkspUri, items);
+export const countTestItemsInCollection = (wkspId: string | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
+  const arr = getAllTestItems(wkspId, items);
   return countTestItems(testData, arr);
 }
 
@@ -304,17 +312,6 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 }
 
 
-// we can't distinguish behave execution errors by exit code
-// a normal assertion failure gives an exit code of 1, but so do lots of other issues
-// so we need to check the stdout/stderr.
-// we do this so that we know whether we can expect junit files to 
-// be created (just an assertion failure) or stop the run and mark tests as failed in the UI
-export function isBehaveExecutionError(outputStr: string) {
-  const errRe = /^(Traceback|ParserError:|ConfigError:)/;
-  return errRe.test(outputStr);
-}
-
-
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }
@@ -336,6 +333,7 @@ export function basename(uri: vscode.Uri) {
     throw "could not determine file name from uri";
   return basename;
 }
+
 
 export function getLines(text: string) {
   return text.split(/\r\n|\r|\n/);

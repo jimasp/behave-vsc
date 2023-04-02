@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "../configuration";
-import { uriMatchString, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
+import { uriId, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { FeatureFileStep } from '../parsers/featureParser';
@@ -21,7 +21,7 @@ function getFeatureReferencesToStepFileFunction(stepsFileUri: vscode.Uri, lineNo
   const featureStepMatches = new Map<string, FeatureFileStep[]>();
 
   stepsFileLineMappings.forEach(sm => {
-    const featureKey = uriMatchString(sm.featureFileStep.uri);
+    const featureKey = uriId(sm.featureFileStep.uri);
     const parentFeature = featureStepMatches.get(featureKey);
     if (!parentFeature)
       featureStepMatches.set(featureKey, [sm.featureFileStep]);

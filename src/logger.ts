@@ -128,8 +128,9 @@ export class Logger {
       }
     }
 
-    if (config.integrationTestRun && !text.includes("Canceled") && !text.includes("Cancelled"))
+    if (config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
       debugger; // eslint-disable-line no-debugger
+    }
 
 
     let winText = text;
@@ -168,7 +169,7 @@ export enum DiagLogType {
 }
 
 export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (config && !config.globalSettings.xRay)
+  if (config && !config.globalSettings.xRay && !config.integrationTestRun && !config.exampleProject)
     return;
 
   if (wkspUri)

@@ -10,39 +10,30 @@ export class TestWorkspaceConfigWithWkspUri {
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private envVarOverrides: { [name: string]: string } | undefined;
-	private fastSkipTags: string[] | undefined;
 	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
-	private runAllAsOne: boolean | undefined;
 	private runParallel: boolean | undefined;
-	private showSettingsWarnings: boolean | undefined;
 	private xRay: boolean | undefined;
 
 	// all user-settable settings in settings.json or *.code-workspace
 	constructor({
-		envVarOverrides, fastSkipTags, featuresPath: featuresPath, justMyCode,
+		envVarOverrides, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
-		runAllAsOne, runParallel, showSettingsWarnings, xRay
+		runParallel, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
-		fastSkipTags: string[] | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
 		multiRootRunWorkspacesInParallel: boolean | undefined,
-		runAllAsOne: boolean | undefined,
 		runParallel: boolean | undefined,
-		showSettingsWarnings: boolean | undefined,
 		xRay: boolean | undefined
 	}) {
 		this.envVarOverrides = envVarOverrides;
-		this.fastSkipTags = fastSkipTags;
 		this.featuresPath = featuresPath;
 		this.justMyCode = justMyCode;
-		this.runAllAsOne = runAllAsOne;
 		this.runParallel = runParallel;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
-		this.showSettingsWarnings = showSettingsWarnings;
 		this.xRay = xRay;
 	}
 
@@ -58,20 +49,14 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
-			case "fastSkipTags":
-				return <T><unknown>(this.fastSkipTags === undefined ? [] : this.fastSkipTags);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
 			case "multiRootRunWorkspacesInParallel":
 				return <T><unknown>(this.multiRootRunWorkspacesInParallel === undefined ? true : this.multiRootRunWorkspacesInParallel);
 			case "justMyCode":
 				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
-			case "runAllAsOne":
-				return <T><unknown>(this.runAllAsOne === undefined ? true : this.runAllAsOne);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
-			case "showSettingsWarnings":
-				return <T><unknown>(this.showSettingsWarnings === undefined ? true : this.showSettingsWarnings);
 			case "xRay":
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			default:
@@ -95,9 +80,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "envVarOverrides":
 				response = <T><unknown>this.envVarOverrides;
 				break;
-			case "fastSkipTags":
-				response = <T><unknown>this.fastSkipTags;
-				break;
 			case "justMyCode":
 				response = <T><unknown>this.justMyCode;
 				break;
@@ -107,14 +89,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "multiRootRunWorkspacesInParallel":
 				response = <T><unknown>this.multiRootRunWorkspacesInParallel;
 				break;
-			case "runAllAsOne":
-				response = <T><unknown>this.runAllAsOne;
-				break;
 			case "runParallel":
 				response = <T><unknown>this.runParallel;
-				break;
-			case "showSettingsWarnings":
-				response = <T><unknown>this.showSettingsWarnings;
 				break;
 			case "xRay":
 				response = <T><unknown>this.xRay;
@@ -157,20 +133,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
 		}
 
-
-		const getExpectedRunAllAsOne = (): boolean => {
-			if (this.runParallel && this.runAllAsOne === undefined)
-				return this.runAllAsOne = false;
-			else
-				return this.runAllAsOne = this.runAllAsOne === undefined ? true : this.runAllAsOne;
-		};
-
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
-			case "fastSkipTags":
-				return <T><unknown>this.get("fastSkipTags");
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
 			case "featuresUri.path":
@@ -181,12 +147,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootRunWorkspacesInParallel":
 				return <T><unknown>(this.get("multiRootRunWorkspacesInParallel"));
-			case "runAllAsOne":
-				return <T><unknown>(getExpectedRunAllAsOne());
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
-			case "showSettingsWarnings":
-				return <T><unknown>(this.get("showSettingsWarnings"));
 			case "xRay":
 				return <T><unknown>(this.get("xRay"));
 

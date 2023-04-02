@@ -14,15 +14,15 @@ register_type(flag_here=parse_flag)
 
 
 def before_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
-    if "normal_skip" in scenario.effective_tags:
-        scenario.skip("Marked with @normal_skip")
+    if "skip" in scenario.effective_tags:
+        scenario.skip("Marked with @skip")
         return
     if "raise_error_in_before_scenario" in scenario.effective_tags:
         raise Exception("error in before_scenario hook")
 
 def after_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
-    if "normal_skip" in scenario.effective_tags:
-        scenario.skip("Marked with @normal_skip")
+    if "skip" in scenario.effective_tags:
+        scenario.skip("Marked with @skip")
         return
     if "raise_error_in_after_scenario" in scenario.effective_tags:
         raise Exception("error in after_scenario hook")

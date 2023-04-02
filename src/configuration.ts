@@ -19,6 +19,7 @@ export interface Configuration {
 // don't export this, use the interface
 class ExtensionConfiguration implements Configuration {
   public integrationTestRun = false;
+  public exampleProject = false;
   public readonly extensionTempFilesUri;
   public readonly logger: Logger;
   private static _configuration?: ExtensionConfiguration;
@@ -29,6 +30,8 @@ class ExtensionConfiguration implements Configuration {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
+    this.exampleProject = (vscode.workspace.workspaceFolders?.find(f =>
+      f.uri.path.includes("/behave-vsc/example-projects/")) !== undefined);
     diagLog("Configuration singleton constructed (this should only fire once)");
   }
 

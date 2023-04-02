@@ -18,7 +18,7 @@
         "editor.rulers": []
     },
     "editor.rulers": [
-        160
+        140
     ],
     "editor.formatOnSave": true,
     "editor.foldingMaximumRegions": 20000,

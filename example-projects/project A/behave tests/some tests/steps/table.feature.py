@@ -1,7 +1,7 @@
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
-from behave import * 
+from behave import given, when, then
 
 class UserDept:
     user = ""

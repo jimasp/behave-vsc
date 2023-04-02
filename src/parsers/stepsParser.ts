@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
-import { uriMatchString, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common';
+import { uriId, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common';
 import { diagLog } from '../logger';
 
 export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
-const stepFileStepStartRe = /^\s*(@step|@given|@when|@then).+/i;
-const stepFileStepRe = /^\s*(@step|@given|@when|@then)\(u?(?:"|')(.+)(?:"|').*\).*$/i;
+const stepFileStepStartStr = "^\\s*@(behave\\.)?(step|given|when|then)\\(";
+const stepFileStepStartRe = new RegExp(`${stepFileStepStartStr}.*`, "i");
+const stepFileStepRe = new RegExp(`${stepFileStepStartStr}u?(?:"|')(.+)(?:"|').*\\).*$`, "i");
 const stepFileSteps = new Map<string, StepFileStep>();
 
 export class StepFileStep {
@@ -22,7 +23,7 @@ export class StepFileStep {
 
 
 export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
-  const featuresUriMatchString = uriMatchString(featuresUri);
+  const featuresUriMatchString = uriId(featuresUri);
   let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
   if (!removeFileUriPrefix)
     return steps;
@@ -47,11 +48,11 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
   if (!content)
     return;
 
-  const fileUriMatchString = uriMatchString(stepFileUri);
+  const fileUriMatchString = uriId(stepFileUri);
 
   // clear all existing stepFileSteps for this step file uri
   for (const [key, stepFileStep] of stepFileSteps) {
-    if (uriMatchString(stepFileStep.uri) === fileUriMatchString)
+    if (uriId(stepFileStep.uri) === fileUriMatchString)
       stepFileSteps.delete(key);
   }
 
@@ -87,7 +88,7 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
     if (foundStep) {
       if (foundStep && line.endsWith("(")) {
         startLineNo = lineNo;
-        multiLineStepType = foundStep[1];
+        multiLineStepType = foundStep[2];
         multiLineBuilding = true;
         continue;
       }
@@ -107,7 +108,7 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
 
 
     if (multiLine) {
-      line = `${multiLineStepType}(${multiLine})`;
+      line = `@${multiLineStepType}(${multiLine})`;
       multiLine = "";
     }
     else {
@@ -133,14 +134,14 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
 
 
 function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
-  const stepType = step[1].slice(1);
-  let textAsRe = step[2].trim();
+  const stepType = step[2];
+  let textAsRe = step[3].trim();
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
   const fileName = basename(fileUri);
   // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we 
   // don't want to allow duplicate text matches in the workspace
-  const reKey = `${uriMatchString(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
+  const reKey = `${uriId(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
   return { reKey, stepFileStep };
 }

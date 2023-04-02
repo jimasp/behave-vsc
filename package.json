@@ -11,15 +11,6 @@
 						"type": "string"
 					}
 				},
-				"behave-vsc.fastSkipTags": {
-					"scope": "resource",
-					"type": "array",
-					"markdownDescription": "Optional array list of fast skip tags that each start with `@`. The listed tags stop behave being called for features/scenarios marked with those tags. This setting has no effect when you run all tests at once and `#behave-vsc.runAllAsOne#` is enabled (or when debugging).",
-					"items": {
-						"type": "string",
-						"pattern": "@.+"
-					}
-				},
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
@@ -38,23 +29,11 @@
 					"markdownDescription": "For multi-root workspaces only. If enabled, then when behave tests are run from more than one workspace, behave tests from those workspaces are run at the same time. This setting should be in your `*.code-workspace` file.",
 					"default": true
 				},
-				"behave-vsc.runAllAsOne": {
-					"scope": "resource",
-					"type": "boolean",
-					"markdownDescription": "Specifies whether a single call to behave (i.e. `python -m behave`) will be used when running *all* behave tests. Recommended to keep this enabled unless you can enable `#behave-vsc.runParallel#`. Note that running a selection of tests vs one-shot `python -m behave` of all tests may give different results, i.e. highlight issues with test isolation.",
-					"default": true
-				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether behave tests run in async mode. Enabling this setting will create multiple behave instances. Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your tests are fully isolated). If you enable this setting, you may wish to disable `#behave-vsc.runAllAsOne#` so running all tests (not just selected/grouped tests) will use runParallel.",
+					"markdownDescription": "Specifies whether to create a separate behave instance for each feature and run those instances simultaneously (except when debugging). Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your features are fully isolated).",
 					"default": false
-				},
-				"behave-vsc.showSettingsWarnings": {
-					"scope": "window",
-					"type": "boolean",
-					"markdownDescription": "Specifies whether the Behave VSC output window displays warnings about configuration settings. For multi-root workspaces, you may wish to set this in your `*.code-workspace` file.",
-					"default": true
 				},
 				"behave-vsc.xRay": {
 					"scope": "window",
@@ -85,7 +64,7 @@
 		"keybindings": [
 			{
 				"command": "behave-vsc.gotoStep",
-				"key": "alt+f12",
+				"key": "f12",
 				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/"
 			},
 			{
@@ -186,7 +165,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug, Run and Navigate Python behave tests",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
@@ -204,7 +183,7 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.72.2"
+		"vscode": "^1.77.0"
 	},
 	"categories": [
 		"Testing",
@@ -257,7 +236,7 @@
 		"rimraf": "^3.0.2",
 		"ts-loader": "^9.2.5",
 		"typescript": "^4.5.5",
-		"webpack": "^5.52.1",
+		"webpack": "^5.76.0",
 		"webpack-cli": "^4.8.0"
 	},
 	"dependencies": {

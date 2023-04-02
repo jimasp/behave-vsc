@@ -10,6 +10,6 @@ Feature: Simple
       When we implement a failing test
       Then we will see the result     
 
-   @normal_skip
+   @skip
    Scenario: run a skipped test
       Given we have behave installed
