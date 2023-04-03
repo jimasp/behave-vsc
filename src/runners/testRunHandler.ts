@@ -25,7 +25,6 @@ export class WkspRun {
     public readonly sortedQueue: QueueItem[],
     public readonly pythonExec: string,
     public readonly allTestsForThisWkspIncluded: boolean,
-    public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri
   ) { }
 }
@@ -175,14 +174,13 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
   try {
 
     const allTestsForThisWkspIncluded = allTestsForThisWkspAreIncluded(request, wkspSettings, ctrl, testData);
-    const wkspIncludedFeatures = getIncludedFeaturesForWksp(wkspSettings.uri, request);
     const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
     const sortedQueue = wkspQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspSettings.name);
 
     wr = new WkspRun(
       wkspSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
-      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri
+      allTestsForThisWkspIncluded, junitWkspRunDirUri
     )
 
     const start = performance.now();
@@ -238,7 +236,7 @@ async function runFeaturesTogether(wr: WkspRun) {
 
     const runEntireFeature = wr.allTestsForThisWkspIncluded
       ? wkspQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, wkspQueueItem);
+      : allSiblingsIncluded(wr, wkspQueueItem);
 
     if (runEntireFeature) {
       if (runTogetherFeatures.includes(runEntireFeature))
@@ -284,7 +282,7 @@ async function runFeaturesParallel(wr: WkspRun) {
 
     const runEntireFeature = wr.allTestsForThisWkspIncluded
       ? wkspQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, wkspQueueItem);
+      : allSiblingsIncluded(wr, wkspQueueItem);
 
     if (runEntireFeature) {
       if (featuresRun.includes(runEntireFeature.id))
@@ -375,27 +373,6 @@ function addRunNote(run: vscode.TestRun) {
 }
 
 
-function getIncludedFeaturesForWksp(wkspUri: vscode.Uri, req: vscode.TestRunRequest | undefined,
-  child: vscode.TestItem | undefined = undefined): vscode.TestItem[] {
-
-  const items: vscode.TestItem[] = [];
-
-  if (child) {
-    if (child.uri)
-      return uriId(child.uri).startsWith(uriId(wkspUri)) && child.id.toLowerCase().endsWith(".feature") ? [child] : [];
-    // no uri = it's a folder
-    child.children.forEach(child => items.push(...getIncludedFeaturesForWksp(wkspUri, undefined, child)));
-    return items;
-  }
-
-  if (!req)
-    throw "req or child must be supplied";
-
-  req.include?.forEach(inc => items.push(...getIncludedFeaturesForWksp(wkspUri, undefined, inc)));
-  return items;
-}
-
-
 function getChildScenariosForParentFeature(wr: WkspRun, scenarioQueueItem: QueueItem) {
   const parentFeature = scenarioQueueItem.test.parent;
   if (!parentFeature)
@@ -415,14 +392,10 @@ function getChildScenariosForFeature(wr: WkspRun, feature: vscode.TestItem) {
 }
 
 
-function parentFeatureOrAllSiblingsIncluded(wr: WkspRun, wkspQueueItem: QueueItem): vscode.TestItem | undefined {
+function allSiblingsIncluded(wr: WkspRun, wkspQueueItem: QueueItem): vscode.TestItem | undefined {
   const parent = wkspQueueItem.test.parent;
   if (!parent)
     throw `parent not found for scenario ${wkspQueueItem.scenario.scenarioName}`;
-
-  const includedParent = wr.includedFeatures?.find(x => x.id === parent.id);
-  if (includedParent)
-    return includedParent;
 
   let allSiblingsIncluded = true;
   parent.children.forEach(child => {
