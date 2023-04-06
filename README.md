@@ -17,7 +17,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Feature file formatting (default Ctrl+K,Ctrl+F).
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter recognition.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
-- This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
+- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -104,10 +104,10 @@ paths=my_tests/behave_features
 - *How can I see the active behave configuration being used for behave execution?* In your behave config file, set `verbose=true`.
 - *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
-- *How can I only execute a specific set of tests while using the extension?* There are a lot of options here, but there are some examples:
+- *How can I only execute a specific subset of tests while using the extension?* Here are some examples of how to approach this:
 
-  - (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup)
-  - (higly flexible) consider if you can group them into folders, not just by tag, then you can select to run any folder/subfolder from the test tree in the UI instead.  
+  - (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup).
+  - (higly flexible) consider if you can group your feature files into folders, rather than just using tags, then you can select to run any folder/subfolder from the test tree in the UI instead.  
   - (highly flexible) consider if you can use a feature/scenario/folder naming scheme that will allow you to leverage the filtering above the test tree to enable you to run just those tests.
   - (custom) use the `envVarOverrides` extension setting to set an environment variable that is only set when running from the extension. This adds endless possibilities, but the most obvious approaches are probably: (a) setting the `BEHAVE_STAGE` environment variable, (b) to control a behave `active_tag_value_provider`, (c) to control `scenario.skip()`, or (d) to control a behave `before_all` for a completely custom setup.
 - *How do I enable automatic feature file formatting on save?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.formatOnSave": true }`

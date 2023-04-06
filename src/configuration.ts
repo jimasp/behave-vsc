@@ -85,12 +85,12 @@ class ExtensionConfiguration implements Configuration {
       throw (`Behave VSC could not find required dependency ${msPyExt}`);
 
     if (!pyext.isActive) {
-      await pyext?.activate();
+      await pyext.activate();
       if (!pyext.isActive)
         throw (`Behave VSC could not activate required dependency ${msPyExt}`);
     }
 
-    const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
+    const pythonExec = await pyext.exports.environments.getActiveEnvironmentPath().path;
     if (!pythonExec)
       throw (`Behave VSC failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
 
