@@ -251,7 +251,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
     if (queueItemResults.length === 0) {
       queueItemResults = testCase.filter(tc => {
         return tc.$.classname === className &&
-          new RegExp(scenarioName.replace(/<.*>/g, ".*")).test(tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")));
+          new RegExp(scenarioName.replace(/<.*?>/g, ".*")).test(tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")));
       });
     }
 
@@ -262,7 +262,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
     const result = queueItemResults.length === 1
       ? queueItemResults[0]
       : rowName
-        ? queueItemResults.find(qir => new RegExp(rowName.replace(/<.*>/g, ".*")).test(qir.$.name))
+        ? queueItemResults.find(qir => new RegExp(rowName.replace(/<.*?>/g, ".*")).test(qir.$.name))
         : queueItemResults.find(qir => qir.$.status === "failed");
 
     if (!result)

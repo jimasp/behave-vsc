@@ -142,9 +142,8 @@ export class TestFile {
 function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
   let escapeRegExChars = scenarioName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  // scenario outline with a <param> in its name
-  if (isOutline && escapeRegExChars.includes("<"))
-    escapeRegExChars = escapeRegExChars.replace(/<.*>/g, ".*");
+  if (isOutline) // scenario outline with a <param> in its name
+    escapeRegExChars = escapeRegExChars.replace(/<.*?>/g, ".*");
 
   return "^" + escapeRegExChars + (isOutline ? " -- @" + (rowId ?? "") : "$");
 }
