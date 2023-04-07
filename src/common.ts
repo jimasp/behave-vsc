@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { Scenario, TestData } from './parsers/testFile';
+import { RunItem, TestData } from './parsers/testFile';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
@@ -264,7 +264,7 @@ export const countTestItemsInCollection = (wkspId: string | null, testData: Test
 export const getScenarioTests = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
   const scenarios = items.filter(item => {
     const data = testData.get(item);
-    if (data && (data as Scenario).scenarioName)
+    if (data && (data as RunItem).scenarioName)
       return true;
   });
   return scenarios;

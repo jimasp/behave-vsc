@@ -5,8 +5,9 @@ import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
 import { diagLog } from '../logger';
 
-let generationCounter = 0;
-export type BehaveTestData = TestFile | Scenario;
+
+
+export type BehaveTestData = TestFile | RunItem;
 export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 
 
@@ -29,8 +30,8 @@ export class TestFile {
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
 
-    const thisGeneration = generationCounter++;
-    const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
+    type Parent = { item: vscode.TestItem, children: vscode.TestItem[] }
+    const ancestors: Parent[] = [];
     this.didResolve = true;
 
     const ascend = (depth: number) => {
@@ -56,25 +57,81 @@ export class TestFile {
       }
     };
 
-    const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
-      const parent = ancestors[ancestors.length - 1];
 
-      const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline);
-      const id = `${uriId(featureUri)}/${data.getLabel()}`;
-      const tcase = controller.createTestItem(id, data.getLabel(), featureUri);
-      testData.set(tcase, data);
-      tcase.range = range;
-      parent.item.label = featureName;
-      parent.children.push(tcase);
-      diagLog(`created child test item scenario ${tcase.id} from ${featureUri.path}`);
-    }
+    let currentOutline: Parent;
+    let currentExamplesTable: Parent;
+    let exampleTable = 0;
+    let exampleRowIdx = 0;
 
     const onFeatureLine = (range: vscode.Range) => {
       item.range = range;
+      item.label = featureName;
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(wkspSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);
+    const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
+      exampleTable = 0;
+      const parent = ancestors[0];
+      const runName = getRunName(scenarioName, isOutline);
+      const itemType = isOutline ? RunItemType.ScenarioOutline : RunItemType.Scenario;
+      const id = `${uriId(featureUri)}/${scenarioName}}`;
+      const testItem = controller.createTestItem(id, scenarioName, featureUri);
+      testItem.range = range;
+      parent.children.push(testItem);
+      parent.item.canResolveChildren = true;
+
+      if (isOutline) {
+        currentOutline = { item: testItem, children: [] };
+        ancestors.push(currentOutline);
+      }
+      else {
+        const data = new RunItem(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
+        testData.set(testItem, data);
+      }
+
+      diagLog(`created child test item scenario ${testItem.id} from ${featureUri.path}`);
+    }
+
+    const onExamplesLine = (range: vscode.Range, examplesLine: string) => {
+
+      exampleTable++;
+      exampleRowIdx = 0;
+
+      if (!currentOutline)
+        throw new Error(`could not find scenario outline parent for ${examplesLine}`);
+
+      examplesLine = examplesLine.replace(/Examples:/i, '').trim();
+      const id = `${uriId(featureUri)}/${examplesLine}}`;
+      const testItem = controller.createTestItem(id, examplesLine, featureUri);
+      testItem.range = range;
+      currentOutline.children.push(testItem);
+      currentOutline.item.canResolveChildren = true;
+      currentExamplesTable = { item: testItem, children: [] };
+      ancestors.push(currentExamplesTable);
+      diagLog(`created child test item examples ${testItem.id} from ${featureUri.path}`);
+    }
+
+    const onExampleLine = (range: vscode.Range, rowText: string) => {
+
+      if (exampleRowIdx++ == 0) // header row
+        return;
+
+      const parent = ancestors[ancestors.length - 1];
+      const rowId = `${exampleTable}.${exampleRowIdx - 1}`;
+      const runName = getRunName(currentOutline.item.label, true, rowId);
+      const rowName = `${currentOutline.item.label} -- @${rowId} ${currentExamplesTable.item.label}`;
+      const data = new RunItem(RunItemType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
+        currentOutline.item.label, rowText, runName, rowName);
+      const id = `${uriId(featureUri)}/${rowText}`;
+      const testItem = controller.createTestItem(id, rowText, featureUri);
+      testItem.range = range;
+      testData.set(testItem, data);
+      parent.children.push(testItem);
+      parent.item.canResolveChildren = true;
+      diagLog(`created child example item from scenario ???? ${testItem.id} from ${featureUri.path}`);
+    }
+
+    parseFeatureContent(wkspSettings, featureUri, content, caller, onScenarioLine, onFeatureLine, onExamplesLine, onExampleLine);
 
     ascend(0); // assign children for all remaining items
   }
@@ -82,22 +139,39 @@ export class TestFile {
 }
 
 
-export class Scenario {
-  public result: string | undefined;
-  constructor(
-    public readonly featureFileName: string,
-    public readonly featureFileWorkspaceRelativePath: string,
-    public readonly featureName: string,
-    public scenarioName: string,
-    public generation: number,
-    public readonly isOutline: boolean,
-  ) { }
+function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
+  let escapeRegExChars = scenarioName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  getLabel() {
-    return `${this.scenarioName}`;
-  }
+  // scenario outline with a <param> in its name
+  if (isOutline && escapeRegExChars.includes("<"))
+    escapeRegExChars = escapeRegExChars.replace(/<.*>/g, ".*");
+
+  return "^" + escapeRegExChars + (isOutline ? " -- @" + (rowId ?? "") : "$");
 }
 
 
+export enum RunItemType {
+  Scenario,
+  ScenarioOutline,
+  ExampleRow
+}
 
+
+export class RunItem {
+  public result: string | undefined;
+  constructor(
+    public readonly runType: RunItemType,
+    public readonly featureFileName: string,
+    public readonly featureFileWorkspaceRelativePath: string,
+    public readonly featureName: string,
+    public readonly scenarioName: string,
+    public readonly label: string,
+    public readonly runName: string,
+    public readonly rowName?: string,
+  ) { }
+
+  getLabel() { // TODO just use public property
+    return this.label;
+  }
+}
 

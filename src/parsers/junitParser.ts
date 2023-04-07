@@ -8,6 +8,7 @@ import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
 import { WorkspaceSettings } from '../settings';
 
 
+
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 
 interface JunitContents {
@@ -88,7 +89,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       throw `Unhandled test result status: ${result.status}`;
   }
 
-  item.scenario.result = result.status;
+  item.runItem.result = result.status;
   run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
     ? result.status.toUpperCase() : "FAILED"}\r\n`);
 
@@ -174,8 +175,8 @@ function getjUnitClassName(featureFileName: string, featureFileWorkspaceRelative
 
 function getJunitFileUri(queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri, wskpRelativeFeaturesPath: string): vscode.Uri {
 
-  const classname = getjUnitClassName(queueItem.scenario.featureFileName,
-    queueItem.scenario.featureFileWorkspaceRelativePath, wskpRelativeFeaturesPath);
+  const classname = getjUnitClassName(queueItem.runItem.featureFileName,
+    queueItem.runItem.featureFileWorkspaceRelativePath, wskpRelativeFeaturesPath);
   const junitFilename = `TESTS-${classname}.xml`;
   const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, junitFilename);
 
@@ -237,51 +238,37 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getjUnitClassName(queueItem.scenario.featureFileName, queueItem.scenario.featureFileWorkspaceRelativePath,
+    const fullFeatureName = getjUnitClassName(queueItem.runItem.featureFileName, queueItem.runItem.featureFileWorkspaceRelativePath,
       wkspSettings.workspaceRelativeFeaturesPath);
-    const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
-    const scenarioName = queueItem.scenario.scenarioName;
+    const className = `${fullFeatureName}.${queueItem.runItem.featureName}`;
+    const scenarioName = queueItem.runItem.scenarioName;
+    const testCase = junitContents.testsuite.testcase;
 
-    // normal scenario
-    let queueItemResults = junitContents.testsuite.testcase.filter(tc =>
-      tc.$.classname === className && tc.$.name === scenarioName
-    );
+    // should get single queueItemResult if normal scenario
+    let queueItemResults = testCase.filter(tc => tc.$.classname === className && tc.$.name === scenarioName);
 
     // scenario outline
     if (queueItemResults.length === 0) {
-      queueItemResults = junitContents.testsuite.testcase.filter(tc =>
-        tc.$.classname === className && tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName
-      );
-    }
-
-    // scenario outline with <param> in scenario outline name
-    if (queueItemResults.length === 0 && scenarioName.includes("<")) {
-      queueItemResults = junitContents.testsuite.testcase.filter(tc => {
-        const jScenName = tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @"));
-        const rx = new RegExp(scenarioName.replace(/<.*>/g, ".*"));
-        return tc.$.classname === className && rx.test(jScenName);
+      queueItemResults = testCase.filter(tc => {
+        return tc.$.classname === className &&
+          new RegExp(scenarioName.replace(/<.*>/g, ".*")).test(tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")));
       });
     }
 
+    if (queueItemResults.length === 0)
+      throw `could not get junit results for queueItem. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
 
-    if (queueItemResults.length === 0) {
-      throw `could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
-      `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`;
-    }
+    const rowName = queueItem.runItem.rowName;
+    const result = queueItemResults.length === 1
+      ? queueItemResults[0]
+      : rowName
+        ? queueItemResults.find(qir => new RegExp(rowName.replace(/<.*>/g, ".*")).test(qir.$.name))
+        : queueItemResults.find(qir => qir.$.status === "failed");
 
-    let queueItemResult = queueItemResults[0];
+    if (!result)
+      throw `could not match queueItem to junit result. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
 
-    // scenario outline
-    if (queueItemResults.length > 1) {
-      for (const qir of queueItemResults) {
-        if (qir.$.status === "failed") {
-          queueItemResult = qir;
-          break;
-        }
-      }
-    }
-
-    const parseResult = CreateParseResult(wkspSettings, debug, queueItemResult);
+    const parseResult = CreateParseResult(wkspSettings, debug, result);
     updateTest(run, debug, parseResult, queueItem);
   }
 }

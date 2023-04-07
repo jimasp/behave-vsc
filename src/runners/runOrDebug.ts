@@ -88,7 +88,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
     const pipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].scenario.featureFileWorkspaceRelativePath;
+    const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].runItem.featureFileWorkspaceRelativePath;
 
     const friendlyArgs = [
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
@@ -141,7 +141,7 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
 
 
   // get the feature paths and remove duplicates
-  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.scenario.featureFileWorkspaceRelativePath))];
+  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.runItem.featureFileWorkspaceRelativePath))];
 
   // remove any feature path already covered by a parent folder selected by the user
   const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
@@ -169,22 +169,9 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
 
 function getPipedScenarioNames(selectedScenarios: QueueItem[]) {
   const scenarioNames: string[] = [];
-  selectedScenarios.forEach(x => {
-    scenarioNames.push(getScenarioRunName(x.scenario.scenarioName, x.scenario.isOutline));
-  });
+  selectedScenarios.forEach(x => scenarioNames.push(x.runItem.runName));
   const pipedScenarioNames = scenarioNames.join("|");
   return pipedScenarioNames;
-}
-
-
-function getScenarioRunName(scenName: string, isOutline: boolean) {
-  let escapeRegExChars = scenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  // scenario outline with a <param> in its name
-  if (isOutline && escapeRegExChars.includes("<"))
-    escapeRegExChars = escapeRegExChars.replace(/<.*>/g, ".*");
-
-  return "^" + escapeRegExChars + (isOutline ? " -- @" : "$");
 }
 
 

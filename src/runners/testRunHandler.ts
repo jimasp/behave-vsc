@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { Scenario, TestData, TestFile } from '../parsers/testFile';
+import { RunItemType, RunItem, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriId,
@@ -89,9 +89,9 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
     const data = testData.get(test);
 
-    if (data instanceof Scenario) {
+    if (data instanceof RunItem) {
       run.enqueued(test);
-      queue.push({ test, scenario: data });
+      queue.push({ test: test, runItem: data });
     }
     else {
       if (data instanceof TestFile && !data.didResolve) {
@@ -332,15 +332,20 @@ function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSett
 
 
 function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: string[], wkspQueueItem: QueueItem) {
-  const featureId = wkspQueueItem.test.parent?.id;
-  if (!featureId)
-    throw new Error("test.parent.id is undefined");
 
-  if (alreadyProcessedFeatureIds.includes(featureId))
+
+  const parent = wkspQueueItem.runItem.runType === RunItemType.ExampleRow
+    ? wkspQueueItem.test.parent?.parent?.parent
+    : wkspQueueItem.test.parent;
+
+  if (!parent)
+    throw new Error("parent is undefined");
+
+  if (alreadyProcessedFeatureIds.includes(parent.id))
     return;
 
-  alreadyProcessedFeatureIds.push(featureId);
-  return featureId;
+  alreadyProcessedFeatureIds.push(parent.id);
+  return parent.id;
 }
 
 
@@ -357,7 +362,7 @@ function logWkspRunComplete(wr: WkspRun, start: number) {
   const end = performance.now();
   if (!wr.debug) {
     config.logger.logInfo(`\n--- ${wr.wkspSettings.name} tests completed for run ${wr.run.name} ` +
-      `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
+      `@${new Date().toISOString()} (${(end - start) / 1000} secs)---\n`,
       wr.wkspSettings.uri, wr.run);
   }
   addRunNote(wr.run);
@@ -376,7 +381,7 @@ function addRunNote(run: vscode.TestRun) {
 function getChildScenariosForParentFeature(wr: WkspRun, scenarioQueueItem: QueueItem) {
   const parentFeature = scenarioQueueItem.test.parent;
   if (!parentFeature)
-    throw `parent feature not found for scenario ${scenarioQueueItem.scenario.scenarioName}}`;
+    throw `parent feature not found for scenario ${scenarioQueueItem.runItem.scenarioName}}`;
   return getChildScenariosForFeature(wr, parentFeature);
 }
 
@@ -393,9 +398,12 @@ function getChildScenariosForFeature(wr: WkspRun, feature: vscode.TestItem) {
 
 
 function allSiblingsIncluded(wr: WkspRun, wkspQueueItem: QueueItem): vscode.TestItem | undefined {
-  const parent = wkspQueueItem.test.parent;
+  let parent = wkspQueueItem.test.parent;
+  if (wkspQueueItem.runItem.runType === RunItemType.ExampleRow)
+    parent = wkspQueueItem.test.parent?.parent?.parent;
+
   if (!parent)
-    throw `parent not found for scenario ${wkspQueueItem.scenario.scenarioName}`;
+    throw `parent not found for scenario ${wkspQueueItem.runItem.getLabel()}`;
 
   let allSiblingsIncluded = true;
   parent.children.forEach(child => {

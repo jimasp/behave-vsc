@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
+import { BehaveTestData, RunItem, TestData, TestFile } from './parsers/testFile';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
@@ -25,7 +25,7 @@ import { JunitWatcher } from './watchers/junitWatcher';
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
-export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
+export interface QueueItem { test: vscode.TestItem; runItem: RunItem; }
 
 
 export type TestSupport = {
