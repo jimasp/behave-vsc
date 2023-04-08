@@ -25,7 +25,7 @@ import { JunitWatcher } from './watchers/junitWatcher';
 const testData = new WeakMap<vscode.TestItem, TestDataItem>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
-export interface QueueItem { test: vscode.TestItem; runItem: QueueableItem; }
+export interface QueueItem { test: vscode.TestItem; qItem: QueueableItem; }
 
 
 export type TestSupport = {

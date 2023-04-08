@@ -89,7 +89,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       throw `Unhandled test result status: ${result.status}`;
   }
 
-  item.runItem.result = result.status;
+  item.qItem.result = result.status;
   run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
     ? result.status.toUpperCase() : "FAILED"}\r\n`);
 
@@ -175,8 +175,8 @@ function getjUnitClassName(featureFileName: string, featureFileWorkspaceRelative
 
 function getJunitFileUri(queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri, wskpRelativeFeaturesPath: string): vscode.Uri {
 
-  const classname = getjUnitClassName(queueItem.runItem.featureFileName,
-    queueItem.runItem.featureFileWorkspaceRelativePath, wskpRelativeFeaturesPath);
+  const classname = getjUnitClassName(queueItem.qItem.featureFileName,
+    queueItem.qItem.featureFileWorkspaceRelativePath, wskpRelativeFeaturesPath);
   const junitFilename = `TESTS-${classname}.xml`;
   const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, junitFilename);
 
@@ -238,10 +238,10 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getjUnitClassName(queueItem.runItem.featureFileName, queueItem.runItem.featureFileWorkspaceRelativePath,
+    const fullFeatureName = getjUnitClassName(queueItem.qItem.featureFileName, queueItem.qItem.featureFileWorkspaceRelativePath,
       wkspSettings.workspaceRelativeFeaturesPath);
-    const className = `${fullFeatureName}.${queueItem.runItem.featureName}`;
-    const scenarioName = queueItem.runItem.scenarioName;
+    const className = `${fullFeatureName}.${queueItem.qItem.featureName}`;
+    const scenarioName = queueItem.qItem.scenarioName;
     const testCase = junitContents.testsuite.testcase;
 
     // should get single queueItemResult if normal scenario
@@ -258,7 +258,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
     if (queueItemResults.length === 0)
       throw `could not get junit results for queueItem. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
 
-    const rowRegEx = queueItem.runItem.junitRowRegex;
+    const rowRegEx = queueItem.qItem.junitRowRegex;
     const result = queueItemResults.length === 1
       ? queueItemResults[0]
       : rowRegEx

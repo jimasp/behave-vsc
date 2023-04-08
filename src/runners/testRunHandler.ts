@@ -90,7 +90,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
     if (data instanceof QueueableItem) {
       run.enqueued(test);
-      queue.push({ test: test, runItem: data });
+      queue.push({ test: test, qItem: data });
       diagLog(`queueSelectedTestItems: queued ${test.id}`);
     }
 
@@ -238,33 +238,27 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
     wr.run.started(wkspQueueItem.test);
 
     const parentFeature = getParentFeature(wkspQueueItem);
-
     if (features.includes(parentFeature))
       continue;
 
+    // if entire feature is included, add it to the list, or start it now if parallel
     const runEntireFeature = entireFeatureIncluded(wr, parentFeature);
     if (runEntireFeature) {
-      // if (runTogetherFeatures.includes(runEntireFeature)) TODO 
-      //   continue;
-      features.push(parentFeature);
-
-      if (parallel) {
-        const promise = runOrDebugFeatures(wr, true, [wkspQueueItem.test.uri as vscode.Uri]);
-        asyncRunPromises.push(promise);
+      if (!features.includes(parentFeature))
+        features.push(parentFeature);
+      if (!parallel)
         continue;
-      }
-
+      const promise = runOrDebugFeatures(wr, true, [wkspQueueItem.test.uri as vscode.Uri]);
+      asyncRunPromises.push(promise);
       continue;
     }
 
+    // not running entire feature, get the selected scenarios for the item's parent feature and mark feature as processed, then run them
     const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, parentFeature);
     if (!featureId)
       continue;
 
-    let selectedChildren = wr.queue.filter(qi => qi.test.id.includes(featureId));
-    // remove children of parents that are already included themselves
-    selectedChildren.forEach(c => c.test.children.forEach(gc => selectedChildren = selectedChildren.filter(x => x.test.id !== gc.id)));
-
+    const selectedChildren = optimiseSelectedChildren(wr, featureId);
     const promise = runOrDebugFeatureWithSelectedChildren(wr, false, selectedChildren);
     if (parallel) {
       asyncRunPromises.push(promise);
@@ -275,6 +269,8 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
     }
   }
 
+  // run features
+
   if (parallel) {
     await Promise.all(asyncRunPromises);
     return;
@@ -283,57 +279,9 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
   if (features.length == 0)
     return;
 
-  const uris = new Set(features.filter(f => f.uri).filter(f => f.uri).map(f => f.uri as vscode.Uri));
-  await runOrDebugFeatures(wr, false, [...uris]);
+  //const uris = new Set(features.filter(f => f.uri).filter(f => f.uri).map(f => f.uri as vscode.Uri));
+  await runOrDebugFeatures(wr, false, [...features.map(f => f.uri as vscode.Uri)]);
 }
-
-
-// async function runFeaturesParallel(wr: WkspRun) {
-
-//   if (wr.debug)
-//     throw new Error("runParallel should not be called with debug=true");
-
-//   diagLog(`runFeaturesParallel`, wr.wkspSettings.uri);
-
-//   const featuresAlreadyRun: vscode.TestItem[] = [];
-//   const alreadyProcessedFeatureIds: string[] = [];
-//   const asyncRunPromises: Promise<void>[] = [];
-
-//   for (const wkspQueueItem of wr.queue) {
-
-//     if (wr.run.token.isCancellationRequested)
-//       break;
-
-//     if (!wkspQueueItem.test.parent)
-//       throw `test.parent of ${wkspQueueItem.test.id} is undefined`;
-
-//     if (featuresAlreadyRun.includes(wkspQueueItem.test.parent))
-//       continue;
-
-//     const runEntireFeature = getParentFeatureIfEntireFeatureIncluded(wr, wkspQueueItem);
-//     if (runEntireFeature) {
-//       // if (featuresAlreadyRun.includes(runEntireFeature.id)) TODO
-//       //   continue;
-//       featuresAlreadyRun.push(runEntireFeature);
-
-//       const promise = runOrDebugFeatures(wr, true, [wkspQueueItem.test.uri as vscode.Uri]);
-//       wr.run.started(wkspQueueItem.test);
-//       asyncRunPromises.push(promise);
-//       continue;
-//     }
-
-//     const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, wkspQueueItem);
-//     if (!featureId)
-//       continue;
-
-//     const selectedChildren = wr.queue.filter(qi => qi.test.id.includes(featureId));
-//     selectedChildren.forEach(qi => wr.run.started(qi.test));
-//     const promise = runOrDebugFeatureWithSelectedChildren(wr, false, selectedChildren);
-//     asyncRunPromises.push(promise);
-//   }
-
-//   await Promise.all(asyncRunPromises);
-// }
 
 
 function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings,
@@ -394,39 +342,11 @@ function addRunNote(run: vscode.TestRun) {
 }
 
 
-// TODO remove commented out code
-
-// function getChildScenariosForParentFeature(scenarioQueueItem: QueueItem, testData: TestData) {
-//   const parentFeature = scenarioQueueItem.test.parent;
-//   if (!parentFeature)
-//     throw `parent feature not found for scenario ${scenarioQueueItem.runItem.scenarioName}}`;
-//   return getChildScenariosForFeature(parentFeature, testData);
-// }
-
-
-// function getChildScenariosForFeature(feature: vscode.TestItem, testData: TestData) {
-//   const childScenarios: QueueItem[] = [];
-//   feature.children.forEach(c => {
-//     const runItem = testData.get(c) as RunItem;
-//     if (!runItem)
-//       throw "missing test data for " + c.id;
-//     childScenarios.push({ test: c, runItem: runItem });
-//   });
-//   return childScenarios;
-// }
-
-
-// function getParentFeatureIfEntireFeatureIncluded(wr: WkspRun, wkspQueueItem: QueueItem) {
-//   return wr.allTestsForThisWkspIncluded
-//     ? wkspQueueItem.test.parent
-//     : getParentFeatureIfAllChildrenInQueue(wr, wkspQueueItem);
-// }
-
 function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
 
   let feature: vscode.TestItem | undefined;
 
-  switch (wkspQueueItem.runItem.itemType) {
+  switch (wkspQueueItem.qItem.itemType) {
     case ItemType.ExampleTable:
       feature = wkspQueueItem.test.parent?.parent;
       break;
@@ -438,7 +358,7 @@ function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
   }
 
   if (!feature)
-    throw `parent or feature not found for scenario ${wkspQueueItem.runItem.label}`;
+    throw `parent or feature not found for scenario ${wkspQueueItem.qItem.label}`;
 
   return feature;
 }
@@ -446,26 +366,19 @@ function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
 
 function entireFeatureIncluded(wr: WkspRun, feature: vscode.TestItem): boolean {
 
-  function array(collection: vscode.TestItemCollection) {
-    // convert testitemcollection to array to enable early return in for loop
-    const items: vscode.TestItem[] = [];
-    collection.forEach(item => items.push(item));
-    return items;
-  }
-
   if (wr.request.include?.includes(feature))
     return true;
 
   // return false if any feature descendents are not in the queue
-  for (const scenario of array(feature.children)) {
+  for (const scenario of convertToTestItemArray(feature.children)) {
     if (!wr.queue?.find(x => x.test.id === scenario.id)) {
       if (scenario.children.size === 0)
         return false;
-      for (const exampleTable of array(scenario.children)) {
+      for (const exampleTable of convertToTestItemArray(scenario.children)) {
         if (!wr.queue?.find(x => x.test.id === exampleTable.id)) {
           if (exampleTable.children.size === 0)
             return false;
-          for (const exampleRow of array(exampleTable.children)) {
+          for (const exampleRow of convertToTestItemArray(exampleTable.children)) {
             if (!wr.queue?.find(x => x.test.id === exampleRow.id))
               return false;
           }
@@ -476,6 +389,42 @@ function entireFeatureIncluded(wr: WkspRun, feature: vscode.TestItem): boolean {
 
   return true;
 }
+
+
+function entireExampleTableIncluded(wr: WkspRun, exampleTable: vscode.TestItem): boolean {
+
+  if (wr.request.include?.includes(exampleTable))
+    return true;
+
+  // return false if any of the example table descendents are not in the queue
+  for (const exampleRow of convertToTestItemArray(exampleTable.children)) {
+    if (!wr.queue?.find(x => x.test.id === exampleRow.id))
+      return false;
+  }
+
+  return true;
+}
+
+
+function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
+
+  let selectedChildren = wr.queue.filter(qi => qi.test.id.includes(featureId));
+
+  // first, add any example tables that have all child rows selected (if the table is not already selected)
+  for (const c of selectedChildren) {
+    if (c.test.parent && c.qItem.itemType === ItemType.ExampleRow &&
+      !selectedChildren.find(x => x.test.id === c.test.parent?.id) && entireExampleTableIncluded(wr, c.test.parent))
+      selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as QueueableItem });
+  }
+
+  // now remove children of parents that are already included themselves  
+  for (const c of selectedChildren) {
+    c.test.children.forEach(gc => selectedChildren = selectedChildren.filter(x => x.test.id !== gc.id));
+  }
+
+  return selectedChildren;
+}
+
 
 
 function convertToTestItemArray(collection: vscode.TestItemCollection): vscode.TestItem[] {

@@ -48,7 +48,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, fea
     if (parallelMode && wr.debug)
       throw new Error("running async debug is not supported");
 
-    const pipedPathPatterns = getPipedFeaturePathsPattern(wr, parallelMode, featureUris);
+    const pipedPathPatterns = getOptimisedPipedFeaturePathsPattern(wr, parallelMode, featureUris);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
@@ -88,7 +88,7 @@ export async function runOrDebugFeatureWithSelectedChildren(wr: WkspRun, paralle
     const pipedScenarioNames = getPipedItems(selectedQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    const featureFileWorkspaceRelativePath = selectedQueueItems[0].runItem.featureFileWorkspaceRelativePath;
+    const featureFileWorkspaceRelativePath = selectedQueueItems[0].qItem.featureFileWorkspaceRelativePath;
 
     const friendlyArgs = [
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
@@ -115,7 +115,7 @@ export async function runOrDebugFeatureWithSelectedChildren(wr: WkspRun, paralle
 }
 
 
-function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, featureUris: vscode.Uri[]) {
+function getOptimisedPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, featureUris: vscode.Uri[]) {
 
   // build the -i path pattern parameter for behave
   // which is a regex of the form: 
@@ -169,7 +169,7 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, feature
 
 function getPipedItems(selectedItems: QueueItem[]) {
   const scenarioNames: string[] = [];
-  selectedItems.forEach(x => scenarioNames.push(x.runItem.runName));
+  selectedItems.forEach(x => scenarioNames.push(x.qItem.runName));
   const pipedScenarioNames = scenarioNames.join("|");
   return pipedScenarioNames;
 }
