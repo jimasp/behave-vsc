@@ -8,7 +8,7 @@ import {
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem
 } from '../common';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
-import { TestData, TestFile } from './testFile';
+import { TestData, FeatureFileItem } from './testFile';
 import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
@@ -184,7 +184,7 @@ export class FileParser {
     const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData, controller, uri, caller);
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
-      await item.testFile.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
+      await item.featureFile.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
     }
     else {
       diagLog(`${caller}: no scenarios found in ${uri.path}`);
@@ -193,7 +193,7 @@ export class FileParser {
 
 
   private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
-    controller: vscode.TestController, uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
+    controller: vscode.TestController, uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, featureFile: FeatureFileItem } | undefined> {
 
     if (!isFeatureFile(uri))
       throw new Error(`${uri.path} is not a feature file`);
@@ -204,7 +204,7 @@ export class FileParser {
     const existingItem = controller.items.get(uriId(uri));
     if (existingItem) {
       diagLog(`${caller}: found existing feature test item for file ${uri.path}`);
-      return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
+      return { testItem: existingItem, featureFile: testData.get(existingItem) as FeatureFileItem || new FeatureFileItem() };
     }
 
     const featureName = await getFeatureNameFromContent(content);
@@ -214,8 +214,8 @@ export class FileParser {
     const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
-    const testFile = new TestFile();
-    testData.set(testItem, testFile);
+    const featureFileItem = new FeatureFileItem();
+    testData.set(testItem, featureFileItem);
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
     let wkspGrandParent: vscode.TestItem | undefined;
@@ -287,7 +287,7 @@ export class FileParser {
     }
 
     diagLog(`${caller}: created test item for ${uri.path}`);
-    return { testItem: testItem, testFile: testFile };
+    return { testItem: testItem, featureFile: featureFileItem };
   }
 
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { BehaveTestData, RunItem, TestData, TestFile } from './parsers/testFile';
+import { TestDataItem, QueueableItem, TestData, FeatureFileItem } from './parsers/testFile';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
@@ -22,10 +22,10 @@ import { startWatchingWorkspace } from './watchers/workspaceWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 
 
-const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+const testData = new WeakMap<vscode.TestItem, TestDataItem>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
-export interface QueueItem { test: vscode.TestItem; runItem: RunItem; }
+export interface QueueItem { test: vscode.TestItem; runItem: QueueableItem; }
 
 
 export type TestSupport = {
@@ -114,12 +114,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           return;
 
         const data = testData.get(item);
-        if (!(data instanceof TestFile))
+        if (!(data instanceof FeatureFileItem))
           return;
 
         wkspSettings = getWorkspaceSettingsForFile(item.uri);
         const content = await getContentFromFilesystem(item.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, item, "resolveHandler");
+        await data.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, item, "resolveHandler");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error

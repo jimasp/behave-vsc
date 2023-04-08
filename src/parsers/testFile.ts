@@ -7,14 +7,14 @@ import { diagLog } from '../logger';
 
 
 
-export type BehaveTestData = TestFile | RunItem;
-export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
+export type TestDataItem = FeatureFileItem | QueueableItem;
+export type TestData = WeakMap<vscode.TestItem, TestDataItem>;
 
 
-export class TestFile {
+export class FeatureFileItem {
   public didResolve = false;
 
-  public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+  public async createChildTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     if (!item.uri)
       throw new Error("missing test item uri");
@@ -59,6 +59,7 @@ export class TestFile {
 
 
     let currentOutline: Parent;
+    let currentOutlineRunName: string;
     let currentExamplesTable: Parent;
     let exampleTable = 0;
     let exampleRowIdx = 0;
@@ -71,22 +72,25 @@ export class TestFile {
 
     const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
       exampleTable = 0;
-      const parent = ancestors[0];
-      const runName = getRunName(scenarioName, isOutline);
-      const itemType = isOutline ? RunItemType.ScenarioOutline : RunItemType.Scenario;
-      const id = `${uriId(featureUri)}/${scenarioName}}`;
+
+      const id = `${uriId(featureUri)}/${scenarioName}`;
       const testItem = controller.createTestItem(id, scenarioName, featureUri);
       testItem.range = range;
+
+      const parent = ancestors[0];
       parent.children.push(testItem);
       parent.item.canResolveChildren = true;
 
+      const runName = getRunName(scenarioName, isOutline);
+      const itemType = isOutline ? ItemType.ScenarioOutline : ItemType.Scenario;
+
+      const data = new QueueableItem(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
+      testData.set(testItem, data);
+
       if (isOutline) {
         currentOutline = { item: testItem, children: [] };
+        currentOutlineRunName = runName;
         ancestors.push(currentOutline);
-      }
-      else {
-        const data = new RunItem(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
-        testData.set(testItem, data);
       }
 
       diagLog(`created child test item scenario ${testItem.id} from ${featureUri.path}`);
@@ -101,13 +105,20 @@ export class TestFile {
         throw new Error(`could not find scenario outline parent for ${examplesLine}`);
 
       examplesLine = examplesLine.replace(/Examples:/i, '').trim();
-      const id = `${uriId(featureUri)}/${examplesLine}}`;
+      const id = `${currentOutline.item.id}/${examplesLine}`;
       const testItem = controller.createTestItem(id, examplesLine, featureUri);
       testItem.range = range;
+
       currentOutline.children.push(testItem);
       currentOutline.item.canResolveChildren = true;
       currentExamplesTable = { item: testItem, children: [] };
       ancestors.push(currentExamplesTable);
+
+      const data = new QueueableItem(ItemType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
+        currentOutline.item.label, currentOutline.item.label,
+        `${currentOutlineRunName} -- @.* ${examplesLine}$`);
+      testData.set(testItem, data);
+
       diagLog(`created child test item examples ${testItem.id} from ${featureUri.path}`);
     }
 
@@ -116,18 +127,22 @@ export class TestFile {
       if (exampleRowIdx++ == 0) // header row
         return;
 
-      const parent = ancestors[ancestors.length - 1];
-      const rowId = `${exampleTable}.${exampleRowIdx - 1}`;
-      const runName = getRunName(currentOutline.item.label, true, rowId);
-      const rowName = `${currentOutline.item.label} -- @${rowId} ${currentExamplesTable.item.label}`;
-      const data = new RunItem(RunItemType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
-        currentOutline.item.label, rowText, runName, rowName);
-      const id = `${uriId(featureUri)}/${rowText}`;
+
+      const id = `${currentExamplesTable.item.id}/${rowText}`;
       const testItem = controller.createTestItem(id, rowText, featureUri);
       testItem.range = range;
-      testData.set(testItem, data);
+
+      const parent = ancestors[ancestors.length - 1];
       parent.children.push(testItem);
       parent.item.canResolveChildren = true;
+
+      const rowId = `${exampleTable}.${exampleRowIdx - 1} ${currentExamplesTable.item.label}`;
+      const runName = getRunName(currentOutline.item.label, true, rowId);
+      const junitRowRegEx = new RegExp(`${currentOutline.item.label} -- @${rowId}`.replace(/<.*?>/g, ".*"));
+      const data = new QueueableItem(ItemType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
+        currentOutline.item.label, rowText, runName, junitRowRegEx);
+      testData.set(testItem, data);
+
       diagLog(`created child example item from scenario ???? ${testItem.id} from ${featureUri.path}`);
     }
 
@@ -145,32 +160,33 @@ function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
   if (isOutline) // scenario outline with a <param> in its name
     escapeRegExChars = escapeRegExChars.replace(/<.*?>/g, ".*");
 
-  return "^" + escapeRegExChars + (isOutline ? " -- @" + (rowId ?? "") : "$");
+  // escapeRegExChars = escapeRegExChars.replace(/"/g, '\\"');
+
+  return "^" + escapeRegExChars + (isOutline ? rowId ? ` -- @${rowId}` : "" : "$");
 }
 
 
-export enum RunItemType {
+export enum ItemType {
   Scenario,
   ScenarioOutline,
+  ExampleTable,
   ExampleRow
 }
 
 
-export class RunItem {
+export class QueueableItem {
   public result: string | undefined;
   constructor(
-    public readonly runType: RunItemType,
+    public readonly itemType: ItemType,
     public readonly featureFileName: string,
     public readonly featureFileWorkspaceRelativePath: string,
     public readonly featureName: string,
     public readonly scenarioName: string,
     public readonly label: string,
     public readonly runName: string,
-    public readonly rowName?: string,
+    public readonly junitRowRegex?: RegExp,
   ) { }
 
-  getLabel() { // TODO just use public property
-    return this.label;
-  }
+
 }
 

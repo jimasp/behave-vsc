@@ -38,7 +38,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
 }
 
 
-export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, scenarioQueueItems: QueueItem[]): Promise<void> {
+export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, featureUris: vscode.Uri[]): Promise<void> {
 
   // runs selected features in a single instance of behave
   // (if we are in parallelMode, then up the stack this will be called without await)
@@ -48,7 +48,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
     if (parallelMode && wr.debug)
       throw new Error("running async debug is not supported");
 
-    const pipedPathPatterns = getPipedFeaturePathsPattern(wr, parallelMode, scenarioQueueItems);
+    const pipedPathPatterns = getPipedFeaturePathsPattern(wr, parallelMode, featureUris);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
@@ -74,8 +74,8 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
 }
 
 
-export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parallelMode: boolean,
-  selectedScenarioQueueItems: QueueItem[]): Promise<void> {
+export async function runOrDebugFeatureWithSelectedChildren(wr: WkspRun, parallelMode: boolean,
+  selectedQueueItems: QueueItem[]): Promise<void> {
 
   // runs selected scenarios in a single instance of behave
   // (if we are in parallelMode, then up the stack this will be called without await)
@@ -85,10 +85,10 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
     if (parallelMode && wr.debug)
       throw new Error("running parallel debug is not supported");
 
-    const pipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems);
+    const pipedScenarioNames = getPipedItems(selectedQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].runItem.featureFileWorkspaceRelativePath;
+    const featureFileWorkspaceRelativePath = selectedQueueItems[0].runItem.featureFileWorkspaceRelativePath;
 
     const friendlyArgs = [
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
@@ -115,7 +115,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
 }
 
 
-function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filteredChildItems: QueueItem[]) {
+function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, featureUris: vscode.Uri[]) {
 
   // build the -i path pattern parameter for behave
   // which is a regex of the form: 
@@ -140,11 +140,11 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
   }
 
 
-  // get the feature paths and remove duplicates
-  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.runItem.featureFileWorkspaceRelativePath))];
+  // get the feature paths 
+  const featureFilesRelativePaths = featureUris.map(uri => vscode.workspace.asRelativePath(uri, false));
 
   // remove any feature path already covered by a parent folder selected by the user
-  const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
+  const featurePathsNotCoveredByFolderPaths = featureFilesRelativePaths.filter(x => folderPaths.every(y => !x.includes(y)));
 
   // note - be careful changing this regex - you will need to retest it with nested folders/features, top level folders,
   // individual features and individual/multiple selected scenarios across both example project A and project B
@@ -167,9 +167,9 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
 }
 
 
-function getPipedScenarioNames(selectedScenarios: QueueItem[]) {
+function getPipedItems(selectedItems: QueueItem[]) {
   const scenarioNames: string[] = [];
-  selectedScenarios.forEach(x => scenarioNames.push(x.runItem.runName));
+  selectedItems.forEach(x => scenarioNames.push(x.runItem.runName));
   const pipedScenarioNames = scenarioNames.join("|");
   return pipedScenarioNames;
 }

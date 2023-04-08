@@ -258,12 +258,12 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
     if (queueItemResults.length === 0)
       throw `could not get junit results for queueItem. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
 
-    const rowName = queueItem.runItem.rowName;
+    const rowRegEx = queueItem.runItem.junitRowRegex;
     const result = queueItemResults.length === 1
       ? queueItemResults[0]
-      : rowName
-        ? queueItemResults.find(qir => new RegExp(rowName.replace(/<.*?>/g, ".*")).test(qir.$.name))
-        : queueItemResults.find(qir => qir.$.status === "failed");
+      : rowRegEx
+        ? queueItemResults.find(qir => rowRegEx.test(qir.$.name))
+        : queueItemResults.find(qir => qir.$.status === "failed") || queueItemResults[0];
 
     if (!result)
       throw `could not match queueItem to junit result. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
