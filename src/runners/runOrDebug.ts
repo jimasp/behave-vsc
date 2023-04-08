@@ -24,7 +24,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-  const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+  const args = friendlyArgsToArgs(friendlyArgs);
 
   const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -53,7 +53,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, fea
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
     const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i", `"${pipedPathPatterns}"`];
-    const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+    const args = friendlyArgsToArgs(friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -94,7 +94,7 @@ export async function runOrDebugFeatureWithSelectedChildren(wr: WkspRun, paralle
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
       `"${featureFileWorkspaceRelativePath}$"`, "-n", `"${pipedScenarioNames}"`
     ];
-    const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+    const args = friendlyArgsToArgs(friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -185,6 +185,11 @@ function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
   }
 
   return envVars;
+}
+
+
+function friendlyArgsToArgs(friendlyArgs: string[]): string[] {
+  return friendlyArgs.map(x => x.replace(/(?<!\\)"/g, ""));
 }
 
 

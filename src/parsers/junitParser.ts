@@ -284,7 +284,7 @@ export function updateTestResultsForUnreadableJunitFile(wkspSettings: WorkspaceS
 
   if (config.exampleProject) {
     debugger; // eslint-disable-line no-debugger
-    throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
+    throw `JUnit file ${junitFileUri.fsPath} could not be read. Check Behave VSC output window for errors.`;
   }
 
   config.logger.show(wkspSettings.uri);

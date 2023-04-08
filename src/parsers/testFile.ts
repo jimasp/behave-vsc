@@ -160,7 +160,7 @@ function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
   if (isOutline) // scenario outline with a <param> in its name
     escapeRegExChars = escapeRegExChars.replace(/<.*?>/g, ".*");
 
-  // escapeRegExChars = escapeRegExChars.replace(/"/g, '\\"');
+  escapeRegExChars = escapeRegExChars.replace(/"/g, '\\"');
 
   return "^" + escapeRegExChars + (isOutline ? rowId ? ` -- @${rowId}` : "" : "$");
 }
