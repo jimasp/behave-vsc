@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { QueueableItem, TestData } from './parsers/testFile';
+import { ChildNode, FeatureNode, TestData } from './parsers/testFile';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
@@ -11,7 +11,7 @@ import { getJunitDirUri } from './watchers/junitWatcher';
 
 
 const vwfs = vscode.workspace.fs;
-export type TestCounts = { nodeCount: number, testCount: number };
+export type NodeCounts = { total: number, features: number, children: number };
 
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
@@ -238,16 +238,16 @@ export const isFeatureFile = (uri: vscode.Uri): boolean => {
 }
 
 
-export const getAllTestItems = (wkspId: string | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getTestItemArray = (collection: vscode.TestItemCollection, wkspId?: string): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
-  // get all test items if wkspUri is null, or
+  // get all test items in the collection if wkspUri is null, or
   // just the ones in the current workspace if wkspUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspId === null || item.id.includes(wkspId)) {
+    if (wkspId === undefined || item.id.includes(wkspId)) {
       items.push(item);
       if (item.children)
-        items.push(...getAllTestItems(wkspId, item.children));
+        items.push(...getTestItemArray(item.children, wkspId));
     }
   });
 
@@ -255,26 +255,23 @@ export const getAllTestItems = (wkspId: string | null, collection: vscode.TestIt
 }
 
 
-export const countTestItemsInCollection = (wkspId: string | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
-  const arr = getAllTestItems(wkspId, items);
-  return countTestItems(testData, arr);
-}
+export const countTestNodes = (testData: TestData, testCollection: vscode.TestItemCollection, wkspId?: string): NodeCounts => {
+  const items = getTestItemArray(testCollection, wkspId);
+  const totalNodeCount = items.length;
 
-
-export const getScenarioTests = (testData: TestData, items: vscode.TestItem[]): vscode.TestItem[] => {
-  const scenarios = items.filter(item => {
+  const featureCount = items.filter(item => {
     const data = testData.get(item);
-    if (data && (data as QueueableItem).scenarioName)
+    if (data && (data instanceof FeatureNode))
       return true;
-  });
-  return scenarios;
-}
+  }).length;
 
+  const childCount = items.filter(item => {
+    const data = testData.get(item);
+    if (data && (data instanceof ChildNode))
+      return true;
+  }).length;
 
-export const countTestItems = (testData: TestData, items: vscode.TestItem[]): TestCounts => {
-  const testCount = getScenarioTests(testData, items).length;
-  const nodeCount = items.length;
-  return { nodeCount, testCount };
+  return { total: totalNodeCount, features: featureCount, children: childCount };
 }
 
 

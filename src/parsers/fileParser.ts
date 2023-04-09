@@ -4,24 +4,30 @@ import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
 import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem
+  getTestItemArray, uriId, getWorkspaceFolder,
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, NodeCounts, findFiles, getContentFromFilesystem, countTestNodes
 } from '../common';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
-import { TestData, FeatureFileItem } from './testFile';
+import { TestData, FeatureNode } from './testFile';
 import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
 
 // for integration test assertions      
 export type WkspParseCounts = {
-  tests: TestCounts,
+  nodeCounts: NodeCounts,
   featureFilesExceptEmptyOrCommentedOut: number,
   stepFilesExceptEmptyOrCommentedOut: number,
   stepFileStepsExceptCommentedOut: number
   featureFileStepsExceptCommentedOut: number,
   stepMappings: number
-};
+}
+
+export class FolderNode {
+  constructor(
+    public readonly label: string,
+  ) { }
+}
 
 export class FileParser {
 
@@ -96,7 +102,7 @@ export class FileParser {
     cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
 
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
-    const items = getAllTestItems(wkspSettings.id, controller.items);
+    const items = getTestItemArray(controller.items, wkspSettings.id);
     for (const item of items) {
       testData.delete(item);
       controller.items.delete(item.id);
@@ -131,7 +137,8 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
+  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken,
+    caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     deleteStepFileSteps(wkspSettings.featuresUri);
@@ -172,8 +179,8 @@ export class FileParser {
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData, controller: vscode.TestController,
-    uri: vscode.Uri, caller: string) {
+  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+    controller: vscode.TestController, uri: vscode.Uri, caller: string) {
 
     if (!isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
@@ -181,7 +188,9 @@ export class FileParser {
     if (!content)
       return;
 
-    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData, controller, uri, caller);
+    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content,
+      testData, controller, uri, caller);
+
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
       await item.featureFile.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
@@ -192,8 +201,9 @@ export class FileParser {
   }
 
 
-  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
-    controller: vscode.TestController, uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, featureFile: FeatureFileItem } | undefined> {
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string,
+    testData: TestData, controller: vscode.TestController, uri: vscode.Uri,
+    caller: string): Promise<{ testItem: vscode.TestItem, featureFile: FeatureNode } | undefined> {
 
     if (!isFeatureFile(uri))
       throw new Error(`${uri.path} is not a feature file`);
@@ -204,7 +214,7 @@ export class FileParser {
     const existingItem = controller.items.get(uriId(uri));
     if (existingItem) {
       diagLog(`${caller}: found existing feature test item for file ${uri.path}`);
-      return { testItem: existingItem, featureFile: testData.get(existingItem) as FeatureFileItem || new FeatureFileItem() };
+      return { testItem: existingItem, featureFile: testData.get(existingItem) as FeatureNode || new FeatureNode() };
     }
 
     const featureName = await getFeatureNameFromContent(content);
@@ -214,7 +224,7 @@ export class FileParser {
     const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;
     controller.items.add(testItem);
-    const featureFileItem = new FeatureFileItem();
+    const featureFileItem = new FeatureNode();
     testData.set(testItem, featureFileItem);
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
@@ -228,7 +238,6 @@ export class FileParser {
         controller.items.add(wkspGrandParent);
       }
     }
-
 
 
     // build folder hierarchy above test item
@@ -254,14 +263,15 @@ export class FileParser {
           current = parent.children.get(folderTestItemId);
 
         if (!current) { // TODO: move getAllTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getAllTestItems(wkspSettings.id, controller.items);
+          const allTestItems = getTestItemArray(controller.items, wkspSettings.id);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
 
         if (!current) {
           current = controller.createTestItem(folderTestItemId, folderName);
-          current.canResolveChildren = true;
           controller.items.add(current);
+          //current.canResolveChildren = true;
+          testData.set(current, new FolderNode(folderName));
         }
 
         if (i === folders.length - 1)
@@ -291,7 +301,8 @@ export class FileParser {
   }
 
 
-  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
+  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string,
+    cancelToken?: vscode.CancellationToken) {
 
     this._finishedFeaturesParseForAllWorkspaces = false;
     this._errored = false;
@@ -299,7 +310,7 @@ export class FileParser {
     // this function is called e.g. when a workspace gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
     diagLog("clearTestItemsAndParseFilesForAllWorkspaces - removing all test nodes/items for all workspaces");
-    const items = getAllTestItems(null, ctrl.items);
+    const items = getTestItemArray(ctrl.items);
     for (const item of items) {
       ctrl.items.delete(item.id);
       testData.delete(item);
@@ -336,7 +347,7 @@ export class FileParser {
       const wkspName = getWorkspaceFolder(wkspUri).name;
       const wkspId = uriId(wkspUri);
       const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
-      let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
+      let testCounts: NodeCounts = { total: 0, features: 0, children: 0 };
 
       diagLog(`\n===== ${callName}: started =====`);
 
@@ -406,14 +417,14 @@ export class FileParser {
       }
 
       diagLog(`${callName}: complete`);
-      testCounts = countTestItemsInCollection(wkspId, testData, ctrl.items);
+      testCounts = countTestNodes(testData, ctrl.items, wkspId);
       this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
 
       if (!config.integrationTestRun)
         return;
 
       return {
-        tests: testCounts,
+        nodeCounts: testCounts,
         featureFilesExceptEmptyOrCommentedOut: featureFileCount,
         stepFilesExceptEmptyOrCommentedOut: stepFileCount,
         stepFileStepsExceptCommentedOut: getStepFileSteps(wkspSettings.featuresUri).length,
@@ -453,7 +464,9 @@ export class FileParser {
 
 
 
-  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
+  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceSettings, testData: TestData,
+    ctrl: vscode.TestController) {
+
     try {
       this._reparsingFile = true;
 
@@ -481,21 +494,25 @@ export class FileParser {
   }
 
 
-  private _logTimesToConsole = (callName: string, testCounts: TestCounts, featParseTime: number, stepsParseTime: number,
+  private _logTimesToConsole = (callName: string, testCounts: NodeCounts, featParseTime: number, stepsParseTime: number,
     mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
     diagLog(
       `---` +
       `\nperf info: ${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
-      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
+      `producing ${testCounts.total} total tree nodes, ${testCounts.features} feature nodes, ` +
+      `${testCounts.children} child nodes, and ${mappingsCount} stepMappings ` +
+      `took ${stepsParseTime + featParseTime} ms. ` +
+      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, ` +
+      `building step mappings: ${buildMappingsTime} ms` +
       `\nIgnore times if any of these are true:` +
       `\n  (a) time taken was during vscode startup contention, ` +
       `\n  (b) busy cpu due to background processes, ` +
       `\n  (c) another test extension is also refreshing, ` +
       `\n  (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
       `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
-      `\n(Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
+      `\n(Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the` +
+      `total time.)` +
       `\n==================`
     );
   }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { TestDataItem, QueueableItem, TestData, FeatureFileItem } from './parsers/testFile';
+import { TestNode, ChildNode, TestData, FeatureNode } from './parsers/testFile';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
@@ -22,10 +22,10 @@ import { startWatchingWorkspace } from './watchers/workspaceWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 
 
-const testData = new WeakMap<vscode.TestItem, TestDataItem>();
+const testData = new WeakMap<vscode.TestItem, TestNode>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
-export interface QueueItem { test: vscode.TestItem; qItem: QueueableItem; }
+export interface QueueItem { test: vscode.TestItem; qItem: ChildNode; }
 
 
 export type TestSupport = {
@@ -114,7 +114,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           return;
 
         const data = testData.get(item);
-        if (!(data instanceof FeatureFileItem))
+        if (!(data instanceof FeatureNode))
           return;
 
         wkspSettings = getWorkspaceSettingsForFile(item.uri);

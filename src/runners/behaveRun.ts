@@ -26,12 +26,12 @@ export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean,
       `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.wkspSettings.envVarOverrides)}`;
     }
 
-    // if parallel mode, use a buffer so logs gets written out in a human-readable order
     const asyncBuff: string[] = [];
     const log = (str: string) => {
       if (!str)
         return;
       str = cleanBehaveText(str);
+      // if parallel mode, use a buffer so logs gets written out in a human-readable order
       if (parallelMode)
         asyncBuff.push(str);
       else

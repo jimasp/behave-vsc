@@ -4,14 +4,15 @@ import { uriId, isFeatureFile } from '../common';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
 import { diagLog } from '../logger';
+import { FolderNode } from './fileParser';
 
 
 
-export type TestDataItem = FeatureFileItem | QueueableItem;
-export type TestData = WeakMap<vscode.TestItem, TestDataItem>;
+export type TestNode = FolderNode | FeatureNode | ChildNode;
+export type TestData = WeakMap<vscode.TestItem, TestNode>;
 
 
-export class FeatureFileItem {
+export class FeatureNode {
   public didResolve = false;
 
   public async createChildTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
@@ -21,6 +22,7 @@ export class FeatureFileItem {
     if (!isFeatureFile(item.uri))
       throw new Error(`${item.uri.path} is not a feature file`);
 
+    this.didResolve = true;
     item.error = undefined;
 
     const featureUri = item.uri;
@@ -29,10 +31,9 @@ export class FeatureFileItem {
     const featureFilename = featureUri.path.split('/').pop();
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
-
     type Parent = { item: vscode.TestItem, children: vscode.TestItem[] }
     const ancestors: Parent[] = [];
-    this.didResolve = true;
+
 
     const ascend = (depth: number) => {
       while (ancestors.length > depth) {
@@ -65,6 +66,7 @@ export class FeatureFileItem {
     let exampleRowIdx = 0;
 
     const onFeatureLine = (range: vscode.Range) => {
+      // feature testItem is created by calller, just update it and add it to ancestors
       item.range = range;
       item.label = featureName;
       ancestors.push({ item: item, children: [] });
@@ -79,12 +81,11 @@ export class FeatureFileItem {
 
       const parent = ancestors[0];
       parent.children.push(testItem);
-      parent.item.canResolveChildren = true;
 
       const runName = getRunName(scenarioName, isOutline);
-      const itemType = isOutline ? ItemType.ScenarioOutline : ItemType.Scenario;
+      const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
 
-      const data = new QueueableItem(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
+      const data = new ChildNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
       testData.set(testItem, data);
 
       if (isOutline) {
@@ -110,11 +111,10 @@ export class FeatureFileItem {
       testItem.range = range;
 
       currentOutline.children.push(testItem);
-      currentOutline.item.canResolveChildren = true;
       currentExamplesTable = { item: testItem, children: [] };
       ancestors.push(currentExamplesTable);
 
-      const data = new QueueableItem(ItemType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
+      const data = new ChildNode(ChildType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
         currentOutline.item.label, currentOutline.item.label,
         `${currentOutlineRunName} -- @.* ${examplesLine}$`);
       testData.set(testItem, data);
@@ -134,12 +134,11 @@ export class FeatureFileItem {
 
       const parent = ancestors[ancestors.length - 1];
       parent.children.push(testItem);
-      parent.item.canResolveChildren = true;
 
       const rowId = `${exampleTable}.${exampleRowIdx - 1} ${currentExamplesTable.item.label}`;
       const runName = getRunName(currentOutline.item.label, true, rowId);
       const junitRowRegEx = new RegExp(`${currentOutline.item.label} -- @${rowId}`.replace(/<.*?>/g, ".*"));
-      const data = new QueueableItem(ItemType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
+      const data = new ChildNode(ChildType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
         currentOutline.item.label, rowText, runName, junitRowRegEx);
       testData.set(testItem, data);
 
@@ -166,7 +165,7 @@ function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
 }
 
 
-export enum ItemType {
+export enum ChildType {
   Scenario,
   ScenarioOutline,
   ExampleTable,
@@ -174,10 +173,10 @@ export enum ItemType {
 }
 
 
-export class QueueableItem {
+export class ChildNode {
   public result: string | undefined;
   constructor(
-    public readonly itemType: ItemType,
+    public readonly nodeType: ChildType,
     public readonly featureFileName: string,
     public readonly featureFileWorkspaceRelativePath: string,
     public readonly featureName: string,
@@ -186,7 +185,5 @@ export class QueueableItem {
     public readonly runName: string,
     public readonly junitRowRegex?: RegExp,
   ) { }
-
-
 }
 

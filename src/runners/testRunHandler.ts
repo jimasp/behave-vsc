@@ -2,14 +2,14 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { ItemType, QueueableItem, TestData, FeatureFileItem } from '../parsers/testFile';
+import { ChildType, ChildNode, TestData, FeatureNode } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
+  countTestNodes, getContentFromFilesystem, uriId,
+  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getTestItemArray
 } from '../common';
 import { QueueItem } from '../extension';
-import { FileParser } from '../parsers/fileParser';
+import { FileParser, FolderNode } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../logger';
 import { getJunitWkspRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getWkspQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
@@ -88,13 +88,13 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
     const data = testData.get(test);
 
-    if (data instanceof QueueableItem) {
+    if (data instanceof ChildNode) {
       run.enqueued(test);
       queue.push({ test: test, qItem: data });
       diagLog(`queueSelectedTestItems: queued ${test.id}`);
     }
 
-    if (data instanceof FeatureFileItem && !data.didResolve) {
+    if (data instanceof FeatureNode && !data.didResolve) {
       const wkspSettings = getWorkspaceSettingsForFile(test.uri);
       const content = await getContentFromFilesystem(test.uri);
       await data.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
@@ -287,21 +287,40 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
 function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings,
   ctrl: vscode.TestController, testData: TestData): boolean {
 
-  let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0)
-    && (!request.exclude || request.exclude.length == 0);
+  // check if "Feature tests" node clicked or "Run all tests" clicked
+  const noIncludesOrExcludes = (!request.include || request.include.length == 0) && (!request.exclude || request.exclude.length == 0);
+  if (noIncludesOrExcludes)
+    return true;
 
-  if (!allTestsForThisWkspIncluded) {
-    const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === wkspSettings.id).length === 1;
+  // workspace node clicked (e.g. "project A" in multi-root workspace)
+  const wkspNodeIncluded = request.include?.filter(item => item.id === wkspSettings.id).length === 1;
+  if (wkspNodeIncluded)
+    return true;
 
-    if (wkspGrandParentItemIncluded)
-      allTestsForThisWkspIncluded = true;
-    else {
-      const allWkspItems = getAllTestItems(wkspSettings.id, ctrl.items);
-      const wkspTestCount = countTestItems(testData, allWkspItems).testCount;
-      allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
+
+  // finally check if all features for this workspace are included in the request 
+  // (e.g. click one feature in a single workspace without python tests, like example-project/Simple)
+
+  const wkspNodeCounts = countTestNodes(testData, ctrl.items);
+  const selectedFeaturesCount = request.include?.filter(item => {
+    if (!item.id.includes(wkspSettings.id))
+      return false;
+    return testData.get(item) instanceof FeatureNode;
+  }).length ?? 0;
+
+  let selectedFoldersChildFeaturesCount = 0;
+  if (request.include) {
+    for (const item of request.include) {
+      if (!item.id.includes(wkspSettings.id))
+        continue;
+      if (!(testData.get(item) instanceof FolderNode))
+        continue;
+      const childFeatureCount = getTestItemArray(item.children).filter(c => (testData.get(c) instanceof FeatureNode)).length;
+      selectedFoldersChildFeaturesCount += childFeatureCount;
     }
   }
-  return allTestsForThisWkspIncluded;
+
+  return wkspNodeCounts.features === selectedFeaturesCount + selectedFoldersChildFeaturesCount;
 }
 
 
@@ -346,11 +365,11 @@ function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
 
   let feature: vscode.TestItem | undefined;
 
-  switch (wkspQueueItem.qItem.itemType) {
-    case ItemType.ExampleTable:
+  switch (wkspQueueItem.qItem.nodeType) {
+    case ChildType.ExampleTable:
       feature = wkspQueueItem.test.parent?.parent;
       break;
-    case ItemType.ExampleRow:
+    case ChildType.ExampleRow:
       feature = wkspQueueItem.test.parent?.parent?.parent;
       break;
     default:
@@ -412,9 +431,9 @@ function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
 
   // first, add any example tables that have all child rows selected (if the table is not already selected)
   for (const c of selectedChildren) {
-    if (c.test.parent && c.qItem.itemType === ItemType.ExampleRow &&
+    if (c.test.parent && c.qItem.nodeType === ChildType.ExampleRow &&
       !selectedChildren.find(x => x.test.id === c.test.parent?.id) && entireExampleTableIncluded(wr, c.test.parent))
-      selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as QueueableItem });
+      selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as ChildNode });
   }
 
   // now remove children of parents that are already included themselves  
@@ -424,7 +443,6 @@ function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
 
   return selectedChildren;
 }
-
 
 
 function convertToTestItemArray(collection: vscode.TestItemCollection): vscode.TestItem[] {
