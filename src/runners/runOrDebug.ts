@@ -18,7 +18,7 @@ const OVERRIDE_ARGS = [
 
 
 export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<void> {
-  // runs all features in a single instance of behave
+  // runs all features in a single instance of behave (not used if running in parallel mode)
 
   const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
@@ -41,7 +41,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
 export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, featureUris: vscode.Uri[]): Promise<void> {
 
   // runs selected features in a single instance of behave
-  // (if we are in parallelMode, then up the stack this will be called without await)
+  // (note: if we are in parallelMode, then up the stack this will be called without await)
 
   try {
 
@@ -77,22 +77,22 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, fea
 export async function runOrDebugFeatureWithSelectedChildren(wr: WkspRun, parallelMode: boolean,
   selectedQueueItems: QueueItem[]): Promise<void> {
 
-  // runs selected scenarios in a single instance of behave
-  // (if we are in parallelMode, then up the stack this will be called without await)
+  // runs a feature with selected children inside a single instance of behave by piping the names
+  // (note: if we are in parallelMode, then up the stack this will be called without await)
 
   try {
 
     if (parallelMode && wr.debug)
       throw new Error("running parallel debug is not supported");
 
-    const pipedScenarioNames = getPipedItems(selectedQueueItems);
+    const pipedNames = getPipedNames(selectedQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileWorkspaceRelativePath = selectedQueueItems[0].qItem.featureFileWorkspaceRelativePath;
 
     const friendlyArgs = [
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
-      `"${featureFileWorkspaceRelativePath}$"`, "-n", `"${pipedScenarioNames}"`
+      `"${featureFileWorkspaceRelativePath}$"`, "-n", `"${pipedNames}"`
     ];
     const args = friendlyArgsToArgs(friendlyArgs);
 
@@ -167,11 +167,12 @@ function getOptimisedPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean
 }
 
 
-function getPipedItems(selectedItems: QueueItem[]) {
-  const scenarioNames: string[] = [];
-  selectedItems.forEach(x => scenarioNames.push(x.qItem.runName));
-  const pipedScenarioNames = scenarioNames.join("|");
-  return pipedScenarioNames;
+function getPipedNames(selectedItems: QueueItem[]) {
+  const itemNames: string[] = [];
+  selectedItems.forEach(x => itemNames.push(x.qItem.runName));
+  itemNames.sort((a, b) => a.localeCompare(b));
+  const pipedNames = itemNames.join("|");
+  return pipedNames;
 }
 
 

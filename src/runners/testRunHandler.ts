@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { ChildType, ChildNode, TestData, FeatureNode } from '../parsers/testFile';
+import { ChildNode, TestData, FeatureNode } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
   countTestNodes, getContentFromFilesystem, uriId,
@@ -198,16 +198,11 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
 
 async function doRunType(wr: WkspRun) {
 
-  if (wr.wkspSettings.runParallel && !wr.debug) {
-    await runFeatures(wr, true);
-    return;
-  }
+  if (wr.wkspSettings.runParallel && !wr.debug)
+    return await runFeatures(wr, true);
 
-  if (wr.allTestsForThisWkspIncluded) {
-    wr.queue.forEach(wkspQueueItem => wr.run.started(wkspQueueItem.test));
-    await runAllFeatures(wr);
-    return;
-  }
+  if (wr.allTestsForThisWkspIncluded)
+    return await runAllFeatures(wr);
 
   await runFeatures(wr, false);
 }
@@ -215,6 +210,7 @@ async function doRunType(wr: WkspRun) {
 
 async function runAllFeatures(wr: WkspRun) {
   diagLog(`runAllFeatures`, wr.wkspSettings.uri);
+  wr.queue.forEach(wkspQueueItem => wr.run.started(wkspQueueItem.test));
   await runOrDebugAllFeaturesInOneInstance(wr);
 }
 
@@ -237,7 +233,7 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
 
     wr.run.started(wkspQueueItem.test);
 
-    const parentFeature = getParentFeature(wkspQueueItem);
+    const parentFeature = getParentFeature(wkspQueueItem, wr.testData);
     if (features.includes(parentFeature))
       continue;
 
@@ -361,25 +357,16 @@ function addRunNote(run: vscode.TestRun) {
 }
 
 
-function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
-
-  let feature: vscode.TestItem | undefined;
-
-  switch (wkspQueueItem.qItem.nodeType) {
-    case ChildType.ExampleTable:
-      feature = wkspQueueItem.test.parent?.parent;
-      break;
-    case ChildType.ExampleRow:
-      feature = wkspQueueItem.test.parent?.parent?.parent;
-      break;
-    default:
-      feature = wkspQueueItem.test.parent;
+function getParentFeature(wkspQueueItem: QueueItem, testData: TestData): vscode.TestItem {
+  let test = wkspQueueItem.test;
+  while (test.parent) {
+    const data = testData.get(test.parent);
+    if (data instanceof FeatureNode) {
+      return test.parent;
+    }
+    test = test.parent;
   }
-
-  if (!feature)
-    throw `parent or feature not found for scenario ${wkspQueueItem.qItem.label}`;
-
-  return feature;
+  throw `parent or feature not found for ${wkspQueueItem.test.label}`;
 }
 
 
