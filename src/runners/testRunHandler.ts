@@ -60,7 +60,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     try {
       const queue: QueueItem[] = [];
-      await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? convertToTestItemArray(ctrl.items), testData);
+      await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? getTestItemArray(ctrl.items), testData);
       await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher);
       return queue;
     }
@@ -100,7 +100,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
       await data.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
     }
 
-    await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
+    await queueSelectedTestItems(ctrl, run, request, queue, getTestItemArray(test.children), testData);
   }
 
 }
@@ -242,7 +242,7 @@ async function runFeatures(wr: WkspRun, parallel: boolean) {
       continue;
 
     // if entire feature is included, add it to the list, or start it now if parallel
-    const runEntireFeature = entireFeatureIncluded(wr, parentFeature);
+    const runEntireFeature = allDescendentsAreInQueue(wr, parentFeature);
     if (runEntireFeature) {
       if (!features.includes(parentFeature))
         features.push(parentFeature);
@@ -383,42 +383,20 @@ function getParentFeature(wkspQueueItem: QueueItem): vscode.TestItem {
 }
 
 
-function entireFeatureIncluded(wr: WkspRun, feature: vscode.TestItem): boolean {
+function allDescendentsAreInQueue(wr: WkspRun, item: vscode.TestItem): boolean {
 
-  if (wr.request.include?.includes(feature))
+  if (wr.request.include?.includes(item))
     return true;
 
-  // return false if any feature descendents are not in the queue
-  for (const scenario of convertToTestItemArray(feature.children)) {
-    if (!wr.queue?.find(x => x.test.id === scenario.id)) {
-      if (scenario.children.size === 0)
+  const itemDescendents = getTestItemArray(wr.ctrl.items, wr.wkspSettings.id).filter(i => i.id.startsWith(item.id + "/"));
+
+  for (const descendent of itemDescendents) {
+    diagLog(descendent.id);
+    if (!wr.queue?.find(x => x.test.id === descendent.id)) {
+      if (descendent.children.size === 0)
         return false;
-      for (const exampleTable of convertToTestItemArray(scenario.children)) {
-        if (!wr.queue?.find(x => x.test.id === exampleTable.id)) {
-          if (exampleTable.children.size === 0)
-            return false;
-          for (const exampleRow of convertToTestItemArray(exampleTable.children)) {
-            if (!wr.queue?.find(x => x.test.id === exampleRow.id))
-              return false;
-          }
-        }
-      }
+      return allDescendentsAreInQueue(wr, descendent);
     }
-  }
-
-  return true;
-}
-
-
-function entireExampleTableIncluded(wr: WkspRun, exampleTable: vscode.TestItem): boolean {
-
-  if (wr.request.include?.includes(exampleTable))
-    return true;
-
-  // return false if any of the example table descendents are not in the queue
-  for (const exampleRow of convertToTestItemArray(exampleTable.children)) {
-    if (!wr.queue?.find(x => x.test.id === exampleRow.id))
-      return false;
   }
 
   return true;
@@ -429,10 +407,9 @@ function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
 
   let selectedChildren = wr.queue.filter(qi => qi.test.id.includes(featureId));
 
-  // first, add any example tables that have all child rows selected (if the table is not already selected)
+  // first, add any parents that have all child rows selected (if the table is not already selected)
   for (const c of selectedChildren) {
-    if (c.test.parent && c.qItem.nodeType === ChildType.ExampleRow &&
-      !selectedChildren.find(x => x.test.id === c.test.parent?.id) && entireExampleTableIncluded(wr, c.test.parent))
+    if (c.test.parent && !selectedChildren.find(x => x.test.id === c.test.parent?.id) && allDescendentsAreInQueue(wr, c.test.parent))
       selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as ChildNode });
   }
 
@@ -444,9 +421,3 @@ function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
   return selectedChildren;
 }
 
-
-function convertToTestItemArray(collection: vscode.TestItemCollection): vscode.TestItem[] {
-  const items: vscode.TestItem[] = [];
-  collection.forEach((item: vscode.TestItem) => items.push(item));
-  return items;
-}
