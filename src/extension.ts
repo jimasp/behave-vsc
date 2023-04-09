@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config, Configuration } from "./configuration";
-import { TestNode, ChildNode, TestData, FeatureNode } from './parsers/testFile';
+import { TestNode, ChildNode, TestData, FeatureNode } from './parsers/featureBuilder';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,

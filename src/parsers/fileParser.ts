@@ -8,7 +8,7 @@ import {
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, NodeCounts, findFiles, getContentFromFilesystem, countTestNodes
 } from '../common';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
-import { TestData, FeatureNode } from './testFile';
+import { TestData, FeatureNode } from './featureBuilder';
 import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 

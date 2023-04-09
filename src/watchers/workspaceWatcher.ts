@@ -3,7 +3,7 @@ import { basename, isFeatureFile, isStepsFile } from '../common';
 import { config } from "../configuration";
 import { diagLog, DiagLogType } from '../logger';
 import { FileParser } from '../parsers/fileParser';
-import { TestData } from '../parsers/testFile';
+import { TestData } from '../parsers/featureBuilder';
 
 
 export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData, parser: FileParser) {

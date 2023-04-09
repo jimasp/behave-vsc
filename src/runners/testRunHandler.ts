@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { ChildNode, TestData, FeatureNode } from '../parsers/testFile';
+import { ChildNode, TestData, FeatureNode } from '../parsers/featureBuilder';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
   countTestNodes, getContentFromFilesystem, uriId,
