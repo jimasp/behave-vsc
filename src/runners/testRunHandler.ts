@@ -390,16 +390,10 @@ function allDescendentsAreInQueue(wr: WkspRun, item: vscode.TestItem): boolean {
 
   const itemDescendents = getTestItemArray(wr.ctrl.items, wr.wkspSettings.id).filter(i => i.id.startsWith(item.id + "/"));
 
-  for (const descendent of itemDescendents) {
-    if (!wr.queue?.find(x => x.test.id === descendent.id)) {
-      if (descendent.children.size === 0)
-        return false;
-      if (!allDescendentsAreInQueue(wr, descendent))
-        return false; // (do not directly return the result of allDescendentsAreInQueue, we want to keep looping if it returns true)
-    }
-  }
+  return !itemDescendents.some(descendent =>
+    !wr.queue?.find(x => x.test.id === descendent.id) && (descendent.children.size === 0 || !allDescendentsAreInQueue(wr, descendent))
+  );
 
-  return true;
 }
 
 
