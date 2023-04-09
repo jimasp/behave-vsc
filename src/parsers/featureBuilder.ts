@@ -137,9 +137,10 @@ export class FeatureNode {
 
       const rowId = `${exampleTable}.${exampleRowIdx - 1} ${currentExamplesTable.item.label}`;
       const runName = getRunName(currentOutline.item.label, true, rowId);
-      const junitRowRegEx = new RegExp(`${currentOutline.item.label} -- @${rowId}`.replace(/<.*?>/g, ".*"));
+      //const junitRowRegEx = TODO - remove
+      //new RegExp(`${currentOutline.item.label} -- @${rowId}`.replace(/<.*?>/g, ".*"));
       const data = new ChildNode(ChildType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
-        currentOutline.item.label, rowText, runName, junitRowRegEx);
+        currentOutline.item.label, rowText, runName);// junitRowRegEx);
       testData.set(testItem, data);
 
       diagLog(`created child example item from scenario ???? ${testItem.id} from ${featureUri.path}`);
@@ -183,7 +184,7 @@ export class ChildNode {
     public readonly scenarioName: string,
     public readonly label: string,
     public readonly runName: string,
-    public readonly junitRowRegex?: RegExp,
+    //public readonly junitRowRegex?: RegExp, // TODO remove
   ) { }
 }
 

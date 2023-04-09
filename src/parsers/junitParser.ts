@@ -248,17 +248,13 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
     let queueItemResults = testCase.filter(tc => tc.$.classname === className && tc.$.name === scenarioName);
 
     // scenario outline
-    if (queueItemResults.length === 0) {
-      queueItemResults = testCase.filter(tc => {
-        return tc.$.classname === className &&
-          new RegExp(scenarioName.replace(/<.*?>/g, ".*")).test(tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")));
-      });
-    }
+    if (queueItemResults.length === 0)
+      queueItemResults = testCase.filter(tc => tc.$.classname === className && new RegExp(queueItem.qItem.runName).test(tc.$.name));
 
     if (queueItemResults.length === 0)
       throw `could not get junit results for queueItem. file: ${junitFileUri.fsPath}, queueItem: ${scenarioName}`;
 
-    const rowRegEx = queueItem.qItem.junitRowRegex;
+    const rowRegEx = new RegExp(queueItem.qItem.runName);
     const result = queueItemResults.length === 1
       ? queueItemResults[0]
       : rowRegEx
