@@ -84,7 +84,7 @@ export class FeatureNode {
       const parent = ancestors[0];
       parent.children.push(testItem);
 
-      let runName = escapeRunName(scenarioName);
+      let runName = "^" + escapeRunName(scenarioName);
       runName = isOutline ? runName.replace(/<.*?>/g, ".*") : runName + "$";
 
       const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
