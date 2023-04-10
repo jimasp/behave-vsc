@@ -48,7 +48,7 @@ export class FeatureNode {
           if (err.includes("duplicate test item")) {
             const n = err.lastIndexOf('/') + 1;
             const dupe = err.substring(n);
-            const text = `Duplicate "${dupe}" in file ${featureFileWkspRelativePath}.`;
+            const text = `Duplicate "${dupe}" in file ${featureFileWkspRelativePath}`;
             config.logger.showWarn(text, wkspSettings.uri);
           }
           else
