@@ -121,30 +121,29 @@ export class Logger {
 
     if (wkspUri) {
       this.channels[wkspUri.path].appendLine(text);
+      this.channels[wkspUri.path].show();
     }
     else {
       for (const wkspPath in this.channels) {
         this.channels[wkspPath].appendLine(text);
       }
+      this.channels[Object.keys(this.channels)[0]].show();
     }
 
     if (config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
       debugger; // eslint-disable-line no-debugger
     }
 
-
-    let winText = text;
+    let wkspText = "";
     if (wkspUri) {
-      // note - don't use config.workspaceSettings here (possible inifinite loop)
+      // note - don't use config.workspaceSettings here (potential infinite loop if error is inside config)
       const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
       if (wskpFolder) {
         const wkspName = wskpFolder?.name;
-        winText = `${wkspName} workspace: ${text}`;
+        wkspText = ` (Workspace: ${wkspName}.)`;
       }
     }
-
-    if (winText.length > 512)
-      winText = text.substring(0, 512) + "...";
+    const winText = `Error: see Behave VSC output window for more information.${wkspText}`;
 
     switch (logType) {
       case DiagLogType.info:

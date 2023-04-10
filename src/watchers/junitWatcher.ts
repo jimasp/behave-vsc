@@ -284,7 +284,7 @@ export class JunitWatcher {
 
     }
     catch (e: unknown) {
-      const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
+      const err = new Error(`junitWatcher error: ${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
       matchedRun?.run.end();
       // entry point function (handler) - show error
       config.logger.showError(err);

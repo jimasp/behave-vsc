@@ -66,7 +66,7 @@ export class FeatureNode {
     let exampleRowIdx = 0;
 
     const onFeatureLine = (range: vscode.Range) => {
-      // feature testItem is created by calller, just update it and add it to ancestors
+      // feature test item is already created by calller, just update it and add it to ancestors
       item.range = range;
       item.label = featureName;
       ancestors.push({ item: item, children: [] });
@@ -85,7 +85,7 @@ export class FeatureNode {
       const runName = getRunName(scenarioName, isOutline);
       const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
 
-      const data = new ChildNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, scenarioName, runName);
+      const data = new ChildNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, runName);
       testData.set(testItem, data);
 
       if (isOutline) {
@@ -115,8 +115,7 @@ export class FeatureNode {
       ancestors.push(currentExamplesTable);
 
       const data = new ChildNode(ChildType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
-        currentOutline.item.label, currentOutline.item.label,
-        `${currentOutlineRunName} -- @.* ${examplesLine}$`);
+        currentOutline.item.label, `${currentOutlineRunName} -- @.* ${examplesLine}$`);
       testData.set(testItem, data);
 
       diagLog(`created child test item examples ${testItem.id} from ${featureUri.path}`);
@@ -137,10 +136,8 @@ export class FeatureNode {
 
       const rowId = `${exampleTable}.${exampleRowIdx - 1} ${currentExamplesTable.item.label}`;
       const runName = getRunName(currentOutline.item.label, true, rowId);
-      //const junitRowRegEx = TODO - remove
-      //new RegExp(`${currentOutline.item.label} -- @${rowId}`.replace(/<.*?>/g, ".*"));
       const data = new ChildNode(ChildType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
-        currentOutline.item.label, rowText, runName);// junitRowRegEx);
+        currentOutline.item.label, runName);
       testData.set(testItem, data);
 
       diagLog(`created child example item from scenario ???? ${testItem.id} from ${featureUri.path}`);
@@ -182,9 +179,7 @@ export class ChildNode {
     public readonly featureFileWorkspaceRelativePath: string,
     public readonly featureName: string,
     public readonly scenarioName: string,
-    public readonly label: string,
     public readonly runName: string,
-    //public readonly junitRowRegex?: RegExp, // TODO remove
   ) { }
 }
 
