@@ -149,11 +149,11 @@ function getOptimisedPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean
   // note - be careful changing this regex - you will need to retest it with nested folders/features, top level folders,
   // individual features and individual/multiple selected scenarios across both example project A and project B
 
-  // as an example of what can go wrong, currently, this would work fine:
+  // as an example of what can go wrong, currently with behave 1.2.6, this would work fine:
   // cd "example-projects/project A"
   // python" -m behave -i "^behave tests/some tests/group1_features/"
 
-  // BUT this would NOT work:
+  // BUT this would NOT work with behave 1.2.6:
   // cd "example-projects/project B"
   // python -m behave -i "^features/grouped/"
 

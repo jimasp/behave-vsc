@@ -48,9 +48,10 @@ export class FeatureNode {
           if (err.includes("duplicate test item")) {
             const n = err.lastIndexOf('/');
             const scen = err.substring(n);
-            err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
+            err = err.replace(scen, `. Duplicate name: "${scen.slice(1)}".`);
+            err = err.replace("Error: ", "");
             // don't throw here, show it and carry on
-            config.logger.showError(err, wkspSettings.uri);
+            config.logger.showWarn(err, wkspSettings.uri);
           }
           else
             throw e;
@@ -83,10 +84,8 @@ export class FeatureNode {
       const parent = ancestors[0];
       parent.children.push(testItem);
 
-      let runName = escapeRegExChars(scenarioName);
-      runName = isOutline ? runName.replace(/<.*?>/g, ".*") : runName;
-      runName = runName.replace(/"/g, '\\"');
-      runName = "^" + (!runName.includes(".*") ? runName + "$" : runName);
+      let runName = escapeRunName(scenarioName);
+      runName = isOutline ? runName.replace(/<.*?>/g, ".*") : runName + "$";
 
       const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
 
@@ -117,7 +116,7 @@ export class FeatureNode {
 
       currentOutline.children.push(testItem);
       currentExamplesTable = { item: testItem, children: [] };
-      currentExamplesTableRunName = `${currentOutlineRunName} -- @.* ${escapeRegExChars(examplesLine)}$`;
+      currentExamplesTableRunName = `${currentOutlineRunName} -- @.* ${escapeRunName(examplesLine)}$`;
       ancestors.push(currentExamplesTable);
 
       const data = new ChildNode(ChildType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
@@ -156,8 +155,8 @@ export class FeatureNode {
 }
 
 
-function escapeRegExChars(str: string) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function escapeRunName(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/"/g, '\\"');
 }
 
 

@@ -81,17 +81,6 @@ export class Logger {
       run.appendOutput(text);
   };
 
-  // used by settings.ts 
-  logSettingsWarning = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text, wkspUri, DiagLogType.warn);
-
-    this.channels[wkspUri.path].appendLine(text);
-    this.channels[wkspUri.path].show(true);
-
-    if (run)
-      run.appendOutput(text + "\r\n");
-  };
-
 
   showWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
     this._show(text, wkspUri, run, DiagLogType.warn);
@@ -121,29 +110,34 @@ export class Logger {
 
     if (wkspUri) {
       this.channels[wkspUri.path].appendLine(text);
-      this.channels[wkspUri.path].show();
+      if (logType === DiagLogType.error)
+        this.channels[wkspUri.path].show();
     }
     else {
       for (const wkspPath in this.channels) {
         this.channels[wkspPath].appendLine(text);
       }
-      this.channels[Object.keys(this.channels)[0]].show();
+      if (logType === DiagLogType.error)
+        this.channels[Object.keys(this.channels)[0]].show();
     }
 
     if (config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
       debugger; // eslint-disable-line no-debugger
     }
 
-    let wkspText = "";
+    let winText = text;
     if (wkspUri) {
-      // note - don't use config.workspaceSettings here (potential infinite loop if error is inside config)
+      // note - don't use config.workspaceSettings here (possible inifinite loop)
       const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
       if (wskpFolder) {
         const wkspName = wskpFolder?.name;
-        wkspText = ` (Workspace: ${wkspName}.)`;
+        winText = `${wkspName} workspace: ${text}`;
       }
     }
-    const winText = `Error: see Behave VSC output window for more information.${wkspText}`;
+
+    if (winText.length > 512)
+      winText = text.substring(0, 512) + "...";
+
 
     switch (logType) {
       case DiagLogType.info:
