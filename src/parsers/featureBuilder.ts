@@ -62,6 +62,7 @@ export class FeatureNode {
     let currentOutline: Parent;
     let currentOutlineRunName: string;
     let currentExamplesTable: Parent;
+    let currentExamplesTableRunName: string;
     let exampleTable = 0;
     let exampleRowIdx = 0;
 
@@ -82,7 +83,11 @@ export class FeatureNode {
       const parent = ancestors[0];
       parent.children.push(testItem);
 
-      const runName = getRunName(scenarioName, isOutline);
+      let runName = escapeRegExChars(scenarioName);
+      runName = isOutline ? runName.replace(/<.*?>/g, ".*") : runName;
+      runName = runName.replace(/"/g, '\\"');
+      runName = "^" + (!runName.includes(".*") ? runName + "$" : runName);
+
       const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
 
       const data = new ChildNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, runName);
@@ -112,10 +117,11 @@ export class FeatureNode {
 
       currentOutline.children.push(testItem);
       currentExamplesTable = { item: testItem, children: [] };
+      currentExamplesTableRunName = `${currentOutlineRunName} -- @.* ${escapeRegExChars(examplesLine)}$`;
       ancestors.push(currentExamplesTable);
 
       const data = new ChildNode(ChildType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
-        currentOutline.item.label, `${currentOutlineRunName} -- @.* ${examplesLine}$`);
+        currentOutline.item.label, currentExamplesTableRunName);
       testData.set(testItem, data);
 
       diagLog(`created child test item examples ${testItem.id} from ${featureUri.path}`);
@@ -134,8 +140,7 @@ export class FeatureNode {
       const parent = ancestors[ancestors.length - 1];
       parent.children.push(testItem);
 
-      const rowId = `${exampleTable}.${exampleRowIdx - 1} ${currentExamplesTable.item.label}`;
-      const runName = getRunName(currentOutline.item.label, true, rowId);
+      const runName = currentExamplesTableRunName.replace("-- @.*", `-- @${exampleTable}.${exampleRowIdx - 1}`);
       const data = new ChildNode(ChildType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
         currentOutline.item.label, runName);
       testData.set(testItem, data);
@@ -151,15 +156,8 @@ export class FeatureNode {
 }
 
 
-function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
-  // CAREFUL changing this function (retest at all tree levels in the mixed outline feature in example project A)
-  let runName = scenarioName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  if (isOutline)
-    runName = runName.replace(/<.*?>/g, ".*");
-  runName = runName.replace(/"/g, '\\"');
-  runName = runName + (rowId ? ` -- @${rowId}$` : "");
-  runName = "^" + runName + (!runName.includes(".*") && !runName.endsWith("$") ? "$" : "");
-  return runName;
+function escapeRegExChars(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 
