@@ -152,14 +152,14 @@ export class FeatureNode {
 
 
 function getRunName(scenarioName: string, isOutline: boolean, rowId?: string) {
-  let escapeRegExChars = scenarioName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-  if (isOutline) // scenario outline with a <param> in its name
-    escapeRegExChars = escapeRegExChars.replace(/<.*?>/g, ".*");
-
-  escapeRegExChars = escapeRegExChars.replace(/"/g, '\\"');
-
-  return "^" + escapeRegExChars + (isOutline ? rowId ? ` -- @${rowId}` : "" : "$");
+  // CAREFUL changing this function (retest at all tree levels in the mixed outline feature in example project A)
+  let runName = scenarioName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (isOutline)
+    runName = runName.replace(/<.*?>/g, ".*");
+  runName = runName.replace(/"/g, '\\"');
+  runName = runName + (rowId ? ` -- @${rowId}$` : "");
+  runName = "^" + runName + (!runName.includes(".*") && !runName.endsWith("$") ? "$" : "");
+  return runName;
 }
 
 
