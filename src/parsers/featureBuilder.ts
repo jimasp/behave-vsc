@@ -44,14 +44,12 @@ export class FeatureNode {
           finished.item.children.replace(finished.children);
         }
         catch (e: unknown) {
-          let err = (e as Error).toString();
+          const err = (e as Error).toString();
           if (err.includes("duplicate test item")) {
-            const n = err.lastIndexOf('/');
-            const scen = err.substring(n);
-            err = err.replace(scen, `. Duplicate name: "${scen.slice(1)}".`);
-            err = err.replace("Error: ", "");
-            // don't throw here, show it and carry on
-            config.logger.showWarn(err, wkspSettings.uri);
+            const n = err.lastIndexOf('/') + 1;
+            const dupe = err.substring(n);
+            const text = `Duplicate "${dupe}" in file ${featureFileWkspRelativePath}.`;
+            config.logger.showWarn(text, wkspSettings.uri);
           }
           else
             throw e;
