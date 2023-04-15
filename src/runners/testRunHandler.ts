@@ -332,7 +332,7 @@ function logWkspRunStarted(wr: WkspRun) {
   if (!wr.debug) {
     addRunNote(wr.run);
     config.logger.logInfo(`--- ${wr.wkspSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
-      wr.wkspSettings.uri, wr.run);
+      wr.wkspSettings.uri);
   }
 }
 
@@ -342,7 +342,7 @@ function logWkspRunComplete(wr: WkspRun, start: number) {
   if (!wr.debug) {
     config.logger.logInfo(`\n--- ${wr.wkspSettings.name} tests completed for run ${wr.run.name} ` +
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---\n`,
-      wr.wkspSettings.uri, wr.run);
+      wr.wkspSettings.uri);
   }
   addRunNote(wr.run);
 }

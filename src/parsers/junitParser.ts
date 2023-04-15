@@ -90,8 +90,11 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
   }
 
   item.qItem.result = result.status;
+
+  if (!item.test.uri || !item.test.range)
+    throw "invalid test item";
   run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
-    ? result.status.toUpperCase() : "FAILED"}\r\n`, new vscode.Location(item.test.uri!, item.test.range!), item.test);
+    ? result.status.toUpperCase() : "FAILED"}\r\n`, new vscode.Location(item.test.uri, item.test.range), item.test);
 
 }
 
