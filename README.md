@@ -17,7 +17,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Feature file formatting (default Ctrl+K,Ctrl+F).
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter recognition.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
-- Supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
+- Supports multi-root workspaces, so you can run features from more than one project folder in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 
 ![Behave VSC demo gif](https://github.com/jimasp/behave-vsc/raw/main/images/behave-vsc.gif)
 
@@ -32,9 +32,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
-### Required project directory structure
+### Required project folder structure
 
-- A single `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
+- A single `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project folder.)
 - A *behave-conformant* directory structure, for example:
 
 ```text
@@ -71,7 +71,7 @@ paths=my_tests/behave_features
 
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, and `envVarOverrides`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
+- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each project folder.
 - For more information on available options, go to the extension settings in vscode.
 
 ---
@@ -83,7 +83,7 @@ paths=my_tests/behave_features
 - The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project.
 
 - For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
-- The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated workspace.
+- The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated project folder.
 - The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 - You can adjust the run behaviour via extension settings in your `settings.json` file (e.g. `runParallel` and `envVarOverrides`).
 - Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
@@ -126,7 +126,7 @@ paths=my_tests/behave_features
   
 ### Otherwise
 
-- Does your project meet the [workspace requirements](#workspace-requirements) and have the [required project directory structure](#required-project-directory-structure)?
+- Does your project meet the [workspace requirements](#workspace-requirements) and have the [required project directory structure](#required-project-folder-structure)?
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
@@ -134,7 +134,7 @@ paths=my_tests/behave_features
 - If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
 - Does restarting vscode solve your issue?
-- Do you have runParallel turned on? Try turning it off.
+- Do you have `runParallel` turned on? Try turning it off.
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 - Check if the problem is in [Known Issues](#known-issues-and-limitations) below
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
@@ -151,14 +151,14 @@ paths=my_tests/behave_features
   - a. Do not to use the >> button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately), or
   - b. Use pytest to run your tests (which supports running unittest tests out of the box).
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
-- Test durations are taken from behave junit xml files, not an actual execution time.
+- Test durations are taken from behave junit xml files, not the actual execution time.
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder it won't find them).
+  - Step navigation only finds steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder then it won't find them).
 
 ---
 
 ## Contributing
 
-If you would like to submit a pull request, please see the  [contributing](CONTRIBUTING.md) doc.
+If you would like to submit a pull request, please see the [contributing](CONTRIBUTING.md) doc.
