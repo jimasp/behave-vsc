@@ -91,7 +91,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
 
   item.qItem.result = result.status;
   run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
-    ? result.status.toUpperCase() : "FAILED"}\r\n`);
+    ? result.status.toUpperCase() : "FAILED"}\r\n`, new vscode.Location(item.test.uri!, item.test.range!), item.test);
 
 }
 

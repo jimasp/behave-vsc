@@ -105,7 +105,6 @@ paths=my_tests/behave_features
 - *How do I clear previous test results?* This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
 - *Why does the behave command output contain `--show-skipped`?* This flag must be enabled for junit files (which the extension depends on) to be produced for skipped tests. It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
 - *How can I only execute a specific subset of tests while using the extension?* Here are some examples of how to approach this:
-
   - (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup).
   - (higly flexible) consider if you can group your feature files into folders, rather than just using tags, then you can select to run any folder/subfolder from the test tree in the UI instead.  
   - (highly flexible) consider if you can use a feature/scenario/folder naming scheme that will allow you to leverage the filtering above the test tree to enable you to run just those tests.
@@ -114,7 +113,7 @@ paths=my_tests/behave_features
 - *How do I disable feature file snippets?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showSnippets": false }`
 - *How do I disable autocomplete for feature file steps?* You can do this via a standard vscode setting: `"[gherkin]": { "editor.suggest.showFunctions": false }`
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?* Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the outputted command and run it manually (or run `python -m behave` for all test output).
-- *Where is the behave junit output stored?* In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
+- *Why is the behave output logged to an output window and not vscode's run terminal window?* Because currently vscode only has one terminal window for run output, so text would be intermixed and unreadable for multiroot workspaces or if you have multiple test extensions installed.
 - *When will this extension have a release version?* When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
 
 ---
