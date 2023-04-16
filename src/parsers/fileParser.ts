@@ -5,7 +5,7 @@ import { WorkspaceSettings } from "../common/settings";
 import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
   getTestItemArray, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, findFiles, getContentFromFilesystem, countTestNodes
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, findFiles, getContentFromFilesystem, countTestNodes, NodeCounts
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, FeatureNode } from './featureBuilder';
@@ -13,8 +13,6 @@ import { diagLog } from '../common/logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
 
-
-type NodeCounts = { total: number, features: number, children: number };
 
 // for integration test assertions      
 export type WkspParseCounts = {

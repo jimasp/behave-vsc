@@ -9,9 +9,7 @@ import { diagLog } from './logger';
 import { getJunitDirUri } from '../watchers/junitWatcher';
 
 
-
-const vwfs = vscode.workspace.fs;
-
+export type NodeCounts = { total: number, features: number, children: number };
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));
 export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
@@ -75,9 +73,10 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
 
   const dirUri = config.extensionTempFilesUri;
   const junitDirUri = getJunitDirUri();
+  const vwfs = vscode.workspace.fs;
 
-  // note - this function runs asynchronously, and we do not wait for it to complete before we start 
-  // the junitWatcher, this is why we don't want to delete the (watched) junit directory itself (only its contents)
+  // note - this function runs asynchronously, and we do not wait for it to complete before we call startWatchingJunitFolder,
+  // this is why we don't want to delete the (watched) junit directory itself (only its contents)
 
   try {
     const children = await vwfs.readDirectory(dirUri);
@@ -211,7 +210,7 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience
     throw new Error("uri is undefined");
-  const data = await vwfs.readFile(uri);
+  const data = await vscode.workspace.fs.readFile(uri);
   return Buffer.from(data).toString('utf8');
 };
 
@@ -280,7 +279,7 @@ export function cleanBehaveText(text: string) {
 export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
   extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
 
-  const entries = await vwfs.readDirectory(directory);
+  const entries = await vscode.workspace.fs.readDirectory(directory);
   const results: vscode.Uri[] = [];
 
   for (const entry of entries) {

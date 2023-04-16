@@ -5,6 +5,7 @@ import { config } from "../common/configuration";
 import { WorkspaceSettings } from "../common/settings";
 import { diagLog } from '../common/logger';
 import { FolderNode } from './fileParser';
+import { toUnicodeVariant } from '../formatters/toUnicodeVariant';
 
 
 
@@ -109,7 +110,8 @@ export class FeatureNode {
 
       examplesLine = examplesLine.replace(/Examples:/i, '').trim();
       const id = `${currentOutline.item.id}/${examplesLine}`;
-      const testItem = controller.createTestItem(id, examplesLine, featureUri);
+      const label = toUnicodeVariant(examplesLine, "si");
+      const testItem = controller.createTestItem(id, label, featureUri);
       testItem.range = range;
 
       currentOutline.children.push(testItem);
@@ -129,9 +131,9 @@ export class FeatureNode {
       if (exampleRowIdx++ == 0) // header row
         return;
 
-
       const id = `${currentExamplesTable.item.id}/${rowText}`;
-      const testItem = controller.createTestItem(id, rowText, featureUri);
+      const label = toUnicodeVariant(rowText, "si");
+      const testItem = controller.createTestItem(id, label, featureUri);
       testItem.range = range;
 
       const parent = ancestors[ancestors.length - 1];
