@@ -1,10 +1,17 @@
-Copyright (c) Jim Macdonald. Source: https://github.com/jimasp/behave-vsc. 
+Behave VSC:
+Source: https://github.com/jimasp/behave-vsc
+Copyright (c) Jim Macdonald.  
 All rights reserved. 
-MIT License.
 
-Originally based on a Microsoft sample: https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample
+Originally based on a Microsoft sample:
+Source: https://github.com/microsoft/vscode-extension-samples/blob/main/test-provider-sample
 Copyright (c) Microsoft
 All rights reserved. 
+
+toUnicodeVariant function:
+Source: https://github.com/davidkonrad/toUnicodeVariant
+Copyright (c) David Konrad. 
+All rights reserved.
 
 MIT License
 
