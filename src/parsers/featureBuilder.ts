@@ -110,7 +110,7 @@ export class FeatureNode {
 
       examplesLine = examplesLine.replace(/Examples:/i, '').trim();
       const id = `${currentOutline.item.id}/${examplesLine}`;
-      const label = toUnicodeVariant(examplesLine, "si");
+      const label = toUnicodeVariant(examplesLine, "i");
       const testItem = controller.createTestItem(id, label, featureUri);
       testItem.range = range;
 
@@ -132,7 +132,7 @@ export class FeatureNode {
         return;
 
       const id = `${currentExamplesTable.item.id}/${rowText}`;
-      const label = toUnicodeVariant(rowText, "si");
+      const label = toUnicodeVariant(rowText, "i");
       const testItem = controller.createTestItem(id, label, featureUri);
       testItem.range = range;
 
