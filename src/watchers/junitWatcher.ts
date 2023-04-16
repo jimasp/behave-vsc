@@ -159,7 +159,7 @@ export class JunitWatcher {
       await Promise.all(updates);
 
       const waited = performance.now() - start;
-      diagLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited}ms`);
+      diagLog(`junitWatcher: run ${run.name} ending, updating test results took ${waited}ms`);
 
     }
     finally {

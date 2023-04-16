@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { ChildNode, FeatureNode, TestData } from './parsers/featureBuilder';
+import { FeatureDescendentNode, FeatureNode, TestData } from './parsers/featureBuilder';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
@@ -267,7 +267,7 @@ export const countTestNodes = (testData: TestData, testCollection: vscode.TestIt
 
   const childCount = items.filter(item => {
     const data = testData.get(item);
-    if (data && (data instanceof ChildNode))
+    if (data && (data instanceof FeatureDescendentNode))
       return true;
   }).length;
 

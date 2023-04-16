@@ -8,7 +8,7 @@ import { FolderNode } from './fileParser';
 
 
 
-export type TestNode = FolderNode | FeatureNode | ChildNode;
+export type TestNode = FolderNode | FeatureNode | FeatureDescendentNode;
 export type TestData = WeakMap<vscode.TestItem, TestNode>;
 
 
@@ -85,9 +85,9 @@ export class FeatureNode {
       let runName = "^" + escapeRunName(scenarioName);
       runName = isOutline ? runName.replace(/<.*?>/g, ".*") : runName + "$";
 
-      const itemType = isOutline ? ChildType.ScenarioOutline : ChildType.Scenario;
+      const itemType = isOutline ? DescendentType.ScenarioOutline : DescendentType.Scenario;
 
-      const data = new ChildNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, runName);
+      const data = new FeatureDescendentNode(itemType, featureFilename, featureFileWkspRelativePath, featureName, scenarioName, runName);
       testData.set(testItem, data);
 
       if (isOutline) {
@@ -117,7 +117,7 @@ export class FeatureNode {
       currentExamplesTableRunName = `${currentOutlineRunName} -- @.* ${escapeRunName(examplesLine)}$`;
       ancestors.push(currentExamplesTable);
 
-      const data = new ChildNode(ChildType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
+      const data = new FeatureDescendentNode(DescendentType.ExampleTable, featureFilename, featureFileWkspRelativePath, featureName,
         currentOutline.item.label, currentExamplesTableRunName);
       testData.set(testItem, data);
 
@@ -138,7 +138,7 @@ export class FeatureNode {
       parent.children.push(testItem);
 
       const runName = currentExamplesTableRunName.replace("-- @.*", `-- @${exampleTable}.${exampleRowIdx - 1}`);
-      const data = new ChildNode(ChildType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
+      const data = new FeatureDescendentNode(DescendentType.ExampleRow, featureFilename, featureFileWkspRelativePath, featureName,
         currentOutline.item.label, runName);
       testData.set(testItem, data);
 
@@ -158,7 +158,7 @@ function escapeRunName(str: string) {
 }
 
 
-export enum ChildType {
+export enum DescendentType {
   Scenario,
   ScenarioOutline,
   ExampleTable,
@@ -166,10 +166,10 @@ export enum ChildType {
 }
 
 
-export class ChildNode {
+export class FeatureDescendentNode {
   public result: string | undefined;
   constructor(
-    public readonly nodeType: ChildType,
+    public readonly nodeType: DescendentType,
     public readonly featureFileName: string,
     public readonly featureFileWorkspaceRelativePath: string,
     public readonly featureName: string,

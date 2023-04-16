@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { ChildNode, TestData, FeatureNode } from '../parsers/featureBuilder';
+import { FeatureDescendentNode, TestData, FeatureNode } from '../parsers/featureBuilder';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
   countTestNodes, getContentFromFilesystem, uriId,
@@ -60,7 +60,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     try {
       const queue: QueueItem[] = [];
-      await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? getTestItemArray(ctrl.items), testData);
+      await addSelectedTestItemsToQueue(ctrl, run, request, queue, request.include ?? getTestItemArray(ctrl.items), testData);
+      // looks better in UI for large projects if run.enqueued is after the queue is built, i.e. outside addSelectedTestItemsToQueue
+      queue.forEach(qi => run.enqueued(qi.test));
       await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher);
       return queue;
     }
@@ -78,7 +80,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 }
 
 
-async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.TestRun,
+async function addSelectedTestItemsToQueue(ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, queue: QueueItem[], allTests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of allTests) {
@@ -88,19 +90,17 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
     const data = testData.get(test);
 
-    if (data instanceof ChildNode) {
-      run.enqueued(test);
-      queue.push({ test: test, qItem: data });
-      diagLog(`queueSelectedTestItems: queued ${test.id}`);
-    }
-
-    if (data instanceof FeatureNode && !data.didResolve) {
+    if (data instanceof FeatureNode && !(data as FeatureNode).didResolve) {
       const wkspSettings = getWorkspaceSettingsForFile(test.uri);
       const content = await getContentFromFilesystem(test.uri);
       await data.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
     }
 
-    await queueSelectedTestItems(ctrl, run, request, queue, getTestItemArray(test.children), testData);
+    if (data instanceof FeatureDescendentNode)
+      queue.push({ test: test, qItem: data });
+
+    if (test.children.size > 0)
+      await addSelectedTestItemsToQueue(ctrl, run, request, queue, getTestItemArray(test.children), testData);
   }
 
 }
@@ -391,7 +391,7 @@ function optimiseSelectedChildren(wr: WkspRun, featureId: string) {
   // first, add any parents that have all child rows selected (if the table is not already selected)
   for (const c of selectedChildren) {
     if (c.test.parent && !selectedChildren.find(x => x.test.id === c.test.parent?.id) && allDescendentsAreInQueue(wr, c.test.parent))
-      selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as ChildNode });
+      selectedChildren.push({ test: c.test.parent, qItem: wr.testData.get(c.test.parent) as FeatureDescendentNode });
   }
 
   // now remove children of parents that are already included themselves  
