@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { basename, isFeatureFile, isStepsFile } from '../common';
-import { config } from "../configuration";
-import { diagLog, DiagLogType } from '../logger';
+import { basename, isFeatureFile, isStepsFile } from '../common/helpers';
+import { config } from "../common/configuration";
+import { diagLog, DiagLogType } from '../common/logger';
 import { FileParser } from '../parsers/fileParser';
 import { TestData } from '../parsers/featureBuilder';
 

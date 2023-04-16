@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './common';
+import { getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './helpers';
 import { config } from './configuration';
 import { Logger } from './logger';
 

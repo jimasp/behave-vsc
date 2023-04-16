@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { config } from "../configuration";
-import { uriId, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
+import { config } from "../common/configuration";
+import { uriId, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common/helpers';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { FeatureFileStep } from '../parsers/featureParser';

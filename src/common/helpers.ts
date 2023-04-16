@@ -3,20 +3,14 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
-import { FeatureDescendentNode, FeatureNode, TestData } from './parsers/featureBuilder';
+import { FeatureDescendentNode, FeatureNode, TestData } from '../parsers/featureBuilder';
 import { WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
-import { getJunitDirUri } from './watchers/junitWatcher';
+import { getJunitDirUri } from '../watchers/junitWatcher';
 
 
 
 const vwfs = vscode.workspace.fs;
-export type NodeCounts = { total: number, features: number, children: number };
-
-export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
-export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
-export const FOLDERNAME_CHARS_VALID_ON_ALLPLATFORMS = /[^ a-zA-Z0-9_.-]/g;
-export const BEHAVE_EXECUTION_ERROR_MESSAGE = "--- BEHAVE EXECUTION ERROR DETECTED ---"
 
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));

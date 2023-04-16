@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { WorkspaceSettings } from "../settings";
-import { uriId, sepr, basename, getLines } from '../common';
-import { diagLog } from '../logger';
+import { WorkspaceSettings } from "../common/settings";
+import { uriId, sepr, basename, getLines } from '../common/helpers';
+import { diagLog } from '../common/logger';
 
 
 const featureReStr = /^(\s*)Feature:(\s*)(.+)$/;

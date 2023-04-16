@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
-import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
+import { config } from "../common/configuration";
+import { WorkspaceSettings } from "../common/settings";
 import { FeatureDescendentNode, TestData, FeatureNode } from '../parsers/featureBuilder';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
   countTestNodes, getContentFromFilesystem, uriId,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getTestItemArray
-} from '../common';
+} from '../common/helpers';
 import { QueueItem } from '../extension';
 import { FileParser, FolderNode } from '../parsers/fileParser';
-import { diagLog, DiagLogType } from '../logger';
+import { diagLog, DiagLogType } from '../common/logger';
 import { getJunitWkspRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getWkspQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
 

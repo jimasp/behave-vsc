@@ -1,17 +1,20 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
-import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
+import { config } from "../common/configuration";
+import { WorkspaceSettings } from "../common/settings";
 import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
   getTestItemArray, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, NodeCounts, findFiles, getContentFromFilesystem, countTestNodes
-} from '../common';
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, findFiles, getContentFromFilesystem, countTestNodes
+} from '../common/helpers';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, FeatureNode } from './featureBuilder';
-import { diagLog } from '../logger';
+import { diagLog } from '../common/logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
+
+
+type NodeCounts = { total: number, features: number, children: number };
 
 // for integration test assertions      
 export type WkspParseCounts = {

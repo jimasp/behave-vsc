@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { uriId, isFeatureFile } from '../common';
-import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
-import { diagLog } from '../logger';
+import { uriId, isFeatureFile } from '../common/helpers';
+import { config } from "../common/configuration";
+import { WorkspaceSettings } from "../common/settings";
+import { diagLog } from '../common/logger';
 import { FolderNode } from './fileParser';
 
 

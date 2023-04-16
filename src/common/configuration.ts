@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getUrisOfWkspFoldersWithFeatures } from './common';
+import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 import { diagLog, Logger } from './logger';
 import { WorkspaceSettings as WorkspaceSettings, WindowSettings } from './settings';
 

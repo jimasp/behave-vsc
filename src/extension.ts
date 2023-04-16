@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { config, Configuration } from "./configuration";
+import { config, Configuration } from "./common/configuration";
 import { TestNode, FeatureDescendentNode, TestData, FeatureNode } from './parsers/featureBuilder';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, cleanExtensionTempDirectory, urisMatch
-} from './common';
+} from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
-import { diagLog } from './logger';
+import { diagLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';

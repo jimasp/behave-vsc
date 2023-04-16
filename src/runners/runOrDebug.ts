@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { WorkspaceSettings } from "../settings";
+import { WorkspaceSettings } from "../common/settings";
 import { runBehaveInstance } from './behaveRun';
 import { debugBehaveInstance } from './behaveDebug';
 import { QueueItem } from '../extension';
-import { WkspError } from '../common';
+import { WkspError } from '../common/helpers';
 import { WkspRun } from './testRunHandler';
 
 

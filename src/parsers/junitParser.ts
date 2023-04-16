@@ -2,12 +2,13 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "../extension";
-import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
-import { config } from '../configuration';
+import { getContentFromFilesystem, showDebugWindow, WkspError } from '../common/helpers';
+import { config } from '../common/configuration';
 import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
-import { WorkspaceSettings } from '../settings';
+import { WorkspaceSettings } from '../common/settings';
 
 
+const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
 

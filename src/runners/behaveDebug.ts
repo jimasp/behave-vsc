@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { config } from "../configuration";
-import { diagLog } from '../logger';
+import { config } from "../common/configuration";
+import { diagLog } from '../common/logger';
 import { WkspRun } from './testRunHandler';
 
 

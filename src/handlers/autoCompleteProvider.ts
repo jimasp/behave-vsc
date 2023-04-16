@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, sepr } from '../common';
-import { config } from '../configuration';
+import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, sepr } from '../common/helpers';
+import { config } from '../common/configuration';
 import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFileSteps } from '../parsers/stepsParser';
 

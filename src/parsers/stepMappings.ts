@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { sepr, urisMatch } from '../common';
+import { sepr, urisMatch } from '../common/helpers';
 import { parser } from '../extension';
-import { diagLog, DiagLogType } from '../logger';
+import { diagLog, DiagLogType } from '../common/logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';

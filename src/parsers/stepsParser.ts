@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { uriId, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common';
-import { diagLog } from '../logger';
+import { uriId, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common/helpers';
+import { diagLog } from '../common/logger';
 
 export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
