@@ -103,6 +103,9 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
   }
 
   item.qItem.result = result.status;
+
+  if (result.status === "passed" || result.status === "skipped")
+    run.appendOutput(result.text, message.location, item.test);
 }
 
 

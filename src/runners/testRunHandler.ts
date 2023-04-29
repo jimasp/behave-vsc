@@ -71,7 +71,6 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       config.logger.showError(e, undefined);
     }
     finally {
-      addRunNote(run);
       run.end();
     }
 
@@ -181,11 +180,7 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
       allTestsForThisWkspIncluded, junitWkspRunDirUri
     )
 
-    const start = performance.now();
-    logWkspRunStarted(wr);
     await doRunType(wr);
-    logWkspRunComplete(wr, start);
-
   }
   catch (e: unknown) {
     wr?.run.end();
@@ -326,31 +321,6 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
     return;
   alreadyProcessedFeatureIds.push(feature.id);
   return feature.id;
-}
-
-
-function logWkspRunStarted(wr: WkspRun) {
-  if (!wr.debug) {
-    config.logger.logInfo(`--- ${wr.wkspSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
-      wr.wkspSettings.uri);
-  }
-}
-
-
-function logWkspRunComplete(wr: WkspRun, start: number) {
-  const end = performance.now();
-  if (!wr.debug) {
-    config.logger.logInfo(`\n--- ${wr.wkspSettings.name} tests completed for run ${wr.run.name} ` +
-      `@${new Date().toISOString()} (${(end - start) / 1000} secs)---\n`,
-      wr.wkspSettings.uri);
-  }
-}
-
-
-function addRunNote(run: vscode.TestRun) {
-  run.appendOutput('\r\n\r\n');
-  run.appendOutput('See "Test Results" window to navigate test results.\r\n');
-  run.appendOutput('See "Behave VSC" output window for Behave output.\r\n');
 }
 
 
