@@ -54,14 +54,26 @@ interface Reason {
 type ParseResult = {
   status: string,
   duration: number,
-  failedText?: string,
+  text: string,
 }
 
+export const statusBuffer = new Set<string>();
 
 export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseResult, item: QueueItem): void {
 
+  // this function will be called every time the feature file is updated, only update tests we haven't already updated
+  if (statusBuffer.has(item.test.id))
+    return;
+
+  // conditional because tests that have not yet run could be marked as "skipped" in the junit file    
+  if (result.status !== "skipped")
+    statusBuffer.add(item.test.id);
+
   const window = debug ? "debug console" : `Behave VSC output window`;
-  let message: vscode.TestMessage;
+  let message: vscode.TestMessage = new vscode.TestMessage(result.text);
+  if (!item.test.uri || !item.test.range)
+    throw "invalid test item";
+  message.location = new vscode.Location(item.test.uri, item.test.range);
 
   if (run.token.isCancellationRequested)
     return;
@@ -74,16 +86,16 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       run.skipped(item.test);
       break;
     case "no-junit-file":
-      run.errored(item.test, new vscode.TestMessage(`No JUnit file was written for this test. Check output in ${window}.`));
+      message.message = `No JUnit file was written for this test. Check output in ${window}.`;
+      run.errored(item.test, message);
+      result.status
       break;
     case "untested":
-      run.errored(item.test, new vscode.TestMessage(`JUnit result was "untested". Check output in ${window}.`));
+      message.message = `This test was not run. Check output in ${window}.`;
+      run.errored(item.test, message);
       break;
     case "failed":
-      if (!item.test.uri || !item.test.range)
-        throw "invalid test item";
-      message = new vscode.TestMessage(result.failedText ?? "failed");
-      message.location = new vscode.Location(item.test.uri, item.test.range);
+      message = new vscode.TestMessage(result.text ?? "failed");
       run.failed(item.test, message, result.duration);
       break;
     default:
@@ -91,12 +103,6 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
   }
 
   item.qItem.result = result.status;
-
-  if (!item.test.uri || !item.test.range)
-    throw "invalid test item";
-  run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
-    ? result.status.toUpperCase() : "FAILED"}\r\n`, new vscode.Location(item.test.uri, item.test.range), item.test);
-
 }
 
 
@@ -104,19 +110,20 @@ function CreateParseResult(wkspSettings: WorkspaceSettings, debug: boolean, test
 
   let xmlDuration = testCase.$.time * 1000;
   const xmlStatus = testCase.$.status;
+  const text = testCase["system-out"].join("\n").replaceAll("\n", "\r\n");
 
   if (actualDuration)
     xmlDuration = actualDuration;
 
   if (xmlStatus === "passed" || xmlStatus === "skipped")
-    return { status: xmlStatus, duration: xmlDuration };
+    return { status: xmlStatus, duration: xmlDuration, text: text };
 
   if (xmlStatus === "untested") {
     if (debug)
       showDebugWindow();
     else
       config.logger.show(wkspSettings.uri);
-    return { status: "untested", duration: xmlDuration };
+    return { status: "untested", duration: xmlDuration, text: text };
   }
 
   if (xmlStatus !== "failed") {
@@ -163,7 +170,7 @@ function CreateParseResult(wkspSettings: WorkspaceSettings, debug: boolean, test
   });
   errText = errText.trim();
 
-  return { status: xmlStatus, duration: xmlDuration, failedText: errText };
+  return { status: xmlStatus, duration: xmlDuration, text: errText };
 }
 
 
@@ -277,7 +284,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 export function updateTestResultsForUnreadableJunitFile(wkspSettings: WorkspaceSettings, run: vscode.TestRun,
   queueItems: QueueItem[], junitFileUri: vscode.Uri) {
 
-  const parseResult = { status: "no-junit-file", duration: 0 };
+  const parseResult = { status: "no-junit-file", duration: 0, text: "no matching junit file was found" };
   for (const queueItem of queueItems) {
     updateTest(run, false, parseResult, queueItem);
   }

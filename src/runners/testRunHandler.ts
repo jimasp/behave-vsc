@@ -71,6 +71,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       config.logger.showError(e, undefined);
     }
     finally {
+      addRunNote(run);
       run.end();
     }
 
@@ -330,7 +331,6 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logWkspRunStarted(wr: WkspRun) {
   if (!wr.debug) {
-    addRunNote(wr.run);
     config.logger.logInfo(`--- ${wr.wkspSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
       wr.wkspSettings.uri);
   }
@@ -344,16 +344,13 @@ function logWkspRunComplete(wr: WkspRun, start: number) {
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---\n`,
       wr.wkspSettings.uri);
   }
-  addRunNote(wr.run);
 }
 
 
 function addRunNote(run: vscode.TestRun) {
-  run.appendOutput('\r\n');
-  run.appendOutput('-----------------------------------------------------------\r\n');
-  run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
-  run.appendOutput('-----------------------------------------------------------\r\n');
-  run.appendOutput('\r\n');
+  run.appendOutput('\r\n\r\n');
+  run.appendOutput('See "Test Results" window to navigate test results.\r\n');
+  run.appendOutput('See "Behave VSC" output window for Behave output.\r\n');
 }
 
 

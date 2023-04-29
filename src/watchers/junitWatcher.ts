@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { uriId } from '../common/helpers';
 import { config } from '../common/configuration';
 import { diagLog, DiagLogType } from '../common/logger';
-import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
+import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, statusBuffer, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
 
 
@@ -165,6 +165,8 @@ export class JunitWatcher {
     finally {
       // all updates done, remove the run from the list
       // (the run will end after this method returns, and you cannot update tests on a run that has ended)
+      //statusBuffer.forEach(s => run.appendOutput(s.message.message.toString(), undefined, s.test));
+      statusBuffer.clear();
       this._currentRuns = this._currentRuns.filter(x => x.run !== run);
       diagLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
     }
@@ -278,7 +280,8 @@ export class JunitWatcher {
       const wkspSettings = matches[0].wkspSettings;
       await parseJunitFileAndUpdateTestResults(wkspSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
       for (const match of matches) {
-        diagLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
+        // note that the same junit file may raise multiple onDidCreate/onDidChange events
+        diagLog(`junitWatcher: ${new Date().toISOString()}run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;
       }
 
