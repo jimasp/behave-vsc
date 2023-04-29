@@ -1,18 +1,17 @@
 import * as vscode from 'vscode';
-import { performance } from 'perf_hooks';
 import { config } from "../common/configuration";
 import { WorkspaceSettings } from "../common/settings";
 import { FeatureDescendentNode, TestData, FeatureNode } from '../parsers/featureBuilder';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedChildren as runOrDebugFeatureWithSelectedChildren } from './runOrDebug';
 import {
-  countTestNodes, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric, getTestItemArray
+  countTestNodes, getContentFromFilesystem,
+  getUrisOfWkspFoldersWithFeatures, rndNumeric, getTestItemArray
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { FileParser, FolderNode } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../common/logger';
 import { getJunitWkspRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
-import { getWkspQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
+import { getWkspQueueJunitFileMap } from '../parsers/junitParser';
 
 export class WkspRun {
   constructor(
@@ -54,116 +53,121 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     // stop the temp directory removal function if it is still running
     removeTempDirectoryCancelSource.cancel();
 
-    const run = ctrl.createTestRun(request, rndNumeric(), false);
-
-    diagLog(`testRunHandler: starting run ${run.name}`);
-
     try {
-      const queue: QueueItem[] = [];
-      await addSelectedTestItemsToQueue(ctrl, run, request, queue, request.include ?? getTestItemArray(ctrl.items), testData);
-      // looks better in UI for large projects if run.enqueued is after the queue is built, i.e. outside addSelectedTestItemsToQueue
-      queue.forEach(qi => run.enqueued(qi.test));
-      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher);
-      return queue;
+      return await runTests(ctrl, request, testData, debug, junitWatcher);
     }
     catch (e: unknown) {
       // entry point (handler) - show error
       config.logger.showError(e, undefined);
     }
-    finally {
-      run.end();
-    }
 
-    diagLog(`testRunHandler: completed run ${run.name}`);
   };
 
 }
 
 
-async function addSelectedTestItemsToQueue(ctrl: vscode.TestController, run: vscode.TestRun,
+async function runTests(ctrl: vscode.TestController, request: vscode.TestRunRequest,
+  testData: TestData, debug: boolean, junitWatcher: JunitWatcher) {
+
+  const allQueueItems: QueueItem[] = [];
+  const wkspRunPromises: Promise<vscode.TestRun>[] = [];
+  const winSettings = config.globalSettings;
+  const wskpsWithFeaturesSettings = getUrisOfWkspFoldersWithFeatures().map(wkspUri => config.workspaceSettings[wkspUri.path]);
+  const runs: vscode.TestRun[] = [];
+
+
+
+  try {
+
+    // run each workspace queue  
+    for (const wkspSettings of wskpsWithFeaturesSettings) {
+
+      const wkspQueue: QueueItem[] = [];
+      await queueSelectedTestItemsForWorkspace(wkspSettings, ctrl, request, wkspQueue,
+        request.include ?? getTestItemArray(ctrl.items), testData);
+      allQueueItems.push(...wkspQueue);
+
+      if (wkspQueue.length === 0)
+        continue;
+
+      const runName = wkspSettings.name + "_" + rndNumeric();
+      const run = ctrl.createTestRun(request, runName, false);
+      wkspQueue.forEach(q => run.enqueued(q.test));
+      const wkspQueueMap = getWkspQueueJunitFileMap(wkspSettings, run, wkspQueue);
+
+      // WAIT for the junit watcher to be ready    
+      await junitWatcher.startWatchingRun(run, debug, wkspSettings.name, wkspQueueMap);
+
+      if (!debug)
+        config.logger.clear(wkspSettings.uri);
+
+      // run workspace sequentially
+      if (!winSettings.multiRootRunWorkspacesInParallel || debug) {
+        await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue);
+        await junitWatcher.stopWatchingRun(run);
+        run.end();
+        runs.splice(runs.indexOf(run), 1);
+        continue;
+      }
+
+      // run workspace in parallel 
+      runs.push(run);
+      wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue));
+    }
+
+    await Promise.all(wkspRunPromises.map(p =>
+      p.then(async (run: vscode.TestRun) => {
+        await junitWatcher.stopWatchingRun(run);
+        run.end();
+        runs.splice(runs.indexOf(run), 1);
+      },
+        (e: Error) => { throw e; })))
+      .catch(e => { throw e; });
+
+    // TODO review how integration tests use this and how it was returned before by testrunhandler
+    return allQueueItems;
+  }
+  finally {
+    for (const run of runs) {
+      await junitWatcher.stopWatchingRun(run);
+      run.end();
+    }
+  }
+
+}
+
+
+
+async function queueSelectedTestItemsForWorkspace(wkspSettings: WorkspaceSettings, ctrl: vscode.TestController,
   request: vscode.TestRunRequest, queue: QueueItem[], allTests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of allTests) {
+
+    if (!test.id.startsWith(wkspSettings.id))
+      continue;
 
     if (request.exclude?.includes(test))
       continue;
 
     const data = testData.get(test);
 
-    if (data instanceof FeatureNode && !(data as FeatureNode).didResolve) {
-      const wkspSettings = getWorkspaceSettingsForFile(test.uri);
+    if (data instanceof FeatureDescendentNode) {
+      queue.push({ test: test, qItem: data });
+    }
+
+    if (data instanceof FeatureNode && !data.didResolve) {
       const content = await getContentFromFilesystem(test.uri);
       await data.createChildTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
     }
 
-    if (data instanceof FeatureDescendentNode)
-      queue.push({ test: test, qItem: data });
-
-    if (test.children.size > 0)
-      await addSelectedTestItemsToQueue(ctrl, run, request, queue, getTestItemArray(test.children), testData);
+    await queueSelectedTestItemsForWorkspace(wkspSettings, ctrl, request, queue, getTestItemArray(test.children), testData);
   }
 
-}
-
-
-async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher) {
-
-  diagLog(`runTestQueue: started for run ${run.name}`);
-
-  if (queue.length === 0)
-    throw "empty queue - nothing to do";
-
-  const wkspRunPromises: Promise<void>[] = [];
-  const winSettings = config.globalSettings;
-  const allWkspsQueueMap: QueueItemMapEntry[] = [];
-  const wskpsWithFeaturesSettings = getUrisOfWkspFoldersWithFeatures().map(wkspUri => config.workspaceSettings[wkspUri.path]);
-
-  for (const wkspSettings of wskpsWithFeaturesSettings) {
-    const idMatch = uriId(wkspSettings.featuresUri);
-    const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
-    const wkspQueueMap = getWkspQueueJunitFileMap(wkspSettings, run, wkspQueue);
-    allWkspsQueueMap.push(...wkspQueueMap);
-  }
-
-  const wkspNames = wskpsWithFeaturesSettings.map(x => x.name);
-
-
-  // WAIT for the junit watcher to be ready
-  await junitWatcher.startWatchingRun(run, debug, wkspNames, allWkspsQueueMap);
-
-  // run each workspace queue  
-  for (const wkspSettings of wskpsWithFeaturesSettings) {
-
-    if (run.token.isCancellationRequested)
-      break;
-
-    const wkspQueue = allWkspsQueueMap.filter(x => x.wkspSettings.id == wkspSettings.id).map(q => q.queueItem);
-    if (wkspQueue.length === 0)
-      continue;
-
-    if (!debug)
-      config.logger.clear(wkspSettings.uri);
-
-    // run workspaces sequentially
-    if (!winSettings.multiRootRunWorkspacesInParallel || debug) {
-      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue);
-      continue;
-    }
-
-    // run workspaces in parallel
-    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue));
-  }
-
-  await Promise.all(wkspRunPromises);
-  await junitWatcher.stopWatchingRun(run);
-
-  diagLog(`runTestQueue: completed for run ${run.name}`);
 }
 
 
 async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[]) {
+  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[]): Promise<vscode.TestRun> {
 
   let wr: WkspRun | undefined = undefined;
 
@@ -181,14 +185,17 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
     )
 
     await doRunType(wr);
+
   }
   catch (e: unknown) {
     wr?.run.end();
     // unawaited async function (if multiRootRunWorkspacesInParallel) - show error
-    config.logger.showError(e, wkspSettings.uri, run);
+    config.logger.showError(e, wkspSettings.uri);
   }
 
   diagLog(`runWorkspaceQueue: completed for run ${run.name}`, wkspSettings.uri);
+
+  return run;
 }
 
 

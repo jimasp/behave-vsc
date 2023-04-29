@@ -75,7 +75,7 @@ export class JunitWatcher {
   }
 
 
-  async startWatchingRun(run: vscode.TestRun, debug: boolean, wkspNamesInRun: string[], queueItemMap: QueueItemMapEntry[]) {
+  async startWatchingRun(run: vscode.TestRun, debug: boolean, wkspName: string, queueItemMap: QueueItemMapEntry[]) {
     // method called when a test run/debug session is starting.
 
     // add the run and wait for the watcher to be ready
@@ -84,15 +84,13 @@ export class JunitWatcher {
 
     if (!this._firstRun) {
       await vscode.workspace.fs.createDirectory(getJunitRunDirUri(run));
-      for (const wkspName of wkspNamesInRun) {
-        const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
-        await vscode.workspace.fs.createDirectory(junitWkspRunDirUri);
-      }
+      const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
+      await vscode.workspace.fs.createDirectory(junitWkspRunDirUri);
       return;
     }
 
     this._firstRun = false;
-    await this._waitForWatcher(run, wkspNamesInRun);
+    await this._waitForWatcher(run, wkspName);
   }
 
 
@@ -159,21 +157,21 @@ export class JunitWatcher {
       await Promise.all(updates);
 
       const waited = performance.now() - start;
-      diagLog(`junitWatcher: run ${run.name} ending, updating test results took ${waited}ms`);
+      diagLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited}ms`);
 
     }
     finally {
       // all updates done, remove the run from the list
       // (the run will end after this method returns, and you cannot update tests on a run that has ended)
       //statusBuffer.forEach(s => run.appendOutput(s.message.message.toString(), undefined, s.test));
-      statusBuffer.clear();
-      this._currentRuns = this._currentRuns.filter(x => x.run !== run);
+      statusBuffer.clear(); this._currentRuns = this._currentRuns.filter(x => x.run !== run);
       diagLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
+      await new Promise(r => setTimeout(r, 5000));
     }
   }
 
 
-  async _waitForWatcher(run: vscode.TestRun, wkspNamesInRun: string[]) {
+  async _waitForWatcher(run: vscode.TestRun, wkspName: string) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
     if (!watcher)
@@ -189,10 +187,8 @@ export class JunitWatcher {
       return;
 
     const waits: Promise<boolean>[] = [];
-    for (const wkspName of wkspNamesInRun) {
-      const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
-      waits.push(this._waitForFolderWatch(junitWkspRunDirUri, 2000));
-    }
+    const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
+    waits.push(this._waitForFolderWatch(junitWkspRunDirUri, 2000));
     await Promise.all(waits);
 
   }
@@ -277,11 +273,10 @@ export class JunitWatcher {
 
       // one junit file is created per feature, so update all tests belonging to this feature
       const matchedQueueItems = matches.map(m => m.queueItem);
-      const wkspSettings = matches[0].wkspSettings;
+      const wkspSettings = matches[0].wkspSettings; // TODO - this could be retrieved from currentRuns if runs are per workspace
       await parseJunitFileAndUpdateTestResults(wkspSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
       for (const match of matches) {
-        // note that the same junit file may raise multiple onDidCreate/onDidChange events
-        diagLog(`junitWatcher: ${new Date().toISOString()}run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
+        diagLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;
       }
 

@@ -64,10 +64,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
   // this function will be called every time the feature file is updated, only update tests we haven't already updated
   if (statusBuffer.has(item.test.id))
     return;
-
-  // conditional because tests that have not yet run could be marked as "skipped" in the junit file    
-  if (result.status !== "skipped")
-    statusBuffer.add(item.test.id);
+  statusBuffer.add(item.test.id);
 
   const window = debug ? "debug console" : `Behave VSC output window`;
   let message: vscode.TestMessage = new vscode.TestMessage(result.text);
