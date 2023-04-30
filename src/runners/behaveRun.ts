@@ -1,4 +1,6 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { config } from "../common/configuration";
+import { cleanBehaveText } from '../common/helpers';
 import { diagLog } from '../common/logger';
 import { WkspRun } from './testRunHandler';
 
@@ -10,10 +12,6 @@ export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean,
   let cp: ChildProcess;
   const cancellationHandler = wr.run.token.onCancellationRequested(() => cp?.kill());
   const wkspUri = wr.wkspSettings.uri;
-
-  function output(output: string) {
-    wr.run.appendOutput(output.replaceAll("\n", "\r\n"));
-  }
 
   try {
     const local_args = [...args];
@@ -28,15 +26,37 @@ export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean,
       `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.wkspSettings.envVarOverrides)}`;
     }
 
-    friendlyCmd = friendlyCmd.replaceAll("\n", "\r\n");
+    const asyncBuff: string[] = [];
+    const log = (str: string) => {
+      if (!str)
+        return;
+      str = cleanBehaveText(str);
+      // if parallel mode, use a buffer so logs gets written out in a human-readable order
+      if (parallelMode)
+        asyncBuff.push(str);
+      else
+        config.logger.logInfoNoLF(str, wkspUri);
+    }
+
+    cp.stderr?.on('data', chunk => log(chunk.toString()));
+    cp.stdout?.on('data', chunk => log(chunk.toString()));
 
     if (!parallelMode)
-      output(`\n${friendlyCmd}\n`);
+      config.logger.logInfo(`\n${friendlyCmd}\n`, wkspUri);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
-    if (wr.run.token.isCancellationRequested)
-      output(`\n-- TEST RUN ${wr.run.name} CANCELLED --`);
+    if (asyncBuff.length > 0) {
+      config.logger.logInfo(`\n---\n${friendlyCmd}\n`, wkspUri);
+      config.logger.logInfo(asyncBuff.join("").trim(), wkspUri);
+      config.logger.logInfo("---", wkspUri);
+    }
+
+    if (wr.run.token.isCancellationRequested) {
+      const text = `\n-- TEST RUN ${wr.run.name} CANCELLED --`;
+      config.logger.logInfo(text, wkspUri);
+      wr.run.appendOutput(text);
+    }
 
   }
   finally {

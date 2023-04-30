@@ -64,30 +64,26 @@ export class Logger {
   };
 
 
-  logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+  logInfo = (text: string, wkspUri: vscode.Uri) => {
     diagLog(text);
 
     this.channels[wkspUri.path].appendLine(text);
-    if (run)
-      run.appendOutput(text + "\r\n");
   };
 
   // log info without a line feed (used for logging behave output)
-  logInfoNoLF = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+  logInfoNoLF = (text: string, wkspUri: vscode.Uri) => {
     diagLog(text);
 
     this.channels[wkspUri.path].append(text);
-    if (run)
-      run.appendOutput(text);
   };
 
 
-  showWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    this._show(text, wkspUri, run, DiagLogType.warn);
+  showWarn = (text: string, wkspUri: vscode.Uri) => {
+    this._show(text, wkspUri, DiagLogType.warn);
   }
 
 
-  showError = (error: unknown, wkspUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
+  showError = (error: unknown, wkspUri?: vscode.Uri | undefined) => {
 
     let text: string;
 
@@ -100,11 +96,11 @@ export class Logger {
       text = `${error}`;
     }
 
-    this._show(text, wkspUri, run, DiagLogType.error);
+    this._show(text, wkspUri, DiagLogType.error);
   }
 
 
-  private _show = (text: string, wkspUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
+  private _show = (text: string, wkspUri: vscode.Uri | undefined, logType: DiagLogType) => {
 
     diagLog(text, wkspUri, logType);
 
@@ -152,8 +148,6 @@ export class Logger {
     }
 
     //vscode.debug.activeDebugConsole.appendLine(text);
-    if (run)
-      run.appendOutput(text.replace("\n", "\r\n") + "\r\n");
   }
 }
 
