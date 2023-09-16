@@ -94,7 +94,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
       `"${featureFileWorkspaceRelativePath}$"`, "-n", `"${pipedScenarioNames}"`
     ];
-    const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+    const args = friendlyArgs.map(x => x.replace(/^"(.*)"$/, '$1'));
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -178,13 +178,14 @@ function getPipedScenarioNames(selectedScenarios: QueueItem[]) {
 
 
 function getScenarioRunName(scenName: string, isOutline: boolean) {
-  let escapeRegExChars = scenName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // escape double quotes and regex special characters
+  let scenarioName = scenName.replace(/[".*+?^${}()|[\]\\]/g, '\\$&');
 
   // scenario outline with a <param> in its name
-  if (isOutline && escapeRegExChars.includes("<"))
-    escapeRegExChars = escapeRegExChars.replace(/<.*>/g, ".*");
+  if (isOutline && scenarioName.includes("<"))
+    scenarioName = scenarioName.replace(/<.*>/g, ".*");
 
-  return "^" + escapeRegExChars + (isOutline ? " -- @" : "$");
+  return "^" + scenarioName + (isOutline ? " -- @" : "$");
 }
 
 
