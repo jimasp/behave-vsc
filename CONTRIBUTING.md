@@ -344,10 +344,14 @@ Example: if you changed anything that affects any of step navigation/feature fil
 
 - SWITCHING to `project B`:
 
-  - N. in file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
-  - O. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition" for a step in that file
-  - P. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` workspace are returned
-  - Q. in the `Step references` window, look at the `textblock.feature` file references:
+  - N. edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foobar`, then:
+    - clear all test results in the test explorer UI
+    - check you can run the renamed feature from inside the feature file using the >> button
+    - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
+  - O. in file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
+  - P. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition" for a step in that file
+  - Q. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` workspace are returned
+  - R. in the `Step references` window, look at the `textblock.feature` file references:
     - also note the number of results at the top of the `Step references` window (`x results in y files`)
     - click on one of the `textblock.feature` results, then comment out the line you are taken to
     - check that the reference window automatically refreshes to remove the reference (the results count should decrement)
@@ -357,26 +361,26 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check you can `F4` and `Shift`+`F4` through the step references for `textblock.feature`
     - save the file
     - in the file explorer UI, copy/paste the `textblock.feature` file itself into the `features/grouped` folder to create a `textblock copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `textblock copy.feature` (and the results count increases by the amount of scenarios in the file)
-  - R. in the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
+  - S. in the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
     - right-click and `Find all Step References` on the `def step_inst(context):` line and check it finds all step references again.
     - try clicking on a reference to check it navigates correctly
-  - S. F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
-  - T. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
-  - U. in the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
-  - V. in the test ui, in `grouped` under `Mixed outline` select `Blenders Success` and `Blenders Fail`, then select `Duplicate` and `Table feature` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
+  - T. F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
+  - U. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
+  - V. in the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
+  - W. in the test ui, in `grouped` under `Mixed outline` select `Blenders Success` and `Blenders Fail`, then select `Duplicate` and `Table feature` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
   - `-i "features/grouped/outline_mixed.feature" -n "^Blenders Fail -- @|^Blenders Success -- @"`
   - `-i "features/grouped/duplicate.feature$"`
   - `-i "features/grouped/table.feature$"`
 
 - THEN:
 
-  - W. go to the output window `Behave VSC: project A`
-  - X. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click `Remove folder from workspace`.
+  - X. go to the output window `Behave VSC: project A`
+  - Y. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click `Remove folder from workspace`.
     - the original `project A` output window should close
     - check there are no error windows pop up. check that the dropdown has output windows for `Behave VSC: simple` and `Behave VSC: project B`(but not `project A`).
     - in the test UI, check that tests run as expected from `simple` and `project B`
     - check that tests show their output in the output windows `Behave VSC: project B` and `Behave VSC: simple`
-  - Y. click vscode's "File" menu and "Add folder to workspace...", double click `project A` to add it back.
+  - Z. click vscode's "File" menu and "Add folder to workspace...", double click `project A` to add it back.
     - check that you have output windows `Behave VSC: project A`, `Behave VSC: project B` and `Behave VSC: simple` (sometimes vscode can glitch and duplicate dropdown items temporarily, but selecting an item from the dropdown should remove any duplicates)
     - check that tests run from `simple` and `project B` and update their output windows
 

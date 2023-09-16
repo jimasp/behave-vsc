@@ -201,15 +201,23 @@ export class FileParser {
     if (!content)
       return;
 
+    // note - get() will only match the top level node (e.g. a folder or root feature)
     const existingItem = controller.items.get(uriId(uri));
-    if (existingItem) {
-      diagLog(`${caller}: found existing feature test item for file ${uri.path}`);
-      return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
-    }
 
     const featureName = await getFeatureNameFromContent(content);
-    if (featureName === null)
+    if (typeof featureName !== "string") {
+      if (!featureName) // true = commented out
+        vscode.window.showWarningMessage(`No feature name found in file: ${uri.path}`);
+      if (existingItem)
+        controller.items.delete(existingItem.id);
       return undefined;
+    }
+
+    if (existingItem) {
+      diagLog(`${caller}: found existing top-level node for file ${uri.path}`);
+      existingItem.label = featureName;
+      return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
+    }
 
     const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;

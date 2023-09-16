@@ -154,7 +154,7 @@ export class Logger {
         vscode.window.showWarningMessage(winText);
         break;
       case DiagLogType.error:
-        vscode.window.showErrorMessage(winText);
+        vscode.window.showErrorMessage(winText, "OK");
         break;
     }
 

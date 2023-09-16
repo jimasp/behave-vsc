@@ -52,7 +52,7 @@ export async function waitOnReadyForStepsNavigation(waitMs: number) {
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
-    vscode.window.showWarningMessage(msg);
+    vscode.window.showWarningMessage(msg, "OK");
   }
 
   return ready;

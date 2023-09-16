@@ -215,7 +215,7 @@ export class JunitWatcher {
         if (detected)
           break;
         const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${DETECT_FILE}`);
-        vscode.workspace.fs.writeFile(fileUri, Buffer.from("<detect_me/>"));
+        await vscode.workspace.fs.writeFile(fileUri, Buffer.from("<detect_me/>"));
         fileUris.push(fileUri);
         diagLog("junitWatcher: writing " + fileUri.fsPath);
         await new Promise(r => setTimeout(r, poll));
@@ -236,7 +236,14 @@ export class JunitWatcher {
       return false;
     }
     finally {
-      fileUris.forEach(f => vscode.workspace.fs.delete(f));
+      fileUris.forEach(async (f) => {
+        try {
+          await vscode.workspace.fs.delete(f);
+        }
+        catch (e: unknown) {
+          //
+        }
+      });
       this._foldersWaitingForWatcher.delete(uriId(folderUri));
     }
 

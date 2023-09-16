@@ -4,11 +4,11 @@ import { uriId, sepr, basename, getLines } from '../common';
 import { diagLog } from '../logger';
 
 
-const featureReStr = /^(\s*)Feature:(\s*)(.+)$/;
-const featureReLine = new RegExp(featureReStr);
-const featureReFile = new RegExp(featureReStr, "im");
-const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
-const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
+const featureRe = /^\s*Feature:(.*)$/i;
+const featureMultiLineRe = /^\s*Feature:(.*)$/im;
+const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/im;
+const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/i;
+const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/i;
 export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
@@ -37,13 +37,17 @@ export const deleteFeatureFileSteps = (featuresUri: vscode.Uri) => {
   }
 }
 
-export const getFeatureNameFromContent = async (content: string): Promise<string | null> => {
-  const featureName = featureReFile.exec(content);
+export const getFeatureNameFromContent = async (content: string): Promise<string | boolean> => {
+  const featureText = featureMultiLineRe.exec(content);
 
-  if (featureName === null)
-    return null;
+  if (featureText === null)
+    return commentedFeatureMultilineReStr.exec(content) !== null;
 
-  return featureName[3].trim();
+  const featureName = featureText[1].trim();
+  if (featureName === '')
+    return false;
+
+  return featureName;
 }
 
 
@@ -96,9 +100,9 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const scenario = scenarioReLine.exec(line);
+    const scenario = scenarioRe.exec(line);
     if (scenario) {
-      const scenarioName = scenario[3].trim();
+      const scenarioName = scenario[2].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, scenarioName, isOutline);
@@ -106,7 +110,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const feature = featureReLine.exec(line);
+    const feature = featureRe.exec(line);
     if (feature) {
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
       onFeatureLine(range);
