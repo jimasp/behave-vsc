@@ -361,7 +361,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check you can `F4` and `Shift`+`F4` through the step references for `textblock.feature`
     - save the file
     - in the file explorer UI, copy/paste the `textblock.feature` file itself into the `features/grouped` folder to create a `textblock copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `textblock copy.feature` (and the results count increases by the amount of scenarios in the file)
-  - S. in the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has it has moved and the original query is for the now blank line number.)
+  - S. in the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has moved and the original query is for the now blank line number.)
     - right-click and `Find all Step References` on the `def step_inst(context):` line and check it finds all step references again.
     - try clicking on a reference to check it navigates correctly
   - T. F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
