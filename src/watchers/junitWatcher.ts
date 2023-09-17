@@ -236,14 +236,14 @@ export class JunitWatcher {
       return false;
     }
     finally {
-      fileUris.forEach(async (f) => {
+      for (const f of fileUris) {
         try {
           await vscode.workspace.fs.delete(f);
         }
         catch (e: unknown) {
           //
         }
-      });
+      }
       this._foldersWaitingForWatcher.delete(uriId(folderUri));
     }
 
