@@ -4,12 +4,12 @@ import { uriId, sepr, basename, getLines } from '../common';
 import { diagLog } from '../logger';
 
 
-const featureRe = /^\s*Feature:(.*)$/i;
-const featureMultiLineRe = /^\s*Feature:(.*)$/im;
-const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/im;
-const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/i;
-const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/i;
-export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
+const featureRe = /^\s*Feature:(.*)$/;
+const featureMultiLineRe = /^\s*Feature:(.*)$/m;
+const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/m;
+const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/;
+const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 
@@ -37,15 +37,23 @@ export const deleteFeatureFileSteps = (featuresUri: vscode.Uri) => {
   }
 }
 
-export const getFeatureNameFromContent = async (content: string): Promise<string | boolean> => {
+export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri, firstRun: boolean): Promise<string | null> => {
   const featureText = featureMultiLineRe.exec(content);
 
-  if (featureText === null)
-    return commentedFeatureMultilineReStr.exec(content) !== null;
+  if (featureText === null) {
+    if (commentedFeatureMultilineReStr.exec(content) !== null)
+      return null; // # Feature: (commented out) - ignore
+    return null; // no "Feature:" text exists in file - ignore (user may be typing it out live, or could be an empty file)
+  }
 
   const featureName = featureText[1].trim();
-  if (featureName === '')
-    return false;
+  if (featureName === '') {
+    if (firstRun) {
+      vscode.window.showWarningMessage(
+        `No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`, "OK");
+    }
+    return null;
+  }
 
   return featureName;
 }

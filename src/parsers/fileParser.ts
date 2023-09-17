@@ -93,7 +93,7 @@ export class FileParser {
 
 
   private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
-    cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
+    cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
     const items = getAllTestItems(wkspSettings.id, controller.items);
@@ -118,7 +118,7 @@ export class FileParser {
       if (cancelToken.isCancellationRequested)
         break;
       const content = await getContentFromFilesystem(uri);
-      await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller);
+      await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller, firstRun);
       processed++;
     }
 
@@ -172,8 +172,8 @@ export class FileParser {
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData, controller: vscode.TestController,
-    uri: vscode.Uri, caller: string) {
+  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+    controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
 
     if (!isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
@@ -181,7 +181,8 @@ export class FileParser {
     if (!content)
       return;
 
-    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData, controller, uri, caller);
+    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData,
+      controller, uri, caller, firstRun);
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
       await item.testFile.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
@@ -192,8 +193,9 @@ export class FileParser {
   }
 
 
-  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
-    controller: vscode.TestController, uri: vscode.Uri, caller: string): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string,
+    testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string,
+    firstRun: boolean): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
     if (!isFeatureFile(uri))
       throw new Error(`${uri.path} is not a feature file`);
@@ -204,10 +206,8 @@ export class FileParser {
     // note - get() will only match the top level node (e.g. a folder or root feature)
     const existingItem = controller.items.get(uriId(uri));
 
-    const featureName = await getFeatureNameFromContent(content);
-    if (typeof featureName !== "string") {
-      if (!featureName) // true = commented out
-        vscode.window.showWarningMessage(`No feature name found in file: ${uri.path}`);
+    const featureName = await getFeatureNameFromContent(content, uri, firstRun);
+    if (!featureName) {
       if (existingItem)
         controller.items.delete(existingItem.id);
       return undefined;
@@ -299,7 +299,8 @@ export class FileParser {
   }
 
 
-  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController, intiator: string, cancelToken?: vscode.CancellationToken) {
+  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController,
+    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
 
     this._finishedFeaturesParseForAllWorkspaces = false;
     this._errored = false;
@@ -314,7 +315,8 @@ export class FileParser {
     }
 
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-      this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`, cancelToken);
+      this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`,
+        firstRun, cancelToken);
     }
   }
 
@@ -322,7 +324,7 @@ export class FileParser {
   // NOTE:
   // - This is normally a BACKGROUND task. It should only be await-ed on user request, i.e. when called by the refreshHandler.
   // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled. 
-  async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string,
+  async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<WkspParseCounts | undefined> {
 
     const wkspPath = wkspUri.path;
@@ -362,7 +364,8 @@ export class FileParser {
 
 
       const start = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token, callName);
+      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token,
+        callName, firstRun);
       const featTime = performance.now() - start;
       if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
@@ -475,7 +478,7 @@ export class FileParser {
         await this._updateStepsFromStepsFileContent(wkspSettings.featuresUri, content, fileUri, "reparseFile");
 
       if (isFeatureFile(fileUri))
-        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile");
+        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile", false);
 
       rebuildStepMappings(wkspSettings.featuresUri);
     }

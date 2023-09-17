@@ -55,7 +55,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
         diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
       }
 
-      parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete");
+      parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete", false);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error

@@ -308,7 +308,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
 
 - A. IMPORTANT:
   - i. *Make sure you do NOT have the marketplace version of the extension installed*
-  - ii. **`git add .` and `git commit -m` your changes** before going further.
+  - ii. if you have any changes you want to save, then e.g. **`git add .` and `git commit -m` your changes** before going further.
 - B. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - C. start `Debug: multiroot workspace`
 

@@ -413,7 +413,8 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig, instances.config);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl, "runAllTestsAndAssertTheResults");
+	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl,
+		"runAllTestsAndAssertTheResults", false);
 	assert(actualCounts, "actualCounts was undefined");
 	const allWkspItems = getAllTestItems(wkspId, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
