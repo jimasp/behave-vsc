@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "../settings";
-import { uriId, sepr, basename, getLines } from '../common';
+import { uriId, sepr, basename, getLines, getWorkspaceUriForFile } from '../common';
 import { diagLog } from '../logger';
+import { config } from '../configuration';
 
 
 const featureRe = /^\s*Feature:(.*)$/;
@@ -49,8 +50,8 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
   const featureName = featureText[1].trim();
   if (featureName === '') {
     if (firstRun) {
-      vscode.window.showWarningMessage(
-        `No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`, "OK");
+      config.logger.showWarn(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
+        getWorkspaceUriForFile(uri));
     }
     return null;
   }
