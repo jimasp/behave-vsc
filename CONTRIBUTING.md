@@ -339,7 +339,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
   - K. in file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
   - L. in the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
   - M. in the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
-    - `-i "behave tests/some tests/group1_features_foo/outline_mixed.feature" -n "^Blenders Success ".*" -- @|^Blenders Success .* -- @"`
+    - `-i "behave tests/some tests/group1_features_foo/outline_mixed.feature$" -n "^Blenders Success ".*" -- @|^Blenders Success .* -- @"`
     - `-i "behave tests/some tests/group1_features_foo/foo.table.feature$|behave tests/some tests/group1_features_foo/textblock.feature$"`
 
 - SWITCHING to `project B`:
