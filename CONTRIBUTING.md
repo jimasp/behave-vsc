@@ -367,7 +367,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
   - T. F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
   - U. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
   - V. in the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
-  - W. in the test ui, in `grouped` under `Mixed outline` select `Blenders Success` and `Blenders Fail`, then select `Duplicate` and `Table feature` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
+  - W. in the test ui, in `grouped` select `Duplicate` and `Table feature`, then under `Mixed outline` select `Blenders Success` and `Blenders Fail` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
   - `-i "features/grouped/outline_mixed.feature" -n "^Blenders Fail -- @|^Blenders Success -- @"`
   - `-i "features/grouped/duplicate.feature$"`
   - `-i "features/grouped/table.feature$"`
