@@ -385,4 +385,4 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check that tests run from `simple` and `project B` and update their output windows
 
 - Lastly, we need to undo the file changes created by these manual tests
-  - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`.
+  - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`
