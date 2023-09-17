@@ -344,7 +344,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
 
 - SWITCHING to `project B`:
 
-  - N. edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foobar`, then:
+  - N. edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Boo`, then:
     - clear all test results in the test explorer UI
     - check you can run the renamed feature from inside the feature file using the >> button
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
