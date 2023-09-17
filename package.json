@@ -165,7 +165,7 @@
 	"name": "behave-vsc",
 	"displayName": "Behave VSC",
 	"description": "Debug, Run and Navigate Python behave tests",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"icon": "images/behave-vsc.png",
 	"galleryBanner": {
 		"color": "#2B2B2B",
@@ -183,7 +183,7 @@
 		"url": "https://github.com/jimasp/behave-vsc.git"
 	},
 	"engines": {
-		"vscode": "^1.77.0"
+		"vscode": "^1.82.0"
 	},
 	"categories": [
 		"Testing",
@@ -225,7 +225,7 @@
 		"@types/glob": "^7.1.4",
 		"@types/mocha": "^9.0.0",
 		"@types/node": "17.x",
-		"@types/vscode": "^1.63.0",
+		"@types/vscode": "^1.82.0",
 		"@types/xml2js": "^0.4.11",
 		"@typescript-eslint/eslint-plugin": "^5.9.0",
 		"@typescript-eslint/parser": "^5.9.0",

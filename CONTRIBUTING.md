@@ -261,9 +261,9 @@ Note that the automated tests are currently quite primitive and *only* verify th
   
   ```bash
   git status
-  git clean -fdx
   git pull origin main
   npm install -g npm@latest
+  git clean -fdx
   npm install 
   npm audit fix 
   ```
