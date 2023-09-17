@@ -2,8 +2,8 @@ Feature: Outline success
 
 Scenario Outline: Blend Success
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+   When I switch the blender on
+   Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -17,8 +17,8 @@ Examples: Consumer Electronics
 
 Scenario Outline: Blend Success 2
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+   When I switch the blender on
+   Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |

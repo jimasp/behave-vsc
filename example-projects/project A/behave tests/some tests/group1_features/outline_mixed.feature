@@ -2,8 +2,8 @@ Feature: Mixed outline
 
 Scenario Outline: Blenders Success <thing>
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+    When I switch the blender on
+    Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -17,8 +17,8 @@ Examples: Consumer Electronics
 
 Scenario Outline: Blenders Success paramless
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+    When I switch the blender on
+    Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -32,8 +32,8 @@ Examples: Consumer Electronics
 
 Scenario Outline: Blenders Fail <thing>
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+    When I switch the blender on
+    Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -49,8 +49,8 @@ Examples: Consumer Electronics
 @skip
 Scenario Outline: Blenders Skip <thing>
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+    When I switch the blender on
+    Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -64,8 +64,8 @@ Examples: Consumer Electronics
 
 Scenario Outline: Blenders Fail paramless
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+   When I switch the blender on
+   Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
@@ -80,8 +80,8 @@ Examples: Consumer Electronics
 
 Scenario Outline: Blenders Success "<thing>"
    Given I put "<thing>" in a blender
-    when I switch the blender on
-    then it should transform into "<other thing>"
+   When I switch the blender on
+   Then it should transform into "<other thing>"
 
 Examples: Amphibians
    | thing         | other thing |
