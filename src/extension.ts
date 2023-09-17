@@ -55,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
-    parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate");
+    parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate", true);
 
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
@@ -131,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-        await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", cancelToken);
+        await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", false, cancelToken);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -226,13 +226,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
         if (testCfg) {
-          parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler");
+          parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes to rebuild the top level nodes)
-        parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler");
+        parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler", false);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        

@@ -1,15 +1,16 @@
 import * as vscode from 'vscode';
 import { WorkspaceSettings } from "../settings";
-import { uriId, sepr, basename, getLines } from '../common';
+import { uriId, sepr, basename, getLines, getWorkspaceUriForFile } from '../common';
 import { diagLog } from '../logger';
+import { config } from '../configuration';
 
 
-const featureReStr = /^(\s*)Feature:(\s*)(.+)$/;
-const featureReLine = new RegExp(featureReStr);
-const featureReFile = new RegExp(featureReStr, "im");
-const scenarioReLine = /^(\s*)(Scenario|Scenario Outline):(.+)$/i;
-const scenarioOutlineRe = /^(\s*)Scenario Outline:(.+)$/i;
-export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
+const featureRe = /^\s*Feature:(.*)$/;
+const featureMultiLineRe = /^\s*Feature:(.*)$/m;
+const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/m;
+const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/;
+const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 
@@ -37,13 +38,25 @@ export const deleteFeatureFileSteps = (featuresUri: vscode.Uri) => {
   }
 }
 
-export const getFeatureNameFromContent = async (content: string): Promise<string | null> => {
-  const featureName = featureReFile.exec(content);
+export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri, firstRun: boolean): Promise<string | null> => {
+  const featureText = featureMultiLineRe.exec(content);
 
-  if (featureName === null)
+  if (featureText === null) {
+    if (commentedFeatureMultilineReStr.exec(content) !== null)
+      return null; // # Feature: (commented out) - ignore
+    return null; // no "Feature:" text exists in file - ignore (user may be typing it out live, or could be an empty file)
+  }
+
+  const featureName = featureText[1].trim();
+  if (featureName === '') {
+    if (firstRun) {
+      config.logger.showWarn(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
+        getWorkspaceUriForFile(uri));
+    }
     return null;
+  }
 
-  return featureName[3].trim();
+  return featureName;
 }
 
 
@@ -96,9 +109,9 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const scenario = scenarioReLine.exec(line);
+    const scenario = scenarioRe.exec(line);
     if (scenario) {
-      const scenarioName = scenario[3].trim();
+      const scenarioName = scenario[2].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
       onScenarioLine(range, scenarioName, isOutline);
@@ -106,7 +119,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const feature = featureReLine.exec(line);
+    const feature = featureRe.exec(line);
     if (feature) {
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
       onFeatureLine(range);

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { sepr, urisMatch } from '../common';
+import { getWorkspaceUriForFile, sepr, urisMatch } from '../common';
 import { parser } from '../extension';
 import { diagLog, DiagLogType } from '../logger';
 import { getStepFileSteps, parseRepWildcard, StepFileStep } from './stepsParser';
@@ -7,6 +7,7 @@ import { FeatureFileStep, getFeatureFileSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
+import { config } from '../configuration';
 
 
 let stepMappings: StepMapping[] = [];
@@ -47,12 +48,12 @@ export function deleteStepMappings(featuresUri: vscode.Uri) {
 }
 
 
-export async function waitOnReadyForStepsNavigation(waitMs: number) {
+export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.Uri) {
   const ready = await parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
-    vscode.window.showWarningMessage(msg);
+    config.logger.showWarn(msg, getWorkspaceUriForFile(uri));
   }
 
   return ready;

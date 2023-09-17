@@ -46,7 +46,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     if (!ready) {
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
-      vscode.window.showWarningMessage(msg);
+      vscode.window.showWarningMessage(msg, "OK");
       if (config.integrationTestRun)
         throw msg;
       return;

@@ -152,9 +152,9 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
       return true;
 
-    // (we may not have a logger yet, and notification window is probably more appropriate for start up)
+    // we don't use config.logger.showWarn here, because we may not have a logger yet
     vscode.window.showWarningMessage(`Specified features path "${featuresPath}" not found in workspace "${folder.name}". ` +
-      `Behave VSC will ignore this workspace until this is corrected.`);
+      `Behave VSC will ignore this workspace until this is corrected.`, "OK");
 
     return false;
   }

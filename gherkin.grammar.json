@@ -24,7 +24,7 @@
             }
         },
         {
-            "match": "(?i)^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
+            "match": "^\\s*(Feature|Background|Rule|Scenario|Scenario Outline|Scenario Template):(.*)",
             "captures": {
                 "1": {
                     "name": "markup.bold"
@@ -35,7 +35,7 @@
             }
         },
         {
-            "match": "(?i)^\\s*(Given|When|Then|And|But)(?:\\:)?(.*)",
+            "match": "^\\s*(Given|When|Then|And|But)(?:\\:)?(.*)",
             "captures": {
                 "1": {
                     "name": "keyword"
@@ -46,7 +46,7 @@
             }
         },
         {
-            "match": "(?i)^\\s*(Examples?):(.*)",
+            "match": "^\\s*(Examples?):(.*)",
             "captures": {
                 "1": {
                     "name": "support.type"
