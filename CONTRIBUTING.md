@@ -349,7 +349,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check you can run the renamed feature from inside the feature file using the >> button
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
   - O. in file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
-  - P. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition" for a step in that file
+  - P. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition` for a step in that file
   - Q. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` workspace are returned
   - R. in the `Step references` window, look at the `textblock.feature` file references:
     - also note the number of results at the top of the `Step references` window (`x results in y files`)
