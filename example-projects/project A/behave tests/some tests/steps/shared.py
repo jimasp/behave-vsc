@@ -1,6 +1,4 @@
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
+# ruff: noqa
 import time
 from behave import given, when, then
 
