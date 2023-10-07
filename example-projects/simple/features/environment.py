@@ -1,7 +1,4 @@
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
-
+# ruff: noqa
 import parse
 from behave import model, register_type
 
