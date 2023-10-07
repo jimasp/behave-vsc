@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './common';
+import { findSubdirectorySync, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
 
@@ -41,6 +41,7 @@ export class WorkspaceSettings {
   public readonly uri: vscode.Uri;
   public readonly name: string;
   public readonly featuresUri: vscode.Uri;
+  public readonly stepsSearchUri: vscode.Uri;
   // internal
   private readonly _warnings: string[] = [];
   private readonly _fatalErrors: string[] = [];
@@ -87,6 +88,14 @@ export class WorkspaceSettings {
       this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
     }
 
+    // default to watching features folder for (possibly multiple) "steps" 
+    // subfolders (e.g. like example project B/features folder)
+    this.stepsSearchUri = vscode.Uri.joinPath(this.featuresUri);
+    if (!findSubdirectorySync(this.stepsSearchUri.fsPath, "steps")) {
+      // if not found, check if there's a "steps" folder in the workspace root to watch
+      if (fs.existsSync(vscode.Uri.joinPath(wkspUri, "steps").fsPath))
+        this.stepsSearchUri = vscode.Uri.joinPath(wkspUri, "steps")
+    }
 
     if (envVarOverridesCfg) {
       const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
@@ -118,11 +127,11 @@ export class WorkspaceSettings {
     }
 
 
-    this.logUserSettings(logger, winSettings);
+    this.logSettings(logger, winSettings);
   }
 
 
-  logUserSettings(logger: Logger, winSettings: WindowSettings) {
+  logSettings(logger: Logger, winSettings: WindowSettings) {
 
     // build sorted output dict of window settings
     const nonUserSettableWinSettings: string[] = [];
@@ -135,7 +144,7 @@ export class WorkspaceSettings {
     });
 
     // build sorted output dict of workspace settings
-    const nonUserSettableWkspSettings = ["name", "uri", "featuresUri"];
+    const nonUserSettableWkspSettings = ["name", "uri", "featuresUri", "stepsSearchUri"];
     const rscSettingsDic: { [name: string]: string; } = {};
     let wkspEntries = Object.entries(this).sort();
     wkspEntries.push(["fullFeaturesPath", this.featuresUri.fsPath]);

@@ -62,7 +62,7 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
   let multiLine = "";
   let startLineNo = 0;
   let multiLineStepType = "";
-  const lines = getLines(content.trim());
+  const lines = getLines(content);
 
   for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 

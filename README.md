@@ -27,15 +27,37 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
-- A compatible directory structure (see below)
+- A compatible directory structure
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
 ### Required project directory structure
 
-- A single `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
-- A *behave-conformant* directory structure, for example:
+- A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
+- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folder must be *inside* the project folder.
+
+Example 1:
+
+```text
+  . my-project
+  .    +-- features/
+  .    |  +-- my.feature
+  .    |  +-- steps/  
+  .    |       +-- steps.py
+```
+
+Example 2:
+
+```text
+  . my-project
+  .    +-- features/
+  .    |       +-- my.feature   
+  .    +-- steps/
+  .    |       +-- steps.py
+```
+
+Example 3:
 
 ```text
   . my-project
@@ -43,13 +65,15 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   .    +-- features/  
   .       +-- environment.py
   .       +-- steps/  
-  .       |      +-- *.py  
+  .       |      +-- __init__.py
+  .       |      +-- steps.py  
   .       +-- storage_tests/  
   .       |      +-- *.feature  
   .       +-- web_tests/  
   .       |      +-- *.feature 
   .       |      +-- steps/
-  .       |         +-- *.py    
+  .       |         +-- __init__.py
+  .       |         +-- steps.py    
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
