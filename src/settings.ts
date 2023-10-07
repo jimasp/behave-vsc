@@ -144,7 +144,7 @@ export class WorkspaceSettings {
     });
 
     // build sorted output dict of workspace settings
-    const nonUserSettableWkspSettings = ["name", "uri", "featuresUri", "stepsSearchUri"];
+    const nonUserSettableWkspSettings = ["name", "uri", "id", "featuresUri", "stepsSearchUri"];
     const rscSettingsDic: { [name: string]: string; } = {};
     let wkspEntries = Object.entries(this).sort();
     wkspEntries.push(["fullFeaturesPath", this.featuresUri.fsPath]);

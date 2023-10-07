@@ -131,7 +131,8 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
+  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken,
+    caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     deleteStepFileSteps(wkspSettings.featuresUri);
