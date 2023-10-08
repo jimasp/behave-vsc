@@ -145,8 +145,10 @@ export class FileParser {
 
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
-    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
-      throw `No step files found in ${wkspSettings.stepsSearchUri.fsPath}`;
+    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested) {
+      config.logger.showWarn("No step files found", wkspSettings.uri);
+      return 0;
+    }
 
     let processed = 0;
     for (const uri of stepFiles) {
