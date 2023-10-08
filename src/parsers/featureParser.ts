@@ -5,12 +5,12 @@ import { diagLog } from '../logger';
 import { config } from '../configuration';
 
 
-const featureRe = /^\s*Feature:(.*)$/;
-const featureMultiLineRe = /^\s*Feature:(.*)$/m;
-const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/m;
-const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/;
-const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/;
-export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/;
+const featureRe = /^\s*Feature:(.*)$/i;
+const featureMultiLineRe = /^\s*Feature:(.*)$/im;
+const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/im;
+const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/i;
+const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/i;
+export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 

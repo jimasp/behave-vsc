@@ -1,6 +1,4 @@
-# pylint: disable=missing-module-docstring
-# pylint: disable=missing-function-docstring
-# pylint: disable=missing-class-docstring
+# ruff: noqa
 
 import parse
 from behave import model, register_type
@@ -13,14 +11,14 @@ def parse_flag(text:str):
 register_type(flag_here=parse_flag)
 
 
-def before_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
+def before_scenario(context, scenario:model.Scenario): 
     if "skip" in scenario.effective_tags:
         scenario.skip("Marked with @skip")
         return
     if "raise_error_in_before_scenario" in scenario.effective_tags:
         raise Exception("error in before_scenario hook")
 
-def after_scenario(context, scenario:model.Scenario): #pylint: disable=unused-argument
+def after_scenario(context, scenario:model.Scenario): 
     if "skip" in scenario.effective_tags:
         scenario.skip("Marked with @skip")
         return

@@ -131,19 +131,24 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken, caller: string): Promise<number> => {
+  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken,
+    caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     deleteStepFileSteps(wkspSettings.featuresUri);
 
-    // replaced with custom findFiles function for now (see comment in findFiles function)    
-    //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/steps/**/*.py`);
-    //let stepFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
-    let stepFiles = await findFiles(wkspSettings.featuresUri, "steps", ".py", cancelToken);
+    let stepFiles: vscode.Uri[] = [];
+    if (wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path))
+      stepFiles = await findFiles(wkspSettings.stepsSearchUri, "steps", ".py", cancelToken);
+    else
+      stepFiles = await findFiles(wkspSettings.stepsSearchUri, undefined, ".py", cancelToken);
+
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
-    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
-      throw `No step files found in ${vscode.Uri.joinPath(wkspSettings.featuresUri, "steps").fsPath}`;
+    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested) {
+      config.logger.showWarn("No step files found", wkspSettings.uri);
+      return 0;
+    }
 
     let processed = 0;
     for (const uri of stepFiles) {

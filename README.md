@@ -27,15 +27,37 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
-- A compatible directory structure (see below)
+- A compatible directory structure
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
 ### Required project directory structure
 
-- A single `features` folder (lowercase by default), which contains a `steps` folder. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
-- A *behave-conformant* directory structure, for example:
+- A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
+- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folders must be somewhere *inside* the project folder (not above it).
+
+Example 1:
+
+```text
+  . my-project
+  .    +-- features/
+  .    |   |   +-- my.feature
+  .    |   |   +-- steps/  
+  .    |   |   |   +-- steps.py
+```
+
+Example 2:
+
+```text
+  . my-project
+  .    +-- features/
+  .    |   |   +-- my.feature   
+  .    +-- steps/
+  .    |   |   +-- steps.py
+```
+
+Example 3:
 
 ```text
   . my-project
@@ -43,13 +65,15 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   .    +-- features/  
   .       +-- environment.py
   .       +-- steps/  
-  .       |      +-- *.py  
+  .       |   |   +-- __init__.py
+  .       |   |   +-- steps.py  
   .       +-- storage_tests/  
-  .       |      +-- *.feature  
+  .       |   +-- *.feature  
   .       +-- web_tests/  
-  .       |      +-- *.feature 
-  .       |      +-- steps/
-  .       |         +-- *.py    
+  .       |   +-- *.feature 
+  .       |   +-- steps/
+  .       |   |   +-- __init__.py
+  .       |   |   +-- steps.py    
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
@@ -156,7 +180,7 @@ paths=my_tests/behave_features
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder it won't find them).
+  - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside the features folder or project root. If you import steps in python from a steps library folder outside your steps folder it won't find them.
 
 ---
 

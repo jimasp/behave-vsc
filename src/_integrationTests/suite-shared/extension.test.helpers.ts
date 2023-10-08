@@ -89,6 +89,8 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	assert.strictEqual(wkspSettings.featuresUri.fsPath, testConfig.getExpected("featuresUri.fsPath", wkspUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
+	assert.strictEqual(wkspSettings.stepsSearchUri.path, testConfig.getExpected("stepsSearchUri.path", wkspUri), wkspName);
+	assert.strictEqual(wkspSettings.stepsSearchUri.fsPath, testConfig.getExpected("stepsSearchUri.fsPath", wkspUri), wkspName);
 }
 
 

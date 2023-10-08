@@ -283,9 +283,8 @@ export function cleanBehaveText(text: string) {
 }
 
 
-// custom function to replace vscode.workspace.findFiles() functionality as required
+// custom function to replace vscode.workspace.findFiles() functionality when required
 // due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
-// TODO: retest via 'npm run test' on windows and see if this is still required after recent changes
 export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
   extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
 
@@ -311,6 +310,26 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
   return results;
 }
 
+
+
+export function findSubdirectorySync(searchPath: string, targetDirName: string): string | null {
+  const files = fs.readdirSync(searchPath);
+  for (const file of files) {
+    const filePath = `${searchPath}/${file}`;
+    const stats = fs.statSync(filePath);
+    if (stats.isDirectory()) {
+      if (file === targetDirName) {
+        return filePath;
+      } else {
+        const result = findSubdirectorySync(filePath, targetDirName);
+        if (result !== null) {
+          return result;
+        }
+      }
+    }
+  }
+  return null;
+}
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
