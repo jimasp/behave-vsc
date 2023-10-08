@@ -23,7 +23,7 @@ import { JunitWatcher } from './watchers/junitWatcher';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
-const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
+const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher[]>();
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
@@ -61,8 +61,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
     for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-      const watcher = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
-      wkspWatchers.set(wkspUri, watcher);
+      const watchers = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
+      wkspWatchers.set(wkspUri, watchers);
+      watchers.forEach(w => context.subscriptions.push(w));
     }
 
     const junitWatcher = new JunitWatcher();
@@ -78,7 +79,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       treeView,
       config,
       cleanExtensionTempDirectoryCancelSource,
-      ...wkspWatchers.values(),
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),
@@ -214,12 +214,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           }
 
           config.reloadSettings(wkspUri);
-          const oldWatcher = wkspWatchers.get(wkspUri);
-          if (oldWatcher)
-            oldWatcher.dispose();
-          const watcher = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
-          wkspWatchers.set(wkspUri, watcher);
-          context.subscriptions.push(watcher);
+          const oldWatchers = wkspWatchers.get(wkspUri);
+          if (oldWatchers)
+            oldWatchers.forEach(w => w.dispose());
+          const watchers = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
+          wkspWatchers.set(wkspUri, watchers);
+          watchers.forEach(w => context.subscriptions.push(w));
         }
 
         // configuration has now changed, e.g. featuresPath, so we need to reparse files
