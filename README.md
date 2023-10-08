@@ -35,16 +35,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ### Required project directory structure
 
 - A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
-- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folder must be *inside* the project folder.
+- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folders must be somewhere *inside* the project folder (not above it).
 
 Example 1:
 
 ```text
   . my-project
   .    +-- features/
-  .    |  +-- my.feature
-  .    |  +-- steps/  
-  .    |       +-- steps.py
+  .    |   |   +-- my.feature
+  .    |   |   +-- steps/  
+  .    |   |   |   +-- steps.py
 ```
 
 Example 2:
@@ -52,9 +52,9 @@ Example 2:
 ```text
   . my-project
   .    +-- features/
-  .    |       +-- my.feature   
+  .    |   |   +-- my.feature   
   .    +-- steps/
-  .    |       +-- steps.py
+  .    |   |   +-- steps.py
 ```
 
 Example 3:
@@ -65,15 +65,15 @@ Example 3:
   .    +-- features/  
   .       +-- environment.py
   .       +-- steps/  
-  .       |      +-- __init__.py
-  .       |      +-- steps.py  
+  .       |   |   +-- __init__.py
+  .       |   |   +-- steps.py  
   .       +-- storage_tests/  
-  .       |      +-- *.feature  
+  .       |   +-- *.feature  
   .       +-- web_tests/  
-  .       |      +-- *.feature 
-  .       |      +-- steps/
-  .       |         +-- __init__.py
-  .       |         +-- steps.py    
+  .       |   +-- *.feature 
+  .       |   +-- steps/
+  .       |   |   +-- __init__.py
+  .       |   |   +-- steps.py    
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
