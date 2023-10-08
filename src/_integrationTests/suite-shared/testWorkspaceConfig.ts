@@ -133,6 +133,22 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
 		}
 
+		const getExpectedFullStepsSearchPath = (): string => {
+			if (!wkspUri)
+				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchPath";
+			if (wkspUri.path.endsWith("simple 2"))
+				return vscode.Uri.joinPath(wkspUri, "steps").path;
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
+		}
+
+		const getExpectedFullStepsSearchFsPath = (): string => {
+			if (!wkspUri)
+				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchFsPath";
+			if (wkspUri.path.endsWith("simple 2"))
+				return vscode.Uri.joinPath(wkspUri, "steps").fsPath;
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
+		}
+
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
 			case "envVarOverrides":
@@ -143,6 +159,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedFullFeaturesPath();
 			case "featuresUri.fsPath":
 				return <T><unknown>getExpectedFullFeaturesFsPath();
+			case "stepsSearchUri.fsPath":
+				return <T><unknown>getExpectedFullStepsSearchFsPath();
+			case "stepsSearchUri.path":
+				return <T><unknown>getExpectedFullStepsSearchPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootRunWorkspacesInParallel":
