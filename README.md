@@ -180,7 +180,7 @@ paths=my_tests/behave_features
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` that is in your features folder (e.g. if you import steps in python from a steps library folder outside your steps folder it won't find them).
+  - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside the features folder or project root. If you import steps in python from a steps library folder outside your steps folder it won't find them.
 
 ---
 
