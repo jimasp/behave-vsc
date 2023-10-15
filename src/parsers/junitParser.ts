@@ -166,21 +166,27 @@ function getjUnitName(wkspSettings: WorkspaceSettings, featureFileName: string, 
 
   const featureFileStem = featureFileName.replace(/.feature$/, "");
 
-  let dotSubFolders: string;
-  if (!wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path) &&
-    featureFileWorkspaceRelativePath === "features/" + featureFileName) {
-    dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
-  }
-  else {
-    dotSubFolders = featureFileWorkspaceRelativePath
-      .replace(wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
+  // default
+  let dotSubFolders = featureFileWorkspaceRelativePath.replace(
+    wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
+
+  // if features and steps are sibling folders
+  if (!wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path)) {
+    if (featureFileWorkspaceRelativePath === "features/" + featureFileName) {
+      dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
+    }
+    else {
+      if (os.platform() === "win32") {
+        const lastDir = wkspSettings.workspaceRelativeFeaturesPath.split("/").pop();
+        if (lastDir === "features")
+          dotSubFolders = dotSubFolders ? lastDir + "." + dotSubFolders : lastDir;
+      }
+    }
   }
 
   dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
   return `${dotSubFolders}${featureFileStem}`;
 }
-
-
 
 
 function getJunitFileUri(wkspSettings: WorkspaceSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
