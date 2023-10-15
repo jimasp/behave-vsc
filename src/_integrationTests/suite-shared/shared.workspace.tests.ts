@@ -14,7 +14,7 @@ export class SharedWorkspaceTests {
   constructor(readonly testPre: string) { }
 
 
-  runDefault = async (wkspName: string, wkspRelativeFeaturesPath: string,
+  runDefault = async (wkspName: string,
     getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {

@@ -53,6 +53,33 @@ async function runTestSuites() {
       launchArgs
     });
 
+    launchArgs = ["example-projects/sibling steps folder 1"];
+    extensionTestsPath = path.resolve(__dirname, './sibling steps folder 1 suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/sibling steps folder 2"];
+    extensionTestsPath = path.resolve(__dirname, './sibling steps folder 2 suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/sibling steps folder 3"];
+    extensionTestsPath = path.resolve(__dirname, './sibling steps folder 3 suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
     launchArgs = ["example-projects/project A"]
     extensionTestsPath = path.resolve(__dirname, './project A suite/index');
     await runTests({

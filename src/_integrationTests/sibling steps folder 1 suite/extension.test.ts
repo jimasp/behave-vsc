@@ -3,8 +3,8 @@ import { getExpectedCounts } from "./expectedResults";
 import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 
 
-suite(`simple suite`, () => {
-	const folderName = "simple";
+suite(`sibling steps folder 1 suite`, () => {
+	const folderName = "sibling steps folder 1";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 

@@ -162,17 +162,26 @@ function CreateParseResult(wkspSettings: WorkspaceSettings, debug: boolean, test
 }
 
 
-function getjUnitClassName(wkspSettings: WorkspaceSettings, featureFileName: string, featureFileWorkspaceRelativePath: string) {
+function getjUnitName(wkspSettings: WorkspaceSettings, featureFileName: string, featureFileWorkspaceRelativePath: string) {
 
   const featureFileStem = featureFileName.replace(/.feature$/, "");
 
-  let dotSubFolders: string;
-  if (wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path)) {
-    dotSubFolders = featureFileWorkspaceRelativePath
-      .replace(wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
-  }
-  else {
-    dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
+  // default
+  let dotSubFolders = featureFileWorkspaceRelativePath.replace(
+    wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
+
+  // if features and steps are sibling folders
+  if (!wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path)) {
+    if (featureFileWorkspaceRelativePath === "features/" + featureFileName) {
+      dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
+    }
+    else {
+      if (os.platform() === "win32") {
+        const lastDir = wkspSettings.workspaceRelativeFeaturesPath.split("/").pop();
+        if (lastDir === "features")
+          dotSubFolders = dotSubFolders ? lastDir + "." + dotSubFolders : lastDir;
+      }
+    }
   }
 
   dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
@@ -180,14 +189,12 @@ function getjUnitClassName(wkspSettings: WorkspaceSettings, featureFileName: str
 }
 
 
-
-
 function getJunitFileUri(wkspSettings: WorkspaceSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
 
-  const classname = getjUnitClassName(wkspSettings, queueItem.scenario.featureFileName,
+  const junitName = getjUnitName(wkspSettings, queueItem.scenario.featureFileName,
     queueItem.scenario.featureFileWorkspaceRelativePath);
 
-  const junitFilename = `TESTS-${classname}.xml`;
+  const junitFilename = `TESTS-${junitName}.xml`;
 
   const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, junitFilename);
 
@@ -249,7 +256,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getjUnitClassName(wkspSettings, queueItem.scenario.featureFileName,
+    const fullFeatureName = getjUnitName(wkspSettings, queueItem.scenario.featureFileName,
       queueItem.scenario.featureFileWorkspaceRelativePath);
     const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
     const scenarioName = queueItem.scenario.scenarioName;

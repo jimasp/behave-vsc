@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
@@ -310,12 +311,10 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
   return results;
 }
 
-
-
 export function findSubdirectorySync(searchPath: string, targetDirName: string): string | null {
   const files = fs.readdirSync(searchPath);
   for (const file of files) {
-    const filePath = `${searchPath}/${file}`;
+    const filePath = path.join(searchPath, file);
     const stats = fs.statSync(filePath);
     if (stats.isDirectory()) {
       if (file === targetDirName) {
@@ -330,6 +329,20 @@ export function findSubdirectorySync(searchPath: string, targetDirName: string):
   }
   return null;
 }
+
+
+export function findHighestTargetParentDirectorySync(startPath: string, stopPath: string, targetDirName: string): string | null {
+  let currentPath = startPath;
+  let highestMatch = null;
+  while (currentPath.startsWith(stopPath)) {
+    const files = fs.readdirSync(currentPath);
+    if (files.includes(targetDirName))
+      highestMatch = path.join(currentPath, targetDirName);
+    currentPath = path.dirname(currentPath);
+  }
+  return highestMatch;
+}
+
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");

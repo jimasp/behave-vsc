@@ -6,7 +6,7 @@ import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 // sessions (which is not supported) when running the multi-root tests 
 
 suite(`workspace-simple suite test debug run`, () => {
-  const folderName = "simple 2";
+  const folderName = "sibling steps folder 1";
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 

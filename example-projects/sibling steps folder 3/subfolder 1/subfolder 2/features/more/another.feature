@@ -1,4 +1,4 @@
-Feature: Simple 2
+Feature: Another
 
    Scenario: run a successful test
       Given we have behave installed
