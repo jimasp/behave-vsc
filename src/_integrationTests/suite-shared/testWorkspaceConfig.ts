@@ -121,37 +121,23 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			}
 		}
 
-		const getExpectedFullFeaturesPath = (): string => {
+		const getExpectedFeaturesUri = (): vscode.Uri => {
 			if (!wkspUri)
-				throw "you must supply wkspUri to get the expected fullFeaturesPath";
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
+				throw "you must supply wkspUri to call getExpectedFeaturesUri";
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
 		}
 
-		const getExpectedFullFeaturesFsPath = (): string => {
-			if (!wkspUri)
-				throw "you must supply wkspUri to get the expected fullFeaturesPath";
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
-		}
 
-		const getExpectedFullStepsSearchPath = (): string => {
-			if (!wkspUri)
-				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchPath";
-			if (!wkspUri.path.includes("sibling steps folder"))
-				return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
-			if (!wkspUri.path.endsWith("sibling steps folder 3"))
-				return vscode.Uri.joinPath(wkspUri, "steps").path;
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath(), "..", "steps").path;
-		}
-
-		const getExpectedFullStepsSearchFsPath = (): string => {
+		const getExpectedStepsSearchUri = (): vscode.Uri => {
 			if (!wkspUri)
 				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchFsPath";
 			if (!wkspUri.path.includes("sibling steps folder"))
-				return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
+				return getExpectedFeaturesUri();
 			if (!wkspUri.path.endsWith("sibling steps folder 3"))
-				return vscode.Uri.joinPath(wkspUri, "steps").fsPath;
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath(), "..", "steps").fsPath;
+				return vscode.Uri.joinPath(wkspUri, "steps");
+			return vscode.Uri.joinPath(getExpectedFeaturesUri(), "..", "steps");
 		}
+
 
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		switch (section) {
@@ -159,14 +145,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>this.get("envVarOverrides");
 			case "featuresPath":
 				return <T><unknown>getExpectedFeaturesPath();
-			case "featuresUri.path":
-				return <T><unknown>getExpectedFullFeaturesPath();
-			case "featuresUri.fsPath":
-				return <T><unknown>getExpectedFullFeaturesFsPath();
-			case "stepsSearchUri.fsPath":
-				return <T><unknown>getExpectedFullStepsSearchFsPath();
-			case "stepsSearchUri.path":
-				return <T><unknown>getExpectedFullStepsSearchPath();
+			case "featuresUri":
+				return <T><unknown>getExpectedFeaturesUri();
+			case "stepsSearchUri":
+				return <T><unknown>getExpectedStepsSearchUri();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootRunWorkspacesInParallel":

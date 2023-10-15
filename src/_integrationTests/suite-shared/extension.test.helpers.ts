@@ -8,7 +8,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../parsers/fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
 
@@ -85,12 +85,12 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"), wkspName);
-	assert.strictEqual(wkspSettings.featuresUri.path, testConfig.getExpected("featuresUri.path", wkspUri), wkspName);
-	assert.strictEqual(wkspSettings.featuresUri.fsPath, testConfig.getExpected("featuresUri.fsPath", wkspUri), wkspName);
+	const expectedFeaturesUri = testConfig.getExpected("featuresUri", wkspUri) as vscode.Uri;
+	assert.strictEqual(true, urisMatch(wkspSettings.featuresUri, expectedFeaturesUri));
+	const expectedStepsSearchUri = testConfig.getExpected("stepsSearchUri", wkspUri) as vscode.Uri;
+	assert.strictEqual(true, urisMatch(wkspSettings.stepsSearchUri, expectedStepsSearchUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
-	assert.strictEqual(wkspSettings.stepsSearchUri.path, testConfig.getExpected("stepsSearchUri.path", wkspUri), wkspName);
-	assert.strictEqual(wkspSettings.stepsSearchUri.fsPath, testConfig.getExpected("stepsSearchUri.fsPath", wkspUri), wkspName);
 }
 
 
