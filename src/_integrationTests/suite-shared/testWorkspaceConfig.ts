@@ -136,17 +136,21 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		const getExpectedFullStepsSearchPath = (): string => {
 			if (!wkspUri)
 				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchPath";
-			if (wkspUri.path.endsWith("simple 2"))
+			if (!wkspUri.path.includes("sibling steps folder"))
+				return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
+			if (!wkspUri.path.endsWith("sibling steps folder 3"))
 				return vscode.Uri.joinPath(wkspUri, "steps").path;
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).path;
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath(), "..", "steps").path;
 		}
 
 		const getExpectedFullStepsSearchFsPath = (): string => {
 			if (!wkspUri)
 				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchFsPath";
-			if (wkspUri.path.endsWith("simple 2"))
+			if (!wkspUri.path.includes("sibling steps folder"))
+				return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
+			if (!wkspUri.path.endsWith("sibling steps folder 3"))
 				return vscode.Uri.joinPath(wkspUri, "steps").fsPath;
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()).fsPath;
+			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath(), "..", "steps").fsPath;
 		}
 
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 

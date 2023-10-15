@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { findSubdirectorySync, getUrisOfWkspFoldersWithFeatures, getWorkspaceFolder, uriId, WkspError } from './common';
+import {
+  findHighestTargetParentDirectorySync, findSubdirectorySync, getUrisOfWkspFoldersWithFeatures,
+  getWorkspaceFolder, uriId, WkspError
+} from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
 
@@ -92,9 +95,12 @@ export class WorkspaceSettings {
     // subfolders (e.g. like example project B/features folder)
     this.stepsSearchUri = vscode.Uri.joinPath(this.featuresUri);
     if (!findSubdirectorySync(this.stepsSearchUri.fsPath, "steps")) {
-      // if not found, check if there's a "steps" folder in the workspace root to watch
-      if (fs.existsSync(vscode.Uri.joinPath(wkspUri, "steps").fsPath))
-        this.stepsSearchUri = vscode.Uri.joinPath(wkspUri, "steps")
+      // if not found, get the highest-level "steps" folder above the features folder inside the workspace
+      const stepsSearchFsPath = findHighestTargetParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath, "steps");
+      if (stepsSearchFsPath)
+        this.stepsSearchUri = vscode.Uri.file(stepsSearchFsPath);
+      else
+        logger.showWarn(`No "steps" folder found.`, this.uri);
     }
 
     if (envVarOverridesCfg) {
@@ -174,4 +180,5 @@ export class WorkspaceSettings {
   }
 
 }
+
 

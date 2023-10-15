@@ -52,7 +52,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
     const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
-    const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i", `"${pipedPathPatterns}"`];
+    const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
     const args = friendlyArgs.map(x => x.replaceAll('"', ""));
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
@@ -91,8 +91,9 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
     const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].scenario.featureFileWorkspaceRelativePath;
 
     const friendlyArgs = [
-      ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`, "-i",
-      `"${featureFileWorkspaceRelativePath}$"`, "-n", `"${pipedScenarioNames}"`
+      "-i", `"${featureFileWorkspaceRelativePath}$"`,
+      "-n", `"${pipedScenarioNames}"`,
+      ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
     const args = friendlyArgs.map(x => x.replace(/^"(.*)"$/, '$1'));
 

@@ -40,11 +40,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: simple 2 workspace",
+			"name": "Debug: multiroot workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/simple 2",
+				"${workspaceFolder}/example-projects/multiroot.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -57,11 +57,45 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: multiroot workspace",
+			"name": "Debug: sibling steps folder 1 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/multiroot.code-workspace",
+				"${workspaceFolder}/example-projects/sibling steps folder 1",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: sibling steps folder 2 workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/sibling steps folder 2",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: sibling steps folder 3 workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/sibling steps folder 3",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -140,13 +174,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: simple 2 workspace",
+			"name": "Run Test Suite: multiroot workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/simple 2",
+				"${workspaceFolder}/example-projects/multiroot.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/simple 2 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiroot suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -155,13 +189,43 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: multiroot workspace",
+			"name": "Run Test Suite: sibling steps folder 1 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/multiroot.code-workspace",
+				"${workspaceFolder}/example-projects/sibling steps folder 1",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiroot suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 1 suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Run Test Suite: sibling steps folder 2 workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/sibling steps folder 2",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 2 suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Run Test Suite: sibling steps folder 3 workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/sibling steps folder 3",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 3 suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

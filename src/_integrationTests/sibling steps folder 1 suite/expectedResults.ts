@@ -17,7 +17,7 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
   const expectedResults: TestResult[] = [
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
-      scenario_featureName: 'Simple 2',
+      scenario_featureName: 'Basic',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -25,15 +25,15 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple 2/{{featurePath}}/simple.feature/run a successful test',
+      test_id: '.../sibling steps folder 1/{{featurePath}}/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../simple 2/{{featurePath}}/simple.feature',
-      test_uri: '.../simple 2/{{featurePath}}/simple.feature'
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/basic.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
-      scenario_featureName: 'Simple 2',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureName: 'Basic',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
       scenario_result: 'failed',
@@ -41,15 +41,15 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple 2/{{featurePath}}/simple.feature/run a failing test',
+      test_id: '.../sibling steps folder 1/{{featurePath}}/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../simple 2/{{featurePath}}/simple.feature',
-      test_uri: '.../simple 2/{{featurePath}}/simple.feature'
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/basic.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
-      scenario_featureName: 'Simple 2',
+      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureName: 'Basic',
       scenario_getLabel: 'run a skipped test',
       scenario_isOutline: false,
       scenario_result: 'skipped',
@@ -57,10 +57,10 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple 2/{{featurePath}}/simple.feature/run a skipped test',
+      test_id: '.../sibling steps folder 1/{{featurePath}}/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../simple 2/{{featurePath}}/simple.feature',
-      test_uri: '.../simple 2/{{featurePath}}/simple.feature'
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/basic.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/basic.feature'
     }),
 
   ];
