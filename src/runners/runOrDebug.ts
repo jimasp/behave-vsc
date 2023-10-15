@@ -147,7 +147,8 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
   // remove any feature path already covered by a parent folder selected by the user
   const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
 
-  // note - be careful changing this regex - you will need to retest it with nested folders/features, top level folders,
+  // NOTE!! be careful changing the `x + "$"` to another regex!
+  // you will need to retest it with nested folders/features, top level folders,
   // individual features and individual/multiple selected scenarios across both example project A and project B
 
   // as an example of what can go wrong, currently, this would work fine:
@@ -157,7 +158,6 @@ function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filtere
   // BUT this would NOT work:
   // cd "example-projects/project B"
   // python -m behave -i "^features/grouped/"
-
 
 
   // BE VERY CAREFUL CHANGING THE PATTERN REGEX - SEE ABOVE NOTES AND TEST THOROUGHLY
