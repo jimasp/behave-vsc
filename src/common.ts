@@ -334,7 +334,7 @@ export function findSubdirectorySync(searchPath: string, targetDirName: string):
 export function findHighestTargetParentDirectorySync(startPath: string, stopPath: string, targetDirName: string): string | null {
   let currentPath = startPath;
   let highestMatch = null;
-  while (currentPath.includes(stopPath)) {
+  while (currentPath.startsWith(stopPath)) {
     const files = fs.readdirSync(currentPath);
     if (files.includes(targetDirName))
       highestMatch = path.join(currentPath, targetDirName);
