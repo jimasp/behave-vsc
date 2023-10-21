@@ -37,7 +37,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folders must be somewhere *inside* the project folder (not above it).
 
-Example 1:
+Example 1 (features folder has steps subfolder):
 
 ```text
 my-project/
@@ -47,7 +47,7 @@ my-project/
             ├── steps.py
 ```
 
-Example 2:
+Example 2 (steps folder has a sibling steps folder):
 
 ```text
 my-project/
@@ -57,30 +57,54 @@ my-project/
         ├── steps.py
 ```
 
-- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
+Example 3 (features folder contains multiple steps folders):
 
-```ini
-# behave.ini
-[behave]
-paths=my_tests/behave_features
+```text
+my-project/
+    ├── behave.ini
+    ├── features/  
+        ├── environment.py
+        ├── steps/  
+            ├── __init__.py
+            ├── steps.py  
+        ├── storage_tests/  
+            ├── *.feature  
+        ├── web_tests/  
+            ├── *.feature 
+            ├── steps/
+                ├── __init__.py
+                ├── steps.py    
 ```
 
-combined with:
+- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
 
-```json
-// settings.json
-{ 
-  "behave-vsc.featuresPath": "my_tests/behave_features" 
-}
-```
+  For example:
+
+    ```ini
+    # behave.ini
+    [behave]
+    paths=my_tests/behave_features
+    ```
+
+    combined with:
+
+    ```json
+    // settings.json
+    { 
+      "behave-vsc.featuresPath": "my_tests/behave_features" 
+    }
+    ```
 
 - If you have issues with relative imports due to the behave working directory then you may be able to fix this by setting the `PYTHONPATH` environment variable, for example:
 
-```json
-  "behave-vsc.envVarOverrides": {
-      "PYTHONPATH": "relative_path_to_folder_containing_imported_code"
-  },
-```
+  ```json
+  // settings.json
+  {
+    "behave-vsc.envVarOverrides": {
+        "PYTHONPATH": "relative_path_to_imported_code_folder"
+    },
+  }
+  ```
 
 ---
 
