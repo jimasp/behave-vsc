@@ -331,16 +331,18 @@ export function findSubdirectorySync(searchPath: string, targetDirName: string):
 }
 
 
-export function findHighestTargetParentDirectorySync(startPath: string, stopPath: string, targetDirName: string): string | null {
+export function findFirstTargetParentDirectorySync(startPath: string, stopPath: string, targetDirName: string): string | null {
   let currentPath = startPath;
-  let highestMatch = null;
+  let firstMatch = null;
   while (currentPath.startsWith(stopPath)) {
     const files = fs.readdirSync(currentPath);
-    if (files.includes(targetDirName))
-      highestMatch = path.join(currentPath, targetDirName);
+    if (files.includes(targetDirName)) {
+      firstMatch = path.join(currentPath, targetDirName);
+      break;
+    }
     currentPath = path.dirname(currentPath);
   }
-  return highestMatch;
+  return firstMatch;
 }
 
 

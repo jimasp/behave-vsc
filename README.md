@@ -37,7 +37,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folders must be somewhere *inside* the project folder (not above it).
 
-Example 1 (features folder has steps subfolder):
+Example 1 (features folder contains a steps folder):
 
 ```text
 my-project/
@@ -47,7 +47,7 @@ my-project/
             ├── steps.py
 ```
 
-Example 2 (steps folder has a sibling steps folder):
+Example 2 (features folder has a sibling steps folder):
 
 ```text
 my-project/
@@ -95,7 +95,7 @@ my-project/
     }
     ```
 
-- If you have issues with relative imports due to the behave working directory then you may be able to fix this by setting the `PYTHONPATH` environment variable, for example:
+- If you have issues with relative imports due to the behave working directory then set the `PYTHONPATH` environment variable, for example:
 
   ```json
   // settings.json
@@ -192,7 +192,7 @@ my-project/
 
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
+  - Step navigation only finds steps that are in `.py` files in a folder called `steps` inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
 - There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
   - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
   - b. Do not to use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
