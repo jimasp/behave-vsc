@@ -40,53 +40,65 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 Example 1:
 
 ```text
-  . my-project
-  .    +-- features/
-  .    |   |   +-- my.feature
-  .    |   |   +-- steps/  
-  .    |   |   |   +-- steps.py
+my-project/
+    ├── features/
+        ├── my.feature
+        ├── steps/  
+            ├── steps.py
 ```
 
 Example 2:
 
 ```text
-  . my-project
-  .    +-- features/
-  .    |   |   +-- my.feature   
-  .    +-- steps/
-  .    |   |   +-- steps.py
+my-project/
+    ├── features/
+        ├── my.feature   
+    ├── steps/
+        ├── steps.py
 ```
 
 Example 3:
 
 ```text
-  . my-project
-  .    +-- behave.ini
-  .    +-- features/  
-  .       +-- environment.py
-  .       +-- steps/  
-  .       |   |   +-- __init__.py
-  .       |   |   +-- steps.py  
-  .       +-- storage_tests/  
-  .       |   +-- *.feature  
-  .       +-- web_tests/  
-  .       |   +-- *.feature 
-  .       |   +-- steps/
-  .       |   |   +-- __init__.py
-  .       |   |   +-- steps.py    
+my-project/
+    ├── behave.ini
+    ├── features/  
+        ├── environment.py
+        ├── steps/  
+            ├── __init__.py
+            ├── steps.py  
+        ├── storage_tests/  
+            ├── *.feature  
+        ├── web_tests/  
+            ├── *.feature 
+            ├── steps/
+                ├── __init__.py
+                ├── steps.py    
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder. For example:
 
-```text
+```ini
 # behave.ini
 [behave]
 paths=my_tests/behave_features
+```
 
+combined with:
+
+```json
 // settings.json
 { 
   "behave-vsc.featuresPath": "my_tests/behave_features" 
 }
+```
+
+- If you have issues with relative imports due to the behave working directory then you may be able to fix this by setting the `PYTHONPATH` environment variable, for example:
+
+```json
+  "behave-vsc.envVarOverrides": {
+      "PYTHONPATH": "relative_path_to_folder_containing_imported_code"
+  },
 ```
 
 ---
@@ -155,6 +167,7 @@ paths=my_tests/behave_features
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
+- Have you tried restarting vscode?
 - If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
 - If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
@@ -172,15 +185,15 @@ paths=my_tests/behave_features
 
 ## Known issues and limitations
 
-- There is currently a bug in the MS python extension if you are using `unittest`` for your python tests in a multiroot project and you hit the >> "Run Tests" button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
-  - a. Use pytest instead of unittest to run your tests (which supports running unittest tests out of the box), or
+- Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
+  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
+  - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
+- There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the >> "Run Tests" button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
+  - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
   - b. Do not to use the >> button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 - Test durations are taken from behave junit xml files, not an actual execution time.
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
-- Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
-  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside the features folder or project root. If you import steps in python from a steps library folder outside your steps folder it won't find them.
 
 ---
 
