@@ -39,4 +39,7 @@ Feature: Basic
       When we implement a successful test
       Then we will see the result    
 
-
+   Scenario: run a test with a "quoted" scenario
+      Given we have behave installed
+      When we implement a successful test
+      Then we will see the result

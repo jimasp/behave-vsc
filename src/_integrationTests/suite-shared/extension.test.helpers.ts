@@ -260,7 +260,7 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 
 function assertExpectedCounts(wkspUri: vscode.Uri, wkspName: string, config: Configuration,
 	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-	actualCounts: WkspParseCounts, hasMuliRootWkspNode: boolean) {
+	actualCounts: WkspParseCounts, hasMultiRootWkspNode: boolean) {
 
 	try {
 		const expectedCounts = getExpectedCounts(wkspUri, config);
@@ -272,7 +272,7 @@ function assertExpectedCounts(wkspUri: vscode.Uri, wkspName: string, config: Con
 		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName + ": stepMappings");
 		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName + ": testCount");
 
-		if (hasMuliRootWkspNode) {
+		if (hasMultiRootWkspNode) {
 			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName + ": nodeCount");
 		}
 		else {

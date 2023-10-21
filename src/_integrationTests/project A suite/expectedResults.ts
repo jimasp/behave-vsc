@@ -7,10 +7,10 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 70, testCount: testCount },
+    tests: { nodeCount: 71, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 24, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 116, stepMappings: 115 // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 119, stepMappings: 118 // (1 diff = "When we have a missing step")
   };
 }
 
@@ -143,6 +143,22 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_label: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       test_parent: '.../project A/behave tests/some tests/group1_features/basic.feature',
       test_uri: '.../project A/behave tests/some tests/group1_features/basic.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Basic',
+      scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
+      scenario_getLabel: 'run a test with a "quoted" scenario',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a test with a "quoted" scenario',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project A/{{featurePath}}/group1_features/basic.feature/run a test with a "quoted" scenario',
+      test_label: 'run a test with a "quoted" scenario',
+      test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
 
     new TestResult({
