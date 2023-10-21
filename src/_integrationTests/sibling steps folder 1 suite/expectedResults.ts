@@ -7,7 +7,7 @@ export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): W
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
     tests: { nodeCount: 14, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 4,
+    featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 3,
     stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 32, stepMappings: 32
   };
 }

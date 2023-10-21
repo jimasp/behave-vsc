@@ -91,11 +91,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: sibling steps folder 3 workspace",
+			"name": "Debug: higher steps folder workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/sibling steps folder 3",
+				"${workspaceFolder}/example-projects/higher steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -219,13 +219,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: sibling steps folder 3 workspace",
+			"name": "Run Test Suite: higher steps folder workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/sibling steps folder 3",
+				"${workspaceFolder}/example-projects/higher steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 3 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/higher steps folder suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

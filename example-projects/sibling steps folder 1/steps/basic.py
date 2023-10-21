@@ -1,7 +1,6 @@
 # ruff: noqa
 from behave import *
 
-
 @when("we implement a {successful_or_failing} test")
 @when('"we" implement a [{successful_or_failing}] test')
 def step_impl(context, successful_or_failing):
@@ -11,4 +10,10 @@ def step_impl(context, successful_or_failing):
 @then("we will see the result")
 def step_res(context):
     assert 1 == 1
+
+@given("we have behave installed")
+@given("we have (behave) installed")
+def step_inst(context):
+    pass
+
 

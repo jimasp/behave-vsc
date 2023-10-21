@@ -71,8 +71,8 @@ async function runTestSuites() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/sibling steps folder 3"];
-    extensionTestsPath = path.resolve(__dirname, './sibling steps folder 3 suite/index');
+    launchArgs = ["example-projects/higher steps folder"];
+    extensionTestsPath = path.resolve(__dirname, './higher steps folder suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

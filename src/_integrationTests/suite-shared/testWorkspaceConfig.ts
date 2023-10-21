@@ -133,7 +133,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchFsPath";
 			if (!wkspUri.path.includes("sibling steps folder"))
 				return getExpectedFeaturesUri();
-			if (!wkspUri.path.endsWith("sibling steps folder 3"))
+			if (!wkspUri.path.endsWith("sibling steps folder 2"))
 				return vscode.Uri.joinPath(wkspUri, "steps");
 			return vscode.Uri.joinPath(getExpectedFeaturesUri(), "..", "steps");
 		}

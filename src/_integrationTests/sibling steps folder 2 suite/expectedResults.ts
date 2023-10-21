@@ -6,15 +6,64 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 14, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 4,
-    stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 32, stepMappings: 32
+    tests: { nodeCount: 19, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 4, stepFilesExceptEmptyOrCommentedOut: 3,
+    stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 39, stepMappings: 39
   };
 }
 
 export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: '{{featurePath}}/more/another.feature',
+      scenario_getLabel: 'run a successful test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/{{featurePath}}/more/another.feature/run a successful test',
+      test_label: 'run a successful test',
+      test_parent: '.../sibling steps folder 2/{{featurePath}}/more/another.feature',
+      test_uri: '.../sibling steps folder 2/{{featurePath}}/more/another.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: '{{featurePath}}/more/another.feature',
+      scenario_getLabel: 'run a failing test',
+      scenario_isOutline: false,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'run a failing test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/{{featurePath}}/more/another.feature/run a failing test',
+      test_label: 'run a failing test',
+      test_parent: '.../sibling steps folder 2/{{featurePath}}/more/another.feature',
+      test_uri: '.../sibling steps folder 2/{{featurePath}}/more/another.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: '{{featurePath}}/more/another.feature',
+      scenario_getLabel: 'run a skipped test',
+      scenario_isOutline: false,
+      scenario_result: 'skipped',
+      scenario_scenarioName: 'run a skipped test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/{{featurePath}}/more/another.feature/run a skipped test',
+      test_label: 'run a skipped test',
+      test_parent: '.../sibling steps folder 2/{{featurePath}}/more/another.feature',
+      test_uri: '.../sibling steps folder 2/{{featurePath}}/more/another.feature'
+    }),
+
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
       scenario_featureName: 'Basic',
