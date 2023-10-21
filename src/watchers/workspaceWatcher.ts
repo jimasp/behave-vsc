@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { basename, isFeatureFile, isStepsFile } from '../common';
+import { StepsDirIsInsideFeaturesFolder, basename, isFeatureFile, isStepsFile } from '../common';
 import { config } from "../configuration";
 import { diagLog, DiagLogType } from '../logger';
 import { FileParser } from '../parsers/fileParser';
@@ -16,7 +16,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
   const watchers = [watcher];
 
   let watcher2: vscode.FileSystemWatcher | undefined;
-  if (!wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path)) {
+  if (!StepsDirIsInsideFeaturesFolder(wkspSettings)) {
     // steps folder is not in features folder
     const pattern = new vscode.RelativePattern(wkspSettings.uri, `steps/**`);
     watcher2 = vscode.workspace.createFileSystemWatcher(pattern);

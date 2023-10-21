@@ -214,6 +214,10 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
   return workspaceFolder;
 }
 
+export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceSettings) => {
+  return wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path);
+}
+
 
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "../extension";
-import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
+import { getContentFromFilesystem, showDebugWindow, StepsDirIsInsideFeaturesFolder, WIN_MAX_PATH, WkspError } from '../common';
 import { config } from '../configuration';
 import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
 import { WorkspaceSettings } from '../settings';
@@ -170,8 +170,7 @@ function getjUnitName(wkspSettings: WorkspaceSettings, featureFileName: string, 
   let dotSubFolders = featureFileWorkspaceRelativePath.replace(
     wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
 
-  // if features and steps are sibling folders
-  if (!wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path)) {
+  if (!StepsDirIsInsideFeaturesFolder(wkspSettings)) {
     if (featureFileWorkspaceRelativePath === "features/" + featureFileName) {
       dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
     }

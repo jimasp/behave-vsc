@@ -5,7 +5,7 @@ import { WorkspaceSettings } from "../settings";
 import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, StepsDirIsInsideFeaturesFolder
 } from '../common';
 import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
@@ -138,7 +138,7 @@ export class FileParser {
     deleteStepFileSteps(wkspSettings.featuresUri);
 
     let stepFiles: vscode.Uri[] = [];
-    if (wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path))
+    if (StepsDirIsInsideFeaturesFolder(wkspSettings))
       stepFiles = await findFiles(wkspSettings.stepsSearchUri, "steps", ".py", cancelToken);
     else
       stepFiles = await findFiles(wkspSettings.stepsSearchUri, undefined, ".py", cancelToken);
