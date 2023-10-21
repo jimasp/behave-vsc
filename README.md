@@ -193,9 +193,9 @@ my-project/
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
   - Step navigation only finds steps that are in `.py` files in a folder called `steps` either inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
-- There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the >> "Run Tests" button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
+- There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
   - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
-  - b. Do not to use the >> button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
+  - b. Do not to use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 - Test durations are taken from behave junit xml files, not an actual execution time.
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
