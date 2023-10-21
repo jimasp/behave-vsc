@@ -130,7 +130,7 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group1_features/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/group1_features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       scenario_isOutline: false,
@@ -139,10 +139,10 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
+      test_id: '.../project A/{{featurePath}}/group1_features/basic.feature/succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
       test_label: 'succeed with a long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long name',
-      test_parent: '.../project A/behave tests/some tests/group1_features/basic.feature',
-      test_uri: '.../project A/behave tests/some tests/group1_features/basic.feature'
+      test_parent: '.../project A/{{featurePath}}/group1_features/basic.feature',
+      test_uri: '.../project A/{{featurePath}}/group1_features/basic.feature'
     }),
 
     new TestResult({
@@ -162,7 +162,7 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/skipped.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/skipped.feature',
       scenario_featureName: 'skipped feature',
       scenario_getLabel: 'scenario that will be skipped',
       scenario_isOutline: false,
@@ -171,10 +171,10 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group2_features/skipped.feature/scenario that will be skipped',
+      test_id: '.../project A/{{featurePath}}/group2_features/skipped.feature/scenario that will be skipped',
       test_label: 'scenario that will be skipped',
-      test_parent: '.../project A/behave tests/some tests/group2_features/skipped.feature',
-      test_uri: '.../project A/behave tests/some tests/group2_features/skipped.feature'
+      test_parent: '.../project A/{{featurePath}}/group2_features/skipped.feature',
+      test_uri: '.../project A/{{featurePath}}/group2_features/skipped.feature'
     }),
 
     new TestResult({
@@ -321,7 +321,7 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group1_features/outline_mixed.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/group1_features/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success paramless',
       scenario_isOutline: true,
@@ -330,10 +330,10 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature/Blenders Success paramless',
+      test_id: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature/Blenders Success paramless',
       test_label: 'Blenders Success paramless',
-      test_parent: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature',
-      test_uri: '.../project A/behave tests/some tests/group1_features/outline_mixed.feature'
+      test_parent: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature',
+      test_uri: '.../project A/{{featurePath}}/group1_features/outline_mixed.feature'
     }),
 
     new TestResult({
@@ -433,7 +433,7 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/duplicate_fail.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/duplicate_fail.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -442,14 +442,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/duplicate_fail.feature/run a test',
+      test_id: '.../project A/{{featurePath}}/duplicate_fail.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project A/behave tests/some tests/duplicate_fail.feature',
-      test_uri: '.../project A/behave tests/some tests/duplicate_fail.feature'
+      test_parent: '.../project A/{{featurePath}}/duplicate_fail.feature',
+      test_uri: '.../project A/{{featurePath}}/duplicate_fail.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/envvars.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/envvars.feature',
       scenario_featureName: 'EnvVars',
       scenario_getLabel: 'run an successful envvars test',
       scenario_isOutline: false,
@@ -458,14 +458,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group2_features/envvars.feature/run an successful envvars test',
+      test_id: '.../project A/{{featurePath}}/group2_features/envvars.feature/run an successful envvars test',
       test_label: 'run an successful envvars test',
-      test_parent: '.../project A/behave tests/some tests/group2_features/envvars.feature',
-      test_uri: '.../project A/behave tests/some tests/group2_features/envvars.feature'
+      test_parent: '.../project A/{{featurePath}}/group2_features/envvars.feature',
+      test_uri: '.../project A/{{featurePath}}/group2_features/envvars.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/step_exception.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/step_exception.feature',
       scenario_featureName: 'Bad step',
       scenario_getLabel: 'step with exception should show failure message',
       scenario_isOutline: false,
@@ -474,15 +474,15 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group2_features/step_exception.feature/step with exception should show failure message',
+      test_id: '.../project A/{{featurePath}}/group2_features/step_exception.feature/step with exception should show failure message',
       test_label: 'step with exception should show failure message',
-      test_parent: '.../project A/behave tests/some tests/group2_features/step_exception.feature',
-      test_uri: '.../project A/behave tests/some tests/group2_features/step_exception.feature'
+      test_parent: '.../project A/{{featurePath}}/group2_features/step_exception.feature',
+      test_uri: '.../project A/{{featurePath}}/group2_features/step_exception.feature'
     }),
 
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested1.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested1.1.feature',
       scenario_featureName: 'Nested 1.1',
       scenario_getLabel: 'success',
       scenario_isOutline: false,
@@ -491,14 +491,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested1.1.feature/success',
+      test_id: '.../project A/{{featurePath}}/nested1/nested1.1.feature/success',
       test_label: 'success',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested1.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested1.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested1.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested1.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested1.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested1.1.feature',
       scenario_featureName: 'Nested 1.1',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -507,14 +507,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested1.1.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested1.1.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested1.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested1.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested1.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested1.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested1.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested1.2.feature',
       scenario_featureName: 'Nested 1.2',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -523,14 +523,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested1.2.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested1.2.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested1.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested1.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested1.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested1.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested1.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested1.2.feature',
       scenario_featureName: 'Nested 1.2',
       scenario_getLabel: 'skipped',
       scenario_isOutline: false,
@@ -539,14 +539,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested1.2.feature/skipped',
+      test_id: '.../project A/{{featurePath}}/nested1/nested1.2.feature/skipped',
       test_label: 'skipped',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested1.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested1.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested1.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested1.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested1.3.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested1.3.feature',
       scenario_featureName: 'Nested 1.3',
       scenario_getLabel: 'skipped by feature',
       scenario_isOutline: false,
@@ -555,14 +555,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested1.3.feature/skipped by feature',
+      test_id: '.../project A/{{featurePath}}/nested1/nested1.3.feature/skipped by feature',
       test_label: 'skipped by feature',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested1.3.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested1.3.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested1.3.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested1.3.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested2.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested2.1.feature',
       scenario_featureName: 'Nested 2.1',
       scenario_getLabel: 'success',
       scenario_isOutline: false,
@@ -571,14 +571,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature/success',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature/success',
       test_label: 'success',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested2.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested2.1.feature',
       scenario_featureName: 'Nested 2.1',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -587,14 +587,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested2.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested2.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested2.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested2.2.feature',
       scenario_featureName: 'Nested 2.2',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -603,14 +603,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested2.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested2.2.feature',
       scenario_featureName: 'Nested 2.2',
       scenario_getLabel: 'skipped',
       scenario_isOutline: false,
@@ -619,14 +619,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature/skipped',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature/skipped',
       test_label: 'skipped',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested2.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested2.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested2.3.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested2.3.feature',
       scenario_featureName: 'Nested 2.3',
       scenario_getLabel: 'skipped by feature',
       scenario_isOutline: false,
@@ -635,14 +635,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested2.3.feature/skipped by feature',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested2.3.feature/skipped by feature',
       test_label: 'skipped by feature',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested2.3.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested2.3.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested2.3.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested2.3.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested3/nested3.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested3/nested3.1.feature',
       scenario_featureName: 'Nested 3.1',
       scenario_getLabel: 'success',
       scenario_isOutline: false,
@@ -651,14 +651,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature/success',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature/success',
       test_label: 'success',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested3/nested3.1.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested3/nested3.1.feature',
       scenario_featureName: 'Nested 3.1',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -667,14 +667,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.1.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested3/nested3.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested3/nested3.2.feature',
       scenario_featureName: 'Nested 3.2',
       scenario_getLabel: 'failure',
       scenario_isOutline: false,
@@ -683,14 +683,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature/failure',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature/failure',
       test_label: 'failure',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested3/nested3.2.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested3/nested3.2.feature',
       scenario_featureName: 'Nested 3.2',
       scenario_getLabel: 'skipped',
       scenario_isOutline: false,
@@ -699,14 +699,14 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature/skipped',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature/skipped',
       test_label: 'skipped',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.2.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/nested1/nested2/nested3/nested3.3.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/nested1/nested2/nested3/nested3.3.feature',
       scenario_featureName: 'Nested 3.3',
       scenario_getLabel: 'skipped by feature',
       scenario_isOutline: false,
@@ -715,10 +715,10 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.3.feature/skipped by feature',
+      test_id: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.3.feature/skipped by feature',
       test_label: 'skipped by feature',
-      test_parent: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.3.feature',
-      test_uri: '.../project A/behave tests/some tests/nested1/nested2/nested3/nested3.3.feature'
+      test_parent: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.3.feature',
+      test_uri: '.../project A/{{featurePath}}/nested1/nested2/nested3/nested3.3.feature'
     }),
 
   ];

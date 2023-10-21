@@ -6,9 +6,9 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 4, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 2,
-    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 7, stepMappings: 7
+    tests: { nodeCount: 14, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 4,
+    stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 32, stepMappings: 32
   };
 }
 
@@ -62,6 +62,135 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_parent: '.../sibling steps folder 1/{{featurePath}}/basic.feature',
       test_uri: '.../sibling steps folder 1/{{featurePath}}/basic.feature'
     }),
+
+    new TestResult({
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Success <thing>',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success <thing>',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Success <thing>',
+      test_label: 'Blenders Success <thing>',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Fail <thing>',
+      scenario_isOutline: true,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'Blenders Fail <thing>',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Fail <thing>',
+      test_label: 'Blenders Fail <thing>',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Skip <thing>',
+      scenario_isOutline: true,
+      scenario_result: 'skipped',
+      scenario_scenarioName: 'Blenders Skip <thing>',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Skip <thing>',
+      test_label: 'Blenders Skip <thing>',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'behave tests/some tests/outline_mixed.feature',
+      scenario_featureName: 'Mixed outline',
+      scenario_getLabel: 'Blenders Success paramless',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success paramless',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Success paramless',
+      test_label: 'Blenders Success paramless',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Fail paramless',
+      scenario_isOutline: true,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'Blenders Fail paramless',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Fail paramless',
+      test_label: 'Blenders Fail paramless',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Mixed outline',
+      scenario_featureFileRelativePath: '{{featurePath}}/outline_mixed.feature',
+      scenario_getLabel: 'Blenders Success "<thing>"',
+      scenario_isOutline: true,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Blenders Success "<thing>"',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature/Blenders Success "<thing>"',
+      test_label: 'Blenders Success "<thing>"',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/outline_mixed.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Table feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/table.feature',
+      scenario_getLabel: 'Use a table (success)',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'Use a table (success)',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/table.feature/Use a table (success)',
+      test_label: 'Use a table (success)',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/table.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/table.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Table feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/table.feature',
+      scenario_getLabel: 'Use a table (fail)',
+      scenario_isOutline: false,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'Use a table (fail)',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 1/{{featurePath}}/table.feature/Use a table (fail)',
+      test_label: 'Use a table (fail)',
+      test_parent: '.../sibling steps folder 1/{{featurePath}}/table.feature',
+      test_uri: '.../sibling steps folder 1/{{featurePath}}/table.feature'
+    }),
+
 
   ];
 
