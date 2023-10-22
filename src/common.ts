@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
@@ -215,7 +214,7 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceSettings) => {
-  return wkspSettings.stepsSearchUri.path.startsWith(wkspSettings.featuresUri.path);
+  return wkspSettings.workspaceRelativeStepsSearchPath.startsWith(wkspSettings.workspaceRelativeFeaturesPath);
 }
 
 
@@ -314,41 +313,6 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 
   return results;
 }
-
-export function findSubdirectorySync(searchPath: string, targetDirName: string): string | null {
-  const files = fs.readdirSync(searchPath);
-  for (const file of files) {
-    const filePath = path.join(searchPath, file);
-    const stats = fs.statSync(filePath);
-    if (stats.isDirectory()) {
-      if (file === targetDirName) {
-        return filePath;
-      } else {
-        const result = findSubdirectorySync(filePath, targetDirName);
-        if (result !== null) {
-          return result;
-        }
-      }
-    }
-  }
-  return null;
-}
-
-
-export function findFirstTargetParentDirectorySync(startPath: string, stopPath: string, targetDirName: string): string | null {
-  let currentPath = startPath;
-  let firstMatch = null;
-  while (currentPath.startsWith(stopPath)) {
-    const files = fs.readdirSync(currentPath);
-    if (files.includes(targetDirName)) {
-      firstMatch = path.join(currentPath, targetDirName);
-      break;
-    }
-    currentPath = path.dirname(currentPath);
-  }
-  return firstMatch;
-}
-
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");

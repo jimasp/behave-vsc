@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
+import * as path from 'path';
 import { QueueItem } from "../extension";
-import { getContentFromFilesystem, showDebugWindow, StepsDirIsInsideFeaturesFolder, WIN_MAX_PATH, WkspError } from '../common';
+import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
 import { config } from '../configuration';
 import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
 import { WorkspaceSettings } from '../settings';
+import { Scenario } from './testFile';
 
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
@@ -72,7 +74,9 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       run.skipped(item.test);
       break;
     case "no-junit-file":
-      run.errored(item.test, new vscode.TestMessage(`No JUnit file was written for this test. Check output in ${window}.`));
+      run.errored(item.test, new vscode.TestMessage(`${result.failedText}.\nCheck output in ${window}.\n` +
+        "(If there is no behave error, then check that your behave-vsc.featuresPath in settings.json\n" +
+        "matches your behave.ini paths setting.)"));
       break;
     case "untested":
       run.errored(item.test, new vscode.TestMessage(`JUnit result was "untested". Check output in ${window}.`));
@@ -161,41 +165,29 @@ function CreateParseResult(wkspSettings: WorkspaceSettings, debug: boolean, test
   return { status: xmlStatus, duration: xmlDuration, failedText: errText };
 }
 
+function getJunitFeatureName(wkspSettings: WorkspaceSettings, scenario: Scenario): string {
 
-function getjUnitName(wkspSettings: WorkspaceSettings, featureFileName: string, featureFileWorkspaceRelativePath: string) {
+  // see make_feature_filename() in https://github.com/behave/behave/blob/main/behave/reporter/junit.py
+  let fileName = null;
 
-  const featureFileStem = featureFileName.replace(/.feature$/, "");
-
-  // default
-  let dotSubFolders = featureFileWorkspaceRelativePath.replace(
-    wkspSettings.workspaceRelativeFeaturesPath + "/", "").split("/").slice(0, -1).join(".");
-
-  if (!StepsDirIsInsideFeaturesFolder(wkspSettings)) {
-    if (featureFileWorkspaceRelativePath === "features/" + featureFileName) {
-      dotSubFolders = featureFileWorkspaceRelativePath.split("/").slice(0, -1).join(".");
-    }
-    else {
-      if (os.platform() === "win32") {
-        const lastDir = wkspSettings.workspaceRelativeFeaturesPath.split("/").pop();
-        if (lastDir === "features")
-          dotSubFolders = dotSubFolders ? lastDir + "." + dotSubFolders : lastDir;
-      }
-    }
+  if (wkspSettings.workspaceRelativeFeaturesPath !== "features" &&
+    scenario.featureFileWorkspaceRelativePath.startsWith(wkspSettings.workspaceRelativeFeaturesPath)) {
+    fileName = scenario.featureFileWorkspaceRelativePath.slice(wkspSettings.workspaceRelativeFeaturesPath.length + 1);
   }
 
-  dotSubFolders = dotSubFolders === "" ? "" : dotSubFolders + ".";
-  return `${dotSubFolders}${featureFileStem}`;
+  if (!fileName)
+    fileName = path.relative(wkspSettings.workspaceRelativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
+
+  fileName = fileName.split('.').slice(0, -1).join('.');
+  fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');
+  return fileName;
 }
 
 
 function getJunitFileUri(wkspSettings: WorkspaceSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
 
-  const junitName = getjUnitName(wkspSettings, queueItem.scenario.featureFileName,
-    queueItem.scenario.featureFileWorkspaceRelativePath);
-
-  const junitFilename = `TESTS-${junitName}.xml`;
-
-  const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, junitFilename);
+  const junitName = getJunitFeatureName(wkspSettings, queueItem.scenario);
+  const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, `TESTS-${junitName}.xml`);
 
   if (os.platform() !== "win32")
     return junitFileUri;
@@ -255,8 +247,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getjUnitName(wkspSettings, queueItem.scenario.featureFileName,
-      queueItem.scenario.featureFileWorkspaceRelativePath);
+    const fullFeatureName = getJunitFeatureName(wkspSettings, queueItem.scenario);
     const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
     const scenarioName = queueItem.scenario.scenarioName;
 
@@ -308,7 +299,12 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 export function updateTestResultsForUnreadableJunitFile(wkspSettings: WorkspaceSettings, run: vscode.TestRun,
   queueItems: QueueItem[], junitFileUri: vscode.Uri) {
 
-  const parseResult = { status: "no-junit-file", duration: 0 };
+  const parseResult: ParseResult = {
+    status: "no-junit-file",
+    duration: 0,
+    failedText: `Failed to read expected JUnit file ${junitFileUri.fsPath}`
+  };
+
   for (const queueItem of queueItems) {
     updateTest(run, false, parseResult, queueItem);
   }

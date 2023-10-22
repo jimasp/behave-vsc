@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { StepsDirIsInsideFeaturesFolder, basename, isFeatureFile, isStepsFile } from '../common';
+import { basename, isFeatureFile, isStepsFile } from '../common';
 import { config } from "../configuration";
 import { diagLog, DiagLogType } from '../logger';
 import { FileParser } from '../parsers/fileParser';
@@ -11,16 +11,11 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
   // NOTE - not just .feature and .py files, but also watch FOLDER changes inside the features folder
   const wkspSettings = config.workspaceSettings[wkspUri.path];
-  const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
-  const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-  const watchers = [watcher];
-
-  let watcher2: vscode.FileSystemWatcher | undefined;
-  if (!StepsDirIsInsideFeaturesFolder(wkspSettings)) {
-    // steps folder is not in features folder
-    const pattern = new vscode.RelativePattern(wkspSettings.uri, `steps/**`);
-    watcher2 = vscode.workspace.createFileSystemWatcher(pattern);
-  }
+  const featuresPattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
+  const featuresWatcher = vscode.workspace.createFileSystemWatcher(featuresPattern);
+  const stepsPattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeStepsSearchPath}/**/*.py`);
+  const stepsWatcher = vscode.workspace.createFileSystemWatcher(stepsPattern);
+  const watchers = [featuresWatcher, stepsWatcher];
 
   const updater = async (uri: vscode.Uri) => {
     if (uri.scheme !== "file")
@@ -75,12 +70,8 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
   }
 
-
-  setEventHandlers(watcher);
-  if (watcher2) {
-    setEventHandlers(watcher2);
-    watchers.push(watcher2);
-  }
+  setEventHandlers(featuresWatcher);
+  setEventHandlers(stepsWatcher);
 
   return watchers;
 }

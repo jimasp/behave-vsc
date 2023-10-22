@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import {
-  findFirstTargetParentDirectorySync,
-  findSubdirectorySync, getUrisOfWkspFoldersWithFeatures,
+  getUrisOfWkspFoldersWithFeatures,
   getWorkspaceFolder, uriId, WkspError
 } from './common';
 import { config } from './configuration';
@@ -45,7 +45,8 @@ export class WorkspaceSettings {
   public readonly uri: vscode.Uri;
   public readonly name: string;
   public readonly featuresUri: vscode.Uri;
-  public readonly stepsSearchUri: vscode.Uri;
+  public readonly workspaceRelativeBaseDirPath: string;
+  public readonly workspaceRelativeStepsSearchPath: string;
   // internal
   private readonly _warnings: string[] = [];
   private readonly _fatalErrors: string[] = [];
@@ -94,15 +95,17 @@ export class WorkspaceSettings {
 
     // default to watching features folder for (possibly multiple) "steps" 
     // subfolders (e.g. like example project B/features folder)
-    this.stepsSearchUri = vscode.Uri.joinPath(this.featuresUri);
-    if (!findSubdirectorySync(this.stepsSearchUri.fsPath, "steps")) {
-      // if not found, get the first higher-level "steps" folder above the features folder inside the workspace
-      const stepsSearchFsPath = findFirstTargetParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath, "steps");
-      if (stepsSearchFsPath)
-        this.stepsSearchUri = vscode.Uri.file(stepsSearchFsPath);
-      else
-        logger.showWarn(`No "steps" folder found.`, this.uri);
-    }
+    let baseDirUri = vscode.Uri.joinPath(this.featuresUri);
+    const baseDirFsPath = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
+    if (baseDirFsPath)
+      baseDirUri = vscode.Uri.file(baseDirFsPath);
+    else
+      logger.showWarn(`No "steps" folder found.`, this.uri);
+    let stepsSearchRelPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
+    if (!stepsSearchRelPath.endsWith("features"))
+      stepsSearchRelPath = path.join(stepsSearchRelPath, "steps");
+    this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
+    this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
     if (envVarOverridesCfg) {
       const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
@@ -151,7 +154,7 @@ export class WorkspaceSettings {
     });
 
     // build sorted output dict of workspace settings
-    const nonUserSettableWkspSettings = ["name", "uri", "id", "featuresUri", "stepsSearchUri"];
+    const nonUserSettableWkspSettings = ["name", "uri", "id", "featuresUri", "baseUri", "workspaceRelativeStepsSearchPath"];
     const rscSettingsDic: { [name: string]: string; } = {};
     let wkspEntries = Object.entries(this).sort();
     wkspEntries.push(["fullFeaturesPath", this.featuresUri.fsPath]);
@@ -183,3 +186,16 @@ export class WorkspaceSettings {
 }
 
 
+function findStepsParentDirectorySync(startPath: string, stopPath: string): string | null {
+  let currentPath = startPath;
+  let firstMatch = null;
+  while (currentPath.startsWith(stopPath)) {
+    const files = fs.readdirSync(currentPath);
+    if (files.includes("steps") || files.includes("environment.py")) {
+      firstMatch = currentPath;
+      break;
+    }
+    currentPath = path.dirname(currentPath);
+  }
+  return firstMatch;
+}

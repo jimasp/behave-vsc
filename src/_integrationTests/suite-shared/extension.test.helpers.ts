@@ -84,11 +84,10 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
-	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("featuresPath"), wkspName);
+	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("workspaceRelativeFeaturesPath"), wkspName);
+	assert.strictEqual(wkspSettings.workspaceRelativeStepsSearchPath, testConfig.getExpected("workspaceRelativeStepsSearchPath", wkspUri), wkspName);
 	const expectedFeaturesUri = testConfig.getExpected("featuresUri", wkspUri) as vscode.Uri;
 	assert.strictEqual(true, urisMatch(wkspSettings.featuresUri, expectedFeaturesUri));
-	const expectedStepsSearchUri = testConfig.getExpected("stepsSearchUri", wkspUri) as vscode.Uri;
-	assert.strictEqual(true, urisMatch(wkspSettings.stepsSearchUri, expectedStepsSearchUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
 }

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 
 // used only in the extension tests themselves
@@ -111,7 +112,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	getExpected<T>(section: string, wkspUri?: vscode.Uri): T | undefined {
 
-		const getExpectedFeaturesPath = (): string => {
+		const getExpectedWorkspaceRelativeFeaturesPath = (): string => {
 			switch (this.featuresPath) {
 				case "":
 				case undefined:
@@ -124,18 +125,18 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		const getExpectedFeaturesUri = (): vscode.Uri => {
 			if (!wkspUri)
 				throw "you must supply wkspUri to call getExpectedFeaturesUri";
-			return vscode.Uri.joinPath(wkspUri, getExpectedFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
+			return vscode.Uri.joinPath(wkspUri, getExpectedWorkspaceRelativeFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
 		}
 
 
-		const getExpectedStepsSearchUri = (): vscode.Uri => {
+		const getExpectedWorkspaceRelativeStepsSearchPath = (): string => {
 			if (!wkspUri)
-				throw "you must supply wkspUri to get the expected getExpectedFullStepsSearchFsPath";
+				throw "you must supply wkspUri to get the expected getExpectedWorkspaceRelativeStepsSearchPath";
 			if (!wkspUri.path.includes("sibling steps folder"))
-				return getExpectedFeaturesUri();
+				return getWorkspaceRelativePath(wkspUri, getExpectedFeaturesUri());
 			if (!wkspUri.path.endsWith("sibling steps folder 2"))
-				return vscode.Uri.joinPath(wkspUri, "steps");
-			return vscode.Uri.joinPath(getExpectedFeaturesUri(), "..", "steps");
+				return getWorkspaceRelativePath(wkspUri, vscode.Uri.joinPath(wkspUri, "steps"));
+			return getWorkspaceRelativePath(wkspUri, vscode.Uri.joinPath(getExpectedFeaturesUri(), "..", "steps"));
 		}
 
 
@@ -143,12 +144,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
-			case "featuresPath":
-				return <T><unknown>getExpectedFeaturesPath();
+			case "workspaceRelativeFeaturesPath":
+				return <T><unknown>getExpectedWorkspaceRelativeFeaturesPath();
 			case "featuresUri":
 				return <T><unknown>getExpectedFeaturesUri();
-			case "stepsSearchUri":
-				return <T><unknown>getExpectedStepsSearchUri();
+			case "workspaceRelativeStepsSearchPath":
+				return <T><unknown>getExpectedWorkspaceRelativeStepsSearchPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootRunWorkspacesInParallel":
@@ -176,4 +177,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		throw new Error('update() method not implemented.');
 	}
 
+}
+
+function getWorkspaceRelativePath(wkspUri: vscode.Uri, searchUri: vscode.Uri) {
+	return path.relative(wkspUri.fsPath, searchUri.fsPath);
 }

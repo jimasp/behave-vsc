@@ -138,10 +138,11 @@ export class FileParser {
     deleteStepFileSteps(wkspSettings.featuresUri);
 
     let stepFiles: vscode.Uri[] = [];
+    const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeStepsSearchPath);
     if (StepsDirIsInsideFeaturesFolder(wkspSettings))
-      stepFiles = await findFiles(wkspSettings.stepsSearchUri, "steps", ".py", cancelToken);
+      stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
     else
-      stepFiles = await findFiles(wkspSettings.stepsSearchUri, undefined, ".py", cancelToken);
+      stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
 
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
