@@ -162,7 +162,7 @@ my-project/
 
 ## Troubleshooting
 
-### If you have used a previous version of this extension
+### If you have used a previous version of this extension, and and a new version has caused a problem
 
 - Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues).
   
