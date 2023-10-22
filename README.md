@@ -41,39 +41,39 @@ Example 1 (features folder contains a steps folder):
 
 ```text
 my-project/
-    ├── features/
-        ├── my.feature
-        ├── steps/  
-            ├── steps.py
+└── features/
+    ├── my.feature
+    └── steps/  
+        └── steps.py
 ```
 
 Example 2 (features folder has a sibling steps folder):
 
 ```text
 my-project/
-    ├── features/
-        ├── my.feature   
-    ├── steps/
-        ├── steps.py
+├── features/
+│   └── my.feature   
+└── steps/
+    └── steps.py
 ```
 
-Example 3 (features folder contains multiple steps folders):
+Example 3 (features folder containing multiple steps folders):
 
 ```text
 my-project/
-    ├── behave.ini
-    ├── features/  
-        ├── environment.py
-        ├── steps/  
+├── behave.ini
+└── features/  
+    ├── environment.py
+    ├── steps/  
+    │   ├── __init__.py
+    │   ├── steps.py  
+    ├── storage_tests/  
+    │   └── *.feature  
+    └── web_tests/  
+        ├── *.feature 
+        └── steps/
             ├── __init__.py
-            ├── steps.py  
-        ├── storage_tests/  
-            ├── *.feature  
-        ├── web_tests/  
-            ├── *.feature 
-            ├── steps/
-                ├── __init__.py
-                ├── steps.py    
+            └── steps.py    
 ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
