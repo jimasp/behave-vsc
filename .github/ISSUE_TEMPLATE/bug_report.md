@@ -25,7 +25,7 @@ Please detail the steps that are required to recreate your issue.
 Please note that only Windows and Linux are directly supported, i.e. if your issue is Mac-specific, you'll need to raise a PR.
 
 **Directory structure (optional, but often relevant):**
-What does your workspace look like? Where are your features/steps folders? Can you supply an image?
+Include your project directory structure if it is relevant (e.g. use the `tree` command).
 Is it a multi-root workspace (i.e. you have a `foobar.code-workspace` file) or just a simple workspace?
 
 **Screenshots and GIFS (optional):**
