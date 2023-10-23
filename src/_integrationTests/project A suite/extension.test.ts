@@ -9,15 +9,15 @@ suite(`project A suite`, () => {
 
 	test("runTogether", async () =>
 		await sharedWorkspaceTests.runTogether(folderName, "/behave tests/some tests/",
-			"/behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
+			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runParallel", async () =>
 		await sharedWorkspaceTests.runParallel(folderName, "behave tests/some tests/",
-			"/behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
+			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runDebug", async () =>
 		await sharedWorkspaceTests.runDebug(folderName, "/behave tests/some tests/",
-			"/behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
+			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 }).timeout(900000);
 

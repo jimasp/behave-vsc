@@ -218,6 +218,25 @@ export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceSettings) 
   return wkspSettings.workspaceRelativeStepsSearchPath.startsWith(wkspSettings.workspaceRelativeFeaturesPath);
 }
 
+export function findSubDirectorySync(searchPath: string, targetDirName: string): string | null {
+  const files = fs.readdirSync(searchPath);
+  for (const file of files) {
+    const filePath = path.join(searchPath, file);
+    const stats = fs.statSync(filePath);
+    if (stats.isDirectory()) {
+      if (file === targetDirName) {
+        return filePath;
+      } else {
+        const result = findSubDirectorySync(filePath, targetDirName);
+        if (result !== null) {
+          return result;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 export const getWorkspaceRelativePath = (wkspUri: vscode.Uri, targetUri: vscode.Uri) => {
   return path.relative(wkspUri.fsPath, targetUri.fsPath);
 }

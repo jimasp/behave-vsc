@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+  findSubDirectorySync,
   getUrisOfWkspFoldersWithFeatures,
   getWorkspaceFolder, uriId, WkspError
 } from './common';
@@ -96,14 +97,22 @@ export class WorkspaceSettings {
     // default to watching features folder for (possibly multiple) "steps" 
     // subfolders (e.g. like example project B/features folder)
     let baseDirUri = vscode.Uri.joinPath(this.featuresUri);
-    const baseDirFsPath = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
-    if (baseDirFsPath)
-      baseDirUri = vscode.Uri.file(baseDirFsPath);
-    else
-      logger.showWarn(`No "steps" folder found.`, this.uri);
-    let stepsSearchRelPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
-    if (!stepsSearchRelPath.endsWith("features"))
-      stepsSearchRelPath = path.join(stepsSearchRelPath, "steps");
+    let stepsSearchRelPath = path.relative(this.uri.fsPath, this.featuresUri.fsPath).replace(/\\/g, "/");
+    const stepsFolderIsInFeaturesFolder = findSubDirectorySync(this.featuresUri.fsPath, "steps");
+
+    // if no steps folder in features folder, then findStepsParentDirectorySync will recurse 
+    // upwards from the features folder to the wksp root looking for a "steps" folder or "environment.py" file
+    if (!stepsFolderIsInFeaturesFolder) {
+      const stepsParentPath = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
+      if (stepsParentPath) {
+        baseDirUri = vscode.Uri.file(stepsParentPath);
+        stepsSearchRelPath = path.join(stepsSearchRelPath, "steps");
+      }
+      else {
+        logger.showWarn(`No "steps" folder found.`, this.uri);
+      }
+    }
+
     this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
     this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
