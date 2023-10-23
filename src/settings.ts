@@ -106,7 +106,7 @@ export class WorkspaceSettings {
       const stepsParentPath = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
       if (stepsParentPath) {
         baseDirUri = vscode.Uri.file(stepsParentPath);
-        stepsSearchRelPath = path.join(stepsSearchRelPath, "steps");
+        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentPath), "steps");
       }
       else {
         logger.showWarn(`No "steps" folder found.`, this.uri);

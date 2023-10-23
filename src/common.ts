@@ -237,9 +237,6 @@ export function findSubDirectorySync(searchPath: string, targetDirName: string):
   return null;
 }
 
-export const getWorkspaceRelativePath = (wkspUri: vscode.Uri, targetUri: vscode.Uri) => {
-  return path.relative(wkspUri.fsPath, targetUri.fsPath);
-}
 
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience
