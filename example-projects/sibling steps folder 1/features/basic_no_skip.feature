@@ -9,7 +9,3 @@ Feature: Basic
       Given we have behave installed
       When we implement a failing test
       Then we will see the result     
-
-   @skip
-   Scenario: run a skipped test
-      Given we have behave installed

@@ -73,7 +73,8 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 }
 
 
-function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration) {
+function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration,
+	expectedWorkspaceRelativeStepsSearchPath: string) {
 
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
@@ -85,7 +86,7 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPath, testConfig.getExpected("workspaceRelativeFeaturesPath"), wkspName);
-	assert.strictEqual(wkspSettings.workspaceRelativeStepsSearchPath, testConfig.getExpected("workspaceRelativeStepsSearchPath", wkspUri), wkspName);
+	assert.strictEqual(wkspSettings.workspaceRelativeStepsSearchPath, expectedWorkspaceRelativeStepsSearchPath, wkspName);
 	const expectedFeaturesUri = testConfig.getExpected("featuresUri", wkspUri) as vscode.Uri;
 	assert.strictEqual(true, urisMatch(wkspSettings.featuresUri, expectedFeaturesUri));
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
@@ -394,7 +395,9 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
-export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string, testConfig: TestWorkspaceConfig,
+export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string,
+	testConfig: TestWorkspaceConfig,
+	expectedWorkspaceRelativeStepsSearchPath: string,
 	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
 	getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
 
@@ -411,7 +414,8 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
-	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig, instances.config);
+	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig,
+		instances.config, expectedWorkspaceRelativeStepsSearchPath);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl,

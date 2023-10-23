@@ -15,6 +15,7 @@ export class SharedWorkspaceTests {
 
 
   runDefault = async (wkspName: string,
+    expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -27,11 +28,13 @@ export class SharedWorkspaceTests {
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getExpectedCounts, getExpectedResults);
+    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, expectedWorkspaceRelativeStepsSearchPath,
+      getExpectedCounts, getExpectedResults);
   }
 
 
   runTogether = async (wkspName: string, wkspRelativeFeaturesPath: string,
+    expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -43,11 +46,13 @@ export class SharedWorkspaceTests {
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getExpectedCounts, getExpectedResults);
+    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, expectedWorkspaceRelativeStepsSearchPath,
+      getExpectedCounts, getExpectedResults);
   }
 
 
   runParallel = async (wkspName: string, wkspRelativeFeaturesPath: string,
+    expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -59,10 +64,12 @@ export class SharedWorkspaceTests {
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, getExpectedCounts, getExpectedResults);
+    await runAllTestsAndAssertTheResults(false, wkspName, testConfig, expectedWorkspaceRelativeStepsSearchPath,
+      getExpectedCounts, getExpectedResults);
   }
 
   runDebug = async (wkspName: string, wkspRelativeFeaturesPath: string,
+    expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResults: (wskpUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -76,7 +83,8 @@ export class SharedWorkspaceTests {
 
     // NOTE - if this fails, try removing all breakpoints in both environments
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(true, wkspName, testConfig, getExpectedCounts, getExpectedResults);
+    await runAllTestsAndAssertTheResults(true, wkspName, testConfig, expectedWorkspaceRelativeStepsSearchPath,
+      getExpectedCounts, getExpectedResults);
   }
 
 }

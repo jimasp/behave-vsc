@@ -145,7 +145,7 @@ my-project/
 
 ### If you have used a previous version of this extension, and and a new version has caused a problem
 
-- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues).
+- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). (Please note that choosing a specific version will stop the extension from upgrading in future, so you will need to manually upgrade to a newer version when the issue has been fixed.)
   
 ### Otherwise
 
@@ -153,17 +153,16 @@ my-project/
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 - Did you set extension settings in your user settings instead of your workspace settings?
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
-- Have you tried restarting vscode?
+- Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
+- Does restarting vscode solve your issue?
+- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
 - If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
 - If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
-- Does restarting vscode solve your issue?
-- Do you have runParallel turned on? Try turning it off.
-- Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
+- Do you have the runParallel setting turned on? Try turning it off.
 - Check if the problem is in [Known Issues](#known-issues-and-limitations) below
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
 - Try temporarily disabling other extensions.
-- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 - The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
 

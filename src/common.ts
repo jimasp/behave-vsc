@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
@@ -217,6 +218,9 @@ export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceSettings) 
   return wkspSettings.workspaceRelativeStepsSearchPath.startsWith(wkspSettings.workspaceRelativeFeaturesPath);
 }
 
+export const getWorkspaceRelativePath = (wkspUri: vscode.Uri, targetUri: vscode.Uri) => {
+  return path.relative(wkspUri.fsPath, targetUri.fsPath);
+}
 
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience

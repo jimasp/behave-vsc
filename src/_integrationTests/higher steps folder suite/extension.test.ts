@@ -9,10 +9,12 @@ suite(`higher steps folder suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runParallel", async () =>
-		await sharedWorkspaceTests.runParallel(folderName, "subfolder/features", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runParallel(folderName, "subfolder/features", "steps",
+			getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runTogether", async () =>
-		await sharedWorkspaceTests.runTogether(folderName, "subfolder/features", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runTogether(folderName, "subfolder/features", "steps",
+			getExpectedCounts, getExpectedResults)).timeout(300000);
 
 }).timeout(900000);
 

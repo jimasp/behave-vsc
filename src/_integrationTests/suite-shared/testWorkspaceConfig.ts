@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 
 // used only in the extension tests themselves
@@ -17,7 +16,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private runParallel: boolean | undefined;
 	private xRay: boolean | undefined;
 
-	// all user-settable settings in settings.json or *.code-workspace
+	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
 		envVarOverrides, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
@@ -129,15 +128,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		}
 
 
-		const getExpectedWorkspaceRelativeStepsSearchPath = (): string => {
-			if (!wkspUri)
-				throw "you must supply wkspUri to get the expected getExpectedWorkspaceRelativeStepsSearchPath";
-			if (!wkspUri.path.includes("sibling steps folder"))
-				return getWorkspaceRelativePath(wkspUri, getExpectedFeaturesUri());
-			if (!wkspUri.path.endsWith("sibling steps folder 2"))
-				return getWorkspaceRelativePath(wkspUri, vscode.Uri.joinPath(wkspUri, "steps"));
-			return getWorkspaceRelativePath(wkspUri, vscode.Uri.joinPath(getExpectedFeaturesUri(), "..", "steps"));
-		}
 
 
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
@@ -148,8 +138,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedWorkspaceRelativeFeaturesPath();
 			case "featuresUri":
 				return <T><unknown>getExpectedFeaturesUri();
-			case "workspaceRelativeStepsSearchPath":
-				return <T><unknown>getExpectedWorkspaceRelativeStepsSearchPath();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootRunWorkspacesInParallel":
@@ -179,6 +167,3 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 }
 
-function getWorkspaceRelativePath(wkspUri: vscode.Uri, searchUri: vscode.Uri) {
-	return path.relative(wkspUri.fsPath, searchUri.fsPath);
-}
