@@ -103,10 +103,13 @@ export class WorkspaceSettings {
     // if no steps folder in features folder, then findStepsParentDirectorySync will recurse 
     // upwards from the features folder to the wksp root looking for a "steps" folder or "environment.py" file
     if (!stepsFolderIsInFeaturesFolder) {
-      const stepsParentPath = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
-      if (stepsParentPath) {
-        baseDirUri = vscode.Uri.file(stepsParentPath);
-        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentPath), "steps");
+      const findStepsParentDirResult = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
+      if (findStepsParentDirResult) {
+        const stepsParentFsPath = findStepsParentDirResult.fsPath;
+        if (findStepsParentDirResult.environmentpyOnly)
+          logger.showWarn(`environment.py found in ${stepsParentFsPath}, but no steps folder found in that directory.`, this.uri);
+        baseDirUri = vscode.Uri.file(stepsParentFsPath);
+        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps");
       }
       else {
         logger.showWarn(`No "steps" folder found.`, this.uri);
@@ -194,17 +197,21 @@ export class WorkspaceSettings {
 
 }
 
+type findStepsParentDirectorySyncResult = {
+  environmentpyOnly: boolean,
+  fsPath: string
+}
 
-function findStepsParentDirectorySync(startPath: string, stopPath: string): string | null {
+function findStepsParentDirectorySync(startPath: string, stopPath: string): findStepsParentDirectorySyncResult | null {
   let currentPath = startPath;
-  let firstMatch = null;
   while (currentPath.startsWith(stopPath)) {
     const files = fs.readdirSync(currentPath);
     if (files.includes("steps") || files.includes("environment.py")) {
-      firstMatch = currentPath;
-      break;
+      const epo = files.includes("environment.py") && !files.includes("steps");
+      return { environmentpyOnly: epo, fsPath: currentPath };
     }
     currentPath = path.dirname(currentPath);
   }
-  return firstMatch;
+
+  return null;
 }

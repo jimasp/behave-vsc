@@ -28,7 +28,14 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
   const setEventHandlers = (watcher: vscode.FileSystemWatcher) => {
 
     // fires on either new file/folder creation OR rename (inc. git actions)
-    watcher.onDidCreate(uri => updater(uri));
+    watcher.onDidCreate(uri => {
+      if (uri.path.endsWith("/steps") || uri.path.endsWith("environment.py")) {
+        config.reloadSettings(wkspSettings.uri);
+        parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidCreate", false);
+        return;
+      }
+      updater(uri);
+    });
 
     // fires on file save (inc. git actions)
     watcher.onDidChange(uri => updater(uri));
@@ -53,6 +60,9 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
         if (basename(uri).includes(".") && !isFeatureFile(uri) && !isStepsFile(uri)) {
           diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
         }
+
+        if (path.endsWith("/steps") || path.endsWith("environment.py"))
+          config.reloadSettings(wkspSettings.uri);
 
         parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete", false);
       }

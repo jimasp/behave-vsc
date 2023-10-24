@@ -214,9 +214,11 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
   return workspaceFolder;
 }
 
+
 export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceSettings) => {
   return wkspSettings.workspaceRelativeStepsSearchPath.startsWith(wkspSettings.workspaceRelativeFeaturesPath);
 }
+
 
 export function findSubDirectorySync(searchPath: string, targetDirName: string): string | null {
   const files = fs.readdirSync(searchPath);

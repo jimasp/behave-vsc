@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
@@ -139,6 +140,11 @@ export class FileParser {
 
     let stepFiles: vscode.Uri[] = [];
     const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeStepsSearchPath);
+    if (!fs.existsSync(stepsSearchUri.fsPath)) {
+      config.logger.showWarn(`No steps directory found at ${wkspSettings.workspaceRelativeStepsSearchPath}.`, wkspSettings.uri);
+      return 0;
+    }
+
     if (StepsDirIsInsideFeaturesFolder(wkspSettings))
       stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
     else
@@ -147,7 +153,7 @@ export class FileParser {
     stepFiles = stepFiles.filter(uri => isStepsFile(uri));
 
     if (stepFiles.length < 1 && !cancelToken.isCancellationRequested) {
-      config.logger.showWarn("No step files found", wkspSettings.uri);
+      config.logger.showWarn(`No step files found in ${wkspSettings.workspaceRelativeStepsSearchPath}.`, wkspSettings.uri);
       return 0;
     }
 

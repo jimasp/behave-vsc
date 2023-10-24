@@ -1,4 +1,3 @@
-# ruff: noqa
 from behave import *
 
 @given("we have behave installed")
