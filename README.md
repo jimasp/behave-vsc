@@ -8,26 +8,25 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ## Features
 
 - Run or Debug behave tests, either from the test side bar or from inside a feature file.
+  - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
+  - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
 
-- Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-
-- See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
-
-- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
   - Quick-navigate in the Step References Window (default F4 + Shift F4).
 
+- Automatic Gherkin syntax highlighting (colourisation), including smart parameter highlighting.  
+
 - Smart feature step auto-completion, e.g. typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. (Also some snippets are thrown in.)
 
-- Feature file formatting (default Ctrl+K,Ctrl+F).
-
-- Automatic Gherkin syntax highlighting (colourisation), including smart parameter recognition.
+- Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
+
+- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
 
 ---
 
@@ -42,11 +41,19 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ### Required project directory structure
 
-- A single `features` folder (lowercase by default), which either contains a `steps` folder or has a sibling `steps` folder at the same level. You don't have to call it "features" - read on, but behave requires you have a folder called "steps". (Multiple features folders are allowed in a multi-root workspace, but only one per project.)
+- A "project" is shorthand for "a workspace folder that contains your feature files".
 
-- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure. Note however that the features and steps folders must be somewhere *inside* the project folder (not above it).
+- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
 
-  - Example 1 (features folder contains a steps folder):
+  - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps`.
+
+  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).
+
+  - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.
+  
+  - Multiple `features` folders are only supported in a multi-root workspace, i.e. one `features` folder per project.
+
+  - Example 1 (features folder contains a child steps folder):
 
     ```text
     my-project/
@@ -87,7 +94,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- If you have any issues with relative imports due to the behave working directory then set the `PYTHONPATH` environment variable.
+- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH":src/lib1:src/lib2:myfolder`".
 
   - Example:
 
@@ -118,7 +125,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ### How test runs work
 
-- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project.
+- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. The behave command working directory is your root project directory.
 
 - For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
 
@@ -147,12 +154,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - *How can I see all effective settings for the extension?*
   - On starting vscode, look in the Behave VSC output window.
+
 - *How can I see the active behave configuration being used for behave execution?*
   - In your behave config file, set `verbose=true`.
+
 - *How do I clear previous test results?*
-  - This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test side bar and then click "Clear all results".
+  - This isn't that obvious in vscode. Click the ellipsis `...` at the top of the Testing side bar and then click "Clear all results".
+
 - *Why does the behave command output contain `--show-skipped`?*
   - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
+
 - *How can I only execute a specific set of tests while using the extension?*
 
   - There are a lot of options here, but there are some examples:
@@ -195,9 +206,11 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Because the extension depends on the `--junit` behave argument. As per the behave docs, with this flag set, all stdout and stderr will be redirected and dumped to the junit report, regardless of the capture/no-capture options. If you want to see print statements, copy/paste the outputted command and run it manually (or run `python -m behave` for all test output).
 
 - *Where is the behave junit output stored?*
+
   - In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
   
 - *When will this extension have a release version?*
+
   - When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
 
 ---
@@ -222,7 +235,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 
-- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release in [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
+- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release on [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
 
 - If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
 
@@ -230,17 +243,17 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
 
-- Do you have the runParallel setting turned on? Try turning it off.
+- Do you have the `runParallel` setting turned on? Try turning it off.
 
 - Check if the problem is in [Known Issues](#known-issues-and-limitations) below
 
 - Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
 
-- Try temporarily disabling other extensions.
+- Try temporarily disabling other extensions. Especially if they relate to behave, gherkin or cucumber.
 
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 
-- The extension is only tested with a few example projects. It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces.)
+- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects) . It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own.)
 
 ---
 
