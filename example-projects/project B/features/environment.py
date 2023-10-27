@@ -1,4 +1,3 @@
-# ruff: noqa
 import parse
 from behave import model, register_type
 

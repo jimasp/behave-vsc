@@ -6,8 +6,8 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 80, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 7,
+    tests: { nodeCount: 81, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 9,
     stepFileStepsExceptCommentedOut: 47,
     featureFileStepsExceptCommentedOut: 128, stepMappings: 127  // (1 diff = "When we have a missing step")
   };
@@ -305,7 +305,7 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped2/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (fail)',
       scenario_isOutline: false,
@@ -314,14 +314,14 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/table.feature/Use a table (fail)',
+      test_id: '.../project B/{{featurePath}}/grouped2/table.feature/Use a table (fail)',
       test_label: 'Use a table (fail)',
-      test_parent: '.../project B/{{featurePath}}/grouped/table.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/table.feature'
+      test_parent: '.../project B/{{featurePath}}/grouped2/table.feature',
+      test_uri: '.../project B/{{featurePath}}/grouped2/table.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/table.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/grouped2/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (success)',
       scenario_isOutline: false,
@@ -330,10 +330,10 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/table.feature/Use a table (success)',
+      test_id: '.../project B/{{featurePath}}/grouped2/table.feature/Use a table (success)',
       test_label: 'Use a table (success)',
-      test_parent: '.../project B/{{featurePath}}/grouped/table.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/table.feature'
+      test_parent: '.../project B/{{featurePath}}/grouped2/table.feature',
+      test_uri: '.../project B/{{featurePath}}/grouped2/table.feature'
     }),
 
     new TestResult({

@@ -45,7 +45,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
 
-  - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps`.
+  - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
 
   - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).
 
@@ -53,28 +53,57 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   
   - Multiple `features` folders are only supported in a multi-root workspace, i.e. one `features` folder per project.
 
-  - Example 1 (features folder contains a child steps folder):
+  - Example 1 - features folder contains a child steps folder:
 
     ```text
     my-project/
     ├── behave.ini
     └── features/
-        ├── steps/  
-        |   └── steps.py
         ├── environment.py
-        └── my.feature        
+        ├── my.feature       
+        └── steps/  
+            └── steps.py
     ```
 
-  - Example 2 (features folder has a sibling steps folder):
+  - Example 2 - features folder has a sibling steps folder:
 
     ```text
     my-project/
     ├── behave.ini
+    ├── environment.py       
     ├── features/
     │   └── my.feature   
-    ├── steps/
-    │   └── steps.py
-    └── environment.py    
+    └── steps/
+        └── steps.py
+ 
+    ```
+
+  - Example 3 - feature folder contains multiple imported `steps` folders. Note that all steps folders must be called `steps` if you want step navigation to work:
+  
+    ```text
+    my-project/
+    └── features
+        ├── my.feature
+        ├── steps
+        │   ├── __init__.py   
+        │   └── shared_steps.py    
+        ├── storage_tests
+        │   ├── storage.feature
+        │   └── steps
+        │      └── __init__.py
+        │      └── storage_steps.py
+        └── web_tests
+            ├── web.feature
+            └── steps
+                ├── __init__.py
+                └── web_steps.py
+    ```
+
+    where `my-project/features/steps/__init__.py` looks like this:
+
+    ```python
+    from features.storage_tests.steps import *
+    from features.web_tests.steps import *
     ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
@@ -152,6 +181,24 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Q&A
 
+- *How can I only execute a specific set of tests while using the extension?*
+
+  - There are a lot of options here, but it is recommended to use a combination of A, B and C below:
+
+    - A. consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI instead.  
+
+    - B. consider if you can use a feature/scenario/folder naming scheme (e.g. prefixes) that will allow you to leverage the filtering above the test tree in the UI to enable you to run just those tests.
+
+    - C. use the `envVarOverrides` extension setting to set an environment variable when running behave from the extension. The great thing about using an environment variable is that you can use it from the command line whenever required (you can see the environment variable in the command in the Behave VSC output window when you run a test.)
+
+      - to control a behave `active_tag_value_provider`
+      - to control `scenario.skip()`
+      - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to control the tests run
+      - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+      - setting the `BEHAVE_STAGE` environment variable
+
+    - D. (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup).
+
 - *How can I see all effective settings for the extension?*
   - On starting vscode, look in the Behave VSC output window.
 
@@ -163,22 +210,6 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - *Why does the behave command output contain `--show-skipped`?*
   - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
-
-- *How can I only execute a specific set of tests while using the extension?*
-
-  - There are a lot of options here, but there are some examples:
-
-    - (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup)
-
-    - (higly flexible) consider if you can group them into folders, not just by tag, then you can select to run any folder/subfolder from the test tree in the UI instead.  
-
-    - (highly flexible) consider if you can use a feature/scenario/folder naming scheme that will allow you to leverage the filtering above the test tree to enable you to run just those tests.
-
-    - (completely custom) use the `envVarOverrides` extension setting to set an environment variable that is only set when running from the extension. This adds endless possibilities, but the most obvious approaches are probably:
-      - to control a behave `before_all` for a completely custom setup
-      - to control a behave `active_tag_value_provider`
-      - to control `scenario.skip()`
-      - setting the `BEHAVE_STAGE` environment variable
 
 - *How do I enable automatic feature file formatting on save?*
   - via a standard vscode setting:

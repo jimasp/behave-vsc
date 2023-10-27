@@ -1,4 +1,3 @@
-# ruff: noqa
 from time import sleep
 import unittest
 

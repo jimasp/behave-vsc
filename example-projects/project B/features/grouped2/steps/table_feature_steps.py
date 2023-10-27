@@ -1,6 +1,4 @@
-# ruff: noqa
 from behave import *
-
 
 class UserDept:
     user = ""
