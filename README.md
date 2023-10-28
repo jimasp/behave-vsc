@@ -137,6 +137,18 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
+- Step library folders that are inside your project folder can be enabled for step navigation via the `behave-vsc.stepLibraryFolders` setting. (This is an experimental feature.)
+
+  - Example:
+
+    ```json
+    // settings.json
+    {
+      "behave-vsc.stepLibraryFolders": [".venv/lib/python3.11/site-packages/behave-django"],
+      "behave-vsc.justMyCode": false
+    }
+    ```
+
 ---
 
 ## Extension settings
@@ -225,11 +237,21 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     "[gherkin]": { "editor.suggest.showSnippets": false }
     ```
 
-- *How do I disable autocomplete for feature file steps?*
+- *How do I disable extension autocomplete for feature files?*
   - via a standard vscode setting:
 
     ```json
     "[gherkin]": { "editor.suggest.showFunctions": false }
+    ```
+
+- *How do I disable Copilot autocomplete for feature files?*
+  - via a standard vscode setting:
+
+    ```json
+      "github.copilot.enable": {
+          "*": true,
+          "gherkin": false,
+      },
     ```
 
 - *Why can't I see print statements in the Behave VSC output window even though I have `stdout_capture=False` in my behave config file?*
@@ -260,7 +282,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Does restarting vscode solve your issue?
 
-- Did you set extension settings in your user settings instead of your workspace settings?
+- Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
 
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 

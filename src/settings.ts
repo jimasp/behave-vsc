@@ -41,6 +41,7 @@ export class WorkspaceSettings {
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly workspaceRelativeFeaturesPath: string;
+  public readonly workspaceRelativeStepLibraryPaths: string[] = [];
   // convenience properties
   public readonly id: string;
   public readonly uri: vscode.Uri;
@@ -49,7 +50,6 @@ export class WorkspaceSettings {
   public readonly workspaceRelativeBaseDirPath: string;
   public readonly workspaceRelativeStepsSearchPath: string;
   // internal
-  private readonly _warnings: string[] = [];
   private readonly _fatalErrors: string[] = [];
 
 
@@ -67,6 +67,9 @@ export class WorkspaceSettings {
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
+    const stepLibraryPathsCfg: string | undefined = wkspConfig.get("stepLibraryPaths");
+    if (stepLibraryPathsCfg === undefined)
+      throw "stepLibraryPaths is undefined";
     const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
@@ -96,6 +99,9 @@ export class WorkspaceSettings {
 
     // default to watching features folder for (possibly multiple) "steps" 
     // subfolders (e.g. like example project B/features folder)
+    // NOTE - if features/steps exists, we still need to look for e.g. features/grouped/steps
+    // so the stepsSearchRelPath in that case will be "features" NOT "features/steps".
+    // also note that baseDir is a concept borrowed from behave's source code (see comment in getJunitFeatureName in junitParser.ts)
     let baseDirUri = vscode.Uri.joinPath(this.featuresUri);
     let stepsSearchRelPath = path.relative(this.uri.fsPath, this.featuresUri.fsPath).replace(/\\/g, "/");
     const stepsFolderIsInFeaturesFolder = findSubDirectorySync(this.featuresUri.fsPath, "steps");
@@ -107,7 +113,7 @@ export class WorkspaceSettings {
       if (findStepsParentDirResult) {
         const stepsParentFsPath = findStepsParentDirResult.fsPath;
         if (findStepsParentDirResult.environmentpyOnly)
-          logger.showWarn(`environment.py found in ${stepsParentFsPath}, but no steps folder found in that directory.`, this.uri);
+          logger.showWarn(`environment.py was found in "${stepsParentFsPath}", but no steps folder was found in that directory.`, this.uri);
         baseDirUri = vscode.Uri.file(stepsParentFsPath);
         stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps");
       }
@@ -119,23 +125,40 @@ export class WorkspaceSettings {
     this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
     this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
+    for (const folder of stepLibraryPathsCfg) {
+      const relativePath = folder.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
+      if (relativePath === "steps"
+        || relativePath === path.join(this.workspaceRelativeFeaturesPath, "steps")
+        || relativePath === this.workspaceRelativeStepsSearchPath) {
+        logger.showWarn(`steps folder "${relativePath}" specified in "behave-vsc.stepLibraryPaths" will be ignored ` +
+          "as it was detected as a standard (non-library) steps path.", this.uri);
+      }
+      else {
+        const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
+        if (!fs.existsSync(folderUri.fsPath))
+          logger.showWarn(`step library path "${folderUri.fsPath}" not found.`, this.uri);
+        else
+          this.workspaceRelativeStepLibraryPaths.push(relativePath);
+      }
+    }
+
     if (envVarOverridesCfg) {
       const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
       try {
         if (typeof envVarOverridesCfg !== "object") {
-          this._warnings.push(err);
+          logger.showWarn(err, this.uri);
         }
         else {
           for (const name in envVarOverridesCfg) {
             // just check for "=" typo
             if (name.includes("=")) {
-              this._warnings.push(`${err} ${name} must not contain =`);
+              logger.showWarn(`${err} ${name} must not contain =`, this.uri);
               break;
             }
             const value = envVarOverridesCfg[name];
             if (value) {
               if (typeof value !== "string") {
-                this._warnings.push(`${err} ${value} is not a string`);
+                logger.showWarn(`${err} ${value} is not a string`, this.uri);
                 break;
               }
               this.envVarOverrides[name] = value;
@@ -144,7 +167,7 @@ export class WorkspaceSettings {
         }
       }
       catch {
-        this._warnings.push(err);
+        logger.showError(err, this.uri);
       }
     }
 

@@ -14,19 +14,21 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private justMyCode: boolean | undefined;
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
 	private runParallel: boolean | undefined;
+	private stepLibraryPaths: string[] | undefined;
 	private xRay: boolean | undefined;
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
 		envVarOverrides, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
-		runParallel, xRay
+		runParallel, stepLibraryPaths, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
 		multiRootRunWorkspacesInParallel: boolean | undefined,
 		runParallel: boolean | undefined,
+		stepLibraryPaths: string[] | undefined,
 		xRay: boolean | undefined
 	}) {
 		this.envVarOverrides = envVarOverrides;
@@ -34,6 +36,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
+		this.stepLibraryPaths = stepLibraryPaths;
 		this.xRay = xRay;
 	}
 
@@ -45,7 +48,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// 1. the actual value if one is set in settings.json/*.code-worspace (this could be e.g. an empty string)
 		// 2. the default in the package.json (if there is one) 
 		// 3. the default value for the type (e.g. bool = false, string = "", dict = {}, array = [])
-		// SO WE MUST MIRROR THAT BEHAVIOR HERE
+		// SO WE MUST MIRROR THAT BEHAVIOUR HERE
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
@@ -57,6 +60,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
+			case "stepLibraryPaths":
+				return <T><unknown>(this.stepLibraryPaths === undefined ? [] : this.stepLibraryPaths);
 			case "xRay":
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			default:
@@ -91,6 +96,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				break;
 			case "runParallel":
 				response = <T><unknown>this.runParallel;
+				break;
+			case "stepLibraryPaths":
+				response = <T><unknown>this.stepLibraryPaths;
 				break;
 			case "xRay":
 				response = <T><unknown>this.xRay;
@@ -127,10 +135,18 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			return vscode.Uri.joinPath(wkspUri, getExpectedWorkspaceRelativeFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
 		}
 
+		const getExpectedWorkspaceRelativeStepLibraryPaths = (): string[] => {
+			if (!wkspUri)
+				throw "you must supply wkspUri to call getExpectedworkspaceRelativeStepLibraryPaths";
+			return this.stepLibraryPaths?.map(path => {
+				return path.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
+			}) ?? [];
+		}
 
 
 
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
+		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
@@ -144,9 +160,10 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("multiRootRunWorkspacesInParallel"));
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
+			case "workspaceRelativeStepLibraryPaths":
+				return <T><unknown>getExpectedWorkspaceRelativeStepLibraryPaths();
 			case "xRay":
 				return <T><unknown>(this.get("xRay"));
-
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("getExpected() missing case for section: " + section);

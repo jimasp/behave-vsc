@@ -248,18 +248,37 @@ export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Pro
 };
 
 
-export const isStepsFile = (uri: vscode.Uri): boolean => {
-  const path = uri.path.toLowerCase();
+export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 
-  if (!path.includes("/steps/"))
+  const isStepsLibFile = (): boolean => {
+    const wkspSettings = getWorkspaceSettingsForFile(fileUri);
+    const relPath = path.relative(wkspSettings.uri.fsPath, fileUri.fsPath);
+    for (const stepsLibFolder of wkspSettings.workspaceRelativeStepLibraryPaths) {
+      if (relPath.startsWith(stepsLibFolder))
+        return true;
+    }
+    return false;
+  }
+
+  if (fileUri.scheme !== "file")
     return false;
 
-  return path.endsWith(".py");
+  const filePath = fileUri.path.toLowerCase();
+  if (!filePath.includes("/steps/")) {
+    if (!isStepsLibFile())
+      return false;
+    if (isStepsLibFile() && !filePath.endsWith("/steps.py"))
+      return false;
+  }
+
+  return filePath.endsWith(".py");
 }
 
 
-export const isFeatureFile = (uri: vscode.Uri): boolean => {
-  const path = uri.path.toLowerCase();
+export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
+  if (fileUri.scheme !== "file")
+    return false;
+  const path = fileUri.path.toLowerCase();
   return path.endsWith(".feature");
 }
 

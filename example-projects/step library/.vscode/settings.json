@@ -1,0 +1,10 @@
+{
+    "behave-vsc.xRay": true,
+    "behave-vsc.stepLibraryPaths": [
+        "steps_lib_1",
+        "steps_lib_2",
+    ],
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
+}

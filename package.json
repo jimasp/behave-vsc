@@ -17,6 +17,12 @@
 					"markdownDescription": "*workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
 					"default": "features"
 				},
+				"behave-vsc.stepLibraryPaths": {
+					"scope": "resource",
+					"type": "array",
+					"markdownDescription": "(experimental) an array of *workspace-relative* paths to step libraries inside the project. This will only find step files that are either in a `steps` folder or are called `steps.py`",
+					"default": []
+				},
 				"behave-vsc.justMyCode": {
 					"scope": "resource",
 					"type": "boolean",

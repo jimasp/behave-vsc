@@ -10,7 +10,8 @@ suite(`higher steps folder suite test debug run`, () => {
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName, "subfolder/features", "steps",
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName,
+    "subfolder/features", "", "steps",
     getExpectedCounts, getExpectedResults)).timeout(300000);
 
 }).timeout(900000);

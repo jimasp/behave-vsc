@@ -1,3 +1,6 @@
 {
-    "behave-vsc.xRay": true
+    "behave-vsc.xRay": true,
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
 }

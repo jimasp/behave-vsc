@@ -159,6 +159,23 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
+			"name": "Debug: step library workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/step library",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Run Test Suite: simple workspace",
 			"type": "extensionHost",
 			"request": "launch",
@@ -256,6 +273,21 @@
 				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/project B suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Run Test Suite: step library workspace",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/step library",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/step library suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

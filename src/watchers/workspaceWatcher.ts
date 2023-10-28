@@ -74,7 +74,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
   }
 
-  // NOTE - ** because we want to watch our for FOLDER changes, not just .feature and .py files
+  // NOTE - ** is because we want to watch our for FOLDER changes, not just .feature and .py files
   const featureFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**`);
   const featuresFolderWatcher = vscode.workspace.createFileSystemWatcher(featureFolderPattern);
   const watchers = [featuresFolderWatcher];
@@ -83,11 +83,18 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
   let separateStepsFolderWatcher: vscode.FileSystemWatcher | undefined;
   if (!StepsDirIsInsideFeaturesFolder(wkspSettings)) {
     // steps folder is not in features folder, so need another watcher
-    // NOTE - ** because we want to watch out for FOLDER changes, not just .py file changes
+    // NOTE - ** is because we want to watch out for FOLDER changes, not just .py file changes
     const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeStepsSearchPath}/**`);
     separateStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(separateStepsFolderWatcher);
     watchers.push(separateStepsFolderWatcher);
+  }
+
+  for (const stepsFolder of wkspSettings.workspaceRelativeStepLibraryPaths) {
+    const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${stepsFolder}/**`);
+    const stepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
+    setEventHandlers(stepsFolderWatcher);
+    watchers.push(stepsFolderWatcher);
   }
 
   return watchers;

@@ -15,5 +15,8 @@
     "python.testing.pytestEnabled": false,
     "behave-vsc.featuresPath": "",
     "behave-vsc.runParallel": true,
-    "behave-vsc.xRay": true
+    "behave-vsc.xRay": true,
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
 }

@@ -9,13 +9,16 @@ suite(`simple suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runDefault", async () =>
-		await sharedWorkspaceTests.runDefault(folderName, "features", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runDefault(folderName,
+			"features", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runParallel", async () =>
-		await sharedWorkspaceTests.runParallel(folderName, "", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runParallel(folderName,
+			"", "features", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runTogether", async () =>
-		await sharedWorkspaceTests.runTogether(folderName, "", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runTogether(folderName,
+			"", "features", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 }).timeout(900000);
 

@@ -8,16 +8,14 @@ suite(`project A suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runTogether", async () =>
-		await sharedWorkspaceTests.runTogether(folderName, "/behave tests/some tests/",
-			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runTogether(folderName,
+			"/behave tests/some tests/", "behave tests/some tests", "behave tests/some tests",
+			getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runParallel", async () =>
-		await sharedWorkspaceTests.runParallel(folderName, "behave tests/some tests/",
-			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
-
-	test("runDebug", async () =>
-		await sharedWorkspaceTests.runDebug(folderName, "/behave tests/some tests/",
-			"behave tests/some tests", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runParallel(folderName,
+			"behave tests/some tests/", "behave tests/some tests", "behave tests/some tests",
+			getExpectedCounts, getExpectedResults)).timeout(300000);
 
 }).timeout(900000);
 

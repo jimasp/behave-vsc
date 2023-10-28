@@ -106,9 +106,6 @@ export class FileParser {
     deleteFeatureFileSteps(wkspSettings.featuresUri);
     deleteStepMappings(wkspSettings.featuresUri);
 
-    // replaced with custom findFiles function for now (see comment in findFiles function)
-    //const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
-    //const featureFiles = await vscode.workspace.findFiles(pattern, null, undefined, cancelToken);
     const featureFiles = await findFiles(wkspSettings.featuresUri, undefined, ".feature", cancelToken);
 
     if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
@@ -150,7 +147,12 @@ export class FileParser {
     else
       stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
 
-    stepFiles = stepFiles.filter(uri => isStepsFile(uri));
+    for (const stepsFolder of wkspSettings.workspaceRelativeStepLibraryPaths) {
+      const stepsLibUri = vscode.Uri.joinPath(wkspSettings.uri, stepsFolder);
+      let stepLibFiles = await findFiles(stepsLibUri, undefined, ".py", cancelToken);
+      stepLibFiles = stepLibFiles.filter(uri => isStepsFile(uri));
+      stepFiles = stepFiles.concat(stepLibFiles);
+    }
 
     if (stepFiles.length < 1 && !cancelToken.isCancellationRequested) {
       config.logger.showWarn(`No step files found in ${wkspSettings.workspaceRelativeStepsSearchPath}.`, wkspSettings.uri);
@@ -334,7 +336,7 @@ export class FileParser {
 
 
   // NOTE:
-  // - This is normally a BACKGROUND task. It should only be await-ed on user request, i.e. when called by the refreshHandler.
+  // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
   // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled. 
   async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<WkspParseCounts | undefined> {

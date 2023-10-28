@@ -11,6 +11,6 @@ suite(`sibling steps folder 1 suite test debug run`, () => {
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
   test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName, "",
-    "steps", getExpectedCounts, getExpectedResults)).timeout(300000);
+    "", "steps", getExpectedCounts, getExpectedResults)).timeout(300000);
 }).timeout(900000);
 

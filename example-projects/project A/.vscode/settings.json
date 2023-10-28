@@ -17,5 +17,8 @@
     "behave-vsc.featuresPath": "behave tests/some tests/",
     "behave-vsc.justMyCode": true,
     "behave-vsc.runParallel": false,
-    "behave-vsc.xRay": true
+    "behave-vsc.xRay": true,
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
 }

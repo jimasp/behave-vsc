@@ -7,6 +7,7 @@
 - sibling steps folder - project containing a steps folder at the same level as the features folder
 - sibling steps folder 2 - project containing a features and steps folder in the same subfolder
 - higher steps folder - project containing a steps folder at a higher level than the features subfolder
+- step library - project containg a step library folder
 - projects included in the multiroot.code-workspace:
   - multiroot bad features path - project to test error handling/output for a bad feature path in settings.json
   - multiroot empty folder - project to test error handling/output for an empty project folder

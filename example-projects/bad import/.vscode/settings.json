@@ -1,4 +1,7 @@
 {
     "behave-vsc.xRay": true,
-    "behave-vsc.runParallel": true
+    "behave-vsc.runParallel": true,
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
 }

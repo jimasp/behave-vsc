@@ -10,7 +10,8 @@ suite(`simple suite test debug run`, () => {
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName, "",
-    "features", getExpectedCounts, getExpectedResults)).timeout(300000);
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName,
+    "", "features", "features",
+    getExpectedCounts, getExpectedResults)).timeout(300000);
 }).timeout(900000);
 
