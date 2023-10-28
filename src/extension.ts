@@ -10,7 +10,7 @@ import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
-import { testRunHandler } from './runners/testRunHandler';
+import { testRunHandler, RunHandlerParams } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog } from './logger';
 import { performance } from 'perf_hooks';
@@ -29,7 +29,7 @@ export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
 export type TestSupport = {
-  runHandler: (debug: boolean, request: vscode.TestRunRequest) => Promise<QueueItem[] | undefined>,
+  runHandler: ({ debug, request, tagExpression, envVars }: RunHandlerParams) => Promise<QueueItem[] | undefined>,
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
@@ -94,16 +94,77 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest) => {
-        await runHandler(false, request);
+        await runHandler({ debug: false, request });
       }
       , true);
+
+    ctrl.createRunProfile('Run Tests with Tags', vscode.TestRunProfileKind.Run,
+      async (request: vscode.TestRunRequest) => {
+        const tagExpression = await vscode.window.showInputBox(
+          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+        );
+        await runHandler({ debug: false, request, tagExpression });
+      }
+      , false);
+
+    ctrl.createRunProfile('Run Tests with Environment Variables', vscode.TestRunProfileKind.Run,
+      async (request: vscode.TestRunRequest) => {
+        const envVars = await vscode.window.showInputBox(
+          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
+        );
+        await runHandler({ debug: false, request, envVars });
+      }
+      , false);
+
+    ctrl.createRunProfile('Run Tests with Environment Variables and Tags', vscode.TestRunProfileKind.Run,
+      async (request: vscode.TestRunRequest) => {
+        const tagExpression = await vscode.window.showInputBox(
+          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+        );
+        const envVars = await vscode.window.showInputBox(
+          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
+        );
+        await runHandler({ debug: true, request, tagExpression, envVars });
+      }
+      , false);
 
 
     ctrl.createRunProfile('Debug Tests', vscode.TestRunProfileKind.Debug,
       async (request: vscode.TestRunRequest) => {
-        await runHandler(true, request);
+        await runHandler({ debug: true, request });
       }
       , true);
+
+    ctrl.createRunProfile('Debug Tests with Tags', vscode.TestRunProfileKind.Debug,
+      async (request: vscode.TestRunRequest) => {
+        const tagExpression = await vscode.window.showInputBox(
+          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+        );
+        await runHandler({ debug: true, request, tagExpression });
+      }
+      , true);
+
+    ctrl.createRunProfile('Debug Tests with Environment Variables', vscode.TestRunProfileKind.Debug,
+      async (request: vscode.TestRunRequest) => {
+        const envVars = await vscode.window.showInputBox(
+          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
+        );
+        await runHandler({ debug: true, request, envVars });
+      }
+      , true);
+
+    ctrl.createRunProfile('Debug Tests with Environment Variables and Tags', vscode.TestRunProfileKind.Debug,
+      async (request: vscode.TestRunRequest) => {
+        const envVars = await vscode.window.showInputBox(
+          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
+        );
+        const tagExpression = await vscode.window.showInputBox(
+          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+        );
+        await runHandler({ debug: true, request, tagExpression, envVars });
+      }
+      , true);
+
 
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {

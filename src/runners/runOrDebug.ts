@@ -1,17 +1,20 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { WorkspaceSettings } from "../settings";
+import { config } from "../configuration";
 import { runBehaveInstance } from './behaveRun';
 import { debugBehaveInstance } from './behaveDebug';
 import { QueueItem } from '../extension';
 import { WkspError } from '../common';
 import { WkspRun } from './testRunHandler';
+import { env } from 'process';
 
 
 
 // hard-code any settings we MUST have (i.e. override user behave.ini file only where absolutely necessary)
+// NOTE: show-skipped is always required, otherwise skipped tests would not produce junit output and we would not be able to 
+// update them in the test explorer tree (this is particularly important for tagged runs where we don't know what ran)
 const OVERRIDE_ARGS = [
-  "--show-skipped", // show-skipped is required for skipped tests to produce junit output
+  "--show-skipped",
   "--junit",
   "--junit-directory"
 ];
@@ -20,11 +23,11 @@ const OVERRIDE_ARGS = [
 export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<void> {
   // runs all features in a single instance of behave
 
-  const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
+  const friendlyEnvVars = getFriendlyEnvVars(wr);
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-  const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+  const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
 
   const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -49,11 +52,11 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
       throw new Error("running async debug is not supported");
 
     const pipedPathPatterns = getPipedFeaturePathsPattern(wr, parallelMode, scenarioQueueItems);
-    const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
+    const friendlyEnvVars = getFriendlyEnvVars(wr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
     const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-    const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+    const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -86,7 +89,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
       throw new Error("running parallel debug is not supported");
 
     const pipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems);
-    const friendlyEnvVars = getFriendlyEnvVars(wr.wkspSettings);
+    const friendlyEnvVars = getFriendlyEnvVars(wr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].scenario.featureFileWorkspaceRelativePath;
 
@@ -95,7 +98,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
-    const args = friendlyArgs.map(x => x.replace(/^"(.*)"$/, '$1'));
+    const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -190,16 +193,32 @@ function getScenarioRunName(scenName: string, isOutline: boolean) {
 }
 
 
-function getFriendlyEnvVars(wkspSettings: WorkspaceSettings) {
-  let envVars = "";
+function getFriendlyEnvVars(wr: WkspRun) {
+  let envVarString = "";
+  const allEnvVars = wr.wkspSettings.envVarOverrides;
+  const envVars = wr.envVars.split(",");
 
-  for (const [name, value] of Object.entries(wkspSettings.envVarOverrides)) {
-    envVars += os.platform() === "win32" ?
-      typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replace('"', '""')}"`}\n` :
-      typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replace('"', '\\"')}" `;
+  if (envVars[0] !== "") {
+    for (let envVar of envVars) {
+      envVar = envVar.trim();
+      if (!envVar.includes("=")) {
+        config.logger.showWarn(`Invalid environment variable setting ${envVar} ignored, must contain =`, wr.wkspSettings.uri);
+        break;
+      }
+      const [name, value] = envVar.split("=");
+      if (name === "")
+        continue;
+      allEnvVars[name] = value ?? "";
+    }
   }
 
-  return envVars;
+  for (const [name, value] of Object.entries(allEnvVars)) {
+    envVarString += os.platform() === "win32" ?
+      typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replaceAll('"', '""')}"`}\n` :
+      typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replaceAll('"', '\\"')}" `;
+  }
+
+  return envVarString;
 }
 
 
@@ -210,4 +229,12 @@ function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
     ps2 = "& ";
   }
   return { ps1, ps2 };
+}
+
+
+function removeDoubleQuotesAndAddTags(wr: WkspRun, friendlyArgs: string[]) {
+  const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+  if (wr.tagExpression)
+    args.unshift(`--tags=${wr.tagExpression}`);
+  return args;
 }

@@ -7,7 +7,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Features
 
-- Run or Debug behave tests, either from the test side bar or from inside a feature file.
+- Run or Debug behave tests, either from the test explorer or from inside a feature file.
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
   - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
 
@@ -155,6 +155,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, and `envVarOverrides`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
+- Note that environment variables (and behave tags) can also be set on a per run basis via the test run profiles in the test explorer UI.
 
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
 
@@ -193,23 +194,22 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Q&A
 
-- *How can I only execute a specific set of tests while using the extension?*
+- *How can I execute a specific subset of tests while using the extension?*
 
-  - There are a lot of options here, but it is recommended to use a combination of A, B and C below:
+  - There are several options here. Using a combination of A, B, and C below is recommended:
 
-    - A. consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI instead.  
+    - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI and/or combine it with tags.
 
-    - B. consider if you can use a feature/scenario/folder naming scheme (e.g. prefixes) that will allow you to leverage the filtering above the test tree in the UI to enable you to run just those tests.
+    - B. Consider if you can use a naming scheme for feature folders that will allow you to leverage the filtering above the test tree in the UI to enable you to run just those tests.
 
-    - C. use the `envVarOverrides` extension setting to set an environment variable when running behave from the extension. The great thing about using an environment variable is that you can use it from the command line whenever required (you can see the environment variable in the command in the Behave VSC output window when you run a test.)
+    - C. (experimental) Run tagged tests via the `Run Tests with Tags` profile in the test explorer or via the `>` in the feature file. Note that this can be further filtered by your selection in the test tree.
+
+    - D. (experimental) Custom. Using the `Run Tests with Environment Variables` profile in the test explorer. While this gives a lot of flexibility, remember that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. So depending on your custom implementation it is possible that you could end up with the test tree spinning around waiting for tests that never run. Some ideas for how to use the environment variables:
 
       - to control a behave `active_tag_value_provider`
       - to control `scenario.skip()`
       - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to control the tests run
       - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
-      - setting the `BEHAVE_STAGE` environment variable
-
-    - D. (simple but inflexible) use the `default_tags=` setting in your behave.ini file (or a `[behave.userdata]` setting for a custom setup).
 
 - *How can I see all effective settings for the extension?*
   - On starting vscode, look in the Behave VSC output window.
@@ -218,7 +218,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - In your behave config file, set `verbose=true`.
 
 - *How do I clear previous test results?*
-  - This isn't that obvious in vscode. Click the ellipsis `...` at the top of the Testing side bar and then click "Clear all results".
+  - This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test explorer and then click `Clear all results`.
 
 - *Why does the behave command output contain `--show-skipped`?*
   - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.

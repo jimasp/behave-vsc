@@ -26,15 +26,23 @@ export class WkspRun {
     public readonly pythonExec: string,
     public readonly allTestsForThisWkspIncluded: boolean,
     public readonly includedFeatures: vscode.TestItem[],
-    public readonly junitRunDirUri: vscode.Uri
+    public readonly junitRunDirUri: vscode.Uri,
+    public readonly tagExpression: string,
+    public readonly envVars: string
   ) { }
 }
 
+export interface RunHandlerParams {
+  debug: boolean;
+  request: vscode.TestRunRequest;
+  tagExpression?: string;
+  envVars?: string;
+}
 
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, parser: FileParser, junitWatcher: JunitWatcher,
   removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
-  return async (debug: boolean, request: vscode.TestRunRequest) => {
+  return async ({ debug, request, tagExpression = "", envVars = "" }: RunHandlerParams) => {
 
     diagLog(`testRunHandler: invoked`);
 
@@ -62,7 +70,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     try {
       const queue: QueueItem[] = [];
       await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? convertToTestItemArray(ctrl.items), testData);
-      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher);
+      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, tagExpression, envVars);
       return queue;
     }
     catch (e: unknown) {
@@ -110,7 +118,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
 
 async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher) {
+  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, tagExprForRun: string, envVarsForRun: string) {
 
   diagLog(`runTestQueue: started for run ${run.name}`);
 
@@ -150,12 +158,12 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
     // run workspaces sequentially
     if (!winSettings.multiRootRunWorkspacesInParallel || debug) {
-      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue);
+      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, tagExprForRun, envVarsForRun);
       continue;
     }
 
     // run workspaces in parallel
-    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue));
+    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, tagExprForRun, envVarsForRun));
   }
 
   await Promise.all(wkspRunPromises);
@@ -166,7 +174,8 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
 
 async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[]) {
+  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[], tagExpression: string,
+  envVarsForRun: string) {
 
   let wr: WkspRun | undefined = undefined;
 
@@ -182,7 +191,7 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
 
     wr = new WkspRun(
       wkspSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
-      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri
+      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri, tagExpression, envVarsForRun
     )
 
     const start = performance.now();

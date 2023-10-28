@@ -6,8 +6,7 @@ import { WkspRun } from './testRunHandler';
 
 
 
-export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean,
-  args: string[], friendlyCmd: string): Promise<void> {
+export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean, args: string[], friendlyCmd: string): Promise<void> {
 
   let cp: ChildProcess;
   const cancellationHandler = wr.run.token.onCancellationRequested(() => cp?.kill());

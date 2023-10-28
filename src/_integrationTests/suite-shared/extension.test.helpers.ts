@@ -450,8 +450,8 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// will inside the runHandler, i.e. so no other parsing gets kicked off until it has begun.
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
-	const runRequest = new vscode.TestRunRequest(include);
-	const resultsPromise = instances.runHandler(debug, runRequest);
+	const request = new vscode.TestRunRequest(include);
+	const resultsPromise = instances.runHandler({ debug, request });
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
 	await (new Promise(t => setTimeout(t, 50)));
