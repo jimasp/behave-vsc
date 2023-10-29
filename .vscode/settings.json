@@ -22,4 +22,7 @@
     ],
     "editor.formatOnSave": true,
     "editor.foldingMaximumRegions": 20000,
+    "mypy-type-checker.path": [
+        "disabled"
+    ]
 }

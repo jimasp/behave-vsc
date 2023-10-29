@@ -6,7 +6,7 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the workspace.",
+					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using `behave-vsc.runProfiles`.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -40,6 +40,11 @@
 					"type": "boolean",
 					"markdownDescription": "Specifies whether to create a separate behave instance for each feature and run those instances simultaneously (except when debugging). Leave this off for your initial run, then enable if you wish and your test setup supports it (i.e. your features are fully isolated).",
 					"default": false
+				},
+				"behave-vsc.runProfiles": {
+					"scope": "window",
+					"type": "object",
+					"markdownDescription": "Run profiles used to set tags and environment variables for test runs. Applies globally to all behave tests in the workspace. See the readme for an example."
 				},
 				"behave-vsc.xRay": {
 					"scope": "window",

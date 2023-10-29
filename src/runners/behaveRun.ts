@@ -16,13 +16,13 @@ export async function runBehaveInstance(wr: WkspRun, parallelMode: boolean, args
     const local_args = [...args];
     local_args.unshift("-m", "behave");
     diagLog(`${wr.pythonExec} ${local_args.join(" ")}`, wkspUri);
-    const env = { ...process.env, ...wr.wkspSettings.envVarOverrides };
+    const env = { ...process.env, ...wr.envVars };
     const options: SpawnOptions = { cwd: wkspUri.fsPath, env: env };
     cp = spawn(wr.pythonExec, local_args, options);
 
     if (!cp.pid) {
       throw `unable to launch python or behave, command: ${wr.pythonExec} ${local_args.join(" ")}\n` +
-      `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.wkspSettings.envVarOverrides)}`;
+      `working directory:${wkspUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.envVars)}`;
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order

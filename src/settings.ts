@@ -15,6 +15,7 @@ export class WindowSettings {
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
+  public readonly runProfiles: RunProfiles | undefined;
   public readonly xRay: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
@@ -29,6 +30,17 @@ export class WindowSettings {
 
     this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.xRay = xRayCfg;
+
+    try {
+      const runProfilesCfg: RunProfiles | undefined = winConfig.get("runProfiles");
+      if (runProfilesCfg === undefined)
+        throw "runProfiles is undefined";
+      this.runProfiles = runProfilesCfg;
+    }
+    catch {
+      vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
+    }
+
   }
 }
 
@@ -61,9 +73,6 @@ export class WorkspaceSettings {
     this.name = wsFolder.name;
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-    const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
-    if (envVarOverridesCfg === undefined)
-      throw "envVarOverrides is undefined";
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
@@ -77,6 +86,15 @@ export class WorkspaceSettings {
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
 
+    try {
+      const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
+      if (envVarOverridesCfg === undefined)
+        throw "envVarOverrides is undefined";
+      this.envVarOverrides = envVarOverridesCfg;
+    }
+    catch {
+      vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
+    }
 
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
@@ -141,36 +159,6 @@ export class WorkspaceSettings {
           this.workspaceRelativeStepLibraryPaths.push(relativePath);
       }
     }
-
-    if (envVarOverridesCfg) {
-      const err = `Invalid envVarOverrides setting ${JSON.stringify(envVarOverridesCfg)} ignored.`;
-      try {
-        if (typeof envVarOverridesCfg !== "object") {
-          logger.showWarn(err, this.uri);
-        }
-        else {
-          for (const name in envVarOverridesCfg) {
-            // just check for "=" typo
-            if (name.includes("=")) {
-              logger.showWarn(`${err} ${name} must not contain =`, this.uri);
-              break;
-            }
-            const value = envVarOverridesCfg[name];
-            if (value) {
-              if (typeof value !== "string") {
-                logger.showWarn(`${err} ${value} is not a string`, this.uri);
-                break;
-              }
-              this.envVarOverrides[name] = value;
-            }
-          }
-        }
-      }
-      catch {
-        logger.showError(err, this.uri);
-      }
-    }
-
 
     this.logSettings(logger, winSettings);
   }
@@ -238,3 +226,13 @@ function findStepsParentDirectorySync(startPath: string, stopPath: string): find
 
   return null;
 }
+
+
+type RunProfile = {
+  envVars: { [key: string]: string };
+  tagExpression: string;
+};
+
+type RunProfiles = { [key: string]: RunProfile };
+
+

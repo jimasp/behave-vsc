@@ -264,7 +264,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   
 - *When will this extension have a release version?*
 
-  - When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes bugs more likely.
+  - When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes breaking changes (and bugs) more likely.
 
 ---
 

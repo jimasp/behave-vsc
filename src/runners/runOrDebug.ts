@@ -194,25 +194,9 @@ function getScenarioRunName(scenName: string, isOutline: boolean) {
 
 
 function getFriendlyEnvVars(wr: WkspRun) {
+
   let envVarString = "";
-  const allEnvVars = wr.wkspSettings.envVarOverrides;
-  const envVars = wr.envVars.split(",");
-
-  if (envVars[0] !== "") {
-    for (let envVar of envVars) {
-      envVar = envVar.trim();
-      if (!envVar.includes("=")) {
-        config.logger.showWarn(`Invalid environment variable setting ${envVar} ignored, must contain =`, wr.wkspSettings.uri);
-        break;
-      }
-      const [name, value] = envVar.split("=");
-      if (name === "")
-        continue;
-      allEnvVars[name] = value ?? "";
-    }
-  }
-
-  for (const [name, value] of Object.entries(allEnvVars)) {
+  for (const [name, value] of Object.entries(wr.envVars)) {
     envVarString += os.platform() === "win32" ?
       typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replaceAll('"', '""')}"`}\n` :
       typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replaceAll('"', '\\"')}" `;

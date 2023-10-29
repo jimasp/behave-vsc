@@ -92,13 +92,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     const runHandler = testRunHandler(testData, ctrl, parser, junitWatcher, cleanExtensionTempDirectoryCancelSource);
 
-    ctrl.createRunProfile('Run Tests', vscode.TestRunProfileKind.Run,
+    ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest) => {
         await runHandler({ debug: false, request });
       }
       , true);
 
-    ctrl.createRunProfile('Run Tests with Tags', vscode.TestRunProfileKind.Run,
+    ctrl.createRunProfile('Run Features with Tags', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest) => {
         const tagExpression = await vscode.window.showInputBox(
           { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
@@ -107,65 +107,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       }
       , false);
 
-    ctrl.createRunProfile('Run Tests with Environment Variables', vscode.TestRunProfileKind.Run,
-      async (request: vscode.TestRunRequest) => {
-        const envVars = await vscode.window.showInputBox(
-          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
-        );
-        await runHandler({ debug: false, request, envVars });
-      }
-      , false);
-
-    ctrl.createRunProfile('Run Tests with Environment Variables and Tags', vscode.TestRunProfileKind.Run,
-      async (request: vscode.TestRunRequest) => {
-        const tagExpression = await vscode.window.showInputBox(
-          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-        );
-        const envVars = await vscode.window.showInputBox(
-          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
-        );
-        await runHandler({ debug: true, request, tagExpression, envVars });
-      }
-      , false);
-
-
-    ctrl.createRunProfile('Debug Tests', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        await runHandler({ debug: true, request });
-      }
-      , true);
-
-    ctrl.createRunProfile('Debug Tests with Tags', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        const tagExpression = await vscode.window.showInputBox(
-          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-        );
-        await runHandler({ debug: true, request, tagExpression });
-      }
-      , true);
-
-    ctrl.createRunProfile('Debug Tests with Environment Variables', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        const envVars = await vscode.window.showInputBox(
-          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
-        );
-        await runHandler({ debug: true, request, envVars });
-      }
-      , true);
-
-    ctrl.createRunProfile('Debug Tests with Environment Variables and Tags', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        const envVars = await vscode.window.showInputBox(
-          { prompt: "Enter environment variables expression, e.g. `EnvVar=1, EnvVar2=2`" }
-        );
-        const tagExpression = await vscode.window.showInputBox(
-          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-        );
-        await runHandler({ debug: true, request, tagExpression, envVars });
-      }
-      , true);
-
-
+    for (const name in config.globalSettings.runProfiles) {
+      const runProfile = config.globalSettings.runProfiles[name];
+      ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
+        async (request: vscode.TestRunRequest) => {
+          await runHandler({ debug: false, request, tagExpression: runProfile.tagExpression, envVars: runProfile.envVars });
+        }
+        , false);
+      ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
+        async (request: vscode.TestRunRequest) => {
+          await runHandler({ debug: true, request, tagExpression: runProfile.tagExpression, envVars: runProfile.envVars });
+        }
+        , false);
+    }
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
       let wkspSettings;
