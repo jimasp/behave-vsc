@@ -3,7 +3,7 @@ import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 
 
 // this is a separate file because we don't want to run parallel debug 
-// sessions (which is not supported) when running the multi-root tests 
+// sessions (which is not supported) when running the multi-root tests (i.e. runMultiRootWorkspacesInParallel=true)
 
 suite(`project B suite test debug run`, () => {
   const folderName = "project B";
