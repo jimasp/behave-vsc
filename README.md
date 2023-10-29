@@ -9,24 +9,18 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run or Debug behave tests, either from the test explorer or from inside a feature file.
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
+  - Select to run tests with tags and/or apply env vars via run profiles.
   - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
-
-- Two-way step navigation:
+- Two-way step navigation (including step library support):
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
   - Quick-navigate in the Step References Window (default F4 + Shift F4).
-
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter highlighting.  
-
 - Smart feature step auto-completion, e.g. typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. (Also some snippets are thrown in.)
-
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
-
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
-
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-
-- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, etc.)
+- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, run profiles, etc.)
 
 ---
 
@@ -42,17 +36,11 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ### Required project directory structure
 
 - A "project" is shorthand for "a workspace folder that contains your feature files".
-
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
-
   - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
-
   - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).
-
   - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.
-  
   - Multiple `features` folders are only supported in a multi-root workspace, i.e. one `features` folder per project.
-
   - Example 1 - features folder contains a child steps folder:
 
     ```text
@@ -156,9 +144,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, and `envVarOverrides`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Note that environment variables (and behave tags) can also be set on a per run basis via the test run profiles in the test explorer UI.
-
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
-
 - For more information on available options, go to the extension settings in vscode.
 
 ---
