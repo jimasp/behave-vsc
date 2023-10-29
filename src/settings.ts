@@ -93,7 +93,7 @@ export class WorkspaceSettings {
       this.envVarOverrides = envVarOverridesCfg;
     }
     catch {
-      vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
+      vscode.window.showWarningMessage('Invalid "behave-vsc.envVarOverrides" setting was ignored.', "OK");
     }
 
     this.justMyCode = justMyCodeCfg;

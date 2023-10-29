@@ -81,6 +81,7 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 		const winSettings = config.globalSettings;
 		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
 		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), wkspName);
+		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), wkspName);
 	}
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
@@ -92,7 +93,8 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	assert.strictEqual(true, urisMatch(wkspSettings.featuresUri, expectedFeaturesUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
 	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
-	assert.deepStrictEqual(wkspSettings.workspaceRelativeStepLibraryPaths, testConfig.getExpected("workspaceRelativeStepLibraryPaths", wkspUri), wkspName);
+	assert.deepStrictEqual(wkspSettings.workspaceRelativeStepLibraryPaths, testConfig.getExpected("workspaceRelativeStepLibraryPaths",
+		wkspUri), wkspName);
 }
 
 
