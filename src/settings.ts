@@ -15,7 +15,7 @@ export class WindowSettings {
   // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
-  public readonly runProfiles: RunProfiles | undefined;
+  public readonly runProfiles: RunProfilesSetting | undefined;
   public readonly xRay: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
@@ -32,7 +32,7 @@ export class WindowSettings {
     this.xRay = xRayCfg;
 
     try {
-      const runProfilesCfg: RunProfiles | undefined = winConfig.get("runProfiles");
+      const runProfilesCfg: RunProfilesSetting | undefined = winConfig.get("runProfiles");
       if (runProfilesCfg === undefined)
         throw "runProfiles is undefined";
       this.runProfiles = runProfilesCfg;
@@ -233,6 +233,6 @@ type RunProfile = {
   tagExpression: string;
 };
 
-type RunProfiles = { [key: string]: RunProfile };
+export type RunProfilesSetting = { [key: string]: RunProfile };
 
 

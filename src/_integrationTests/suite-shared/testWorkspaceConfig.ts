@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { RunProfilesSetting } from '../../settings';
 
 
 // used only in the extension tests themselves
@@ -6,7 +7,8 @@ export class TestWorkspaceConfigWithWkspUri {
 	constructor(public testConfig: TestWorkspaceConfig, public wkspUri: vscode.Uri) { }
 }
 
-// used in extension code to allow us to dynamically inject a workspace configuration
+// used in extension code to allow us to dynamically inject a test workspace configuration
+// (i.e. independent of the actual settings.json)
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private envVarOverrides: { [name: string]: string } | undefined;
@@ -15,13 +17,14 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private multiRootRunWorkspacesInParallel: boolean | undefined;
 	private runParallel: boolean | undefined;
 	private stepLibraryPaths: string[] | undefined;
+	private runProfiles: RunProfilesSetting | undefined;
 	private xRay: boolean | undefined;
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
 		envVarOverrides, featuresPath: featuresPath, justMyCode,
 		multiRootRunWorkspacesInParallel,
-		runParallel, stepLibraryPaths, xRay
+		runParallel, stepLibraryPaths, runProfiles, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
 		featuresPath: string | undefined,
@@ -29,6 +32,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		multiRootRunWorkspacesInParallel: boolean | undefined,
 		runParallel: boolean | undefined,
 		stepLibraryPaths: string[] | undefined,
+		runProfiles: RunProfilesSetting | undefined,
 		xRay: boolean | undefined
 	}) {
 		this.envVarOverrides = envVarOverrides;
@@ -37,6 +41,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runParallel = runParallel;
 		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
 		this.stepLibraryPaths = stepLibraryPaths;
+		this.runProfiles = runProfiles;
 		this.xRay = xRay;
 	}
 
@@ -64,12 +69,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.stepLibraryPaths === undefined ? [] : this.stepLibraryPaths);
 			case "xRay":
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
+			case "runProfiles":
+				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
 		}
 	}
-
 
 
 	inspect<T>(section: string): {
@@ -99,6 +105,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				break;
 			case "stepLibraryPaths":
 				response = <T><unknown>this.stepLibraryPaths;
+				break;
+			case "runProfiles":
+				response = <T><unknown>this.runProfiles;
 				break;
 			case "xRay":
 				response = <T><unknown>this.xRay;
@@ -160,6 +169,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("multiRootRunWorkspacesInParallel"));
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
+			case "runProfiles":
+				return <T><unknown>(this.get("runProfiles"));
 			case "workspaceRelativeStepLibraryPaths":
 				return <T><unknown>getExpectedWorkspaceRelativeStepLibraryPaths();
 			case "xRay":

@@ -8,6 +8,7 @@ export async function run(): Promise<void[]> {
 	const aSuite = runner("../**/project A suite/**.test.js");
 	const bSuite = runner("../**/project B suite/**.test.js", ["../**/project B suite/**.testdebug.test.js"]);
 	const sSuite = runner("../**/simple suite/**.test.js", ["../**/simple suite/**.testdebug.test.js"]);
+	const rpSuite = runner("../**/run profiles suite/**.test.js", ["../**/run profiles suite/**.testdebug.test.js"]);
 
-	return Promise.all([aSuite, bSuite, sSuite]);
+	return Promise.all([aSuite, bSuite, sSuite, rpSuite]);
 }

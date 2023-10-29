@@ -62,17 +62,17 @@ Feature: Tags and Vars
       When we implement a failing test
       Then we will see the result
 
+   @skip
+   Scenario: untagged - @skip - skip always
+      Given we have behave installed
+      When we implement a successful test
+      Then we will see the result
+
    Scenario: untagged - success - envvar checks
       Given we have behave installed
       When envvar var1 is set to 'OVR-1'
       And envvar var3 is set to 'OVR-3'
       Then we will see the result   
-
-   @skip
-   Scenario: @skip - skip always
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result
 
 
 

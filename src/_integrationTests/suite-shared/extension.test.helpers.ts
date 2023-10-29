@@ -261,11 +261,11 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 }
 
 function assertExpectedCounts(wkspUri: vscode.Uri, wkspName: string, config: Configuration,
-	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+	getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
 	actualCounts: WkspParseCounts, hasMultiRootWkspNode: boolean) {
 
 	try {
-		const expectedCounts = getExpectedCounts(wkspUri, config);
+		const expectedCounts = getExpectedCountsFunc(wkspUri, config);
 
 		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName + ": featureFilesExceptEmptyOrCommentedOut");
 		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName + ": stepFilesExceptEmptyOrCommentedOut");
@@ -401,8 +401,9 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	testConfig: TestWorkspaceConfig,
 	expectedWorkspaceRelativeBaseDirPath: string,
 	expectedWorkspaceRelativeStepsSearchPath: string,
-	getExpectedCounts: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-	getExpectedResults: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]) {
+	getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+	getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
+	tagExpression = "", envVars: { [name: string]: string } = {}) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
 	const wkspUri = getTestWorkspaceUri(wskpFileSystemFolderName);
@@ -435,7 +436,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allWkspItems);
-	const expectedResults = getExpectedResults(wkspUri, instances.config);
+	const expectedResults = getExpectedResultsFunc(wkspUri, instances.config);
 	if (include.length !== expectedResults.length)
 		debugger; // eslint-disable-line no-debugger
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
@@ -451,7 +452,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const request = new vscode.TestRunRequest(include);
-	const resultsPromise = instances.runHandler({ debug, request });
+	const resultsPromise = instances.runHandler({ debug, request, tagExpression, envVars });
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
 	await (new Promise(t => setTimeout(t, 50)));
@@ -497,7 +498,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCounts, actualCounts, hasMuliRootWkspNode);
+	assertExpectedCounts(wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCountsFunc, actualCounts, hasMuliRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

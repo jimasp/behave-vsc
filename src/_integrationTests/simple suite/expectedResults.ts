@@ -16,7 +16,7 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
