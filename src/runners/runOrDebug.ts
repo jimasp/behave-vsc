@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { config } from "../configuration";
 import { runBehaveInstance } from './behaveRun';
 import { debugBehaveInstance } from './behaveDebug';
 import { QueueItem } from '../extension';
 import { WkspError } from '../common';
 import { WkspRun } from './testRunHandler';
-import { env } from 'process';
 
 
 
@@ -27,7 +25,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-  const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
+  const args = addTagsAndGetArgs(wr, friendlyArgs);
 
   const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -56,7 +54,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
     const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-    const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
+    const args = addTagsAndGetArgs(wr, friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -98,7 +96,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
-    const args = removeDoubleQuotesAndAddTags(wr, friendlyArgs);
+    const args = addTagsAndGetArgs(wr, friendlyArgs);
 
     const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -216,9 +214,12 @@ function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
 }
 
 
-function removeDoubleQuotesAndAddTags(wr: WkspRun, friendlyArgs: string[]) {
+function addTagsAndGetArgs(wr: WkspRun, friendlyArgs: string[]) {
   const args = friendlyArgs.map(x => x.replaceAll('"', ""));
-  if (wr.tagExpression)
+  if (wr.tagExpression) {
+    friendlyArgs.unshift(`--tags="${wr.tagExpression}"`);
     args.unshift(`--tags=${wr.tagExpression}`);
+  }
   return args;
 }
+

@@ -125,7 +125,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step library folders that are inside your project folder can be enabled for step navigation via the `behave-vsc.stepLibraryFolders` setting. (This is an experimental feature.)
+- Step library folders that are inside your project folder can be enabled for step navigation via the `behave-vsc.stepLibraryFolders` setting.
 
   - Example:
 
@@ -178,24 +178,47 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ---
 
+## Running a subset of tests
+
+- There are several options here. Using a combination of all of these is recommended:
+
+  - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI and/or combine it with tags.
+
+  - B. Consider if you can use a naming scheme for feature folders that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
+
+  - C. Run tagged tests via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
+
+  - D. Run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+
+      ```json
+      "behave-vsc.runProfiles": {
+          "tagA profile": {
+              "tagExpression": "@a",            
+              "envVars": {
+                  "var1": "1-a",
+                  "var2": "2-a"
+              },
+          },
+          "tagBorC profile": {
+              "tagExpression": "@b,@c",            
+              "envVars": {
+                  "var1": "1-bc",
+                  "var2": "2-bc"
+              },
+          }
+      },
+      ```
+
+      Note that the envVars setting will override any `behave-vsc.envVarOverrides` setting that has the same key.
+
+      Separately, here are some ideas about how you could use an environment variable in you `environment.py` file:
+
+    - to control a behave `active_tag_value_provider`
+    - to control `scenario.skip()`
+    - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+    - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+
 ## Q&A
-
-- *How can I execute a specific subset of tests while using the extension?*
-
-  - There are several options here. Using a combination of A, B, and C below is recommended:
-
-    - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI and/or combine it with tags.
-
-    - B. Consider if you can use a naming scheme for feature folders that will allow you to leverage the filtering above the test tree in the UI to enable you to run just those tests.
-
-    - C. (experimental) Run tagged tests via the `Run Tests with Tags` profile in the test explorer or via the `>` in the feature file. Note that this can be further filtered by your selection in the test tree.
-
-    - D. (experimental) Custom. Using the `Run Tests with Environment Variables` profile in the test explorer. While this gives a lot of flexibility, remember that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. So depending on your custom implementation it is possible that you could end up with the test tree spinning around waiting for tests that never run. Some ideas for how to use the environment variables:
-
-      - to control a behave `active_tag_value_provider`
-      - to control `scenario.skip()`
-      - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to control the tests run
-      - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
 
 - *How can I see all effective settings for the extension?*
   - On starting vscode, look in the Behave VSC output window.
