@@ -1,5 +1,8 @@
-import { getExpectedResultsForTag1Expression } from "./expectedResults";
-import { getExpectedCounts } from "./expectedResults";
+import {
+	getExpectedResultsForNoTagExpression,
+	getExpectedResultsForTag1Or2Expression, getExpectedResultsForTag1Expression,
+	getExpectedResultsForTag2Expression, getExpectedCounts
+} from "./expectedResults";
 import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 
 
@@ -36,8 +39,30 @@ suite(`run profiles suite`, () => {
 
 	test("runWithRunProfiles", async () =>
 		await sharedWorkspaceTests.runWithRunProfiles(folderName,
+			"", "features", "features", getExpectedCounts, getExpectedResultsForNoTagExpression,
+			runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "",
+			{})
+	).timeout(300000);
+
+	test("runWithRunProfiles", async () =>
+		await sharedWorkspaceTests.runDebugWithRunProfiles(folderName,
 			"", "features", "features", getExpectedCounts, getExpectedResultsForTag1Expression,
-			runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "tag1", {})
+			runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "@tag1",
+			{ var1: "TAG1-1", var2: "TAG1-2" })
+	).timeout(300000);
+
+	test("runWithRunProfiles", async () =>
+		await sharedWorkspaceTests.runDebugWithRunProfiles(folderName,
+			"", "features", "features", getExpectedCounts, getExpectedResultsForTag2Expression,
+			runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "@tag2",
+			{ var1: "TAG2-1", var2: "TAG2-2" })
+	).timeout(300000);
+
+	test("runWithRunProfiles", async () =>
+		await sharedWorkspaceTests.runDebugWithRunProfiles(folderName,
+			"", "features", "features", getExpectedCounts, getExpectedResultsForTag1Or2Expression,
+			runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "@tag1,@tag2",
+			{ var1: "TAG1-OR-2-1", var2: "TAG1-OR-2-2" })
 	).timeout(300000);
 
 }).timeout(900000);
