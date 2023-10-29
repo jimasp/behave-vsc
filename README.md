@@ -9,7 +9,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run or Debug behave tests, either from the test explorer or from inside a feature file.
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-  - Select to run tests with tags and/or apply env vars via run profiles.
+  - Select to run tests with tags and/or environment variables via run profiles.
   - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
 - Two-way step navigation (including step library support):
   - "Go to Step Definition" from inside a feature file (default F12).
@@ -125,7 +125,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step library folders that are inside your project folder can be enabled for step navigation via the `behave-vsc.stepLibraryFolders` setting.
+- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for library folders that are inside your project folder via the `behave-vsc.stepLibraryFolders` setting.
 
   - Example:
 
@@ -186,9 +186,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - B. Consider if you can use a naming scheme for feature folders that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
 
-  - C. Run tagged tests via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
-
-  - D. Run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+  - C. Run tagged tests:
+    - Via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
+    - Via run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
       ```json
       "behave-vsc.runProfiles": {
