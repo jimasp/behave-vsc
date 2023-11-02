@@ -12,11 +12,11 @@ suite(`step library suite`, () => {
 		await sharedWorkspaceTests.runWithStepsLibrary(folderName, "features", "features",
 			[
 				{
-					"path": "steps_lib_1",
+					"relativePath": "steps_lib_1",
 					"stepFilesRx": ".*/steps/.*\\.py"
 				},
 				{
-					"path": "steps_lib_2",
+					"relativePath": "steps_lib_2",
 					"stepFilesRx": ".*/steps/.*\\.py|.*/regex1_match.py|.*/regex2_match.py",
 				}
 			],

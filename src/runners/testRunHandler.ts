@@ -362,7 +362,6 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logWkspRunStarted(wr: WkspRun) {
   if (!wr.debug) {
-    addRunNote(wr.run);
     config.logger.logInfo(`--- ${wr.wkspSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
       wr.wkspSettings.uri, wr.run);
   }
@@ -376,17 +375,13 @@ function logWkspRunComplete(wr: WkspRun, start: number) {
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
       wr.wkspSettings.uri, wr.run);
   }
-  addRunNote(wr.run);
+  wr.run.appendOutput('\r\n');
+  wr.run.appendOutput('-----------------------------------------------------------\r\n');
+  wr.run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
+  wr.run.appendOutput('-----------------------------------------------------------\r\n');
+  wr.run.appendOutput('\r\n');
 }
 
-
-function addRunNote(run: vscode.TestRun) {
-  run.appendOutput('\r\n');
-  run.appendOutput('-----------------------------------------------------------\r\n');
-  run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
-  run.appendOutput('-----------------------------------------------------------\r\n');
-  run.appendOutput('\r\n');
-}
 
 
 function getIncludedFeaturesForWksp(wkspUri: vscode.Uri, req: vscode.TestRunRequest | undefined,

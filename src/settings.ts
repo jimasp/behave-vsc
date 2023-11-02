@@ -4,7 +4,7 @@ import * as path from 'path';
 import {
   findSubDirectorySync,
   getUrisOfWkspFoldersWithFeatures,
-  getWorkspaceFolder, uriId, WkspError
+  getWorkspaceFolder, normalise_relative_path, uriId, WkspError
 } from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
@@ -108,7 +108,7 @@ export class WorkspaceSettings {
     this.runParallel = runParallelCfg;
 
 
-    this.workspaceRelativeFeaturesPath = featuresPathCfg.replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
+    this.workspaceRelativeFeaturesPath = normalise_relative_path(featuresPathCfg);
     // vscode will not substitute a default if an empty string is specified in settings.json
     if (!this.workspaceRelativeFeaturesPath)
       this.workspaceRelativeFeaturesPath = "features";
@@ -141,7 +141,7 @@ export class WorkspaceSettings {
         if (findStepsParentDirResult.environmentpyOnly)
           logger.showWarn(`environment.py was found in "${stepsParentFsPath}", but no steps folder was found in that directory.`, this.uri);
         baseDirUri = vscode.Uri.file(stepsParentFsPath);
-        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps");
+        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps").replace(/\\/g, "/");
       }
       else {
         logger.showWarn(`No "steps" folder found.`, this.uri);
@@ -151,28 +151,47 @@ export class WorkspaceSettings {
     this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
     this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
-    for (const stepLibrary of requestedStepLibraries) {
-      const relativePath = stepLibrary.path.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
-
-      if (relativePath === "steps"
-        || relativePath === path.join(this.workspaceRelativeFeaturesPath, "steps")
-        || relativePath === this.workspaceRelativeStepsSearchPath) {
-        logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraryPaths" will be ignored ` +
-          "as it was detected as a standard (non-library) steps path.", this.uri);
-        continue;
-      }
-
-      const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
-      if (!fs.existsSync(folderUri.fsPath))
-        logger.showWarn(`step library path "${folderUri.fsPath}" not found.`, this.uri);
-      else
-        this.stepLibraries.push(stepLibrary);
-    }
-
+    this.setStepLibraries(requestedStepLibraries, logger, wkspUri);
 
     this.logSettings(logger, winSettings);
   }
 
+
+  setStepLibraries(requestedStepLibraries: StepLibrariesSetting, logger: Logger, wkspUri: vscode.Uri) {
+    for (const stepLibrary of requestedStepLibraries) {
+      const relativePath = normalise_relative_path(stepLibrary.relativePath);
+      const stepFilesRx = stepLibrary.stepFilesRx;
+
+      if (!relativePath) {
+        // the path is required as it is used to set the watcher path
+        logger.showWarn('step library path specified in "behave-vsc.stepLibraries" cannot be an empty ' +
+          'string and will be ignored', this.uri);
+        continue;
+      }
+
+      // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folders
+      const rxPath = relativePath + "/" + stepFilesRx;
+      const lowerRelativePath = relativePath.toLowerCase();
+      if (relativePath === this.workspaceRelativeStepsSearchPath
+        || RegExp(rxPath).test(this.workspaceRelativeStepsSearchPath)
+        // check standard paths even if they are not currently in use    
+        || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
+        logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
+          "because it is a known steps path).", this.uri);
+        continue;
+      }
+
+      const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
+      if (!fs.existsSync(folderUri.fsPath)) {
+        logger.showWarn(`step library path "${folderUri.fsPath}" specified in "behave-vsc.stepLibraries" not found ` +
+          `and will be ignored`, this.uri);
+      }
+      else {
+        stepLibrary.relativePath = relativePath;
+        this.stepLibraries.push(stepLibrary);
+      }
+    }
+  }
 
   logSettings(logger: Logger, winSettings: WindowSettings) {
 
@@ -246,7 +265,7 @@ type RunProfile = {
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
 export type StepLibrary = {
-  path: string;
+  relativePath: string;
   stepFilesRx: string;
 }
 

@@ -14,7 +14,7 @@
         "space_var": " ",
         "USERNAME": "bob-163487"
     },
-    "behave-vsc.featuresPath": "behave tests/some tests/",
+    "behave-vsc.featuresPath": "behave tests\\some tests/",
     "behave-vsc.justMyCode": true,
     "behave-vsc.runParallel": false,
     "behave-vsc.xRay": true,

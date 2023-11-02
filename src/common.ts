@@ -120,6 +120,9 @@ export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfigu
   return (value as T);
 }
 
+export const normalise_relative_path = (path: string) => {
+  return path.replace(/\\/g, "/").replace(/^\//, "").replace(/\/$/, "").trim();
+}
 
 // THIS FUNCTION MUST BE FAST (ideally < 1ms) 
 // (check performance if you change it)
@@ -143,7 +146,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     // check if featuresPath specified in settings.json
     // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
     const wkspConfig = vscode.workspace.getConfiguration("behave-vsc", folder.uri);
-    const featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
+    let featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
     if (!featuresPath && !hasDefaultFeaturesFolder) {
       return false; // probably a workspace with no behave requirements
     }
@@ -151,6 +154,8 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     // default features folder and nothing specified in settings.json (or default specified)
     if (hasDefaultFeaturesFolder && !featuresPath)
       return true;
+
+    featuresPath = normalise_relative_path(featuresPath as string);
 
     featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath as string);
     if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
@@ -262,8 +267,8 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
     let stepLibMatch: StepLibrary | null = null;
     let currentMatchLen = 0, lenPath = 0;
     for (const stepLib of wkspSettings.stepLibraries) {
-      if (relPath.startsWith(stepLib.path))
-        lenPath = stepLib.path.length;
+      if (relPath.startsWith(stepLib.relativePath))
+        lenPath = stepLib.relativePath.length;
       if (lenPath > currentMatchLen) {
         currentMatchLen = lenPath;
         stepLibMatch = stepLib;

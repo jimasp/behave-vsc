@@ -147,7 +147,7 @@ export class FileParser {
     else
       stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
 
-    for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.path)) {
+    for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
       const stepsLibUri = vscode.Uri.joinPath(wkspSettings.uri, stepsLibPath);
       let stepLibFiles = await findFiles(stepsLibUri, undefined, ".py", cancelToken);
       stepLibFiles = stepLibFiles.filter(uri => isStepsFile(uri));

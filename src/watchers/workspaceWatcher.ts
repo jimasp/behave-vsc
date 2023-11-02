@@ -91,7 +91,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
     watchers.push(separateStepsFolderWatcher);
   }
 
-  for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.path)) {
+  for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
     const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${stepsLibPath}/**`);
     const stepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(stepsFolderWatcher);

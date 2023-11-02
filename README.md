@@ -143,14 +143,23 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for library folders that are inside your project folder via the `behave-vsc.stepLibraryFolders` setting.
+- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for imported step libraries inside your project folder via the `behave-vsc.stepLibraryFolders` setting.
 
   - Example:
 
     ```json
     // settings.json
     {
-      "behave-vsc.stepLibraryFolders": [".venv/lib/python3.9/site-packages/package-steps-lib"],
+      "behave-vsc.stepLibraries": [
+          {
+              "relativePath": ".venv/lib/python3.9/site-packages/package-steps-lib",
+              "stepFilesRx": ".*/steps/.*|.*/steps.py"
+          },
+          {
+              "relativePath": "my_steps_lib",
+              "stepFilesRx": ".*/steps/.*",
+          }
+      ],
       "behave-vsc.justMyCode": false
     }
     ```
