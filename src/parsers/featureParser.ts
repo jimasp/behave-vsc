@@ -96,15 +96,15 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       const text = step[0].trim();
       const matchText = step[2].trim();
 
-      let stepType = step[1].trim().toLowerCase();
-      if (stepType === "and" || stepType === "but")
-        stepType = lastStepType;
+      let lcStepType = step[1].trim().toLowerCase();
+      if (lcStepType === "and" || lcStepType === "but")
+        lcStepType = lastStepType;
       else
-        lastStepType = stepType;
+        lastStepType = lcStepType;
 
       const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
       const key = `${uriId(uri)}${sepr}${range.start.line}`;
-      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, stepType));
+      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, lcStepType));
       fileSteps++;
       continue;
     }

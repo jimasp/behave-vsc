@@ -6,7 +6,7 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Optional key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using `behave-vsc.runProfiles`.",
+					"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using `behave-vsc.runProfiles`.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -17,13 +17,13 @@
 					"markdownDescription": "*Workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
 					"default": "features"
 				},
-				"behave-vsc.stepLibraryPaths": {
+				"behave-vsc.stepLibraries": {
 					"scope": "resource",
 					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"markdownDescription": "An array of *workspace-relative* paths to step libraries inside the project. This will only find step files that are either in a `steps` folder or are called `steps.py`"
+					"markdownDescription": "An array of step library dictionaries. Each entry has (a) a *workspace-relative* path to the step library inside the project, and (b) an optional regex of extra filenames to include that are NOT inside `steps` subfolders of the given path. See the readme for an example.",
+					"additionalProperties": {
+						"type": "object"
+					}
 				},
 				"behave-vsc.justMyCode": {
 					"scope": "resource",

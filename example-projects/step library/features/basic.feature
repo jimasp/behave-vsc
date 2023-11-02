@@ -12,4 +12,4 @@ Feature: Basic
 
    @skip
    Scenario: run a skipped test
-      Given we have behave installed
+      Given we have another step

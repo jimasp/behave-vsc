@@ -5,7 +5,7 @@ import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
 import { Scenario, TestData } from './parsers/testFile';
-import { WorkspaceSettings } from './settings';
+import { StepLibrary, WorkspaceSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
 
@@ -77,6 +77,9 @@ export function urisMatch(uri1: vscode.Uri, uri2: vscode.Uri) {
   return uri1.toString() === uri2.toString();
 }
 
+export function uriStartsWith(startsWith: vscode.Uri, uriToCheck: vscode.Uri) {
+  return uriToCheck.toString().startsWith(uriToCheck.toString());
+}
 
 export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
 
@@ -249,37 +252,44 @@ export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Pro
 
 
 export const isStepsFile = (fileUri: vscode.Uri): boolean => {
-
-  const isStepsLibFile = (): boolean => {
-    const wkspSettings = getWorkspaceSettingsForFile(fileUri);
-    const relPath = path.relative(wkspSettings.uri.fsPath, fileUri.fsPath);
-    for (const stepsLibFolder of wkspSettings.workspaceRelativeStepLibraryPaths) {
-      if (relPath.startsWith(stepsLibFolder))
-        return true;
-    }
-    return false;
-  }
-
   if (fileUri.scheme !== "file")
     return false;
+  const lcPath = fileUri.path.toLowerCase();
+  if (!lcPath.endsWith(".py"))
+    return false;
 
-  const filePath = fileUri.path.toLowerCase();
-  if (!filePath.includes("/steps/")) {
-    if (!isStepsLibFile())
-      return false;
-    if (isStepsLibFile() && !filePath.endsWith("/steps.py"))
+  function getStepLibraryMatch(wkspSettings: WorkspaceSettings, relPath: string) {
+    let stepLibMatch: StepLibrary | null = null;
+    let currentMatchLen = 0, lenPath = 0;
+    for (const stepLib of wkspSettings.stepLibraries) {
+      if (relPath.startsWith(stepLib.path))
+        lenPath = stepLib.path.length;
+      if (lenPath > currentMatchLen) {
+        currentMatchLen = lenPath;
+        stepLibMatch = stepLib;
+      }
+    }
+    return stepLibMatch;
+  }
+
+  if (!lcPath.includes("/steps/")) {
+    const wkspSettings = getWorkspaceSettingsForFile(fileUri);
+    const relPath = path.relative(wkspSettings.uri.fsPath, fileUri.fsPath);
+    const stepLibMatch = getStepLibraryMatch(wkspSettings, relPath);
+
+    if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
       return false;
   }
 
-  return filePath.endsWith(".py");
+  return true;
 }
 
 
 export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
   if (fileUri.scheme !== "file")
     return false;
-  const path = fileUri.path.toLowerCase();
-  return path.endsWith(".feature");
+  const lcPath = fileUri.path.toLowerCase();
+  return lcPath.endsWith(".feature");
 }
 
 

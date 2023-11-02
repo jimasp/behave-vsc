@@ -53,7 +53,7 @@ export class WorkspaceSettings {
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly workspaceRelativeFeaturesPath: string;
-  public readonly workspaceRelativeStepLibraryPaths: string[] = [];
+  public readonly stepLibraries: StepLibrariesSetting = [];
   // convenience properties
   public readonly id: string;
   public readonly uri: vscode.Uri;
@@ -76,15 +76,23 @@ export class WorkspaceSettings {
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
-    const stepLibraryPathsCfg: string | undefined = wkspConfig.get("stepLibraryPaths");
-    if (stepLibraryPathsCfg === undefined)
-      throw "stepLibraryPaths is undefined";
     const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
     const runParallelCfg: boolean | undefined = wkspConfig.get("runParallel");
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
+
+    let requestedStepLibraries: StepLibrariesSetting = [];
+    try {
+      const stepLibrariesCfg: StepLibrariesSetting | undefined = wkspConfig.get("stepLibraries");
+      if (stepLibrariesCfg === undefined)
+        throw "stepLibraries is undefined";
+      requestedStepLibraries = stepLibrariesCfg;
+    }
+    catch {
+      vscode.window.showWarningMessage('Invalid "behave-vsc.stepLibraries" setting was ignored.', "OK");
+    }
 
     try {
       const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
@@ -143,22 +151,24 @@ export class WorkspaceSettings {
     this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
     this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
-    for (const folder of stepLibraryPathsCfg) {
-      const relativePath = folder.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
+    for (const stepLibrary of requestedStepLibraries) {
+      const relativePath = stepLibrary.path.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "").trim();
+
       if (relativePath === "steps"
         || relativePath === path.join(this.workspaceRelativeFeaturesPath, "steps")
         || relativePath === this.workspaceRelativeStepsSearchPath) {
-        logger.showWarn(`steps folder "${relativePath}" specified in "behave-vsc.stepLibraryPaths" will be ignored ` +
+        logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraryPaths" will be ignored ` +
           "as it was detected as a standard (non-library) steps path.", this.uri);
+        continue;
       }
-      else {
-        const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
-        if (!fs.existsSync(folderUri.fsPath))
-          logger.showWarn(`step library path "${folderUri.fsPath}" not found.`, this.uri);
-        else
-          this.workspaceRelativeStepLibraryPaths.push(relativePath);
-      }
+
+      const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
+      if (!fs.existsSync(folderUri.fsPath))
+        logger.showWarn(`step library path "${folderUri.fsPath}" not found.`, this.uri);
+      else
+        this.stepLibraries.push(stepLibrary);
     }
+
 
     this.logSettings(logger, winSettings);
   }
@@ -235,4 +245,9 @@ type RunProfile = {
 
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
+export type StepLibrary = {
+  path: string;
+  stepFilesRx: string;
+}
 
+export type StepLibrariesSetting = StepLibrary[];

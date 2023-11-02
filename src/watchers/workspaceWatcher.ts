@@ -29,7 +29,8 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
     // fires on either new file/folder creation OR rename (inc. git actions)
     watcher.onDidCreate(uri => {
-      if (uri.path.endsWith("/steps") || uri.path.endsWith("environment.py")) {
+      const lcPath = uri.path.toLowerCase();
+      if (lcPath.endsWith("/steps") || lcPath.endsWith("environment.py")) {
         config.reloadSettings(wkspSettings.uri);
         parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidCreate", false);
         return;
@@ -46,14 +47,14 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
         return;
 
       try {
-        const path = uri.path.toLowerCase();
+        const lcPath = uri.path.toLowerCase();
 
         // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
         // files, but we cannot determine if this is a file or folder deletion as:
         //   (a) it has been deleted so we can't stat it, and 
         //   (b) "." is valid in folder names so we can't determine by looking at the path
         // but we can ignore specific file extensions or paths we know we don't care about
-        if (path.endsWith(".tmp")) // .tmp = vscode file history file
+        if (lcPath.endsWith(".tmp")) // .tmp = vscode file history file
           return;
 
         // log for extension developers in case we need to add another file type above
@@ -61,7 +62,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
           diagLog(`detected deletion of unanticipated file type, uri: ${uri}`, wkspUri, DiagLogType.warn);
         }
 
-        if (path.endsWith("/steps") || path.endsWith("environment.py"))
+        if (lcPath.endsWith("/steps") || lcPath.endsWith("environment.py"))
           config.reloadSettings(wkspSettings.uri);
 
         parser.parseFilesForWorkspace(wkspUri, testData, ctrl, "OnDidDelete", false);
@@ -90,8 +91,8 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
     watchers.push(separateStepsFolderWatcher);
   }
 
-  for (const stepsFolder of wkspSettings.workspaceRelativeStepLibraryPaths) {
-    const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${stepsFolder}/**`);
+  for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.path)) {
+    const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${stepsLibPath}/**`);
     const stepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(stepsFolderWatcher);
     watchers.push(stepsFolderWatcher);

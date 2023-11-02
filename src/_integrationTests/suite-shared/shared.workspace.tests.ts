@@ -4,7 +4,7 @@ import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { Configuration } from '../../configuration';
 import { TestResult } from './expectedResults.helpers';
 import { WkspParseCounts } from '../../parsers/fileParser';
-import { RunProfilesSetting } from '../../settings';
+import { RunProfilesSetting, StepLibrariesSetting } from '../../settings';
 
 
 const defaultEnvVarOverrides = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
@@ -25,7 +25,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
       envVarOverrides: undefined, featuresPath: undefined,
-      justMyCode: undefined, stepLibraryPaths: undefined, runProfiles: undefined, xRay: undefined
+      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: undefined
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -45,7 +45,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraryPaths: undefined, runProfiles: undefined, xRay: true
+      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -65,7 +65,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: true, stepLibraryPaths: undefined, runProfiles: undefined, xRay: true
+      justMyCode: true, stepLibraries: undefined, runProfiles: undefined, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -84,7 +84,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraryPaths: undefined, runProfiles: undefined, xRay: true
+      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: true
     });
 
 
@@ -98,7 +98,7 @@ export class SharedWorkspaceTests {
   runWithStepsLibrary = async (wkspName: string,
     expectedWorkspaceRelativeBaseDirPath: string,
     expectedWorkspaceRelativeStepsSearchPath: string,
-    stepsLibraryPaths: string[],
+    stepLibraries: StepLibrariesSetting,
     getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -106,7 +106,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
       envVarOverrides: undefined, featuresPath: undefined,
-      justMyCode: undefined, stepLibraryPaths: stepsLibraryPaths, runProfiles: undefined, xRay: undefined
+      justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: undefined
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -130,7 +130,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: false, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraryPaths: undefined, runProfiles: runProfiles, xRay: true
+      justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -153,7 +153,7 @@ export class SharedWorkspaceTests {
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraryPaths: undefined, runProfiles: runProfiles, xRay: true
+      justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
     });
 
 

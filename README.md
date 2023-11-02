@@ -24,33 +24,45 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ---
 
+## Terminology
+
+- In this readme, "project" is shorthand for "a root workspace folder that contains your feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+
 ## Workspace requirements
 
 - No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
-- A compatible directory structure
+- A compatible project directory structure
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
 
-### Required project directory structure
+### Compatible project directory structures
 
-- A "project" is shorthand for "a workspace folder that contains your feature files".
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
   - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
   - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).
   - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.
   - Multiple `features` folders are only supported in a multi-root workspace, i.e. one `features` folder per project.
+
   - Example 1 - features folder contains a child steps folder:
 
     ```text
     my-project/
     ├── behave.ini
     └── features/
+        ├── a.feature                    
         ├── environment.py
-        ├── my.feature       
-        └── steps/  
-            └── steps.py
+        ├── steps/
+        │   ├── shared_steps.py
+        │   ├── storage_steps/
+        │   │   └── db.py       
+        │   └── web_steps/
+        │       └── page.py      
+        ├── storage_features
+        │   └── db.feature         
+        └── web_features
+            └── page.feature                                       
     ```
 
   - Example 2 - features folder has a sibling steps folder:
@@ -60,18 +72,24 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ├── behave.ini
     ├── environment.py       
     ├── features/
-    │   └── my.feature   
+    │   ├── a.feature   
+    │   ├── storage_features
+    │   │   └── db.feature   
+    │   └── web_features
+    │       └── page.feature       
     └── steps/
-        └── steps.py
- 
+          ├── shared_steps.py
+          ├── storage_steps/
+          │   └── db.py         
+          └── web_steps/
+              └── page.py
     ```
 
-  - Example 3 - feature folder contains multiple imported `steps` folders. Note that all steps folders must be called `steps` if you want step navigation to work:
-  
+  - Example 3 - steps-with-feature, the feature folder contains multiple imported `steps` folders. Note that all steps folders must be called `steps` if you want step navigation to work (if you cannot change all the folder names to `steps`, then a messier option for step navigation is to use the `stepLibraries` extension setting and nominate every steps folder individually):
+
     ```text
     my-project/
     └── features
-        ├── my.feature
         ├── steps
         │   ├── __init__.py   
         │   └── shared_steps.py    
@@ -132,7 +150,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ```json
     // settings.json
     {
-      "behave-vsc.stepLibraryFolders": [".venv/lib/python3.11/site-packages/behave-django"],
+      "behave-vsc.stepLibraryFolders": [".venv/lib/python3.9/site-packages/package-steps-lib"],
       "behave-vsc.justMyCode": false
     }
     ```
