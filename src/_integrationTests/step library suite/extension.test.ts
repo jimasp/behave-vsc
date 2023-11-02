@@ -12,12 +12,12 @@ suite(`step library suite`, () => {
 		await sharedWorkspaceTests.runWithStepsLibrary(folderName, "features", "features",
 			[
 				{
-					"relativePath": "steps_lib_1",
-					"stepFilesRx": ".*/steps/.*\\.py"
+					"relativePath": "folder1/steps_lib_1 ",
+					"stepFilesRx": ".*/steps/.*"
 				},
 				{
-					"relativePath": "steps_lib_2",
-					"stepFilesRx": ".*/steps/.*\\.py|.*/regex1_match.py|.*/regex2_match.py",
+					"relativePath": "folder2\\steps_lib_2",
+					"stepFilesRx": ".*/steps/.*|more_steps/.*|.*/steps2.py|.*/steps3.py",
 				}
 			],
 			getExpectedCounts, getExpectedResults)).timeout(300000);
