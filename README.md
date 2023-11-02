@@ -143,7 +143,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for imported step libraries inside your project folder via the `behave-vsc.stepLibraryFolders` setting.
+- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for imported step libraries inside your project folder via the `behave-vsc.stepLibraries` setting.
 
   - Example:
 

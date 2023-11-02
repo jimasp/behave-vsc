@@ -217,7 +217,7 @@ feature file formatting is provided by:
 
 ## Generating the extension installer manually (.vsix file)
 
-If you have a customised fork and you want to distribute it to your team, you will want to create your own .vsix file:
+If you have a customised fork and you want to distribute it to your team, you will want to create your own `.vsix` file:
 
 1. `npm install -g @vscode/vsce` (installs latest version of packaging tool)
 2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the integration tests - if you've already run them, then you can just close vscode windows as they appear)
