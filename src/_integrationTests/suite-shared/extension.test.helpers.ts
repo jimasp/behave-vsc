@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { RunProfile, WorkspaceSettings } from "../../settings";
+import { RunProfile, WorkspaceFolderSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
@@ -128,7 +128,7 @@ function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<File
 }
 
 
-async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceSettings) {
+async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceFolderSettings) {
 
 	const stepLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/**/*.feature`);
@@ -145,7 +145,7 @@ async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceSettings) 
 	return [...stepLines];
 }
 
-async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceSettings) {
+async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceFolderSettings) {
 
 	const funcLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPath}/steps/*.py`);

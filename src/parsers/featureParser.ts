@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { WorkspaceSettings } from "../settings";
+import { WorkspaceFolderSettings } from "../settings";
 import { uriId, sepr, basename, getLines, getWorkspaceUriForFile } from '../common';
 import { diagLog } from '../logger';
 import { config } from '../configuration';
@@ -26,13 +26,13 @@ export class FeatureFileStep {
   ) { }
 }
 
-export const getFeatureFilesSteps = (projUri: vscode.Uri) => {
-  const projUriMatchString = uriId(projUri);
-  return [...featureFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
+export const getFeatureFilesSteps = (wkspFolderUri: vscode.Uri) => {
+  const wkspFolderUriMatchString = uriId(wkspFolderUri);
+  return [...featureFileSteps].filter(([k,]) => k.startsWith(wkspFolderUriMatchString));
 }
 
-export const deleteFeatureFilesSteps = (projUri: vscode.Uri) => {
-  const projFeatureFileSteps = getFeatureFilesSteps(projUri);
+export const deleteFeatureFilesSteps = (wkspFolderUri: vscode.Uri) => {
+  const projFeatureFileSteps = getFeatureFilesSteps(wkspFolderUri);
   for (const [key,] of projFeatureFileSteps) {
     featureFileSteps.delete(key);
   }
@@ -61,7 +61,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode.Uri, content: string, caller: string,
+export const parseFeatureContent = (wkspSettings: WorkspaceFolderSettings, uri: vscode.Uri, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 

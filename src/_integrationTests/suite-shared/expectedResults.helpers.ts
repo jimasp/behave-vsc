@@ -1,4 +1,4 @@
-import { WorkspaceSettings } from "../../settings";
+import { WorkspaceFolderSettings } from "../../settings";
 
 interface ITestResult {
   test_id: string | undefined;
@@ -37,7 +37,7 @@ export class TestResult implements ITestResult {
 }
 
 
-export function applyTestConfiguration(wkspSettings: WorkspaceSettings, expectedResults: TestResult[]) {
+export function applyTestConfiguration(wkspSettings: WorkspaceFolderSettings, expectedResults: TestResult[]) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
     const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.workspaceRelativeFeaturesPath);
     returnResults[index] = JSON.parse(json);

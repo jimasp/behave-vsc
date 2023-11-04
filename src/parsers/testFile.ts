@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { uriId, isFeatureFile } from '../common';
 import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
+import { WorkspaceFolderSettings } from "../settings";
 import { diagLog } from '../logger';
 
 let generationCounter = 0;
@@ -13,7 +13,7 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+  public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: WorkspaceFolderSettings, content: string, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     if (!item.uri)
       throw new Error("missing test item uri");

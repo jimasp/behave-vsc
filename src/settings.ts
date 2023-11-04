@@ -10,9 +10,9 @@ import { config } from './configuration';
 import { Logger } from './logger';
 
 
-export class WindowSettings {
+export class InstanceSettings {
   // class for package.json "window" settings 
-  // these apply to the whole vscode instance, but may be set in settings.json or *.code-workspace 
+  // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly multiRootRunWorkspacesInParallel: boolean;
   public readonly runProfiles: RunProfilesSetting | undefined;
@@ -44,9 +44,9 @@ export class WindowSettings {
   }
 }
 
-export class WorkspaceSettings {
+export class WorkspaceFolderSettings {
   // class for package.json "resource" settings in settings.json
-  // these apply to a single workspace 
+  // these apply to a single workspace folder
 
   // user-settable
   public readonly envVarOverrides: { [name: string]: string } = {};
@@ -65,7 +65,7 @@ export class WorkspaceSettings {
   private readonly _fatalErrors: string[] = [];
 
 
-  constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: WindowSettings, logger: Logger) {
+  constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings, logger: Logger) {
 
     this.uri = wkspUri;
     this.id = uriId(wkspUri);
@@ -193,7 +193,7 @@ export class WorkspaceSettings {
     }
   }
 
-  logSettings(logger: Logger, winSettings: WindowSettings) {
+  logSettings(logger: Logger, winSettings: InstanceSettings) {
 
     // build sorted output dict of window settings
     const nonUserSettableWinSettings: string[] = [];

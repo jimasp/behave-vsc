@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
-import { RunProfile, WorkspaceSettings } from "../settings";
+import { RunProfile, WorkspaceFolderSettings } from "../settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
@@ -16,7 +16,7 @@ import { getWkspQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitPar
 
 export class WkspRun {
   constructor(
-    public readonly wkspSettings: WorkspaceSettings,
+    public readonly wkspSettings: WorkspaceFolderSettings,
     public readonly run: vscode.TestRun,
     public readonly request: vscode.TestRunRequest,
     public readonly debug: boolean,
@@ -167,7 +167,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 }
 
 
-async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.TestController, run: vscode.TestRun,
+async function runWorkspaceQueue(wkspSettings: WorkspaceFolderSettings, ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[], runProfile: RunProfile) {
 
   let wr: WkspRun | undefined = undefined;
@@ -319,7 +319,7 @@ async function runFeaturesParallel(wr: WkspRun) {
 }
 
 
-function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSettings: WorkspaceSettings,
+function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSettings: WorkspaceFolderSettings,
   ctrl: vscode.TestController, testData: TestData) {
 
   let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0)

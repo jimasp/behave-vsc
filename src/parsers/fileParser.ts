@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
+import { WorkspaceFolderSettings } from "../settings";
 import { deleteFeatureFilesSteps, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
@@ -93,7 +93,7 @@ export class FileParser {
   }
 
 
-  private _parseFeatureFiles = async (wkspSettings: WorkspaceSettings, testData: TestData, controller: vscode.TestController,
+  private _parseFeatureFiles = async (wkspSettings: WorkspaceFolderSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
     diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
@@ -129,7 +129,7 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (wkspSettings: WorkspaceSettings, cancelToken: vscode.CancellationToken,
+  private _parseStepsFiles = async (wkspSettings: WorkspaceFolderSettings, cancelToken: vscode.CancellationToken,
     caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
@@ -177,16 +177,16 @@ export class FileParser {
   }
 
 
-  private async _updateStepsFromStepsFileContent(projUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
+  private async _updateStepsFromStepsFileContent(wkspFolderUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(fileUri))
       throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFileContent(projUri, content, fileUri, caller);
+    await parseStepsFileContent(wkspFolderUri, content, fileUri, caller);
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
+  private async _updateTestItemFromFeatureFileContent(wkspSettings: WorkspaceFolderSettings, content: string, testData: TestData,
     controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
 
     if (!isFeatureFile(uri))
@@ -207,7 +207,7 @@ export class FileParser {
   }
 
 
-  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceSettings, content: string,
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: WorkspaceFolderSettings, content: string,
     testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string,
     firstRun: boolean): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
@@ -374,7 +374,7 @@ export class FileParser {
         }
       }
       this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
-      const wkspSettings: WorkspaceSettings = config.workspaceSettings[wkspUri.path];
+      const wkspSettings: WorkspaceFolderSettings = config.workspaceSettings[wkspUri.path];
 
 
       const start = performance.now();
@@ -478,7 +478,7 @@ export class FileParser {
 
 
 
-  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceSettings, testData: TestData, ctrl: vscode.TestController) {
+  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: WorkspaceFolderSettings, testData: TestData, ctrl: vscode.TestController) {
     try {
       this._reparsingFile = true;
 
