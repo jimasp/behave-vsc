@@ -42,28 +42,27 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
   - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
-  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).
-  - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.
-  - Multiple `features` folders are only supported in a multi-root workspace, i.e. one `features` folder per project.
-
+  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).  
+  - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.  
+  - Multiple `features` folders are only supported in a multi-root workspace, i.e. you can only have one `features` folder per project.
+  - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
+  
   - Example 1 - features folder contains a child steps folder:
 
     ```text
     my-project/
     ├── behave.ini
     └── features/
-        ├── a.feature                    
-        ├── environment.py
-        ├── steps/
-        │   ├── shared_steps.py
-        │   ├── storage_steps/
-        │   │   └── db.py       
-        │   └── web_steps/
-        │       └── page.py      
-        ├── storage_features
-        │   └── db.feature         
-        └── web_features
-            └── page.feature                                       
+        ├── environment.py    
+        ├── features/
+        │   ├── db_features
+        │   │   └── db1.feature   
+        │   └── web_features
+        │       └── web1.feature   
+        └── steps/
+            ├── shared.py
+            ├── db.py                             
+            └── web.py
     ```
 
   - Example 2 - features folder has a sibling steps folder:
@@ -73,17 +72,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ├── behave.ini
     ├── environment.py       
     ├── features/
-    │   ├── a.feature   
-    │   ├── storage_features
-    │   │   └── db.feature   
+    │   ├── db_features
+    │   │   └── db1.feature   
     │   └── web_features
-    │       └── page.feature       
+    │       └── web1.feature       
     └── steps/
-          ├── shared_steps.py
-          ├── storage_steps/
-          │   └── db.py         
-          └── web_steps/
-              └── page.py
+        ├── shared.py
+        ├── db.py                             
+        └── web.py
     ```
 
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
@@ -103,7 +99,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH":src/lib1:src/lib2:myfolder`".
+- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
 
   - Example:
 
