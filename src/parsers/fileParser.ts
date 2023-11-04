@@ -6,7 +6,7 @@ import { WorkspaceFolderSettings } from "../settings";
 import { deleteFeatureFilesSteps, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, StepsDirIsInsideFeaturesFolder
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesUriForFeatureFileUri
 } from '../common';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
@@ -106,23 +106,25 @@ export class FileParser {
     deleteFeatureFilesSteps(wkspSettings.uri);
     deleteStepMappings(wkspSettings.uri);
 
-    const featureFiles = await findFiles(wkspSettings.featuresUri, undefined, ".feature", cancelToken);
-
-    if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-      throw `No feature files found in ${wkspSettings.featuresUri.fsPath}`;
-
     let processed = 0;
-    for (const uri of featureFiles) {
-      if (cancelToken.isCancellationRequested)
-        break;
-      const content = await getContentFromFilesystem(uri);
-      await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller, firstRun);
-      processed++;
-    }
+    for (const featuresUri of wkspSettings.featuresUris) {
+      const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
 
-    if (cancelToken.isCancellationRequested) {
-      // either findFiles or loop will have exited early, log it either way
-      diagLog(`${caller}: cancelling, _parseFeatureFiles stopped`);
+      if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
+        config.logger.showWarn(`No feature files found in ${featuresUri.fsPath}`, wkspSettings.uri);
+
+      for (const uri of featureFiles) {
+        if (cancelToken.isCancellationRequested)
+          break;
+        const content = await getContentFromFilesystem(uri);
+        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller, firstRun);
+        processed++;
+      }
+
+      if (cancelToken.isCancellationRequested) {
+        // either findFiles or loop will have exited early, log it either way
+        diagLog(`${caller}: cancelling, _parseFeatureFiles stopped`);
+      }
     }
 
     return processed;
@@ -135,42 +137,42 @@ export class FileParser {
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
     deleteStepFileSteps(wkspSettings.uri);
 
-    let stepFiles: vscode.Uri[] = [];
-    const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeStepsSearchPath);
-    if (!fs.existsSync(stepsSearchUri.fsPath)) {
-      config.logger.showWarn(`No steps directory found at ${wkspSettings.workspaceRelativeStepsSearchPath}.`, wkspSettings.uri);
-      return 0;
-    }
-
-    if (StepsDirIsInsideFeaturesFolder(wkspSettings))
-      stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
-    else
-      stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
-
-    for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
-      const stepsLibUri = vscode.Uri.joinPath(wkspSettings.uri, stepsLibPath);
-      let stepLibFiles = await findFiles(stepsLibUri, undefined, ".py", cancelToken);
-      stepLibFiles = stepLibFiles.filter(uri => isStepsFile(uri));
-      stepFiles = stepFiles.concat(stepLibFiles);
-    }
-
-    if (stepFiles.length < 1 && !cancelToken.isCancellationRequested) {
-      config.logger.showWarn(`No step files found in ${wkspSettings.workspaceRelativeStepsSearchPath}.`, wkspSettings.uri);
-      return 0;
-    }
-
     let processed = 0;
-    for (const uri of stepFiles) {
-      if (cancelToken.isCancellationRequested)
-        break;
-      const content = await getContentFromFilesystem(uri);
-      await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, uri, caller);
-      processed++;
-    }
+    for (const relStepsSearchPath of wkspSettings.workspaceRelativeStepsSearchPaths) {
+      let stepFiles: vscode.Uri[] = [];
+      const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, relStepsSearchPath);
+      if (!fs.existsSync(stepsSearchUri.fsPath)) {
+        config.logger.showWarn(`No steps directory found at ${relStepsSearchPath}.`, wkspSettings.uri);
+        return processed;
+      }
 
-    if (cancelToken.isCancellationRequested) {
-      // either findFiles or loop will have exited early, log it either way
-      diagLog(`${caller}: cancelling, _parseStepFiles stopped`);
+      if (wkspSettings.stepsFolderIsInFeaturesFolder)
+        stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
+      else
+        stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
+
+      for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
+        const stepsLibUri = vscode.Uri.joinPath(wkspSettings.uri, stepsLibPath);
+        let stepLibFiles = await findFiles(stepsLibUri, undefined, ".py", cancelToken);
+        stepLibFiles = stepLibFiles.filter(uri => isStepsFile(uri));
+        stepFiles = stepFiles.concat(stepLibFiles);
+      }
+
+      if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
+        return processed;
+
+      for (const uri of stepFiles) {
+        if (cancelToken.isCancellationRequested)
+          break;
+        const content = await getContentFromFilesystem(uri);
+        await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, uri, caller);
+        processed++;
+      }
+
+      if (cancelToken.isCancellationRequested) {
+        // either findFiles or loop will have exited early, log it either way
+        diagLog(`${caller}: cancelling, _parseStepFiles stopped`);
+      }
     }
 
     return processed;
@@ -260,14 +262,24 @@ export class FileParser {
     let firstFolder: vscode.TestItem | undefined = undefined;
     let parent: vscode.TestItem | undefined = undefined;
     let current: vscode.TestItem | undefined;
-    const sfp = uri.path.substring(wkspSettings.featuresUri.path.length + 1);
+
+    let sfp = "";
+    if (!sfp.includes("/") && wkspSettings.featuresUris.length > 1) {
+      sfp = uri.path.substring(wkspSettings.uri.path.length + 1);
+    }
+    else {
+      const fullFeaturesPath = getFeaturesUriForFeatureFileUri(wkspSettings, uri)?.path;
+      if (fullFeaturesPath)
+        sfp = uri.path.substring(fullFeaturesPath.length + 1);
+    }
+
     if (sfp.includes("/")) {
 
       const folders = sfp.split("/").slice(0, -1);
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
         const folderName = "$(folder) " + folders[i]; // $(folder) = folder icon
-        const folderTestItemId = `${uriId(wkspSettings.featuresUri)}/${path}`;
+        const folderTestItemId = `${uriId(wkspSettings.uri)}/${path}`;
 
         if (i === 0)
           parent = wkspGrandParent;

@@ -1,0 +1,10 @@
+{
+    "behave-vsc.xRay": true,
+    "behave-vsc.relativeFeaturesPaths": [
+        "features",
+        "features2"
+    ],
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
+    ]
+}

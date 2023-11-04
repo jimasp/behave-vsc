@@ -77,8 +77,8 @@ export function urisMatch(uri1: vscode.Uri, uri2: vscode.Uri) {
   return uri1.toString() === uri2.toString();
 }
 
-export function uriStartsWith(startsWith: vscode.Uri, uriToCheck: vscode.Uri) {
-  return uriToCheck.toString().startsWith(uriToCheck.toString());
+export function uriStartsWith(uriToCheck: vscode.Uri, checkIfStartsWithUri: vscode.Uri) {
+  return uriToCheck.toString().startsWith(checkIfStartsWithUri.toString());
 }
 
 export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
@@ -146,38 +146,46 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     // check if featuresPath specified in settings.json
     // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
     const wkspConfig = vscode.workspace.getConfiguration("behave-vsc", folder.uri);
-    let featuresPath = getActualWorkspaceSetting(wkspConfig, "featuresPath");
-    if (!featuresPath && !hasDefaultFeaturesFolder) {
-      return false; // probably a workspace with no behave requirements
+    const featurePathsCfg = getActualWorkspaceSetting(wkspConfig, "featuresPath") as string;
+    let relativeFeaturesPathsCfg = getActualWorkspaceSetting(wkspConfig, "relativeFeaturesPaths") as string[];
+
+    if (featurePathsCfg && !relativeFeaturesPathsCfg) {
+      relativeFeaturesPathsCfg = [];
+      relativeFeaturesPathsCfg.push(featurePathsCfg);
     }
 
+    if (!relativeFeaturesPathsCfg && !hasDefaultFeaturesFolder)
+      return false; // probably a workspace with no behave requirements
+
     // default features folder and nothing specified in settings.json (or default specified)
-    if (hasDefaultFeaturesFolder && !featuresPath)
+    if (hasDefaultFeaturesFolder && !relativeFeaturesPathsCfg)
       return true;
 
-    featuresPath = normalise_relative_path(featuresPath as string);
+    for (const featurePath of relativeFeaturesPathsCfg) {
+      const featuresPath = normalise_relative_path(featurePath);
 
-    featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath as string);
-    if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
-      return true;
+      featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath);
+      if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
+        continue;
 
-    // we don't use config.logger.showWarn here, because we may not have a logger yet
-    vscode.window.showWarningMessage(`Specified features path "${featuresPath}" not found in workspace "${folder.name}". ` +
-      `Behave VSC will ignore this workspace until this is corrected.`, "OK");
+      // we don't use config.logger.showWarn here, because we may not have a logger yet
+      vscode.window.showWarningMessage(`Specified features path "${featuresPath}" not found in workspace "${folder.name}". ` +
+        `Behave VSC will ignore this workspace until this is corrected.`, "OK");
 
-    return false;
+      return false;
+    }
+
+    return true;
   }
 
 
   const folders = vscode.workspace.workspaceFolders;
-  if (!folders) {
+  if (!folders)
     throw "No workspace folders found";
-  }
 
   for (const folder of folders) {
-    if (hasFeaturesFolder(folder)) {
+    if (hasFeaturesFolder(folder))
       workspaceFoldersWithFeatures.push(folder.uri);
-    }
   }
 
   diagLog(`perf info: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
@@ -220,11 +228,6 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
   if (!workspaceFolder)
     throw new Error("No workspace folder found for uri " + wskpUri.path);
   return workspaceFolder;
-}
-
-
-export const StepsDirIsInsideFeaturesFolder = (wkspSettings: WorkspaceFolderSettings) => {
-  return wkspSettings.workspaceRelativeStepsSearchPath.startsWith(wkspSettings.workspaceRelativeFeaturesPath);
 }
 
 
@@ -287,6 +290,13 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   }
 
   return true;
+}
+
+export const getFeaturesUriForFeatureFileUri = (wkspSettings: WorkspaceFolderSettings, featureFileUri: vscode.Uri) => {
+  for (const featuresUri of wkspSettings.featuresUris) {
+    if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
+      return featuresUri;
+  }
 }
 
 

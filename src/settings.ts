@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   findSubDirectorySync,
+  getActualWorkspaceSetting,
   getUrisOfWkspFoldersWithFeatures,
   getWorkspaceFolder, normalise_relative_path, uriId, WkspError
 } from './common';
@@ -52,15 +53,16 @@ export class WorkspaceFolderSettings {
   public readonly envVarOverrides: { [name: string]: string } = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
-  public readonly workspaceRelativeFeaturesPath: string;
+  public readonly workspaceRelativeFeaturesPaths: string[] = [];
   public readonly stepLibraries: StepLibrariesSetting = [];
   // convenience properties
   public readonly id: string;
   public readonly uri: vscode.Uri;
   public readonly name: string;
-  public readonly featuresUri: vscode.Uri;
+  public readonly featuresUris: vscode.Uri[] = [];
   public readonly workspaceRelativeBaseDirPath: string;
-  public readonly workspaceRelativeStepsSearchPath: string;
+  public readonly workspaceRelativeStepsSearchPaths: string[] = [];
+  public readonly stepsFolderIsInFeaturesFolder: boolean = false;
   // internal
   private readonly _fatalErrors: string[] = [];
 
@@ -76,6 +78,9 @@ export class WorkspaceFolderSettings {
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
+    const relativeFeaturesPathsCfg: string[] | undefined = wkspConfig.get("relativeFeaturesPaths");
+    if (relativeFeaturesPathsCfg === undefined)
+      throw "relativefeaturesPaths is undefined";
     const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
@@ -107,48 +112,76 @@ export class WorkspaceFolderSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-
-    this.workspaceRelativeFeaturesPath = normalise_relative_path(featuresPathCfg);
-    // vscode will not substitute a default if an empty string is specified in settings.json
-    if (!this.workspaceRelativeFeaturesPath)
-      this.workspaceRelativeFeaturesPath = "features";
-    this.featuresUri = vscode.Uri.joinPath(wkspUri, this.workspaceRelativeFeaturesPath);
-    if (this.workspaceRelativeFeaturesPath === ".")
-      this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
-    if (!fs.existsSync(this.featuresUri.fsPath)) {
-      // note - this error should never happen or some logic/hooks are wrong 
-      // (or the user has actually deleted/moved the features path since loading)
-      // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
-      // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
-      this._fatalErrors.push(`features path ${this.featuresUri.fsPath} not found.`);
+    if (getActualWorkspaceSetting(wkspConfig, "relativeFeaturesPaths")) {
+      for (const featuresPath of relativeFeaturesPathsCfg) {
+        this.workspaceRelativeFeaturesPaths.push(normalise_relative_path(featuresPath));
+      }
+    }
+    else {
+      this.workspaceRelativeFeaturesPaths = [normalise_relative_path(featuresPathCfg)];
+      logger.showWarn(`"behave-vsc.featuresPath" setting is DEPRECATED. Please use "behave-vsc.relativeFeaturesPaths" instead.`, this.uri);
     }
 
-    // default to watching features folder for (possibly multiple) "steps" 
-    // subfolders (e.g. like example project B/features folder)
-    // NOTE - if features/steps exists, we still need to look for e.g. features/grouped/steps
-    // so the stepsSearchRelPath in that case will be "features" NOT "features/steps".
-    // also note that baseDir is a concept borrowed from behave's source code (see comment in getJunitFeatureName in junitParser.ts)
-    let baseDirUri = vscode.Uri.joinPath(this.featuresUri);
-    let stepsSearchRelPath = path.relative(this.uri.fsPath, this.featuresUri.fsPath).replace(/\\/g, "/");
-    const stepsFolderIsInFeaturesFolder = findSubDirectorySync(this.featuresUri.fsPath, "steps");
+    if (this.workspaceRelativeFeaturesPaths.length === 0 || this.workspaceRelativeFeaturesPaths[0] === "")
+      this.workspaceRelativeFeaturesPaths = ["features"];
 
-    // if no steps folder in features folder, then findStepsParentDirectorySync will recurse 
-    // upwards from the features folder to the wksp root looking for a "steps" folder or "environment.py" file
-    if (!stepsFolderIsInFeaturesFolder) {
-      const findStepsParentDirResult = findStepsParentDirectorySync(this.featuresUri.fsPath, this.uri.fsPath);
+    let stepsSearchRelPath: string;
+    for (const featuresPath of this.workspaceRelativeFeaturesPaths) {
+
+      if (featuresPath === ".")
+        this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
+
+      const featuresUri = vscode.Uri.joinPath(wkspUri, featuresPath);
+      this.featuresUris.push(featuresUri);
+
+      if (!fs.existsSync(featuresUri.fsPath)) {
+        // note - this error should never happen or some logic/hooks are wrong 
+        // (or the user has actually deleted/moved the features path since loading)
+        // because the existence of the path should always be checked by getUrisOfWkspFoldersWithFeatures(true)
+        // before we get here (i.e. called elsewhere when workspace folders/settings are changed etc.)    
+        this._fatalErrors.push(`ERROR: features path "${featuresUri.fsPath}" does not exist on disk.`);
+        this.logSettings(logger, winSettings);
+        return;
+      }
+
+      if (!this.stepsFolderIsInFeaturesFolder)
+        this.stepsFolderIsInFeaturesFolder = findSubDirectorySync(featuresUri.fsPath, "steps") !== null ? true : false;
+
+      if (this.stepsFolderIsInFeaturesFolder) {
+        // watch features folder for (possibly multiple) "steps" subfolders (e.g. like example 
+        // project B/features folder which imports grouped/steps and grouped2/steps).
+        // NOTE - if features/steps exists, we still need to look for e.g. features/grouped/steps
+        // so the stepsSearchRelPath in that case will be "features" NOT "features/steps".
+        stepsSearchRelPath = path.relative(this.uri.fsPath, featuresUri.fsPath).replace(/\\/g, "/");
+        if (!this.workspaceRelativeStepsSearchPaths.includes(stepsSearchRelPath))
+          this.workspaceRelativeStepsSearchPaths.push(stepsSearchRelPath);
+      }
+    }
+
+    // default the baseDir to the first featuresPath.
+    // baseDir is a concept borrowed from behave's source code and is partly used to calculate 
+    // junit filenames (see comment in getJunitFeatureName in junitParser.ts)    
+    let baseDirUri = vscode.Uri.joinPath(this.featuresUris[0]);
+
+    if (!this.stepsFolderIsInFeaturesFolder) {
+      // no steps folder in features folder, so use findStepsParentDirectorySync to recurse upwards 
+      // from the features folder to the wksp folder root looking for a "steps" folder or "environment.py" file      
+      const findStepsParentDirResult = findStepsParentDirectorySync(this.featuresUris[0].fsPath, this.uri.fsPath);
       if (findStepsParentDirResult) {
         const stepsParentFsPath = findStepsParentDirResult.fsPath;
-        if (findStepsParentDirResult.environmentpyOnly)
-          logger.showWarn(`environment.py was found in "${stepsParentFsPath}", but no steps folder was found in that directory.`, this.uri);
+        if (findStepsParentDirResult.environmentpyOnly) {
+          logger.showWarn(`environment.py was found in "${stepsParentFsPath}", ` +
+            "but no steps folder was found in that directory.", this.uri);
+        }
         baseDirUri = vscode.Uri.file(stepsParentFsPath);
         stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps").replace(/\\/g, "/");
+        this.workspaceRelativeStepsSearchPaths.push(stepsSearchRelPath);
       }
       else {
         logger.showWarn(`No "steps" folder found.`, this.uri);
       }
     }
 
-    this.workspaceRelativeStepsSearchPath = stepsSearchRelPath;
     this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
 
     this.setStepLibraries(requestedStepLibraries, logger, wkspUri);
@@ -169,11 +202,18 @@ export class WorkspaceFolderSettings {
         continue;
       }
 
-      // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folders
+      // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folder
       const rxPath = relativePath + "/" + stepFilesRx;
       const lowerRelativePath = relativePath.toLowerCase();
-      if (relativePath === this.workspaceRelativeStepsSearchPath
-        || RegExp(rxPath).test(this.workspaceRelativeStepsSearchPath)
+      let rxMatch = false;
+      for (const relStepSearchPath of this.workspaceRelativeStepsSearchPaths) {
+        if (RegExp(rxPath).test(relStepSearchPath)) {
+          rxMatch = true;
+          break;
+        }
+      }
+      if (rxMatch
+        || this.workspaceRelativeStepsSearchPaths.includes(relativePath)
         // check standard paths even if they are not currently in use    
         || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
         logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
@@ -193,6 +233,7 @@ export class WorkspaceFolderSettings {
     }
   }
 
+
   logSettings(logger: Logger, winSettings: InstanceSettings) {
 
     // build sorted output dict of window settings
@@ -209,10 +250,10 @@ export class WorkspaceFolderSettings {
     const nonUserSettableWkspSettings = ["name", "uri", "id", "featuresUri", "baseUri", "workspaceRelativeStepsSearchPath"];
     const rscSettingsDic: { [name: string]: string; } = {};
     let wkspEntries = Object.entries(this).sort();
-    wkspEntries.push(["fullFeaturesPath", this.featuresUri.fsPath]);
+    wkspEntries.push(["fullFeaturesPaths", this.featuresUris.map(featureUri => featureUri.fsPath)]);
     wkspEntries.push(["junitTempPath", config.extensionTempFilesUri.fsPath]);
     wkspEntries = wkspEntries.filter(([key]) => !key.startsWith("_") && !nonUserSettableWkspSettings.includes(key) && key !== "workspaceRelativeFeaturesPath");
-    wkspEntries.push(["featuresPath", this.workspaceRelativeFeaturesPath]);
+    wkspEntries.push(["featuresPath", this.workspaceRelativeFeaturesPaths]);
     wkspEntries = wkspEntries.sort();
     wkspEntries.forEach(([key, value]) => {
       const name = key === "workspaceRelativeFeaturesPath" ? "featuresPath" : key;
@@ -229,7 +270,7 @@ export class WorkspaceFolderSettings {
     logger.logInfo(`\n${this.name} workspace settings:\n${JSON.stringify(rscSettingsDic, null, 2)}`, this.uri);
 
     if (this._fatalErrors.length > 0) {
-      throw new WkspError(`\nFATAL error due to invalid workspace setting in workspace "${this.name}". Extension cannot continue. ` +
+      throw new WkspError(`\nFATAL ERROR due to invalid setting in "${this.name}/.vscode/settings.json". Extension cannot continue. ` +
         `${this._fatalErrors.join("\n")}\n` +
         `NOTE: fatal errors may require you to restart vscode after correcting the problem.) `, this.uri);
     }

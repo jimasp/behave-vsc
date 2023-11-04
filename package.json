@@ -14,13 +14,25 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "*Workspace-relative* path to the features subfolder. If not `features` (the default), then this must tie up with the `\"paths=\"` setting in your behave configuration file. Example: `mysubfolder/my_behave_tests`.",
-					"default": "features"
+					"markdownDescription": "DEPRECATED. Please use \"behave-vsc.relativeFeaturePaths\" instead.",
+					"default": "features",
+					"deprecationMessage": "DEPRECATED. Please use \"behave-vsc.relativeFeaturePaths\" instead."
+				},
+				"behave-vsc.relativeFeaturesPaths": {
+					"scope": "resource",
+					"type": "array",
+					"markdownDescription": "An array of *project-relative* paths to the feature folders. If not `[ \"features\" ]` (the default), then this should tie up with the `\"paths=\"` setting in your behave configuration file. Example: `[ \"my-features1\", \"my-features2\"] `.",
+					"default": [
+						"features"
+					],
+					"additionalProperties": {
+						"type": "string"
+					}
 				},
 				"behave-vsc.stepLibraries": {
 					"scope": "resource",
 					"type": "array",
-					"markdownDescription": "An array of step library dictionaries. Each entry has (a) a *workspace-relative* path to the step library inside the project, and (b) an optional regex of extra filenames to include that are NOT inside `steps` subfolders of the given path. See the readme for an example.",
+					"markdownDescription": "An array of step library dictionaries. Each entry has (a) a *project-relative* path to the step library inside the project, and (b) an optional regex of extra filenames to include that are NOT inside `steps` subfolders of the given path. See the readme for an example.",
 					"additionalProperties": {
 						"type": "object"
 					}

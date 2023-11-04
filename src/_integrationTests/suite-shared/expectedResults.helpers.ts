@@ -39,7 +39,7 @@ export class TestResult implements ITestResult {
 
 export function applyTestConfiguration(wkspSettings: WorkspaceFolderSettings, expectedResults: TestResult[]) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
-    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.workspaceRelativeFeaturesPath);
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.workspaceRelativeFeaturesPaths);
     returnResults[index] = JSON.parse(json);
   });
 
