@@ -9,7 +9,9 @@ suite(`step library suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runWithStepsLibrary", async () =>
-		await sharedWorkspaceTests.runWithStepsLibrary(folderName, "features", "features",
+		await sharedWorkspaceTests.runTogether(folderName, "features", "features",
+			"????features????",
+			getExpectedCounts, getExpectedResults, undefined, undefined, undefined,
 			[
 				{
 					"relativePath": "folder1/steps_lib_1 ",
@@ -20,7 +22,7 @@ suite(`step library suite`, () => {
 					"stepFilesRx": ".*/steps/.*|more_steps/.*|.*/steps2.py|.*/steps3.py",
 				}
 			],
-			getExpectedCounts, getExpectedResults)).timeout(300000);
+		)).timeout(300000);
 
 }).timeout(900000);
 

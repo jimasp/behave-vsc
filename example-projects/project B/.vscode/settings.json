@@ -16,7 +16,7 @@
     "behave-vsc.featuresPath": "",
     "behave-vsc.runParallel": true,
     "behave-vsc.xRay": true,
-    "mypy-type-checker.path": [
-        "disabled"
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
     ]
 }

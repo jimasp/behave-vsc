@@ -14,7 +14,7 @@ export class SharedWorkspaceTests {
   constructor(readonly testPre: string) { }
 
 
-  runDefault = async (wkspName: string,
+  runTogetherWithDefaultSettings = async (wkspName: string,
     expectedWorkspaceRelativeBaseDirPath: string,
     expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
@@ -31,7 +31,7 @@ export class SharedWorkspaceTests {
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
       expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc);
+      getExpectedCountsFunc, getExpectedResultsFunc, undefined);
   }
 
 
@@ -39,19 +39,23 @@ export class SharedWorkspaceTests {
     expectedWorkspaceRelativeBaseDirPath: string,
     expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-    getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
+    getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
+    envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
+    runProfiles: RunProfilesSetting | undefined = undefined,
+    selectedRunProfile = "",
+    stepLibraries: StepLibrariesSetting | undefined = undefined,
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: false, multiRootRunWorkspacesInParallel: true,
-      envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: true
+      envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
+      justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
       expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc);
+      getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
 
 
@@ -59,110 +63,116 @@ export class SharedWorkspaceTests {
     expectedWorkspaceRelativeBaseDirPath: string,
     expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-    getExpectedResultsFunc: (wskpUri: vscode.Uri, config: Configuration) => TestResult[]
+    getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
+    envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
+    runProfiles: RunProfilesSetting | undefined = undefined,
+    selectedRunProfile = "",
+    stepLibraries: StepLibrariesSetting | undefined = undefined,
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootRunWorkspacesInParallel: true,
-      envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: true, stepLibraries: undefined, runProfiles: undefined, xRay: true
+      envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
+      justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
       expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc);
+      getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
 
   runDebug = async (wkspName: string, wkspRelativeFeaturesPath: string,
     expectedWorkspaceRelativeBaseDirPath: string,
     expectedWorkspaceRelativeStepsSearchPath: string,
     getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-    getExpectedResultsFunc: (wskpUri: vscode.Uri, config: Configuration) => TestResult[]
-  ) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: true, multiRootRunWorkspacesInParallel: true,
-      envVarOverrides: defaultEnvVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: true
-    });
-
-
-    // NOTE - if this fails, try removing all breakpoints in both vscode instances 
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(true, wkspName, testConfig,
-      expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc);
-  }
-
-  runWithStepsLibrary = async (wkspName: string,
-    expectedWorkspaceRelativeBaseDirPath: string,
-    expectedWorkspaceRelativeStepsSearchPath: string,
-    stepLibraries: StepLibrariesSetting,
-    getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-    getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
-  ) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
-      envVarOverrides: undefined, featuresPath: undefined,
-      justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: undefined
-    });
-
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
-      expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc);
-  }
-
-
-  runWithRunProfiles = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    expectedWorkspaceRelativeBaseDirPath: string,
-    expectedWorkspaceRelativeStepsSearchPath: string,
-    getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
     getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
-    envVarOverrides: { [name: string]: string },
-    runProfiles: RunProfilesSetting,
-    tagExpression: string,
-    envVars: { [name: string]: string }
-  ) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: false, multiRootRunWorkspacesInParallel: true,
-      envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
-    });
-
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
-      expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc, tagExpression, envVars);
-  }
-
-  runDebugWithRunProfiles = async (wkspName: string, wkspRelativeFeaturesPath: string,
-    expectedWorkspaceRelativeBaseDirPath: string,
-    expectedWorkspaceRelativeStepsSearchPath: string,
-    getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-    getExpectedResultsFunc: (wskpUri: vscode.Uri, config: Configuration) => TestResult[],
-    envVarOverrides: { [name: string]: string },
-    runProfiles: RunProfilesSetting,
-    tagExpression: string,
-    envVars: { [name: string]: string }
+    envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
+    runProfiles: RunProfilesSetting | undefined = undefined,
+    selectedRunProfile = "",
+    stepLibraries: StepLibrariesSetting | undefined = undefined,
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootRunWorkspacesInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
-      justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
+      justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: true
     });
-
 
     // NOTE - if this fails, try removing all breakpoints in both vscode instances 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(true, wkspName, testConfig,
       expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
-      getExpectedCountsFunc, getExpectedResultsFunc, tagExpression, envVars);
+      getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
+
+  // runWithStepsLibrary = async (wkspName: string,
+  //   expectedWorkspaceRelativeBaseDirPath: string,
+  //   expectedWorkspaceRelativeStepsSearchPath: string,
+  //   stepLibraries: StepLibrariesSetting,
+  //   getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+  //   getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[]
+  // ) => {
+
+  //   const testConfig = new TestWorkspaceConfig({
+  //     runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
+  //     envVarOverrides: undefined, featuresPath: undefined,
+  //     justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: undefined
+  //   });
+
+  //   console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
+  //   await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
+  //     expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
+  //     getExpectedCountsFunc, getExpectedResultsFunc);
+  // }
+
+
+  // runWithRunProfiles = async (wkspName: string, wkspRelativeFeaturesPath: string,
+  //   expectedWorkspaceRelativeBaseDirPath: string,
+  //   expectedWorkspaceRelativeStepsSearchPath: string,
+  //   getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+  //   getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
+  //   envVarOverrides: { [name: string]: string },
+  //   runProfiles: RunProfilesSetting,
+  //   runProfileTagExpression: string,
+  //   runProfileEnvVarOverrides: { [name: string]: string }
+  // ) => {
+
+  //   const testConfig = new TestWorkspaceConfig({
+  //     runParallel: false, multiRootRunWorkspacesInParallel: true,
+  //     envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
+  //     justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
+  //   });
+
+  //   console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
+  //   await runAllTestsAndAssertTheResults(false, wkspName, testConfig,
+  //     expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
+  //     getExpectedCountsFunc, getExpectedResultsFunc, runProfileTagExpression, runProfileEnvVarOverrides);
+  // }
+
+  // runDebugWithRunProfiles = async (wkspName: string, wkspRelativeFeaturesPath: string,
+  //   expectedWorkspaceRelativeBaseDirPath: string,
+  //   expectedWorkspaceRelativeStepsSearchPath: string,
+  //   getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
+  //   getExpectedResultsFunc: (wskpUri: vscode.Uri, config: Configuration) => TestResult[],
+  //   envVarOverrides: { [name: string]: string },
+  //   runProfiles: RunProfilesSetting,
+  //   runProfile
+  // ) => {
+
+  //   const testConfig = new TestWorkspaceConfig({
+  //     runParallel: true, multiRootRunWorkspacesInParallel: true,
+  //     envVarOverrides: envVarOverrides, featuresPath: wkspRelativeFeaturesPath,
+  //     justMyCode: undefined, stepLibraries: undefined, runProfiles: runProfiles, xRay: true
+  //   });
+
+
+  //   // NOTE - if this fails, try removing all breakpoints in both vscode instances 
+  //   console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
+  //   await runAllTestsAndAssertTheResults(true, wkspName, testConfig,
+  //     expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath,
+  //     getExpectedCountsFunc, getExpectedResultsFunc, runProfile);
+  // }
 
 
 }

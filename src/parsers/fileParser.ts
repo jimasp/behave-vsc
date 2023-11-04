@@ -266,7 +266,7 @@ export class FileParser {
       const folders = sfp.split("/").slice(0, -1);
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
-        const folderName = "\uD83D\uDCC1 " + folders[i]; // folder icon
+        const folderName = "$(folder) " + folders[i]; // folder icon
         const folderTestItemId = `${uriId(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)

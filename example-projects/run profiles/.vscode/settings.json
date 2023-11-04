@@ -1,33 +1,42 @@
 {
-    "mypy-type-checker.path": [
-        "disabled"
-    ],
     "behave-vsc.xRay": true,
     "behave-vsc.envVarOverrides": {
         "var1": "OVR-1",
         "var3": "OVR-3",
     },
     "behave-vsc.runProfiles": {
+        "just_envVarOverrides profile": {
+            "envVarOverrides": {
+                "var1": "ENV-1",
+                "var2": "ENV-2"
+            },
+        },
+        "just_tagExpression profile": {
+            "tagExpression": "@tag1",
+        },
         "tag1 profile": {
-            "envVars": {
+            "envVarOverrides": {
                 "var1": "TAG1-1",
                 "var2": "TAG1-2"
             },
             "tagExpression": "@tag1",
         },
         "tag2 profile": {
-            "envVars": {
+            "envVarOverrides": {
                 "var1": "TAG2-1",
                 "var2": "TAG2-2"
             },
             "tagExpression": "@tag2",
         },
         "tag1or2 profile": {
-            "envVars": {
+            "envVarOverrides": {
                 "var1": "TAG1-OR-2-1",
                 "var2": "TAG1-OR-2-2"
             },
             "tagExpression": "@tag1,@tag2",
-        }        
+        },
     },
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
+    ],
 }

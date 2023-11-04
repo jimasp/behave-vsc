@@ -6,11 +6,11 @@
             "stepFilesRx": ".*/steps/.*"
         },
         {
-            "relativePath": "folder2\\steps_lib_2", 
+            "relativePath": "folder2\\steps_lib_2",
             "stepFilesRx": ".*/steps/.*|more_steps/.*|.*/steps2.py|.*/steps3.py",
         }
     ],
-    "mypy-type-checker.path": [
-        "disabled"
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
     ]
 }

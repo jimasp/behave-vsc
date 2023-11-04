@@ -257,11 +257,18 @@ function findStepsParentDirectorySync(startPath: string, stopPath: string): find
 }
 
 
-type RunProfile = {
-  envVars: { [key: string]: string };
-  tagExpression: string;
-};
+export class RunProfile {
+  envVarOverrides?: { [key: string]: string } = {};
+  tagExpression?= "";
 
+  constructor(
+    envVarOverrides: { [key: string]: string } = {},
+    tagExpression = ""
+  ) {
+    this.envVarOverrides = envVarOverrides;
+    this.tagExpression = tagExpression;
+  }
+}
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
 export type StepLibrary = {

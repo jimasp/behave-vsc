@@ -80,6 +80,24 @@ async function runTestSuites() {
       launchArgs
     });
 
+    launchArgs = ["example-projects/step library"];
+    extensionTestsPath = path.resolve(__dirname, './step library suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/run profiles"];
+    extensionTestsPath = path.resolve(__dirname, './run profiles suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
     launchArgs = ["example-projects/project A"]
     extensionTestsPath = path.resolve(__dirname, './project A suite/index');
     await runTests({

@@ -4,7 +4,7 @@ import { WkspParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
-  const testCount = getExpectedResultsForTag1Expression(wkspUri, config).length;
+  const testCount = getExpectedResultsForTag1RunProfile(wkspUri, config).length;
   return {
     tests: { nodeCount: 13, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 1,
@@ -14,7 +14,7 @@ export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): W
 
 
 
-export const getExpectedResultsForNoTagExpression = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForNoRunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -217,7 +217,7 @@ export const getExpectedResultsForNoTagExpression = (wkspUri: vscode.Uri, config
 }
 
 
-export const getExpectedResultsForTag1Expression = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag1RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -420,7 +420,7 @@ export const getExpectedResultsForTag1Expression = (wkspUri: vscode.Uri, config:
 }
 
 
-export const getExpectedResultsForTag2Expression = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag2RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -623,7 +623,7 @@ export const getExpectedResultsForTag2Expression = (wkspUri: vscode.Uri, config:
 }
 
 
-export const getExpectedResultsForTag1Or2Expression = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag1Or2RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({

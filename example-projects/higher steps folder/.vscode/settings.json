@@ -1,7 +1,7 @@
 {
     "behave-vsc.xRay": true,
     "behave-vsc.featuresPath": "subfolder/features",
-    "mypy-type-checker.path": [
-        "disabled"
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
     ]
 }

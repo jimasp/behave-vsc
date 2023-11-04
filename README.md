@@ -11,16 +11,17 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
   - Select to run tests with tags and/or environment variables via run profiles.
   - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
-- Two-way step navigation (including step library support):
+- Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
   - Quick-navigate in the Step References Window (default F4 + Shift F4).
+  - Includes step library support.
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter highlighting.  
 - Smart feature step auto-completion, e.g. typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. (Also some snippets are thrown in.)
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, run profiles, etc.)
+- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, run profiles for per-run settings, etc.)
 
 ---
 
@@ -85,33 +86,6 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
               └── page.py
     ```
 
-  - Example 3 - steps-with-feature, the feature folder contains multiple imported `steps` folders. Note that all steps folders must be called `steps` if you want step navigation to work (if you cannot change all the folder names to `steps`, then a messier option for step navigation is to use the `stepLibraries` extension setting and nominate every steps folder individually):
-
-    ```text
-    my-project/
-    └── features
-        ├── steps
-        │   ├── __init__.py   
-        │   └── shared_steps.py    
-        ├── storage_tests
-        │   ├── storage.feature
-        │   └── steps
-        │      └── __init__.py
-        │      └── storage_steps.py
-        └── web_tests
-            ├── web.feature
-            └── steps
-                ├── __init__.py
-                └── web_steps.py
-    ```
-
-    where `my-project/features/steps/__init__.py` looks like this:
-
-    ```python
-    from features.storage_tests.steps import *
-    from features.web_tests.steps import *
-    ```
-
 - If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
 
   - For example:
@@ -143,7 +117,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `feature/steps` or `steps` folders, but you can also enable step navigation for imported step libraries inside your project folder via the `behave-vsc.stepLibraries` setting.
+- Step navigation is automatically enabled for your `features/steps` or `steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `behave-vsc.stepLibraries` setting.
 
   - Example:
 
@@ -211,24 +185,24 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI and/or combine it with tags.
 
-  - B. Consider if you can use a naming scheme for feature folders that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
+  - B. Consider if you can use a naming scheme for feature subfolders/files that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
 
   - C. Run tagged tests:
     - Via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
-    - Via run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and equally (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+    - Via run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
       ```json
       "behave-vsc.runProfiles": {
           "tagA profile": {
               "tagExpression": "@a",            
-              "envVars": {
+              "envVarOverrides": {
                   "var1": "1-a",
                   "var2": "2-a"
               },
           },
           "tagBorC profile": {
               "tagExpression": "@b,@c",            
-              "envVars": {
+              "envVarOverrides": {
                   "var1": "1-bc",
                   "var2": "2-bc"
               },
@@ -236,7 +210,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       },
       ```
 
-      Note that the envVars setting will override any `behave-vsc.envVarOverrides` setting that has the same key.
+      Note that the envVarOverrides property will override any `behave-vsc.envVarOverrides` setting that has the same key.
 
       Separately, here are some ideas about how you could use an environment variable in you `environment.py` file:
 
@@ -312,7 +286,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   
 ### Otherwise
 
-- Does your project meet the [workspace requirements](#workspace-requirements) and have the [required project directory structure](#required-project-directory-structure)?
+- Does your project meet the [workspace requirements](#workspace-requirements) and have a [compatible project directory structure](#compatible-project-directory-structures)?
 
 - If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
 
@@ -349,11 +323,13 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ## Known issues and limitations
 
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
-  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}` or `re` regex matching like `(?P<foo>foo)`.
+
+  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
   - Step navigation only finds steps that are in `.py` files in a folder called `steps` inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
 
 - There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
+
   - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
   
   - b. Do not to use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).

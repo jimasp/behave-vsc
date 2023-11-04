@@ -17,6 +17,10 @@
 			"name": "run profiles"
 		},
 		{
+			"path": "./step library",
+			"name": "step library"
+		},
+		{
 			"path": "./multiroot bad features path",
 			"name": "bad features path"
 		},
@@ -34,21 +38,21 @@
 		"behave-vsc.xRay": true,
 		"behave-vsc.runProfiles": {
 			"tag1 profile": {
-				"envVars": {
+				"envVarOverrides": {
 					"var1": "TAG1-1",
 					"var2": "TAG1-2"
 				},
 				"tagExpression": "@tag1",
 			},
 			"tag2 profile": {
-				"envVars": {
+				"envVarOverrides": {
 					"var1": "TAG2-1",
 					"var2": "TAG2-2"
 				},
 				"tagExpression": "@tag2",
 			},
 			"tag1or2 profile": {
-				"envVars": {
+				"envVarOverrides": {
 					"var1": "TAG1-OR-2-1",
 					"var2": "TAG1-OR-2-2"
 				},

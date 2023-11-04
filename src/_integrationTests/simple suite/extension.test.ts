@@ -9,7 +9,7 @@ suite(`simple suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runDefault", async () =>
-		await sharedWorkspaceTests.runDefault(folderName,
+		await sharedWorkspaceTests.runTogetherWithDefaultSettings(folderName,
 			"features", "features", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runParallel", async () =>

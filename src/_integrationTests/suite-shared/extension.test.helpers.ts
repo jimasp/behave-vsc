@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { WorkspaceSettings } from "../../settings";
+import { RunProfile, WorkspaceSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
@@ -404,7 +404,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	expectedWorkspaceRelativeStepsSearchPath: string,
 	getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
 	getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
-	tagExpression = "", envVars: { [name: string]: string } = {}) {
+	runProfile: RunProfile | undefined = undefined) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
 	const wkspUri = getTestWorkspaceUri(wskpFileSystemFolderName);
@@ -453,7 +453,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const request = new vscode.TestRunRequest(include);
-	const resultsPromise = instances.runHandler({ debug, request, tagExpression, envVars });
+	const resultsPromise = instances.runHandler(debug, request, runProfile);
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
 	await (new Promise(t => setTimeout(t, 50)));

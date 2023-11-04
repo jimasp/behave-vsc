@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
-import { WorkspaceSettings } from "../settings";
+import { RunProfile, WorkspaceSettings } from "../settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
@@ -28,21 +28,15 @@ export class WkspRun {
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
     public readonly tagExpression: string,
-    public readonly envVars: { [key: string]: string; }
+    public readonly envVarOverrides: { [key: string]: string; }
   ) { }
 }
 
-export interface RunHandlerParams {
-  debug: boolean;
-  request: vscode.TestRunRequest;
-  tagExpression?: string;
-  envVars?: { [key: string]: string; };
-}
 
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, parser: FileParser, junitWatcher: JunitWatcher,
   removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
-  return async ({ debug, request, tagExpression = "", envVars }: RunHandlerParams) => {
+  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()) => {
 
     diagLog(`testRunHandler: invoked`);
 
@@ -70,7 +64,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     try {
       const queue: QueueItem[] = [];
       await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? convertToTestItemArray(ctrl.items), testData);
-      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, tagExpression, envVars ?? {});
+      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
     }
     catch (e: unknown) {
@@ -118,8 +112,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
 
 async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher,
-  tagExprForRun: string, envVarsForRun: { [key: string]: string; }) {
+  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
 
   diagLog(`runTestQueue: started for run ${run.name}`);
 
@@ -159,12 +152,12 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
     // run workspaces sequentially
     if (!winSettings.multiRootRunWorkspacesInParallel || debug) {
-      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, tagExprForRun, envVarsForRun);
+      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, runProfile);
       continue;
     }
 
     // run workspaces in parallel
-    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, tagExprForRun, envVarsForRun));
+    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, runProfile));
   }
 
   await Promise.all(wkspRunPromises);
@@ -175,8 +168,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
 
 async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[],
-  tagExpression: string, envVarsForRun: { [key: string]: string; }) {
+  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[], runProfile: RunProfile) {
 
   let wr: WkspRun | undefined = undefined;
 
@@ -190,13 +182,14 @@ async function runWorkspaceQueue(wkspSettings: WorkspaceSettings, ctrl: vscode.T
     const sortedQueue = wkspQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspSettings.name);
 
-    // note that wr.envVar keys (i.e. runProfile setting) will (and should) 
-    // override a wr.wkspSettings.envVarOverrides global setting with the same
-    const envVars = { ...wkspSettings.envVarOverrides, ...envVarsForRun };
+    // note that runProfile.envVarOverrides will (and should) override 
+    // any wr.wkspSettings.envVarOverrides global setting with the same key
+    const allEnvVarOverrides = { ...wkspSettings.envVarOverrides, ...runProfile.envVarOverrides };
 
     wr = new WkspRun(
       wkspSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
-      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri, tagExpression, envVars
+      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri,
+      runProfile.tagExpression ?? "", allEnvVarOverrides
     )
 
     const start = performance.now();

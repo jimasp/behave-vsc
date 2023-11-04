@@ -1,6 +1,6 @@
-import { getExpectedCounts, getExpectedResultsForTag1Expression } from "./expectedResults";
+import { getExpectedCounts, getExpectedResultsForTag1RunProfile } from "./expectedResults";
 import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
-import { runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles } from "./extension.test";
+import { projectEnvVarOverrides, runProfilesSetting } from "./extension.test";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -11,11 +11,11 @@ suite(`run profiles suite test debug run`, () => {
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
   const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
-  test("runDebugWithRunProfiles", async () =>
-    await sharedWorkspaceTests.runDebugWithRunProfiles(folderName,
-      "", "features", "features", getExpectedCounts, getExpectedResultsForTag1Expression,
-      runProfilesWorkspaceEnvVarOverrides, runProfilesWorkspaceRunProfiles, "@tag1",
-      { var1: "TAG1-1", var2: "TAG1-2" })
+  test("runDebug - tag1 profile", async () =>
+    await sharedWorkspaceTests.runDebug(folderName,
+      "", "features", "features", getExpectedCounts, getExpectedResultsForTag1RunProfile,
+      projectEnvVarOverrides, runProfilesSetting, "tag1 profile")
+
   ).timeout(300000);
 
 }).timeout(900000);

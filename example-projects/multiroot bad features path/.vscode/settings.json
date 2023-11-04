@@ -1,7 +1,7 @@
 {
     // to test bad features path
     "behave-vsc.featuresPath": "intentional-bad-features-path",
-    "mypy-type-checker.path": [
-        "disabled"
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
     ]
 }

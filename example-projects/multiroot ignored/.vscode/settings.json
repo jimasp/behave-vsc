@@ -2,7 +2,7 @@
     /* see README.md in parent folder */
     "behave-vsc.runParallel": false,
     "behave-vsc.justMyCode": true,
-    "mypy-type-checker.path": [
-        "disabled"
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
     ]
 }

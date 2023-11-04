@@ -9,7 +9,7 @@ suite(`sibling steps folder 1 suite`, () => {
 	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
 
 	test("runDefault", async () =>
-		await sharedWorkspaceTests.runDefault(folderName, "", "steps", getExpectedCounts, getExpectedResults)).timeout(300000);
+		await sharedWorkspaceTests.runTogetherWithDefaultSettings(folderName, "", "steps", getExpectedCounts, getExpectedResults)).timeout(300000);
 
 	test("runParallel", async () =>
 		await sharedWorkspaceTests.runParallel(folderName, "", "", "steps", getExpectedCounts, getExpectedResults)).timeout(300000);

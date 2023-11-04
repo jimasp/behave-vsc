@@ -449,12 +449,12 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/envvars.feature',
-      scenario_featureName: 'EnvVars',
-      scenario_getLabel: 'run an successful envvars test',
+      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/envVarOverrides.feature',
+      scenario_featureName: 'envVarOverrides',
+      scenario_getLabel: 'run an successful envVarOverrides test',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run an successful envvars test',
+      scenario_scenarioName: 'run an successful envVarOverrides test',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,

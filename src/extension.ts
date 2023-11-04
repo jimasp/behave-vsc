@@ -10,7 +10,7 @@ import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
-import { testRunHandler, RunHandlerParams } from './runners/testRunHandler';
+import { testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog } from './logger';
 import { performance } from 'perf_hooks';
@@ -20,6 +20,7 @@ import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 import { startWatchingWorkspace } from './watchers/workspaceWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
+import { RunProfile } from './settings';
 
 
 const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
@@ -29,14 +30,15 @@ export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 
 export type TestSupport = {
-  runHandler: ({ debug, request, tagExpression, envVars }: RunHandlerParams) => Promise<QueueItem[] | undefined>,
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
   config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri, forceRefresh?: boolean) => Promise<void>
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
+    forceRefresh?: boolean) => Promise<void>
 };
 
 
@@ -260,16 +262,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
   }
 
 
-  function createRunProfiles(ctrl: vscode.TestController, runHandler: ({ debug, request, tagExpression, envVars }: RunHandlerParams) => Promise<QueueItem[] | undefined>) {
+  function createRunProfiles(ctrl: vscode.TestController,
+    runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>) {
+
     ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
       async (request: vscode.TestRunRequest) => {
-        await runHandler({ debug: false, request });
+        await runHandler(false, request);
       },
       true);
 
     ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
       async (request: vscode.TestRunRequest) => {
-        await runHandler({ debug: true, request });
+        await runHandler(true, request);
       },
       true);
 
@@ -278,7 +282,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const tagExpression = await vscode.window.showInputBox(
           { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
         );
-        await runHandler({ debug: false, request, tagExpression });
+        await runHandler(false, request, new RunProfile(undefined, tagExpression));
       });
 
     ctrl.createRunProfile('Debug Features with Tags', vscode.TestRunProfileKind.Debug,
@@ -286,18 +290,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const tagExpression = await vscode.window.showInputBox(
           { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
         );
-        await runHandler({ debug: true, request, tagExpression });
+        await runHandler(true, request, new RunProfile(undefined, tagExpression));
       });
 
     for (const name in config.globalSettings.runProfiles) {
       const runProfile = config.globalSettings.runProfiles[name];
       ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
-          await runHandler({ debug: false, request, tagExpression: runProfile.tagExpression, envVars: runProfile.envVars });
+          await runHandler(false, request, runProfile);
         });
       ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
-          await runHandler({ debug: true, request, tagExpression: runProfile.tagExpression, envVars: runProfile.envVars });
+          await runHandler(true, request, runProfile);
         });
     }
   }
