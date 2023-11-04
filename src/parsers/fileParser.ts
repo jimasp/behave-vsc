@@ -3,12 +3,12 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { WorkspaceSettings } from "../settings";
-import { deleteFeatureFileSteps, getFeatureFileSteps, getFeatureNameFromContent } from './featureParser';
+import { deleteFeatureFilesSteps, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, StepsDirIsInsideFeaturesFolder
 } from '../common';
-import { parseStepsFileContent, getStepFileSteps, deleteStepFileSteps } from './stepsParser';
+import { parseStepsFileContent, getStepFilesSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
 import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
@@ -103,8 +103,8 @@ export class FileParser {
       controller.items.delete(item.id);
     }
 
-    deleteFeatureFileSteps(wkspSettings.featuresUri);
-    deleteStepMappings(wkspSettings.featuresUri);
+    deleteFeatureFilesSteps(wkspSettings.uri);
+    deleteStepMappings(wkspSettings.uri);
 
     const featureFiles = await findFiles(wkspSettings.featuresUri, undefined, ".feature", cancelToken);
 
@@ -133,7 +133,7 @@ export class FileParser {
     caller: string): Promise<number> => {
 
     diagLog("removing existing steps for workspace: " + wkspSettings.name);
-    deleteStepFileSteps(wkspSettings.featuresUri);
+    deleteStepFileSteps(wkspSettings.uri);
 
     let stepFiles: vscode.Uri[] = [];
     const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, wkspSettings.workspaceRelativeStepsSearchPath);
@@ -164,7 +164,7 @@ export class FileParser {
       if (cancelToken.isCancellationRequested)
         break;
       const content = await getContentFromFilesystem(uri);
-      await this._updateStepsFromStepsFileContent(wkspSettings.featuresUri, content, uri, caller);
+      await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, uri, caller);
       processed++;
     }
 
@@ -177,12 +177,12 @@ export class FileParser {
   }
 
 
-  private async _updateStepsFromStepsFileContent(featuresUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
+  private async _updateStepsFromStepsFileContent(projUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(fileUri))
       throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFileContent(featuresUri, content, fileUri, caller);
+    await parseStepsFileContent(projUri, content, fileUri, caller);
   }
 
 
@@ -266,7 +266,7 @@ export class FileParser {
       const folders = sfp.split("/").slice(0, -1);
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
-        const folderName = "$(folder) " + folders[i]; // folder icon
+        const folderName = "$(folder) " + folders[i]; // $(folder) = folder icon
         const folderTestItemId = `${uriId(wkspSettings.featuresUri)}/${path}`;
 
         if (i === 0)
@@ -411,7 +411,7 @@ export class FileParser {
       diagLog(`${callName}: steps loaded`);
 
       const updateMappingsStart = performance.now();
-      mappingsCount = rebuildStepMappings(wkspSettings.featuresUri);
+      mappingsCount = rebuildStepMappings(wkspSettings.uri);
       buildMappingsTime = performance.now() - updateMappingsStart;
       diagLog(`${callName}: stepmappings built`);
 
@@ -441,9 +441,9 @@ export class FileParser {
         tests: testCounts,
         featureFilesExceptEmptyOrCommentedOut: featureFileCount,
         stepFilesExceptEmptyOrCommentedOut: stepFileCount,
-        stepFileStepsExceptCommentedOut: getStepFileSteps(wkspSettings.featuresUri).length,
-        featureFileStepsExceptCommentedOut: getFeatureFileSteps(wkspSettings.featuresUri).length,
-        stepMappings: getStepMappings(wkspSettings.featuresUri).length
+        stepFileStepsExceptCommentedOut: getStepFilesSteps(wkspSettings.uri).length,
+        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(wkspSettings.uri).length,
+        stepMappings: getStepMappings(wkspSettings.uri).length
       };
     }
     catch (e: unknown) {
@@ -489,12 +489,12 @@ export class FileParser {
         content = await getContentFromFilesystem(fileUri);
 
       if (isStepsFile(fileUri))
-        await this._updateStepsFromStepsFileContent(wkspSettings.featuresUri, content, fileUri, "reparseFile");
+        await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, fileUri, "reparseFile");
 
       if (isFeatureFile(fileUri))
         await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile", false);
 
-      rebuildStepMappings(wkspSettings.featuresUri);
+      rebuildStepMappings(wkspSettings.uri);
     }
     catch (e: unknown) {
       // unawaited async func, must log the error

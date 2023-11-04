@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, sepr } from '../common';
 import { config } from '../configuration';
 import { featureFileStepRe } from "../parsers/featureParser";
-import { getStepFileSteps } from '../parsers/stepsParser';
+import { getStepFilesSteps } from '../parsers/stepsParser';
 
 
 export const autoCompleteProvider = {
@@ -35,7 +35,7 @@ export const autoCompleteProvider = {
         }
       }
 
-      const stepFileSteps = getStepFileSteps(wkspSettings.featuresUri);
+      const stepFileSteps = getStepFilesSteps(wkspSettings.uri);
       const items: vscode.CompletionItem[] = [];
 
       for (const [key, value] of stepFileSteps) {

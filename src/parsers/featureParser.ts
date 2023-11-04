@@ -26,14 +26,14 @@ export class FeatureFileStep {
   ) { }
 }
 
-export const getFeatureFileSteps = (featuresUri: vscode.Uri) => {
-  const featuresUriMatchString = uriId(featuresUri);
-  return [...featureFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+export const getFeatureFilesSteps = (projUri: vscode.Uri) => {
+  const projUriMatchString = uriId(projUri);
+  return [...featureFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
 }
 
-export const deleteFeatureFileSteps = (featuresUri: vscode.Uri) => {
-  const wkspFeatureFileSteps = getFeatureFileSteps(featuresUri);
-  for (const [key,] of wkspFeatureFileSteps) {
+export const deleteFeatureFilesSteps = (projUri: vscode.Uri) => {
+  const projFeatureFileSteps = getFeatureFilesSteps(projUri);
+  for (const [key,] of projFeatureFileSteps) {
     featureFileSteps.delete(key);
   }
 }

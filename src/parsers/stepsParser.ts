@@ -22,9 +22,9 @@ export class StepFileStep {
 }
 
 
-export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
-  const featuresUriMatchString = uriId(featuresUri);
-  let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
+export function getStepFilesSteps(projUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
+  const projUriMatchString = uriId(projUri);
+  let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
   if (!removeFileUriPrefix)
     return steps;
   steps = [...new Map([...steps].map(([k, v]) => [afterFirstSepr(k), v]))];
@@ -32,15 +32,15 @@ export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = 
 }
 
 
-export function deleteStepFileSteps(featuresUri: vscode.Uri) {
-  const wkspStepFileSteps = getStepFileSteps(featuresUri);
+export function deleteStepFileSteps(projUri: vscode.Uri) {
+  const wkspStepFileSteps = getStepFilesSteps(projUri);
   for (const [key,] of wkspStepFileSteps) {
     stepFileSteps.delete(key);
   }
 }
 
 
-export async function parseStepsFileContent(featuresUri: vscode.Uri, content: string, stepFileUri: vscode.Uri, caller: string) {
+export async function parseStepsFileContent(projUri: vscode.Uri, content: string, stepFileUri: vscode.Uri, caller: string) {
 
   if (!isStepsFile(stepFileUri))
     throw new Error(`${stepFileUri.path} is not a steps file`);
@@ -119,7 +119,7 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
     const step = stepFileStepRe.exec(line);
     if (step) {
       const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
-      const stepFsRk = createStepFileStepAndReKey(featuresUri, stepFileUri, range, step);
+      const stepFsRk = createStepFileStepAndReKey(projUri, stepFileUri, range, step);
       if (stepFileSteps.get(stepFsRk.reKey))
         diagLog("replacing duplicate step file step reKey: " + stepFsRk.reKey);
       stepFileSteps.set(stepFsRk.reKey, stepFsRk.stepFileStep); // map.set() = no duplicate keys allowed (per workspace)
@@ -133,15 +133,15 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
 }
 
 
-function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
+function createStepFileStepAndReKey(projUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
   const stepType = step[2];
   let textAsRe = step[3].trim();
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
   const fileName = basename(fileUri);
-  // NOTE: it's important the key contains the featuresUri, NOT the fileUri, because we 
-  // don't want to allow duplicate text matches in the workspace
-  const reKey = `${uriId(featuresUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
+  // NOTE: it's important the key contains the projUri, NOT the fileUri, because we 
+  // don't want to allow duplicate text matches in the project
+  const reKey = `${uriId(projUri)}${sepr}^${stepType}${sepr}${textAsRe}$`;
   const stepFileStep = new StepFileStep(reKey, fileUri, fileName, stepType, range, textAsRe);
   return { reKey, stepFileStep };
 }
