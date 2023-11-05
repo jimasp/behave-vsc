@@ -18,6 +18,7 @@ export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com
 export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
 export const FOLDERNAME_CHARS_VALID_ON_ALLPLATFORMS = /[^ a-zA-Z0-9_.-]/g;
 export const BEHAVE_EXECUTION_ERROR_MESSAGE = "--- BEHAVE EXECUTION ERROR DETECTED ---"
+export const BEHAVE_CONFIG_FILES = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
 
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));

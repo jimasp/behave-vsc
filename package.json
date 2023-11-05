@@ -14,20 +14,9 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "DEPRECATED. Please use \"behave-vsc.relativeFeaturePaths\" instead.",
+					"markdownDescription": "DEPRECATED and ignored. Feature paths are now read direct from the behave config file.",
 					"default": "features",
-					"deprecationMessage": "DEPRECATED. Please use \"behave-vsc.relativeFeaturePaths\" instead."
-				},
-				"behave-vsc.relativeFeaturesPaths": {
-					"scope": "resource",
-					"type": "array",
-					"markdownDescription": "An array of *project-relative* paths to the feature folders. If not `[ \"features\" ]` (the default), then this should tie up with the `\"paths=\"` setting in your behave configuration file. Example: `[ \"my-features1\", \"my-features2\"] `.",
-					"default": [
-						"features"
-					],
-					"additionalProperties": {
-						"type": "string"
-					}
+					"deprecationMessage": "DEPRECATED and ignored. Feature paths are now read direct from the behave config file."
 				},
 				"behave-vsc.stepLibraries": {
 					"scope": "resource",

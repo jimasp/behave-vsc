@@ -165,26 +165,18 @@ function CreateParseResult(wkspSettings: WorkspaceFolderSettings, debug: boolean
   return { status: xmlStatus, duration: xmlDuration, failedText: errText };
 }
 
+
+
 function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Scenario): string {
-
+  // mostly a copy of make_feature_filename() in behave source code
   let fileName = null;
-
-  // get the base feature folder path for the scenario
   const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
-  let featuresPath = "";
-  for (const relFeaturesPath of wkspSettings.workspaceRelativeFeaturesPaths) {
-    if (relFeatureFilePath.startsWith(relFeaturesPath)) {
-      featuresPath = relFeaturesPath
+  for (const relConfigPath of wkspSettings.relativeConfigPaths) {
+    if (relFeatureFilePath.startsWith(relConfigPath)) {
+      fileName = relFeatureFilePath.slice(relConfigPath.length + 1);
       break;
     }
   }
-
-  if (!featuresPath)
-    throw new Error(`Could not find features path for scenario ${scenario.scenarioName}`);
-
-  // for source of the below logic, see make_feature_filename() in https://github.com/behave/behave/blob/main/behave/reporter/junit.py
-  if (featuresPath !== "features")
-    fileName = scenario.featureFileWorkspaceRelativePath.slice(featuresPath.length + 1);
 
   if (!fileName)
     fileName = path.relative(wkspSettings.workspaceRelativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);

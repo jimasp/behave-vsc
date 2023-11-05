@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { basename, isFeatureFile, isStepsFile } from '../common';
+import { BEHAVE_CONFIG_FILES, basename, isFeatureFile, isStepsFile } from '../common';
 import { config } from "../configuration";
 import { diagLog, DiagLogType } from '../logger';
 import { FileParser } from '../parsers/fileParser';
@@ -88,7 +88,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
   }
 
   if (!wkspSettings.stepsFolderIsInFeaturesFolder) {
-    for (const relStepsPath of wkspSettings.workspaceRelativeStepsSearchPaths) {
+    for (const relStepsPath of wkspSettings.workspaceRelativeStepsNavigationPaths) {
       const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relStepsPath}/**`);
       const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
       setEventHandlers(siblingStepsFolderWatcher);
@@ -101,6 +101,15 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
     const stepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(stepsFolderWatcher);
     watchers.push(stepsFolderWatcher);
+  }
+
+  for (const configFile of BEHAVE_CONFIG_FILES) {
+    const configFilePattern = new vscode.RelativePattern(wkspSettings.uri, `${configFile}`);
+    const configFileWatcher = vscode.workspace.createFileSystemWatcher(configFilePattern);
+    configFileWatcher.onDidCreate(() => config.reloadSettings(wkspSettings.uri));
+    configFileWatcher.onDidChange(() => config.reloadSettings(wkspSettings.uri));
+    configFileWatcher.onDidDelete(() => config.reloadSettings(wkspSettings.uri));
+    watchers.push(configFileWatcher);
   }
 
   return watchers;

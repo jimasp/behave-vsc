@@ -138,11 +138,11 @@ export class FileParser {
     deleteStepFileSteps(wkspSettings.uri);
 
     let processed = 0;
-    for (const relStepsSearchPath of wkspSettings.workspaceRelativeStepsSearchPaths) {
+    for (const relStepsSearchPath of wkspSettings.workspaceRelativeStepsNavigationPaths) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath)) {
-        config.logger.showWarn(`No steps directory found at ${relStepsSearchPath}.`, wkspSettings.uri);
+        config.logger.showWarn(`No steps directory found at ${stepsSearchUri.fsPath}.`, wkspSettings.uri);
         return processed;
       }
 

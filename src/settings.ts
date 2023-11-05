@@ -2,13 +2,38 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
+  BEHAVE_CONFIG_FILES,
   findSubDirectorySync,
-  getActualWorkspaceSetting,
   getUrisOfWkspFoldersWithFeatures,
   getWorkspaceFolder, normalise_relative_path, uriId, WkspError
 } from './common';
 import { config } from './configuration';
 import { Logger } from './logger';
+
+
+
+export class RunProfile {
+  envVarOverrides?: { [key: string]: string } = {};
+  tagExpression?= "";
+
+  constructor(
+    envVarOverrides: { [key: string]: string } = {},
+    tagExpression = ""
+  ) {
+    this.envVarOverrides = envVarOverrides;
+    this.tagExpression = tagExpression;
+  }
+}
+export type RunProfilesSetting = { [key: string]: RunProfile };
+
+export type StepLibrary = {
+  relativePath: string;
+  stepFilesRx: string;
+}
+
+export type StepLibrariesSetting = StepLibrary[];
+
+
 
 
 export class InstanceSettings {
@@ -59,10 +84,11 @@ export class WorkspaceFolderSettings {
   public readonly id: string;
   public readonly uri: vscode.Uri;
   public readonly name: string;
+  public readonly relativeConfigPaths: string[] = [];
   public readonly featuresUris: vscode.Uri[] = [];
-  public readonly workspaceRelativeBaseDirPath: string;
-  public readonly workspaceRelativeStepsSearchPaths: string[] = [];
-  public readonly stepsFolderIsInFeaturesFolder: boolean = false;
+  public readonly workspaceRelativeBaseDirPath: string = "error";
+  public readonly workspaceRelativeStepsNavigationPaths: string[] = [];
+  public readonly stepsFolderIsInFeaturesFolder = false;
   // internal
   private readonly _fatalErrors: string[] = [];
 
@@ -78,9 +104,6 @@ export class WorkspaceFolderSettings {
     const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
-    const relativeFeaturesPathsCfg: string[] | undefined = wkspConfig.get("relativeFeaturesPaths");
-    if (relativeFeaturesPathsCfg === undefined)
-      throw "relativefeaturesPaths is undefined";
     const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
@@ -112,26 +135,70 @@ export class WorkspaceFolderSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    if (getActualWorkspaceSetting(wkspConfig, "relativeFeaturesPaths")) {
-      for (const featuresPath of relativeFeaturesPathsCfg) {
-        this.workspaceRelativeFeaturesPaths.push(normalise_relative_path(featuresPath));
-      }
-    }
-    else {
-      this.workspaceRelativeFeaturesPaths = [normalise_relative_path(featuresPathCfg)];
-      logger.showWarn(`"behave-vsc.featuresPath" setting is DEPRECATED. Please use "behave-vsc.relativeFeaturesPaths" instead.`, this.uri);
-    }
+
+    logger.showWarn(`"behave-vsc.featuresPath" setting is DEPRECATED and ignored. ` +
+      "Paths are now read directly from the behave configuration file in your project root.", this.uri);
+
+    this.setFeaturePaths();
 
     if (this.workspaceRelativeFeaturesPaths.length === 0 || this.workspaceRelativeFeaturesPaths[0] === "")
       this.workspaceRelativeFeaturesPaths = ["features"];
 
+    // baseDir is a concept borrowed from behave's source code and is partly used to calculate 
+    // junit filenames (see comment in getJunitFeatureName in junitParser.ts)    
+    const baseDirPath = getRelativeBaseDirPath(this, this.workspaceRelativeFeaturesPaths, logger, undefined);
+    if (baseDirPath === null) {
+      this._fatalErrors.push(`Could not find a valid base directory for this workspace.`);
+      this.logSettings(logger, winSettings);
+      return;
+    }
+
+    this.workspaceRelativeStepsNavigationPaths.push(path.join(baseDirPath, "steps"));
+    this.workspaceRelativeBaseDirPath = baseDirPath;
+
+    this.setStepsNavigationPaths(logger, winSettings, this.stepsFolderIsInFeaturesFolder);
+
+    this.setStepLibraries(requestedStepLibraries, logger, wkspUri);
+
+    this.logSettings(logger, winSettings);
+  }
+
+
+  setFeaturePaths() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let config: { [key: string]: any; } | undefined = undefined;
+    let section = "behave";
+    // match order of preference in behave source "config_filenames()" function
+    for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+      const file = path.join(this.uri.fsPath, configFile);
+      if (fs.existsSync(file)) {
+        if (configFile === "pyproject.toml")
+          section = "tool.behave";
+        config = configParser(file)
+        break;
+      }
+    }
+
+    if (config) {
+      const configPaths = config[section]?.paths;
+      if (configPaths) {
+        configPaths.forEach((path: string) => {
+          path = path.trim().replace(this.uri.fsPath, "");
+          this.workspaceRelativeFeaturesPaths.push(normalise_relative_path(path));
+          this.relativeConfigPaths.push(path);
+        });
+      }
+    }
+  }
+
+  setStepsNavigationPaths(logger: Logger, winSettings: InstanceSettings, stepsFolderIsInFeaturesFolder: boolean) {
     let stepsSearchRelPath: string;
     for (const featuresPath of this.workspaceRelativeFeaturesPaths) {
 
       if (featuresPath === ".")
         this._fatalErrors.push(`"." is not a valid "behave-vsc.featuresPath" value. The features folder must be a subfolder.`);
 
-      const featuresUri = vscode.Uri.joinPath(wkspUri, featuresPath);
+      const featuresUri = vscode.Uri.joinPath(this.uri, featuresPath);
       this.featuresUris.push(featuresUri);
 
       if (!fs.existsSync(featuresUri.fsPath)) {
@@ -144,51 +211,20 @@ export class WorkspaceFolderSettings {
         return;
       }
 
-      if (!this.stepsFolderIsInFeaturesFolder)
-        this.stepsFolderIsInFeaturesFolder = findSubDirectorySync(featuresUri.fsPath, "steps") !== null ? true : false;
+      if (!stepsFolderIsInFeaturesFolder)
+        stepsFolderIsInFeaturesFolder = findSubDirectorySync(featuresUri.fsPath, "steps") !== null ? true : false;
 
-      if (this.stepsFolderIsInFeaturesFolder) {
+      if (stepsFolderIsInFeaturesFolder) {
         // watch features folder for (possibly multiple) "steps" subfolders (e.g. like example 
         // project B/features folder which imports grouped/steps and grouped2/steps).
         // NOTE - if features/steps exists, we still need to look for e.g. features/grouped/steps
         // so the stepsSearchRelPath in that case will be "features" NOT "features/steps".
         stepsSearchRelPath = path.relative(this.uri.fsPath, featuresUri.fsPath).replace(/\\/g, "/");
-        if (!this.workspaceRelativeStepsSearchPaths.includes(stepsSearchRelPath))
-          this.workspaceRelativeStepsSearchPaths.push(stepsSearchRelPath);
+        if (!this.workspaceRelativeStepsNavigationPaths.includes(stepsSearchRelPath))
+          this.workspaceRelativeStepsNavigationPaths.push(stepsSearchRelPath);
       }
     }
-
-    // default the baseDir to the first featuresPath.
-    // baseDir is a concept borrowed from behave's source code and is partly used to calculate 
-    // junit filenames (see comment in getJunitFeatureName in junitParser.ts)    
-    let baseDirUri = vscode.Uri.joinPath(this.featuresUris[0]);
-
-    if (!this.stepsFolderIsInFeaturesFolder) {
-      // no steps folder in features folder, so use findStepsParentDirectorySync to recurse upwards 
-      // from the features folder to the wksp folder root looking for a "steps" folder or "environment.py" file      
-      const findStepsParentDirResult = findStepsParentDirectorySync(this.featuresUris[0].fsPath, this.uri.fsPath);
-      if (findStepsParentDirResult) {
-        const stepsParentFsPath = findStepsParentDirResult.fsPath;
-        if (findStepsParentDirResult.environmentpyOnly) {
-          logger.showWarn(`environment.py was found in "${stepsParentFsPath}", ` +
-            "but no steps folder was found in that directory.", this.uri);
-        }
-        baseDirUri = vscode.Uri.file(stepsParentFsPath);
-        stepsSearchRelPath = path.join(path.relative(this.uri.fsPath, stepsParentFsPath), "steps").replace(/\\/g, "/");
-        this.workspaceRelativeStepsSearchPaths.push(stepsSearchRelPath);
-      }
-      else {
-        logger.showWarn(`No "steps" folder found.`, this.uri);
-      }
-    }
-
-    this.workspaceRelativeBaseDirPath = path.relative(this.uri.fsPath, baseDirUri.fsPath).replace(/\\/g, "/");
-
-    this.setStepLibraries(requestedStepLibraries, logger, wkspUri);
-
-    this.logSettings(logger, winSettings);
   }
-
 
   setStepLibraries(requestedStepLibraries: StepLibrariesSetting, logger: Logger, wkspUri: vscode.Uri) {
     for (const stepLibrary of requestedStepLibraries) {
@@ -206,14 +242,14 @@ export class WorkspaceFolderSettings {
       const rxPath = relativePath + "/" + stepFilesRx;
       const lowerRelativePath = relativePath.toLowerCase();
       let rxMatch = false;
-      for (const relStepSearchPath of this.workspaceRelativeStepsSearchPaths) {
+      for (const relStepSearchPath of this.workspaceRelativeStepsNavigationPaths) {
         if (RegExp(rxPath).test(relStepSearchPath)) {
           rxMatch = true;
           break;
         }
       }
       if (rxMatch
-        || this.workspaceRelativeStepsSearchPaths.includes(relativePath)
+        || this.workspaceRelativeStepsNavigationPaths.includes(relativePath)
         // check standard paths even if they are not currently in use    
         || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
         logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
@@ -278,43 +314,112 @@ export class WorkspaceFolderSettings {
 
 }
 
-type findStepsParentDirectorySyncResult = {
-  environmentpyOnly: boolean,
-  fsPath: string
+
+function getRelativeBehaveRunStepsDir(stage: string | undefined): [string, string] {
+  let steps_dir = "steps";
+  let environment_file = "environment.py";
+
+  if (stage) {
+    const prefix = stage + "_";
+    steps_dir = prefix + steps_dir;
+    environment_file = prefix + environment_file;
+  }
+
+  return [steps_dir, environment_file];
 }
 
-function findStepsParentDirectorySync(startPath: string, stopPath: string): findStepsParentDirectorySyncResult | null {
-  let currentPath = startPath;
-  while (currentPath.startsWith(stopPath)) {
-    const files = fs.readdirSync(currentPath);
-    if (files.includes("steps") || files.includes("environment.py")) {
-      const epo = files.includes("environment.py") && !files.includes("steps");
-      return { environmentpyOnly: epo, fsPath: currentPath };
+
+function getRelativeBaseDirPath(wkspSettings: WorkspaceFolderSettings, relativeFeaturePaths: string[], logger: Logger,
+  stage: string | undefined): string | null {
+
+  // this function is derived from "setup_paths()" function in behave source code 
+
+  let base_dir;
+
+  if (relativeFeaturePaths.length > 0)
+    base_dir = relativeFeaturePaths[0];
+  else
+    base_dir = "features";
+
+
+  const project_parent_dir = path.dirname(wkspSettings.uri.fsPath);
+  let new_base_dir = path.join(wkspSettings.uri.fsPath, base_dir);
+  const [steps_dir, environment_file] = getRelativeBehaveRunStepsDir(stage);
+
+  console.log(steps_dir);
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (fs.existsSync(path.join(new_base_dir, steps_dir)))
+      break;
+    if (fs.existsSync(path.join(new_base_dir, environment_file)))
+      break;
+    if (new_base_dir === project_parent_dir)
+      break;
+
+    new_base_dir = path.dirname(new_base_dir);
+  }
+
+  if (new_base_dir === project_parent_dir) {
+    if (relativeFeaturePaths.length > 0) {
+      logger.showWarn(`Could not find "${steps_dir}" directory. Please specify your "behave-vsc.relativeFeaturePaths".`,
+        wkspSettings.uri);
     }
-    currentPath = path.dirname(currentPath);
+    else {
+      logger.showWarn(`Could not find "${steps_dir}" directory in path "${base_dir}"`, wkspSettings.uri);
+    }
+    return null;
   }
 
-  return null;
+  return path.relative(wkspSettings.uri.fsPath, new_base_dir);
 }
 
 
-export class RunProfile {
-  envVarOverrides?: { [key: string]: string } = {};
-  tagExpression?= "";
 
-  constructor(
-    envVarOverrides: { [key: string]: string } = {},
-    tagExpression = ""
-  ) {
-    this.envVarOverrides = envVarOverrides;
-    this.tagExpression = tagExpression;
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function configParser(filePath: string): { [key: string]: any; } {
+
+  const data = fs.readFileSync(filePath, 'utf-8');
+  const lines = data.split('\n');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const config: { [key: string]: any } = {};
+  let currentSection = '';
+  let currentValue: string | string[] = '';
+  let currentKey = '';
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line.startsWith('#') || line.startsWith(';'))
+      continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentSection = line.slice(1, -1);
+      config[currentSection] = {};
+    }
+    else if (line.includes('=')) {
+      let [key, value] = line.split('=');
+      key = key.trim();
+      value = value.trim();
+      currentValue = value;
+      currentKey = key;
+      config[currentSection][key] = value;
+    }
+    else {
+      if (line.length > 0) {
+        const arr: string[] = [];
+        if (currentValue instanceof Array)
+          arr.push(...currentValue);
+        else
+          arr.push(currentValue);
+        arr.push(line);
+        currentValue = arr;
+        config[currentSection][currentKey] = arr;
+      }
+    }
   }
-}
-export type RunProfilesSetting = { [key: string]: RunProfile };
 
-export type StepLibrary = {
-  relativePath: string;
-  stepFilesRx: string;
+  return config;
 }
 
-export type StepLibrariesSetting = StepLibrary[];
