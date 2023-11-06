@@ -389,6 +389,10 @@ export function configParser(filePath: string): { [key: string]: any; } {
   let currentValue: string | string[] = '';
   let currentKey = '';
 
+  let toml = false;
+  if (filePath.endsWith(".toml"))
+    toml = true;
+
   for (let line of lines) {
     line = line.trim();
     if (line.startsWith('#') || line.startsWith(';'))
@@ -402,11 +406,22 @@ export function configParser(filePath: string): { [key: string]: any; } {
       let [key, value] = line.split('=');
       key = key.trim();
       value = value.trim();
-      currentValue = value;
-      currentKey = key;
+      if (toml) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+          const arr = value.split(",");
+          config[currentSection][key] = arr;
+          continue;
+        }
+      }
+      else {
+        currentValue = value;
+        currentKey = key;
+      }
       config[currentSection][key] = value;
     }
     else {
+      if (toml)
+        continue;
       if (line.length > 0) {
         const arr: string[] = [];
         if (currentValue instanceof Array)
