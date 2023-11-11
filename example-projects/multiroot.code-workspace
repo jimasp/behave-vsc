@@ -21,8 +21,8 @@
 			"name": "step library"
 		},
 		{
-			"path": "./multiroot bad features path",
-			"name": "bad features path"
+			"path": "./multiroot unconfigured features path",
+			"name": "unconfigured features path"
 		},
 		{
 			"path": "./multiroot empty folder",
