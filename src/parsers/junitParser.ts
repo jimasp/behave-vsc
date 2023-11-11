@@ -6,7 +6,7 @@ import { QueueItem } from "../extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
 import { config } from '../configuration';
 import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
-import { WorkspaceFolderSettings } from '../settings';
+import { ProjectSettings } from '../settings';
 import { Scenario } from './testFile';
 
 
@@ -98,7 +98,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
 }
 
 
-function CreateParseResult(wkspSettings: WorkspaceFolderSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
+function CreateParseResult(wkspSettings: ProjectSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
 
   let xmlDuration = testCase.$.time * 1000;
   const xmlStatus = testCase.$.status;
@@ -166,7 +166,7 @@ function CreateParseResult(wkspSettings: WorkspaceFolderSettings, debug: boolean
 
 
 
-function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Scenario): string {
+function getJunitFeatureName(wkspSettings: ProjectSettings, scenario: Scenario): string {
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "make_feature_filename()".
   // if that function changes in behave, then it is likely this will also have to change.    
@@ -188,7 +188,7 @@ function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Sc
 }
 
 
-function getJunitFileUri(wkspSettings: WorkspaceFolderSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
+function getJunitFileUri(wkspSettings: ProjectSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
 
   const junitName = getJunitFeatureName(wkspSettings, queueItem.scenario);
   const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, `TESTS-${junitName}.xml`);
@@ -207,13 +207,13 @@ export class QueueItemMapEntry {
   constructor(
     public readonly queueItem: QueueItem,
     public readonly junitFileUri: vscode.Uri,
-    public readonly wkspSettings: WorkspaceFolderSettings,
+    public readonly wkspSettings: ProjectSettings,
     public updated = false
   ) { }
 }
 
 
-export function getWkspQueueJunitFileMap(wkspSettings: WorkspaceFolderSettings, run: vscode.TestRun, wkspQueueItems: QueueItem[]) {
+export function getWkspQueueJunitFileMap(wkspSettings: ProjectSettings, run: vscode.TestRun, wkspQueueItems: QueueItem[]) {
   const wkspJunitRunDirUri = getJunitWkspRunDirUri(run, wkspSettings.name);
   return wkspQueueItems.map(qi => {
     const junitFileUri = getJunitFileUri(wkspSettings, qi, wkspJunitRunDirUri);
@@ -224,7 +224,7 @@ export function getWkspQueueJunitFileMap(wkspSettings: WorkspaceFolderSettings, 
 
 
 
-export async function parseJunitFileAndUpdateTestResults(wkspSettings: WorkspaceFolderSettings, run: vscode.TestRun, debug: boolean,
+export async function parseJunitFileAndUpdateTestResults(wkspSettings: ProjectSettings, run: vscode.TestRun, debug: boolean,
   junitFileUri: vscode.Uri, filteredQueue: QueueItem[]): Promise<void> {
 
   if (!junitFileUri.fsPath.toLowerCase().endsWith(".xml"))
@@ -300,7 +300,7 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: Workspace
 }
 
 
-export function updateTestResultsForUnreadableJunitFile(wkspSettings: WorkspaceFolderSettings, run: vscode.TestRun,
+export function updateTestResultsForUnreadableJunitFile(wkspSettings: ProjectSettings, run: vscode.TestRun,
   queueItems: QueueItem[], junitFileUri: vscode.Uri) {
 
   const parseResult: ParseResult = {

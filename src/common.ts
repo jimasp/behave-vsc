@@ -5,7 +5,7 @@ import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
 import { Scenario, TestData } from './parsers/testFile';
-import { StepLibrary, WorkspaceFolderSettings } from './settings';
+import { StepLibrary, ProjectSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
 
@@ -177,7 +177,7 @@ export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined):
 }
 
 
-export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): WorkspaceFolderSettings => {
+export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
   const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
   return config.workspaceSettings[wkspUri.path];
 }
@@ -301,7 +301,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   if (!lcPath.endsWith(".py"))
     return false;
 
-  function getStepLibraryMatch(wkspSettings: WorkspaceFolderSettings, relPath: string) {
+  function getStepLibraryMatch(wkspSettings: ProjectSettings, relPath: string) {
     let stepLibMatch: StepLibrary | null = null;
     let currentMatchLen = 0, lenPath = 0;
     for (const stepLib of wkspSettings.stepLibraries) {
@@ -327,7 +327,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   return true;
 }
 
-export const getFeaturesUriForFeatureFileUri = (wkspSettings: WorkspaceFolderSettings, featureFileUri: vscode.Uri) => {
+export const getFeaturesUriForFeatureFileUri = (wkspSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
   for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
     const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))

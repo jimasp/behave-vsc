@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { RunProfile, WorkspaceFolderSettings } from "../../settings";
+import { RunProfile, ProjectSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
@@ -79,7 +79,7 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
 		const winSettings = config.globalSettings;
-		assert.strictEqual(winSettings.multiRootRunWorkspacesInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
+		assert.strictEqual(winSettings.multiRootRunProjectsInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
 		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), wkspName);
 		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), wkspName);
 	}
@@ -128,7 +128,7 @@ function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<File
 }
 
 
-async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceFolderSettings) {
+async function getAllStepLinesFromFeatureFiles(wkspSettings: ProjectSettings) {
 
 	const stepLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/**/*.feature`);
@@ -145,7 +145,7 @@ async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceFolderSett
 	return [...stepLines];
 }
 
-async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceFolderSettings) {
+async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: ProjectSettings) {
 
 	const funcLines = new Map<FileStep, string>();
 	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/steps/*.py`);

@@ -36,24 +36,35 @@ export type StepLibrariesSetting = StepLibrary[];
 
 
 export class InstanceSettings {
-  // class for package.json "window" settings 
+  // class for package.json scope:"window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
-  public readonly multiRootRunWorkspacesInParallel: boolean;
+  public readonly multiRootRunProjectsInParallel: boolean;
   public readonly runProfiles: RunProfilesSetting | undefined;
   public readonly xRay: boolean;
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
+
+    // deprecated setting
     const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
     if (multiRootRunWorkspacesInParallelCfg === undefined)
       throw "multiRootRunWorkspacesInParallel is undefined";
+    // ------------------
+
+    const multiRootRunProjectsInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
+    if (multiRootRunProjectsInParallelCfg === undefined)
+      throw "multiRootRunWorkspacesInParallel is undefined";
+
+    if (!multiRootRunWorkspacesInParallelCfg || !multiRootRunProjectsInParallelCfg)
+      this.multiRootRunProjectsInParallel = false;
+    else
+      this.multiRootRunProjectsInParallel = true;
+
     const xRayCfg: boolean | undefined = winConfig.get("xRay");
     if (xRayCfg === undefined)
       throw "xRay is undefined";
-
-    this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallelCfg;
     this.xRay = xRayCfg;
 
     try {
@@ -69,9 +80,9 @@ export class InstanceSettings {
   }
 }
 
-export class WorkspaceFolderSettings {
-  // class for package.json "resource" settings in settings.json
-  // these apply to a single workspace folder
+export class ProjectSettings {
+  // class for package.json scope:"resource" settings in settings.json
+  // these apply to a specific workspace root folder
 
   // user-settable
   public readonly envVarOverrides: { [name: string]: string } = {};
@@ -164,7 +175,7 @@ export class WorkspaceFolderSettings {
   }
 
 
-  private _getRelativeBaseDirPath(wkspSettings: WorkspaceFolderSettings, relativeConfigPaths: string[], logger: Logger): string | null {
+  private _getRelativeBaseDirPath(wkspSettings: ProjectSettings, relativeConfigPaths: string[], logger: Logger): string | null {
     // NOTE: this function MUST have basically the same logic as the 
     // behave source code function "setup_paths()".
     // if that function changes in behave, then it is likely this will also have to change.  

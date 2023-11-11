@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { WorkspaceFolderSettings } from "../settings";
+import { ProjectSettings } from "../settings";
 import { uriId, sepr, basename, getLines, getWorkspaceUriForFile } from '../common';
 import { diagLog } from '../logger';
 import { config } from '../configuration';
@@ -61,7 +61,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: WorkspaceFolderSettings, uri: vscode.Uri, content: string, caller: string,
+export const parseFeatureContent = (wkspSettings: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
