@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getWorkspaceUriForFile, getLines } from '../common';
+import { getProjectUriForFile, getLines } from '../common';
 import { config } from '../configuration';
 
 const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
@@ -50,8 +50,8 @@ export const formatFeatureProvider = {
     catch (e: unknown) {
       // entry point function (handler) - show error  
       try {
-        const wkspUri = getWorkspaceUriForFile(document.uri);
-        config.logger.showError(e, wkspUri);
+        const projUri = getProjectUriForFile(document.uri);
+        config.logger.showError(e, projUri);
       }
       catch {
         config.logger.showError(e);

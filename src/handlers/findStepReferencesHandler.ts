@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "../configuration";
-import { uriId, getWorkspaceUriForFile, isStepsFile, openDocumentRange } from '../common';
+import { uriId, getProjectUriForFile, isStepsFile, openDocumentRange } from '../common';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { FeatureFileStep } from '../parsers/featureParser';
@@ -105,8 +105,8 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const wkspUri = getWorkspaceUriForFile(fileUri);
-      config.logger.showError(e, wkspUri);
+      const projUri = getProjectUriForFile(fileUri);
+      config.logger.showError(e, projUri);
     }
     catch {
       config.logger.showError(e);

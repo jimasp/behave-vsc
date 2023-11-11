@@ -6,8 +6,8 @@ import { Configuration } from "../../configuration";
 import { RunProfile, ProjectSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
-import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
-import { WkspParseCounts } from '../../parsers/fileParser';
+import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
+import { ProjParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
@@ -73,27 +73,27 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 }
 
 
-function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration,
-	expectedWorkspaceRelativeBaseDirPath: string, expectedWorkspaceRelativeStepsSearchPath: string) {
+function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration,
+	expectedProjectRelativeBaseDirPath: string, expectedProjectRelativeStepsSearchPath: string) {
 
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
-		const winSettings = config.globalSettings;
-		assert.strictEqual(winSettings.multiRootRunProjectsInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), wkspName);
-		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), wkspName);
-		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), wkspName);
+		const winSettings = config.instanceSettings;
+		assert.strictEqual(winSettings.multiRootRunProjectsInParallel, testConfig.getExpected("multiRootRunWorkspacesInParallel"), projName);
+		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), projName);
+		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), projName);
 	}
 
-	const wkspSettings = config.workspaceSettings[wkspUri.path];
-	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
-	assert.strictEqual(wkspSettings.relativeFeaturePaths, testConfig.getExpected("workspaceRelativeFeaturesPath"), wkspName);
-	assert.strictEqual(wkspSettings.workspaceRelativeStepsSearchPath, expectedWorkspaceRelativeStepsSearchPath, wkspName);
-	assert.strictEqual(wkspSettings.relativeBaseDirPath, expectedWorkspaceRelativeBaseDirPath, wkspName);
-	const expectedFeaturesUri = testConfig.getExpected("featuresUri", wkspUri) as vscode.Uri;
-	assert.strictEqual(true, urisMatch(wkspSettings.featuresUris, expectedFeaturesUri), wkspName);
-	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
-	assert.strictEqual(wkspSettings.runParallel, testConfig.getExpected("runParallel"), wkspName);
-	assert.deepStrictEqual(wkspSettings.stepLibraries, testConfig.getExpected("stepLibraries"), wkspName);
+	const projSettings = config.projectSettings[projUri.path];
+	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), projName);
+	assert.strictEqual(projSettings.relativeFeaturePaths, testConfig.getExpected("workspaceRelativeFeaturesPath"), projName);
+	assert.strictEqual(projSettings.workspaceRelativeStepsSearchPath, expectedProjectRelativeStepsSearchPath, projName);
+	assert.strictEqual(projSettings.relativeBaseDirPath, expectedProjectRelativeBaseDirPath, projName);
+	const expectedFeaturesUri = testConfig.getExpected("featuresUri", projUri) as vscode.Uri;
+	assert.strictEqual(true, urisMatch(projSettings.featuresUris, expectedFeaturesUri), projName);
+	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), projName);
+	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), projName);
+	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"), projName);
 }
 
 
@@ -128,10 +128,10 @@ function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<File
 }
 
 
-async function getAllStepLinesFromFeatureFiles(wkspSettings: ProjectSettings) {
+async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 
 	const stepLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/**/*.feature`);
+	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.relativeFeaturePaths}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
@@ -145,10 +145,10 @@ async function getAllStepLinesFromFeatureFiles(wkspSettings: ProjectSettings) {
 	return [...stepLines];
 }
 
-async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: ProjectSettings) {
+async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
 
 	const funcLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/steps/*.py`);
+	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.relativeFeaturePaths}/steps/*.py`);
 	const stepFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const stepFileUri of stepFileUris) {
@@ -164,10 +164,10 @@ async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: ProjectSettin
 
 
 
-async function assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri: vscode.Uri, instances: TestSupport) {
+async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: TestSupport) {
 
-	const wkspSettings = instances.config.workspaceSettings[wkspUri.path];
-	const featureFileSteps = await getAllStepLinesFromFeatureFiles(wkspSettings);
+	const projSettings = instances.config.projectSettings[projUri.path];
+	const featureFileSteps = await getAllStepLinesFromFeatureFiles(projSettings);
 
 	for (const [step, stepText] of featureFileSteps) {
 		const uri = step.uri;
@@ -185,14 +185,14 @@ async function assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri: vscode.U
 			throw e;
 		}
 	}
-	console.log(`assertAllFeatureFileStepsHaveAStepFileStepMatch for ${wkspSettings.name}, ${featureFileSteps.length} feature file steps successfully matched`)
+	console.log(`assertAllFeatureFileStepsHaveAStepFileStepMatch for ${projSettings.name}, ${featureFileSteps.length} feature file steps successfully matched`)
 }
 
 
-async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri: vscode.Uri, instances: TestSupport) {
+async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: TestSupport) {
 
-	const wkspSettings = instances.config.workspaceSettings[wkspUri.path];
-	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(wkspSettings);
+	const projSettings = instances.config.projectSettings[projUri.path];
+	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(projSettings);
 
 	for (const [step, funcLine] of stepFileSteps) {
 		const uri = step.uri;
@@ -213,7 +213,7 @@ async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri: vsc
 			throw e;
 		}
 	}
-	console.log(`assertAllStepFileStepsHaveAtLeastOneFeatureReference for ${wkspSettings.name}, ${stepFileSteps.length} step file steps successfully matched`)
+	console.log(`assertAllStepFileStepsHaveAtLeastOneFeatureReference for ${projSettings.name}, ${stepFileSteps.length} step file steps successfully matched`)
 }
 
 
@@ -261,25 +261,25 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 	return arrChildrenIds.join();
 }
 
-function assertExpectedCounts(wkspUri: vscode.Uri, wkspName: string, config: Configuration,
-	getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-	actualCounts: WkspParseCounts, hasMultiRootWkspNode: boolean) {
+function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Configuration,
+	getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
+	actualCounts: ProjParseCounts, hasMultiRootWkspNode: boolean) {
 
 	try {
-		const expectedCounts = getExpectedCountsFunc(wkspUri, config);
+		const expectedCounts = getExpectedCountsFunc(projUri, config);
 
-		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, wkspName + ": featureFilesExceptEmptyOrCommentedOut");
-		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, wkspName + ": stepFilesExceptEmptyOrCommentedOut");
-		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, wkspName + ": stepFileStepsExceptCommentedOut");
-		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, wkspName + ": featureFileStepsExceptCommentedOut");
-		assert(actualCounts.stepMappings === expectedCounts.stepMappings, wkspName + ": stepMappings");
-		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, wkspName + ": testCount");
+		assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, projName + ": featureFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, projName + ": stepFilesExceptEmptyOrCommentedOut");
+		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, projName + ": stepFileStepsExceptCommentedOut");
+		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, projName + ": featureFileStepsExceptCommentedOut");
+		assert(actualCounts.stepMappings === expectedCounts.stepMappings, projName + ": stepMappings");
+		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, projName + ": testCount");
 
 		if (hasMultiRootWkspNode) {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, wkspName + ": nodeCount");
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, projName + ": nodeCount");
 		}
 		else {
-			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, wkspName + ": nodeCount");
+			assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, projName + ": nodeCount");
 		}
 	}
 	catch (e: unknown) {
@@ -301,11 +301,11 @@ function assertInstances(instances: TestSupport) {
 	assert(instances.configurationChangedHandler);
 }
 
-function getTestWorkspaceUri(wkspName: string) {
+function getTestWorkspaceUri(projName: string) {
 	const uris = getUrisOfWkspFoldersWithFeatures();
-	const wkspUri = uris.find(uri => uri.path.includes(wkspName));
-	assert(wkspUri, "wkspUri");
-	return wkspUri;
+	const projUri = uris.find(uri => uri.path.includes(projName));
+	assert(projUri, "projUri");
+	return projUri;
 }
 
 //declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -400,15 +400,15 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
 export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string,
 	testConfig: TestWorkspaceConfig,
-	expectedWorkspaceRelativeBaseDirPath: string,
-	expectedWorkspaceRelativeStepsSearchPath: string,
-	getExpectedCountsFunc: (wkspUri: vscode.Uri, config: Configuration) => WkspParseCounts,
-	getExpectedResultsFunc: (wkspUri: vscode.Uri, config: Configuration) => TestResult[],
+	expectedProjectRelativeBaseDirPath: string,
+	expectedProjectRelativeStepsSearchPath: string,
+	getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
+	getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
 	runProfile: RunProfile | undefined = undefined) {
 
 	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
-	const wkspUri = getTestWorkspaceUri(wskpFileSystemFolderName);
-	const wkspId = uriId(wkspUri);
+	const projUri = getTestWorkspaceUri(wskpFileSystemFolderName);
+	const projId = uriId(projUri);
 
 	await setLock(consoleName, "acquire");
 	console.log(`${consoleName} initialising`);
@@ -418,26 +418,26 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// normally OnDidChangeConfiguration is called when the user changes the settings in the extension
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
-	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithWkspUri(testConfig, wkspUri));
-	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, wkspUri, testConfig,
-		instances.config, expectedWorkspaceRelativeBaseDirPath, expectedWorkspaceRelativeStepsSearchPath);
+	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
+	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, projUri, testConfig,
+		instances.config, expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
-	const actualCounts = await instances.parser.parseFilesForWorkspace(wkspUri, instances.testData, instances.ctrl,
+	const actualCounts = await instances.parser.parseFilesForWorkspace(projUri, instances.testData, instances.ctrl,
 		"runAllTestsAndAssertTheResults", false);
 	assert(actualCounts, "actualCounts was undefined");
-	const allWkspItems = getAllTestItems(wkspId, instances.ctrl.items);
-	console.log(`${consoleName}: workspace nodes:${allWkspItems.length}`);
-	assert(allWkspItems.length > 0, "allWkspItems.length was 0");
-	const hasMuliRootWkspNode = allWkspItems.find(item => item.id === uriId(wkspUri)) !== undefined;
+	const allProjItems = getAllTestItems(projId, instances.ctrl.items);
+	console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
+	assert(allProjItems.length > 0, "allProjItems.length was 0");
+	const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;
 
 	// check all steps can be matched
-	await assertAllFeatureFileStepsHaveAStepFileStepMatch(wkspUri, instances);
-	await assertAllStepFileStepsHaveAtLeastOneFeatureReference(wkspUri, instances);
+	await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, instances);
+	await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, instances);
 
 	// sanity check include length matches expected length
-	const include = getScenarioTests(instances.testData, allWkspItems);
-	const expectedResults = getExpectedResultsFunc(wkspUri, instances.config);
+	const include = getScenarioTests(instances.testData, allProjItems);
+	const expectedResults = getExpectedResultsFunc(projUri, instances.config);
 	if (include.length !== expectedResults.length)
 		debugger; // eslint-disable-line no-debugger
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
@@ -499,7 +499,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(wkspUri, wskpFileSystemFolderName, instances.config, getExpectedCountsFunc, actualCounts, hasMuliRootWkspNode);
+	assertExpectedCounts(projUri, wskpFileSystemFolderName, instances.config, getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

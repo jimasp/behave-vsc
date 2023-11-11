@@ -13,8 +13,8 @@ export function getJunitDirUri(): vscode.Uri {
 }
 
 
-export function getJunitWkspRunDirUri(run: vscode.TestRun, wkspName: string): vscode.Uri {
-  return vscode.Uri.joinPath(getJunitRunDirUri(run), wkspName);
+export function getJunitProjRunDirUri(run: vscode.TestRun, projName: string): vscode.Uri {
+  return vscode.Uri.joinPath(getJunitRunDirUri(run), projName);
 }
 
 
@@ -75,7 +75,7 @@ export class JunitWatcher {
   }
 
 
-  async startWatchingRun(run: vscode.TestRun, debug: boolean, wkspNamesInRun: string[], queueItemMap: QueueItemMapEntry[]) {
+  async startWatchingRun(run: vscode.TestRun, debug: boolean, projNamesInRun: string[], queueItemMap: QueueItemMapEntry[]) {
     // method called when a test run/debug session is starting.
 
     // add the run and wait for the watcher to be ready
@@ -84,15 +84,15 @@ export class JunitWatcher {
 
     if (!this._firstRun) {
       await vscode.workspace.fs.createDirectory(getJunitRunDirUri(run));
-      for (const wkspName of wkspNamesInRun) {
-        const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
-        await vscode.workspace.fs.createDirectory(junitWkspRunDirUri);
+      for (const projName of projNamesInRun) {
+        const junitProjRunDirUri = getJunitProjRunDirUri(run, projName);
+        await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
       }
       return;
     }
 
     this._firstRun = false;
-    await this._waitForWatcher(run, wkspNamesInRun);
+    await this._waitForWatcher(run, projNamesInRun);
   }
 
 
@@ -152,7 +152,7 @@ export class JunitWatcher {
             // because the vscode onDidTerminateDebugSession event doesn't tell us, so we just have to assume debug stop 
             // was clicked and that is why the junit file was not written. any error will still display to 
             // the user in the debug console if they open it.)
-            updateTestResultsForUnreadableJunitFile(qim.wkspSettings, stoppedRun.run, [qim.queueItem], qim.junitFileUri);
+            updateTestResultsForUnreadableJunitFile(qim.projSettings, stoppedRun.run, [qim.queueItem], qim.junitFileUri);
           }
         })());
       }
@@ -171,7 +171,7 @@ export class JunitWatcher {
   }
 
 
-  async _waitForWatcher(run: vscode.TestRun, wkspNamesInRun: string[]) {
+  async _waitForWatcher(run: vscode.TestRun, projNamesInRun: string[]) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
     if (!watcher)
@@ -187,9 +187,9 @@ export class JunitWatcher {
       return;
 
     const waits: Promise<boolean>[] = [];
-    for (const wkspName of wkspNamesInRun) {
-      const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspName);
-      waits.push(this._waitForFolderWatch(junitWkspRunDirUri, 2000));
+    for (const projName of projNamesInRun) {
+      const junitProjRunDirUri = getJunitProjRunDirUri(run, projName);
+      waits.push(this._waitForFolderWatch(junitProjRunDirUri, 2000));
     }
     await Promise.all(waits);
 
@@ -282,8 +282,8 @@ export class JunitWatcher {
 
       // one junit file is created per feature, so update all tests belonging to this feature
       const matchedQueueItems = matches.map(m => m.queueItem);
-      const wkspSettings = matches[0].wkspSettings;
-      await parseJunitFileAndUpdateTestResults(wkspSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
+      const projSettings = matches[0].projSettings;
+      await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
       for (const match of matches) {
         diagLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;

@@ -3,7 +3,7 @@ import { config, Configuration } from "./configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   getContentFromFilesystem,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, isFeatureFile,
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, cleanExtensionTempDirectory, urisMatch
 } from './common';
 import { StepFileStep } from './parsers/stepsParser';
@@ -11,14 +11,14 @@ import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithWkspUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfigWithprojUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
 import { diagLog } from './logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
-import { startWatchingWorkspace } from './watchers/workspaceWatcher';
+import { startWatchingProject } from './watchers/workspaceWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './settings';
 
@@ -37,7 +37,7 @@ export type TestSupport = {
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
     forceRefresh?: boolean) => Promise<void>
 };
 
@@ -62,9 +62,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
-    for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-      const watchers = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
-      wkspWatchers.set(wkspUri, watchers);
+    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+      const watchers = startWatchingProject(projUri, ctrl, testData, parser);
+      wkspWatchers.set(projUri, watchers);
       watchers.forEach(w => context.subscriptions.push(w));
     }
 
@@ -96,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     createRunProfiles(ctrl, runHandler);
 
     ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
-      let wkspSettings;
+      let projSettings;
 
       try {
         if (!item || !item.uri || item.uri?.scheme !== 'file')
@@ -106,14 +106,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         if (!(data instanceof TestFile))
           return;
 
-        wkspSettings = getWorkspaceSettingsForFile(item.uri);
+        projSettings = getProjectSettingsForFile(item.uri);
         const content = await getContentFromFilesystem(item.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, item, "resolveHandler");
+        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, item, "resolveHandler");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error
-        const wkspUri = wkspSettings ? wkspSettings.uri : undefined;
-        config.logger.showError(e, wkspUri);
+        const projUri = projSettings ? projSettings.uri : undefined;
+        config.logger.showError(e, projUri);
       }
     };
 
@@ -155,8 +155,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         const uri = event.document.uri;
         if (!isFeatureFile(uri) && !isStepsFile(uri))
           return;
-        const wkspSettings = getWorkspaceSettingsForFile(uri);
-        parser.reparseFile(uri, event.document.getText(), wkspSettings, testData, ctrl);
+        const projSettings = getProjectSettingsForFile(uri);
+        parser.reparseFile(uri, event.document.getText(), projSettings, testData, ctrl);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -169,7 +169,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithWkspUri,
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
       forceFullRefresh?: boolean) => {
 
       // for integration test runAllTestsAndAssertTheResults, 
@@ -189,26 +189,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           return;
 
         if (!testCfg)
-          config.logger.clearAllWksps();
+          config.logger.clearAllProjects();
 
         // adding/removing/renaming workspaces will not only change the 
         // set of workspaces we are watching, but also the output channels
         config.logger.syncChannelsToWorkspaceFolders();
 
-        for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
+        for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
-            if (urisMatch(testCfg.wkspUri, wkspUri)) {
-              config.reloadSettings(wkspUri, testCfg.testConfig);
+            if (urisMatch(testCfg.projUri, projUri)) {
+              config.reloadSettings(projUri, testCfg.testConfig);
             }
             continue;
           }
 
-          config.reloadSettings(wkspUri);
-          const oldWatchers = wkspWatchers.get(wkspUri);
+          config.reloadSettings(projUri);
+          const oldWatchers = wkspWatchers.get(projUri);
           if (oldWatchers)
             oldWatchers.forEach(w => w.dispose());
-          const watchers = startWatchingWorkspace(wkspUri, ctrl, testData, parser);
-          wkspWatchers.set(wkspUri, watchers);
+          const watchers = startWatchingProject(projUri, ctrl, testData, parser);
+          wkspWatchers.set(projUri, watchers);
           watchers.forEach(w => context.subscriptions.push(w));
         }
 
@@ -217,7 +217,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel 
         // workspace integration test runs)
         if (testCfg) {
-          parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler", false);
+          parser.parseFilesForWorkspace(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
@@ -296,8 +296,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         await runHandler(true, request, new RunProfile(undefined, tagExpression));
       });
 
-    for (const name in config.globalSettings.runProfiles) {
-      const runProfile = config.globalSettings.runProfiles[name];
+    for (const name in config.instanceSettings.runProfiles) {
+      const runProfile = config.instanceSettings.runProfiles[name];
       ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           await runHandler(false, request, runProfile);

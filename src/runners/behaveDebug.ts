@@ -1,39 +1,39 @@
 import * as vscode from 'vscode';
 import { config } from "../configuration";
 import { diagLog } from '../logger';
-import { WkspRun } from './testRunHandler';
+import { ProjRun } from './testRunHandler';
 
 
 
-export async function debugBehaveInstance(wr: WkspRun, args: string[], friendlyCmd: string): Promise<void> {
+export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
 
   const runCancelHandler = wr.run.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
 
   try {
-    diagLog(friendlyCmd, wr.wkspSettings.uri); // log debug friendlyCmd in diagnostics log only
+    diagLog(friendlyCmd, wr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
 
     // --outfile = remove stdout noise from debug console
     args.push("--no-summary", "--outfile",
-      vscode.Uri.joinPath(config.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.wkspSettings.name}-debug.log`).fsPath);
+      vscode.Uri.joinPath(config.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.projSettings.name}-debug.log`).fsPath);
 
-    const env = { ...process.env, ...wr.wkspSettings.envVarOverrides };
+    const env = { ...process.env, ...wr.projSettings.envVarOverrides };
 
     const debugLaunchConfig = {
       name: `behave-vsc-debug`,
       console: "internalConsole",
       type: "python",
-      cwd: wr.wkspSettings.uri.fsPath,
+      cwd: wr.projSettings.uri.fsPath,
       request: 'launch',
       module: "behave",
       args: args,
       env: env,
-      justMyCode: wr.wkspSettings.justMyCode
+      justMyCode: wr.projSettings.justMyCode
     };
 
-    const wkspFolder = vscode.workspace.getWorkspaceFolder(wr.wkspSettings.uri);
+    const projFolder = vscode.workspace.getWorkspaceFolder(wr.projSettings.uri);
 
-    if (!await vscode.debug.startDebugging(wkspFolder, debugLaunchConfig)) {
-      diagLog("unable to start debug session, was debug stop button clicked?", wr.wkspSettings.uri);
+    if (!await vscode.debug.startDebugging(projFolder, debugLaunchConfig)) {
+      diagLog("unable to start debug session, was debug stop button clicked?", wr.projSettings.uri);
       return;
     }
 

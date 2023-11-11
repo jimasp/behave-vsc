@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getWorkspaceSettingsForFile, getWorkspaceUriForFile, sepr } from '../common';
+import { getProjectSettingsForFile, getProjectUriForFile, sepr } from '../common';
 import { config } from '../configuration';
 import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFilesSteps } from '../parsers/stepsParser';
@@ -13,8 +13,8 @@ export const autoCompleteProvider = {
       if (!step)
         return;
 
-      const wkspSettings = getWorkspaceSettingsForFile(document.uri);
-      if (!wkspSettings)
+      const projSettings = getProjectSettingsForFile(document.uri);
+      if (!projSettings)
         return;
 
       const stepType = step[1].trim();
@@ -35,7 +35,7 @@ export const autoCompleteProvider = {
         }
       }
 
-      const stepFileSteps = getStepFilesSteps(wkspSettings.uri);
+      const stepFileSteps = getStepFilesSteps(projSettings.uri);
       const items: vscode.CompletionItem[] = [];
 
       for (const [key, value] of stepFileSteps) {
@@ -57,8 +57,8 @@ export const autoCompleteProvider = {
     catch (e: unknown) {
       // entry point function (handler) - show error  
       try {
-        const wkspUri = getWorkspaceUriForFile(document.uri);
-        config.logger.showError(e, wkspUri);
+        const projUri = getProjectUriForFile(document.uri);
+        config.logger.showError(e, projUri);
       }
       catch {
         config.logger.showError(e);

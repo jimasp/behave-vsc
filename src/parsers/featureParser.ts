@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ProjectSettings } from "../settings";
-import { uriId, sepr, basename, getLines, getWorkspaceUriForFile } from '../common';
+import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common';
 import { diagLog } from '../logger';
 import { config } from '../configuration';
 
@@ -26,13 +26,13 @@ export class FeatureFileStep {
   ) { }
 }
 
-export const getFeatureFilesSteps = (wkspFolderUri: vscode.Uri) => {
-  const wkspFolderUriMatchString = uriId(wkspFolderUri);
-  return [...featureFileSteps].filter(([k,]) => k.startsWith(wkspFolderUriMatchString));
+export const getFeatureFilesSteps = (projUri: vscode.Uri) => {
+  const projUriMatchString = uriId(projUri);
+  return [...featureFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
 }
 
-export const deleteFeatureFilesSteps = (wkspFolderUri: vscode.Uri) => {
-  const projFeatureFileSteps = getFeatureFilesSteps(wkspFolderUri);
+export const deleteFeatureFilesSteps = (projUri: vscode.Uri) => {
+  const projFeatureFileSteps = getFeatureFilesSteps(projUri);
   for (const [key,] of projFeatureFileSteps) {
     featureFileSteps.delete(key);
   }
@@ -51,7 +51,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
   if (featureName === '') {
     if (firstRun) {
       config.logger.showWarn(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
-        getWorkspaceUriForFile(uri));
+        getProjectUriForFile(uri));
     }
     return null;
   }
@@ -61,7 +61,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (wkspSettings: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
+export const parseFeatureContent = (projSettings: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
@@ -127,7 +127,7 @@ export const parseFeatureContent = (wkspSettings: ProjectSettings, uri: vscode.U
 
   }
 
-  diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, wkspSettings.uri);
+  diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, projSettings.uri);
 };
 
 

@@ -5,7 +5,7 @@ import {
   getProjectRelativeConfigPaths,
   getProjectRelativeFeaturePaths,
   getUrisOfWkspFoldersWithFeatures,
-  getWorkspaceFolder, normalise_relative_path, uriId, WkspError
+  getWorkspaceFolder, normalise_relative_path, uriId, projError
 } from './common';
 import { Logger } from './logger';
 
@@ -101,26 +101,26 @@ export class ProjectSettings {
   private readonly _fatalErrors: string[] = [];
 
 
-  constructor(wkspUri: vscode.Uri, wkspConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings, logger: Logger) {
+  constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings, logger: Logger) {
 
-    this.uri = wkspUri;
-    this.id = uriId(wkspUri);
-    const wsFolder = getWorkspaceFolder(wkspUri);
+    this.uri = projUri;
+    this.id = uriId(projUri);
+    const wsFolder = getWorkspaceFolder(projUri);
     this.name = wsFolder.name;
 
     // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-    const featuresPathCfg: string | undefined = wkspConfig.get("featuresPath");
+    const featuresPathCfg: string | undefined = projConfig.get("featuresPath");
     if (featuresPathCfg === undefined)
       throw "featuresPath is undefined";
-    const justMyCodeCfg: boolean | undefined = wkspConfig.get("justMyCode");
+    const justMyCodeCfg: boolean | undefined = projConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
-    const runParallelCfg: boolean | undefined = wkspConfig.get("runParallel");
+    const runParallelCfg: boolean | undefined = projConfig.get("runParallel");
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
 
     try {
-      const envVarOverridesCfg: { [name: string]: string } | undefined = wkspConfig.get("envVarOverrides");
+      const envVarOverridesCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
       if (envVarOverridesCfg === undefined)
         throw "envVarOverrides is undefined";
       this.envVarOverrides = envVarOverridesCfg;
@@ -130,7 +130,7 @@ export class ProjectSettings {
     }
 
     try {
-      const stepLibrariesCfg: StepLibrariesSetting | undefined = wkspConfig.get("stepLibraries");
+      const stepLibrariesCfg: StepLibrariesSetting | undefined = projConfig.get("stepLibraries");
       if (stepLibrariesCfg === undefined)
         throw "stepLibraries is undefined";
       for (const stepLibrary of stepLibrariesCfg) {
@@ -169,13 +169,13 @@ export class ProjectSettings {
       this.relativeStepsPathsOutsideFeaturePaths.push(path.join(this.relativeBaseDirPath, "steps"));
     }
 
-    this.relativeStepsPathsOutsideFeaturePaths.push(...this._getStepLibraryStepPaths(this.stepLibraries, logger, wkspUri));
+    this.relativeStepsPathsOutsideFeaturePaths.push(...this._getStepLibraryStepPaths(this.stepLibraries, logger, projUri));
 
     this._logSettings(logger, winSettings);
   }
 
 
-  private _getRelativeBaseDirPath(wkspSettings: ProjectSettings, relativeConfigPaths: string[], logger: Logger): string | null {
+  private _getRelativeBaseDirPath(projSettings: ProjectSettings, relativeConfigPaths: string[], logger: Logger): string | null {
     // NOTE: this function MUST have basically the same logic as the 
     // behave source code function "setup_paths()".
     // if that function changes in behave, then it is likely this will also have to change.  
@@ -187,8 +187,8 @@ export class ProjectSettings {
       base_dir = "features";
 
 
-    const project_parent_dir = path.dirname(wkspSettings.uri.fsPath);
-    let new_base_dir = path.join(wkspSettings.uri.fsPath, base_dir);
+    const project_parent_dir = path.dirname(projSettings.uri.fsPath);
+    let new_base_dir = path.join(projSettings.uri.fsPath, base_dir);
     const steps_dir = "steps";
     const environment_file = "environment.py";
 
@@ -208,16 +208,16 @@ export class ProjectSettings {
     if (new_base_dir === project_parent_dir) {
       if (relativeConfigPaths.length > 0) {
         logger.showWarn(`Could not find "${steps_dir}" directory. Please specify "paths" in your behave configuration.`,
-          wkspSettings.uri);
+          projSettings.uri);
       }
       return null;
     }
 
-    return path.relative(wkspSettings.uri.fsPath, new_base_dir);
+    return path.relative(projSettings.uri.fsPath, new_base_dir);
   }
 
 
-  private _getStepLibraryStepPaths(requestedStepLibraries: StepLibrariesSetting, logger: Logger, wkspUri: vscode.Uri): string[] {
+  private _getStepLibraryStepPaths(requestedStepLibraries: StepLibrariesSetting, logger: Logger, projUri: vscode.Uri): string[] {
 
     const stepLibraryPaths: string[] = [];
 
@@ -251,7 +251,7 @@ export class ProjectSettings {
         continue;
       }
 
-      const folderUri = vscode.Uri.joinPath(wkspUri, relativePath);
+      const folderUri = vscode.Uri.joinPath(projUri, relativePath);
       if (!fs.existsSync(folderUri.fsPath)) {
         logger.showWarn(`step library path "${folderUri.fsPath}" specified in "behave-vsc.stepLibraries" not found ` +
           `and will be ignored`, this.uri);
@@ -278,9 +278,9 @@ export class ProjectSettings {
     });
 
     // build sorted output dict of resource settings
-    const filterWkspSettings = ["envVarOverrides", "justMyCode", "runParallel", "stepLibraries"];
+    const filterprojSettings = ["envVarOverrides", "justMyCode", "runParallel", "stepLibraries"];
     let projEntries = Object.entries(this).sort();
-    projEntries = projEntries.filter(([key]) => filterWkspSettings.includes(key));
+    projEntries = projEntries.filter(([key]) => filterprojSettings.includes(key));
     projEntries = projEntries.sort();
     const resourceSettingsDic: { [name: string]: string; } = {};
     projEntries.forEach(([key, value]) => {
@@ -289,14 +289,14 @@ export class ProjectSettings {
 
     // output settings, and any warnings or errors for settings
 
-    const wkspUris = getUrisOfWkspFoldersWithFeatures();
-    if (wkspUris.length > 0 && this.uri === wkspUris[0])
-      logger.logInfoAllWksps(`\ninstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
+    const projUris = getUrisOfWkspFoldersWithFeatures();
+    if (projUris.length > 0 && this.uri === projUris[0])
+      logger.logInfoAllProjects(`\ninstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 
     logger.logInfo(`\n${this.name} workspace settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
 
     if (this._fatalErrors.length > 0) {
-      throw new WkspError(`\nFATAL ERROR due to invalid setting in "${this.name}/.vscode/settings.json". Extension cannot continue. ` +
+      throw new projError(`\nFATAL ERROR due to invalid setting in "${this.name}/.vscode/settings.json". Extension cannot continue. ` +
         `${this._fatalErrors.join("\n")}\n` +
         `NOTE: fatal errors may require you to restart vscode after correcting the problem.) `, this.uri);
     }

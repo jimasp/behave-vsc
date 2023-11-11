@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getWorkspaceUriForFile, getLines } from '../common';
+import { getProjectUriForFile, getLines } from '../common';
 import { config } from '../configuration';
 import { parser } from '../extension';
 import { featureFileStepRe } from '../parsers/featureParser';
@@ -56,8 +56,8 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 			// entry point function (handler)
 			try {
 				// not worth showing the error to user for this, just log it
-				const wkspUri = getWorkspaceUriForFile(document.uri);
-				config.logger.logInfo(`${e}`, wkspUri);
+				const projUri = getProjectUriForFile(document.uri);
+				config.logger.logInfo(`${e}`, projUri);
 			}
 			catch {
 				config.logger.showError(`${e}`);

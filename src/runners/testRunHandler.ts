@@ -6,17 +6,17 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getAllTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getWorkspaceSettingsForFile, rndNumeric
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
 } from '../common';
 import { QueueItem } from '../extension';
 import { FileParser } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../logger';
-import { getJunitWkspRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
-import { getWkspQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
+import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
+import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
 
-export class WkspRun {
+export class ProjRun {
   constructor(
-    public readonly wkspSettings: ProjectSettings,
+    public readonly projSettings: ProjectSettings,
     public readonly run: vscode.TestRun,
     public readonly request: vscode.TestRunRequest,
     public readonly debug: boolean,
@@ -24,7 +24,7 @@ export class WkspRun {
     public readonly testData: TestData,
     public readonly sortedQueue: QueueItem[],
     public readonly pythonExec: string,
-    public readonly allTestsForThisWkspIncluded: boolean,
+    public readonly allTestsForThisProjIncluded: boolean,
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
     public readonly tagExpression: string,
@@ -98,9 +98,9 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
     }
     else {
       if (data instanceof TestFile && !data.didResolve) {
-        const wkspSettings = getWorkspaceSettingsForFile(test.uri);
+        const projSettings = getProjectSettingsForFile(test.uri);
         const content = await getContentFromFilesystem(test.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, ctrl, test, "queueSelectedItems");
+        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedItems");
       }
 
       await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
@@ -119,104 +119,104 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   if (queue.length === 0)
     throw "empty queue - nothing to do";
 
-  const wkspRunPromises: Promise<void>[] = [];
-  const winSettings = config.globalSettings;
-  const allWkspsQueueMap: QueueItemMapEntry[] = [];
-  const wskpsWithFeaturesSettings = getUrisOfWkspFoldersWithFeatures().map(wkspUri => config.workspaceSettings[wkspUri.path]);
+  const projRunPromises: Promise<void>[] = [];
+  const winSettings = config.instanceSettings;
+  const allProjectsQueueMap: QueueItemMapEntry[] = [];
+  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => config.projectSettings[projUri.path]);
 
-  for (const wkspSettings of wskpsWithFeaturesSettings) {
-    const idMatch = uriId(wkspSettings.uri);
-    const wkspQueue = queue.filter(item => item.test.id.includes(idMatch));
-    const wkspQueueMap = getWkspQueueJunitFileMap(wkspSettings, run, wkspQueue);
-    allWkspsQueueMap.push(...wkspQueueMap);
+  for (const projSettings of allProjectsSettings) {
+    const idMatch = uriId(projSettings.uri);
+    const projQueue = queue.filter(item => item.test.id.includes(idMatch));
+    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, projQueue);
+    allProjectsQueueMap.push(...projQueueMap);
   }
 
-  const wkspNames = wskpsWithFeaturesSettings.map(x => x.name);
+  const projNames = allProjectsSettings.map(x => x.name);
 
 
   // WAIT for the junit watcher to be ready
-  await junitWatcher.startWatchingRun(run, debug, wkspNames, allWkspsQueueMap);
+  await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
 
   // run each workspace queue  
-  for (const wkspSettings of wskpsWithFeaturesSettings) {
+  for (const projSettings of allProjectsSettings) {
 
     if (run.token.isCancellationRequested)
       break;
 
-    const wkspQueue = allWkspsQueueMap.filter(x => x.wkspSettings.id == wkspSettings.id).map(q => q.queueItem);
-    if (wkspQueue.length === 0)
+    const projQueue = allProjectsQueueMap.filter(x => x.projSettings.id == projSettings.id).map(q => q.queueItem);
+    if (projQueue.length === 0)
       continue;
 
     if (!debug)
-      config.logger.clear(wkspSettings.uri);
+      config.logger.clear(projSettings.uri);
 
     // run workspaces sequentially
     if (!winSettings.multiRootRunProjectsInParallel || debug) {
-      await runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, runProfile);
+      await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
       continue;
     }
 
     // run workspaces in parallel
-    wkspRunPromises.push(runWorkspaceQueue(wkspSettings, ctrl, run, request, testData, debug, wkspQueue, runProfile));
+    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
   }
 
-  await Promise.all(wkspRunPromises);
+  await Promise.all(projRunPromises);
   await junitWatcher.stopWatchingRun(run);
 
   diagLog(`runTestQueue: completed for run ${run.name}`);
 }
 
 
-async function runWorkspaceQueue(wkspSettings: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, testData: TestData, debug: boolean, wkspQueue: QueueItem[], runProfile: RunProfile) {
+async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
+  request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
 
-  let wr: WkspRun | undefined = undefined;
+  let wr: ProjRun | undefined = undefined;
 
-  diagLog(`runWorkspaceQueue: started for run ${run.name}`, wkspSettings.uri);
+  diagLog(`runWorkspaceQueue: started for run ${run.name}`, projSettings.uri);
 
   try {
 
-    const allTestsForThisWkspIncluded = allTestsForThisWkspAreIncluded(request, wkspSettings, ctrl, testData);
-    const wkspIncludedFeatures = getIncludedFeaturesForWksp(wkspSettings.uri, request);
-    const pythonExec = await config.getPythonExecutable(wkspSettings.uri, wkspSettings.name);
-    const sortedQueue = wkspQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitWkspRunDirUri = getJunitWkspRunDirUri(run, wkspSettings.name);
+    const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, projSettings, ctrl, testData);
+    const projIncludedFeatures = getIncludedFeaturesForProj(projSettings.uri, request);
+    const pythonExec = await config.getPythonExecutable(projSettings.uri, projSettings.name);
+    const sortedQueue = projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
+    const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 
     // note that runProfile.envVarOverrides will (and should) override 
-    // any wr.wkspSettings.envVarOverrides global setting with the same key
-    const allEnvVarOverrides = { ...wkspSettings.envVarOverrides, ...runProfile.envVarOverrides };
+    // any wr.projSettings.envVarOverrides global setting with the same key
+    const allEnvVarOverrides = { ...projSettings.envVarOverrides, ...runProfile.envVarOverrides };
 
-    wr = new WkspRun(
-      wkspSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
-      allTestsForThisWkspIncluded, wkspIncludedFeatures, junitWkspRunDirUri,
+    wr = new ProjRun(
+      projSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
+      allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       runProfile.tagExpression ?? "", allEnvVarOverrides
     )
 
     const start = performance.now();
-    logWkspRunStarted(wr);
+    logProjRunStarted(wr);
     await doRunType(wr);
-    logWkspRunComplete(wr, start);
+    logProjRunComplete(wr, start);
 
   }
   catch (e: unknown) {
     wr?.run.end();
     // unawaited async function (if multiRootRunWorkspacesInParallel) - show error
-    config.logger.showError(e, wkspSettings.uri, run);
+    config.logger.showError(e, projSettings.uri, run);
   }
 
-  diagLog(`runWorkspaceQueue: completed for run ${run.name}`, wkspSettings.uri);
+  diagLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
 }
 
 
-async function doRunType(wr: WkspRun) {
+async function doRunType(wr: ProjRun) {
 
-  if (wr.wkspSettings.runParallel && !wr.debug) {
+  if (wr.projSettings.runParallel && !wr.debug) {
     await runFeaturesParallel(wr);
     return;
   }
 
-  if (wr.allTestsForThisWkspIncluded) {
-    wr.sortedQueue.forEach(wkspQueueItem => wr.run.started(wkspQueueItem.test));
+  if (wr.allTestsForThisProjIncluded) {
+    wr.sortedQueue.forEach(projQueueItem => wr.run.started(projQueueItem.test));
     await runAllFeatures(wr);
     return;
   }
@@ -225,27 +225,27 @@ async function doRunType(wr: WkspRun) {
 }
 
 
-async function runAllFeatures(wr: WkspRun) {
-  diagLog(`runAllFeatures`, wr.wkspSettings.uri);
+async function runAllFeatures(wr: ProjRun) {
+  diagLog(`runAllFeatures`, wr.projSettings.uri);
   await runOrDebugAllFeaturesInOneInstance(wr);
 }
 
 
-async function runFeaturesTogether(wr: WkspRun) {
+async function runFeaturesTogether(wr: ProjRun) {
 
-  diagLog(`runFeaturesTogether`, wr.wkspSettings.uri);
+  diagLog(`runFeaturesTogether`, wr.projSettings.uri);
 
   const runTogetherFeatures: vscode.TestItem[] = [];
   const alreadyProcessedFeatureIds: string[] = [];
 
-  for (const wkspQueueItem of wr.sortedQueue) {
+  for (const projQueueItem of wr.sortedQueue) {
 
     if (wr.run.token.isCancellationRequested)
       break;
 
-    const runEntireFeature = wr.allTestsForThisWkspIncluded
-      ? wkspQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, wkspQueueItem);
+    const runEntireFeature = wr.allTestsForThisProjIncluded
+      ? projQueueItem.test.parent
+      : parentFeatureOrAllSiblingsIncluded(wr, projQueueItem);
 
     if (runEntireFeature) {
       if (runTogetherFeatures.includes(runEntireFeature))
@@ -254,7 +254,7 @@ async function runFeaturesTogether(wr: WkspRun) {
       continue;
     }
 
-    const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, wkspQueueItem);
+    const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, projQueueItem);
     if (!featureId)
       continue;
 
@@ -273,39 +273,39 @@ async function runFeaturesTogether(wr: WkspRun) {
 }
 
 
-async function runFeaturesParallel(wr: WkspRun) {
+async function runFeaturesParallel(wr: ProjRun) {
 
   if (wr.debug)
     throw new Error("runParallel should not be called with debug=true");
 
-  diagLog(`runFeaturesParallel`, wr.wkspSettings.uri);
+  diagLog(`runFeaturesParallel`, wr.projSettings.uri);
 
   const featuresRun: string[] = [];
   const asyncRunPromises: Promise<void>[] = [];
   const alreadyProcessedFeatureIds: string[] = [];
 
-  for (const wkspQueueItem of wr.sortedQueue) {
+  for (const projQueueItem of wr.sortedQueue) {
 
     if (wr.run.token.isCancellationRequested)
       break;
 
-    const runEntireFeature = wr.allTestsForThisWkspIncluded
-      ? wkspQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, wkspQueueItem);
+    const runEntireFeature = wr.allTestsForThisProjIncluded
+      ? projQueueItem.test.parent
+      : parentFeatureOrAllSiblingsIncluded(wr, projQueueItem);
 
     if (runEntireFeature) {
       if (featuresRun.includes(runEntireFeature.id))
         continue;
       featuresRun.push(runEntireFeature.id);
 
-      const childScenarios: QueueItem[] = getChildScenariosForParentFeature(wr, wkspQueueItem);
+      const childScenarios: QueueItem[] = getChildScenariosForParentFeature(wr, projQueueItem);
       childScenarios.forEach(x => wr.run.started(x.test));
       const promise = runOrDebugFeatures(wr, true, childScenarios);
       asyncRunPromises.push(promise);
       continue;
     }
 
-    const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, wkspQueueItem);
+    const featureId = getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds, projQueueItem);
     if (!featureId)
       continue;
 
@@ -319,29 +319,29 @@ async function runFeaturesParallel(wr: WkspRun) {
 }
 
 
-function allTestsForThisWkspAreIncluded(request: vscode.TestRunRequest, wkspSettings: ProjectSettings,
+function allTestsForThisProjAreIncluded(request: vscode.TestRunRequest, projSettings: ProjectSettings,
   ctrl: vscode.TestController, testData: TestData) {
 
-  let allTestsForThisWkspIncluded = (!request.include || request.include.length == 0)
+  let allTestsForThisProjIncluded = (!request.include || request.include.length == 0)
     && (!request.exclude || request.exclude.length == 0);
 
-  if (!allTestsForThisWkspIncluded) {
-    const wkspGrandParentItemIncluded = request.include?.filter(item => item.id === wkspSettings.id).length === 1;
+  if (!allTestsForThisProjIncluded) {
+    const projGrandParentItemIncluded = request.include?.filter(item => item.id === projSettings.id).length === 1;
 
-    if (wkspGrandParentItemIncluded)
-      allTestsForThisWkspIncluded = true;
+    if (projGrandParentItemIncluded)
+      allTestsForThisProjIncluded = true;
     else {
-      const allWkspItems = getAllTestItems(wkspSettings.id, ctrl.items);
-      const wkspTestCount = countTestItems(testData, allWkspItems).testCount;
-      allTestsForThisWkspIncluded = request.include?.length === wkspTestCount;
+      const allProjItems = getAllTestItems(projSettings.id, ctrl.items);
+      const projTestCount = countTestItems(testData, allProjItems).testCount;
+      allTestsForThisProjIncluded = request.include?.length === projTestCount;
     }
   }
-  return allTestsForThisWkspIncluded;
+  return allTestsForThisProjIncluded;
 }
 
 
-function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: string[], wkspQueueItem: QueueItem) {
-  const featureId = wkspQueueItem.test.parent?.id;
+function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: string[], projQueueItem: QueueItem) {
+  const featureId = projQueueItem.test.parent?.id;
   if (!featureId)
     throw new Error("test.parent.id is undefined");
 
@@ -353,20 +353,20 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 }
 
 
-function logWkspRunStarted(wr: WkspRun) {
+function logProjRunStarted(wr: ProjRun) {
   if (!wr.debug) {
-    config.logger.logInfo(`--- ${wr.wkspSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
-      wr.wkspSettings.uri, wr.run);
+    config.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
+      wr.projSettings.uri, wr.run);
   }
 }
 
 
-function logWkspRunComplete(wr: WkspRun, start: number) {
+function logProjRunComplete(wr: ProjRun, start: number) {
   const end = performance.now();
   if (!wr.debug) {
-    config.logger.logInfo(`\n--- ${wr.wkspSettings.name} tests completed for run ${wr.run.name} ` +
+    config.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
-      wr.wkspSettings.uri, wr.run);
+      wr.projSettings.uri, wr.run);
   }
   wr.run.appendOutput('\r\n');
   wr.run.appendOutput('-----------------------------------------------------------\r\n');
@@ -377,28 +377,28 @@ function logWkspRunComplete(wr: WkspRun, start: number) {
 
 
 
-function getIncludedFeaturesForWksp(wkspUri: vscode.Uri, req: vscode.TestRunRequest | undefined,
+function getIncludedFeaturesForProj(projUri: vscode.Uri, req: vscode.TestRunRequest | undefined,
   child: vscode.TestItem | undefined = undefined): vscode.TestItem[] {
 
   const items: vscode.TestItem[] = [];
 
   if (child) {
     if (child.uri)
-      return uriId(child.uri).startsWith(uriId(wkspUri)) && child.id.toLowerCase().endsWith(".feature") ? [child] : [];
+      return uriId(child.uri).startsWith(uriId(projUri)) && child.id.toLowerCase().endsWith(".feature") ? [child] : [];
     // no uri = it's a folder
-    child.children.forEach(child => items.push(...getIncludedFeaturesForWksp(wkspUri, undefined, child)));
+    child.children.forEach(child => items.push(...getIncludedFeaturesForProj(projUri, undefined, child)));
     return items;
   }
 
   if (!req)
     throw "req or child must be supplied";
 
-  req.include?.forEach(inc => items.push(...getIncludedFeaturesForWksp(wkspUri, undefined, inc)));
+  req.include?.forEach(inc => items.push(...getIncludedFeaturesForProj(projUri, undefined, inc)));
   return items;
 }
 
 
-function getChildScenariosForParentFeature(wr: WkspRun, scenarioQueueItem: QueueItem) {
+function getChildScenariosForParentFeature(wr: ProjRun, scenarioQueueItem: QueueItem) {
   const parentFeature = scenarioQueueItem.test.parent;
   if (!parentFeature)
     throw `parent feature not found for scenario ${scenarioQueueItem.scenario.scenarioName}}`;
@@ -406,7 +406,7 @@ function getChildScenariosForParentFeature(wr: WkspRun, scenarioQueueItem: Queue
 }
 
 
-function getChildScenariosForFeature(wr: WkspRun, feature: vscode.TestItem) {
+function getChildScenariosForFeature(wr: ProjRun, feature: vscode.TestItem) {
   const childScenarios: QueueItem[] = [];
   feature.children.forEach(c => {
     const child = wr.sortedQueue.find(x => x.test.id === c.id);
@@ -417,10 +417,10 @@ function getChildScenariosForFeature(wr: WkspRun, feature: vscode.TestItem) {
 }
 
 
-function parentFeatureOrAllSiblingsIncluded(wr: WkspRun, wkspQueueItem: QueueItem): vscode.TestItem | undefined {
-  const parent = wkspQueueItem.test.parent;
+function parentFeatureOrAllSiblingsIncluded(wr: ProjRun, projQueueItem: QueueItem): vscode.TestItem | undefined {
+  const parent = projQueueItem.test.parent;
   if (!parent)
-    throw `parent not found for scenario ${wkspQueueItem.scenario.scenarioName}`;
+    throw `parent not found for scenario ${projQueueItem.scenario.scenarioName}`;
 
   const includedParent = wr.includedFeatures?.find(x => x.id === parent.id);
   if (includedParent)

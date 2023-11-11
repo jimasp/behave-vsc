@@ -8,10 +8,10 @@ export interface Configuration {
   integrationTestRun: boolean;
   readonly extensionTempFilesUri: vscode.Uri;
   readonly logger: Logger;
-  readonly workspaceSettings: { [wkspUriPath: string]: ProjectSettings };
-  readonly globalSettings: InstanceSettings;
-  reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
-  getPythonExecutable(wkspUri: vscode.Uri, wkspName: string): Promise<string>;
+  readonly projectSettings: { [projUriPath: string]: ProjectSettings };
+  readonly instanceSettings: InstanceSettings;
+  reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
+  getPythonExecutable(projUri: vscode.Uri, projName: string): Promise<string>;
   dispose(): void;
 }
 
@@ -24,7 +24,7 @@ class ExtensionConfiguration implements Configuration {
   public readonly logger: Logger;
   private static _configuration?: ExtensionConfiguration;
   private _windowSettings: InstanceSettings | undefined = undefined;
-  private _resourceSettings: { [wkspUriPath: string]: ProjectSettings } = {};
+  private _resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
 
   private constructor() {
     ExtensionConfiguration._configuration = this;
@@ -47,37 +47,37 @@ class ExtensionConfiguration implements Configuration {
   }
 
   // called by onDidChangeConfiguration
-  public reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
+  public reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
     if (testConfig) {
       this._windowSettings = new InstanceSettings(testConfig);
-      this._resourceSettings[wkspUri.path] = new ProjectSettings(wkspUri, testConfig, this._windowSettings, this.logger);
+      this._resourceSettings[projUri.path] = new ProjectSettings(projUri, testConfig, this._windowSettings, this.logger);
     }
     else {
       this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this._resourceSettings[wkspUri.path] = new ProjectSettings(wkspUri,
-        vscode.workspace.getConfiguration("behave-vsc", wkspUri), this._windowSettings, this.logger);
+      this._resourceSettings[projUri.path] = new ProjectSettings(projUri,
+        vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings, this.logger);
     }
   }
 
-  public get globalSettings(): InstanceSettings {
+  public get instanceSettings(): InstanceSettings {
     return this._windowSettings
       ? this._windowSettings
       : this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
   }
 
-  public get workspaceSettings(): { [wkspUriPath: string]: ProjectSettings } {
-    const winSettings = this.globalSettings;
-    getUrisOfWkspFoldersWithFeatures().forEach(wkspUri => {
-      if (!this._resourceSettings[wkspUri.path]) {
-        this._resourceSettings[wkspUri.path] =
-          new ProjectSettings(wkspUri, vscode.workspace.getConfiguration("behave-vsc", wkspUri), winSettings, this.logger);
+  public get projectSettings(): { [projUriPath: string]: ProjectSettings } {
+    const winSettings = this.instanceSettings;
+    getUrisOfWkspFoldersWithFeatures().forEach(projUri => {
+      if (!this._resourceSettings[projUri.path]) {
+        this._resourceSettings[projUri.path] =
+          new ProjectSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings, this.logger);
       }
     });
     return this._resourceSettings;
   }
 
   // note - python interpreter can be changed dynamically by the user, so don't store the result
-  getPythonExecutable = async (wkspUri: vscode.Uri, wkspName: string) => {
+  getPythonExecutable = async (projUri: vscode.Uri, projName: string) => {
     const msPyExt = "ms-python.python";
     const pyext = vscode.extensions.getExtension(msPyExt);
 
@@ -90,9 +90,9 @@ class ExtensionConfiguration implements Configuration {
         throw (`Behave VSC could not activate required dependency ${msPyExt}`);
     }
 
-    const pythonExec = await pyext?.exports.settings.getExecutionDetails(wkspUri).execCommand[0];
+    const pythonExec = await pyext?.exports.settings.getExecutionDetails(projUri).execCommand[0];
     if (!pythonExec)
-      throw (`Behave VSC failed to obtain python executable for ${wkspName} workspace from ${msPyExt}`);
+      throw (`Behave VSC failed to obtain python executable for ${projName} workspace from ${msPyExt}`);
 
     return pythonExec;
   }

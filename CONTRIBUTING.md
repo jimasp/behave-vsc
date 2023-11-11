@@ -13,6 +13,10 @@
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
 - Bug fixes are great. New features will be considered, but see [Development guidelines](#development-guidelines).
 
+## Terminology
+
+- In this document, and in most of the code, "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+
 ---
 
 ### Development environment setup for extension development
@@ -123,13 +127,13 @@ If you want to add a test, they should go somewhere in `src/test`.
 - KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
 - Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions.
 - Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
-- Always consider multi-root workspaces, i.e. there can be different workspace settings per workspace folder, window settings can be changed in a `*.code-workspace` file, output channels are per workspace folder (to stop parallel test runs being merged and to make info and warnings contextual), workspaces folders may be added/removed by the user at run time requiring reload of the test tree, etc.
+- Always consider multi-root workspaces, i.e. there can be different project settings per project folder, window (instance) settings can be changed in a `*.code-workspace` file, output channels are per project folder (to stop parallel test runs being merged and to make info and warnings contextual), project folders may be added/removed by the user at run time requiring reload of the test tree, etc.
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
 - Always consider cross-platform, i.e. consider that windows max path is 259 characters, windows max command line length is 8191 characters, consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. Use `getUriMatchString()` or `urisMatch()` to compare uris (do not use `uri.path` or `uri.fsPath` for equality checks). Use `uri.path` internally, and `uri.fsPath` for file operations. Use `relativePattern` for file searches. Do not use `path.join` (outside of integration tests), use `vscode.Uri.joinPath` instead. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) Line-endings use `\n`.
 - Encoding (use `utf8`).
 - While the extension is not internationalised, `Date()` should be avoided, except for `Date().toISOString()` for user output. The `performance` library is used for timings.
-- Look out for race conditions. You can have e.g. 3 workspaces running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
-- Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names have unique ids, so you can be sure they are unique to the vscode instance as well as the workspace.
+- Look out for race conditions. You can have e.g. 3 projects running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
+- Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names have unique ids, so you can be sure they are unique to the vscode instance as well as the project.
 - Also see [General development notes](#general-development-notes) below.
 
 ---
@@ -167,10 +171,10 @@ feature file formatting is provided by:
 - These are general guidelines. If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, only gets shown once, creates an error dialog box to alert the user and has the full expected stack if `xRay` is enabled. Think about the user experience.
 - Note that stack traces will only appear if `behave-vsc.xRay` is enabled.
 - `showError` will show the error in a dialog box to alert the user.
-- The most common error handling stack is: `throw "an error message"` -> `throw new WkspError` -> `config.showError`.
+- The most common error handling stack is: `throw "an error message"` -> `throw new projError` -> `config.showError`.
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).
 - Entry point (event handlers/hooks) and background tasks (i.e. unawaited async functions/promises) should always contain a `try/catch` with a `config.showError`. Examples are `activate`,`deactivate` and any function called `...Handler` or `onDid...`, or just `on...` (e.g. `onCancellationRequested`). These are the top-level functions and so they need catches.
-- Elsewhere `showError` should be avoided. Instead you want to use either `throw "my message"` or `throw new WkspError(...)`. The second option (`wkspError`) should be used if: (a) there is no `catch` above that creates a `new WkspError` itself, and (b) you have a workspace context (i.e. `wr`, `wkspSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw "my message"` or `throw new projError(...)`. The second option (`projError`) should be used if: (a) there is no `catch` above that creates a `new projError` itself, and (b) you have a workspace context (i.e. `wr`, `projSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github.
 - Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
 - Generally speaking, Info level events appear in the output window. Warnings and Errors appear in the output window and as a notification window. All of them will appear in console if `xRay` is enabled. See [Logging](#logging) for more information.
@@ -178,9 +182,9 @@ feature file formatting is provided by:
 ### Logging
 
 - In the case of errors, should not call the logger. You should `throw` for errors (see [Exception handling](#exception-handling)), and `showWarn` for warnings. This will automatically log the error/warning and open a notification window to alert the user.
-- Log info to the Behave VSC workspace context output window and any active debug window: `config.logger.logInfo("msg", wkspUri)`. Preferred over `logInfoAllWksps()` wherever possible.
-- Log info to all Behave VSC output windows (regardless of workspace): `config.logger.logInfoAllWksps`. *This should be used sparingly, i.e. only where a workspace context does not make sense.*
-- Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", wkspUri, run)`.
+- Log info to the Behave VSC project context output window and any active debug window: `config.logger.logInfo("msg", projUri)`. Preferred over `logInfoAllProjects()` wherever possible.
+- Log info to all Behave VSC output windows (regardless of project): `config.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a workspace context does not make sense.*
+- Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", projUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg\r\n")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 
@@ -234,7 +238,7 @@ If you have a customised fork and you want to distribute it to your team, you wi
 ### Process
 
 - Fork the repo, make your changes.
-- Generally speaking, you should only add files to, not modify, the example project workspaces in your PR.
+- *Generally* speaking, you should only add files to, not modify, existing example projects in your PR.
 - Quickly review your code vs the project's [Development guidelines](#development-guidelines)
 - Is your bug/use case covered by an existing test, or example project feature file? If not, is it possible to add one so it doesn't break again?
 - `git add .` and `git commit -m` your changes if required
@@ -304,7 +308,7 @@ debug stop) button works
 
 After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
 
-Example: if you changed anything that affects any of step navigation/feature file parsing/step file parsing/filesystem watchers/workspace settings, then you'd want to run these manual tests as a minimum:
+Example: if you changed anything that affects any of step navigation/feature file parsing/step file parsing/filesystem watchers/instance or project settings, then you'd want to run these manual tests as a minimum:
 
 - i.  IMPORTANT:
   - a. *Make sure you do NOT have the marketplace version of the extension installed*
@@ -351,7 +355,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
   - B. in file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
   - C. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition` for a step in that file
-  - D. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` workspace are returned
+  - D. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` project are returned
   - E. in the `Step references` window, look at the `textblock.feature` file references:
     - also note the number of results at the top of the `Step references` window (`x results in y files`)
     - click on one of the `textblock.feature` results, then comment out the line you are taken to
@@ -376,7 +380,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
 - THEN:
 
   - X. go to the output window `Behave VSC: project A`
-  - Y. in the file explorer UI, right click `project A` a workspace folder (e.g. "project A") and click `Remove folder from workspace`.
+  - Y. in the file explorer UI, right click `project A` workspace folder (e.g. "project A") and click `Remove folder from workspace`.
     - the original `project A` output window should close
     - check there are no error windows pop up. check that the dropdown has output windows for `Behave VSC: simple` and `Behave VSC: project B`(but not `project A`).
     - in the test UI, check that tests run as expected from `simple` and `project B`

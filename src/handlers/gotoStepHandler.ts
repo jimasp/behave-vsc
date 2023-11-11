@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { config } from "../configuration";
-import { getWorkspaceUriForFile, isFeatureFile, openDocumentRange } from '../common';
+import { getProjectUriForFile, isFeatureFile, openDocumentRange } from '../common';
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { featureFileStepRe } from '../parsers/featureParser';
 
@@ -40,8 +40,8 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const wkspUri = getWorkspaceUriForFile(docUri);
-      config.logger.showError(e, wkspUri);
+      const projUri = getProjectUriForFile(docUri);
+      config.logger.showError(e, projUri);
     }
     catch {
       config.logger.showError(e);

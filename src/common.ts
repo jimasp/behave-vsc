@@ -25,19 +25,19 @@ export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sep
 export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
 
 
-// the main purpose of WkspError is that it enables us to have an error containing a workspace uri that 
+// the main purpose of projError is that it enables us to have an error containing a workspace uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can log to the specific workspace output window
 // - the logger can use the workspace name in the notification window
 // - the error is only logged/displayed once 
 // - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
 // for more info on error handling, see contributing.md
-export class WkspError extends Error {
-  constructor(errorOrMsg: unknown, public wkspUri: vscode.Uri, public run?: vscode.TestRun) {
+export class projError extends Error {
+  constructor(errorOrMsg: unknown, public projUri: vscode.Uri, public run?: vscode.TestRun) {
     const msg = errorOrMsg instanceof Error ? errorOrMsg.message : errorOrMsg as string;
     super(msg);
     this.stack = errorOrMsg instanceof Error ? errorOrMsg.stack : undefined;
-    Object.setPrototypeOf(this, WkspError.prototype);
+    Object.setPrototypeOf(this, projError.prototype);
   }
 }
 
@@ -59,8 +59,8 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
-  config.logger.logInfoAllWksps(`Behave VSC v${outputVersion}`);
-  config.logger.logInfoAllWksps(`Release notes: ${releaseNotesUrl}`);
+  config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
+  config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}`);
 }
 
 
@@ -164,22 +164,22 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 }
 
 
-export const getWorkspaceUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
+export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
   if (fileorFolderUri?.scheme !== "file")
     throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   if (!fileorFolderUri) // handling this here for caller convenience
     throw new Error("uri is undefined");
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
-  const wkspUri = workspaceFolder ? workspaceFolder.uri : undefined;
-  if (!wkspUri)
+  const projUri = workspaceFolder ? workspaceFolder.uri : undefined;
+  if (!projUri)
     throw "No workspace folder found for file " + fileorFolderUri.fsPath;
-  return wkspUri;
+  return projUri;
 }
 
 
-export const getWorkspaceSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
-  const wkspUri = getWorkspaceUriForFile(fileorFolderUri);
-  return config.workspaceSettings[wkspUri.path];
+export const getProjectSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
+  const projUri = getProjectUriForFile(fileorFolderUri);
+  return config.projectSettings[projUri.path];
 }
 
 
@@ -191,14 +191,14 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const getProjectRelativeFeaturePaths = (wkspUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
+export const getProjectRelativeFeaturePaths = (projUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
 
   // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function  
 
   const allFeatureRelPaths: string[] = [];
   for (const fPath of projectRelativeConfigPaths) {
-    const featureUri = findFilesSync(wkspUri, fPath, ".feature");
-    const relPaths = featureUri.map(featureUri => path.relative(wkspUri.fsPath, path.dirname(featureUri.fsPath)).replace(/\\/g, "/"));
+    const featureUri = findFilesSync(projUri, fPath, ".feature");
+    const relPaths = featureUri.map(featureUri => path.relative(projUri.fsPath, path.dirname(featureUri.fsPath)).replace(/\\/g, "/"));
     allFeatureRelPaths.push(...relPaths);
   }
   /* 
@@ -230,7 +230,7 @@ export const getProjectRelativeFeaturePaths = (wkspUri: vscode.Uri, projectRelat
 }
 
 
-export const getProjectRelativeConfigPaths = (wkspUri: vscode.Uri): string[] => {
+export const getProjectRelativeConfigPaths = (projUri: vscode.Uri): string[] => {
 
   // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function
 
@@ -240,7 +240,7 @@ export const getProjectRelativeConfigPaths = (wkspUri: vscode.Uri): string[] => 
   let section = "behave";
   // match order of preference in behave source "config_filenames()" function
   for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
-    const file = path.join(wkspUri.fsPath, configFile);
+    const file = path.join(projUri.fsPath, configFile);
     if (fs.existsSync(file)) {
       if (configFile === "pyproject.toml")
         section = "tool.behave";
@@ -255,7 +255,7 @@ export const getProjectRelativeConfigPaths = (wkspUri: vscode.Uri): string[] => 
       if (typeof configPaths === "string")
         configPaths = [configPaths];
       configPaths.forEach((path: string) => {
-        path = path.trim().replace(wkspUri.fsPath, "");
+        path = path.trim().replace(projUri.fsPath, "");
         path = normalise_relative_path(path);
         projectRelativeConfigPaths.push(path);
       });
@@ -301,10 +301,10 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   if (!lcPath.endsWith(".py"))
     return false;
 
-  function getStepLibraryMatch(wkspSettings: ProjectSettings, relPath: string) {
+  function getStepLibraryMatch(projSettings: ProjectSettings, relPath: string) {
     let stepLibMatch: StepLibrary | null = null;
     let currentMatchLen = 0, lenPath = 0;
-    for (const stepLib of wkspSettings.stepLibraries) {
+    for (const stepLib of projSettings.stepLibraries) {
       if (relPath.startsWith(stepLib.relativePath))
         lenPath = stepLib.relativePath.length;
       if (lenPath > currentMatchLen) {
@@ -316,9 +316,9 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   }
 
   if (!lcPath.includes("/steps/")) {
-    const wkspSettings = getWorkspaceSettingsForFile(fileUri);
-    const relPath = path.relative(wkspSettings.uri.fsPath, fileUri.fsPath);
-    const stepLibMatch = getStepLibraryMatch(wkspSettings, relPath);
+    const projSettings = getProjectSettingsForFile(fileUri);
+    const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
+    const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
 
     if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
       return false;
@@ -327,9 +327,9 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   return true;
 }
 
-export const getFeaturesUriForFeatureFileUri = (wkspSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
-  for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
-    const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
+export const getFeaturesUriForFeatureFileUri = (projSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
+  for (const relFeaturesPath of projSettings.relativeFeaturePaths) {
+    const featuresUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
       return featuresUri;
   }
@@ -344,16 +344,16 @@ export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
 }
 
 
-export const getAllTestItems = (wkspId: string | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getAllTestItems = (projId: string | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
-  // get all test items if wkspUri is null, or
-  // just the ones in the current workspace if wkspUri is supplied 
+  // get all test items if projUri is null, or
+  // just the ones in the current workspace if projUri is supplied 
   collection.forEach((item: vscode.TestItem) => {
-    if (wkspId === null || item.id.includes(wkspId)) {
+    if (projId === null || item.id.includes(projId)) {
       items.push(item);
       if (item.children)
-        items.push(...getAllTestItems(wkspId, item.children));
+        items.push(...getAllTestItems(projId, item.children));
     }
   });
 
@@ -361,8 +361,8 @@ export const getAllTestItems = (wkspId: string | null, collection: vscode.TestIt
 }
 
 
-export const countTestItemsInCollection = (wkspId: string | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
-  const arr = getAllTestItems(wkspId, items);
+export const countTestItemsInCollection = (projId: string | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
+  const arr = getAllTestItems(projId, items);
   return countTestItems(testData, arr);
 }
 

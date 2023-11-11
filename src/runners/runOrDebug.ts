@@ -3,8 +3,8 @@ import * as os from 'os';
 import { runBehaveInstance } from './behaveRun';
 import { debugBehaveInstance } from './behaveDebug';
 import { QueueItem } from '../extension';
-import { WkspError } from '../common';
-import { WkspRun } from './testRunHandler';
+import { projError } from '../common';
+import { ProjRun } from './testRunHandler';
 
 
 
@@ -18,7 +18,7 @@ const OVERRIDE_ARGS = [
 ];
 
 
-export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<void> {
+export async function runOrDebugAllFeaturesInOneInstance(wr: ProjRun): Promise<void> {
   // runs all features in a single instance of behave
 
   const friendlyEnvVars = getFriendlyEnvVars(wr);
@@ -27,7 +27,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
   const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-  const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
+  const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
   if (wr.debug) {
@@ -39,7 +39,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: WkspRun): Promise<v
 }
 
 
-export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, scenarioQueueItems: QueueItem[]): Promise<void> {
+export async function runOrDebugFeatures(wr: ProjRun, parallelMode: boolean, scenarioQueueItems: QueueItem[]): Promise<void> {
 
   // runs selected features in a single instance of behave
   // (if we are in parallelMode, then up the stack this will be called without await)
@@ -56,7 +56,7 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
     const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
     const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-    const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (wr.debug) {
@@ -69,13 +69,13 @@ export async function runOrDebugFeatures(wr: WkspRun, parallelMode: boolean, sce
   catch (e: unknown) {
     wr.run.end();
     // unawaited (if runParallel) async func, must log the error 
-    throw new WkspError(e, wr.wkspSettings.uri, wr.run);
+    throw new projError(e, wr.projSettings.uri, wr.run);
   }
 
 }
 
 
-export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parallelMode: boolean,
+export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parallelMode: boolean,
   selectedScenarioQueueItems: QueueItem[]): Promise<void> {
 
   // runs selected scenarios in a single instance of behave
@@ -98,7 +98,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
     ];
     const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-    const friendlyCmd = `${ps1}cd "${wr.wkspSettings.uri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (wr.debug) {
@@ -111,13 +111,13 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: WkspRun, parall
   catch (e: unknown) {
     wr.run.end();
     // unawaited (if runParallel) async func, must log the error 
-    throw new WkspError(e, wr.wkspSettings.uri, wr.run);
+    throw new projError(e, wr.projSettings.uri, wr.run);
   }
 
 }
 
 
-function getPipedFeaturePathsPattern(wr: WkspRun, parallelMode: boolean, filteredChildItems: QueueItem[]) {
+function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filteredChildItems: QueueItem[]) {
 
   // build the -i path pattern parameter for behave
   // which is a regex of the form: 
@@ -191,7 +191,7 @@ function getScenarioRunName(scenName: string, isOutline: boolean) {
 }
 
 
-function getFriendlyEnvVars(wr: WkspRun) {
+function getFriendlyEnvVars(wr: ProjRun) {
 
   let envVarString = "";
   for (const [name, value] of Object.entries(wr.envVarOverrides)) {
@@ -214,7 +214,7 @@ function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
 }
 
 
-function addTagsAndGetArgs(wr: WkspRun, friendlyArgs: string[]) {
+function addTagsAndGetArgs(wr: ProjRun, friendlyArgs: string[]) {
   const args = friendlyArgs.map(x => x.replaceAll('"', ""));
   if (wr.tagExpression) {
     friendlyArgs.unshift(`--tags="${wr.tagExpression}"`);

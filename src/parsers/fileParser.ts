@@ -15,7 +15,7 @@ import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './step
 
 
 // for integration test assertions      
-export type WkspParseCounts = {
+export type ProjParseCounts = {
   tests: TestCounts,
   featureFilesExceptEmptyOrCommentedOut: number,
   stepFilesExceptEmptyOrCommentedOut: number,
@@ -31,7 +31,7 @@ export class FileParser {
   private _finishedStepsParseForAllWorkspaces = false;
   private _finishedFeaturesParseForWorkspace: { [key: string]: boolean } = {};
   private _finishedStepsParseForWorkspace: { [key: string]: boolean } = {};
-  private _cancelTokenSources: { [wkspUriPath: string]: vscode.CancellationTokenSource } = {};
+  private _cancelTokenSources: { [projUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
   private _reparsingFile = false;
 
@@ -93,22 +93,22 @@ export class FileParser {
   }
 
 
-  private _parseFeatureFiles = async (wkspSettings: ProjectSettings, testData: TestData, controller: vscode.TestController,
+  private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
-    diagLog("removing existing test nodes/items for workspace: " + wkspSettings.name);
-    const items = getAllTestItems(wkspSettings.id, controller.items);
+    diagLog("removing existing test nodes/items for workspace: " + projSettings.name);
+    const items = getAllTestItems(projSettings.id, controller.items);
     for (const item of items) {
       testData.delete(item);
       controller.items.delete(item.id);
     }
 
-    deleteFeatureFilesSteps(wkspSettings.uri);
-    deleteStepMappings(wkspSettings.uri);
+    deleteFeatureFilesSteps(projSettings.uri);
+    deleteStepMappings(projSettings.uri);
 
     let processed = 0;
-    for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
-      const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
+    for (const relFeaturesPath of projSettings.relativeFeaturePaths) {
+      const featuresUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
       if (!fs.existsSync(featuresUri.fsPath)) {
         // e.g. user has deleted/renamed folder
         continue;
@@ -116,13 +116,13 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        config.logger.showWarn(`No feature files found in ${relFeaturesPath}`, wkspSettings.uri);
+        config.logger.showWarn(`No feature files found in ${relFeaturesPath}`, projSettings.uri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, controller, uri, caller, firstRun);
+        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, controller, uri, caller, firstRun);
         processed++;
       }
 
@@ -136,21 +136,21 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (wkspSettings: ProjectSettings, cancelToken: vscode.CancellationToken,
+  private _parseStepsFiles = async (projSettings: ProjectSettings, cancelToken: vscode.CancellationToken,
     caller: string): Promise<number> => {
 
-    diagLog("removing existing steps for workspace: " + wkspSettings.name);
-    deleteStepFileSteps(wkspSettings.uri);
+    diagLog("removing existing steps for workspace: " + projSettings.name);
+    deleteStepFileSteps(projSettings.uri);
 
     let processed = 0;
-    const allRelStepsPaths = wkspSettings.relativeFeaturePaths.concat(wkspSettings.relativeStepsPathsOutsideFeaturePaths);
+    const allRelStepsPaths = projSettings.relativeFeaturePaths.concat(projSettings.relativeStepsPathsOutsideFeaturePaths);
     for (const relStepsSearchPath of allRelStepsPaths) {
       let stepFiles: vscode.Uri[] = [];
-      const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, relStepsSearchPath);
+      const stepsSearchUri = vscode.Uri.joinPath(projSettings.uri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
         continue;
 
-      if (wkspSettings.relativeFeaturePaths.includes(relStepsSearchPath))
+      if (projSettings.relativeFeaturePaths.includes(relStepsSearchPath))
         stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
       else
         stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
@@ -163,7 +163,7 @@ export class FileParser {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, uri, caller);
+        await this._updateStepsFromStepsFileContent(projSettings.uri, content, uri, caller);
         processed++;
       }
 
@@ -177,16 +177,16 @@ export class FileParser {
   }
 
 
-  private async _updateStepsFromStepsFileContent(wkspFolderUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
+  private async _updateStepsFromStepsFileContent(projUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(fileUri))
       throw new Error(`${fileUri.fsPath} is not a steps file`);
 
-    await parseStepsFileContent(wkspFolderUri, content, fileUri, caller);
+    await parseStepsFileContent(projUri, content, fileUri, caller);
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(wkspSettings: ProjectSettings, content: string, testData: TestData,
+  private async _updateTestItemFromFeatureFileContent(projSettings: ProjectSettings, content: string, testData: TestData,
     controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
 
     if (!isFeatureFile(uri))
@@ -195,11 +195,11 @@ export class FileParser {
     if (!content)
       return;
 
-    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings, content, testData,
+    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(projSettings, content, testData,
       controller, uri, caller, firstRun);
     if (item) {
       diagLog(`${caller}: parsing ${uri.path}`);
-      await item.testFile.createScenarioTestItemsFromFeatureFileContent(wkspSettings, content, testData, controller, item.testItem, caller);
+      await item.testFile.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, controller, item.testItem, caller);
     }
     else {
       diagLog(`${caller}: no scenarios found in ${uri.path}`);
@@ -207,7 +207,7 @@ export class FileParser {
   }
 
 
-  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(wkspSettings: ProjectSettings, content: string,
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(projSettings: ProjectSettings, content: string,
     testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string,
     firstRun: boolean): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
@@ -240,14 +240,14 @@ export class FileParser {
     testData.set(testItem, testFile);
 
     // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
-    let wkspGrandParent: vscode.TestItem | undefined;
+    let projGrandParent: vscode.TestItem | undefined;
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-      wkspGrandParent = controller.items.get(wkspSettings.id);
-      if (!wkspGrandParent) {
-        const wkspName = wkspSettings.name;
-        wkspGrandParent = controller.createTestItem(wkspSettings.id, wkspName);
-        wkspGrandParent.canResolveChildren = true;
-        controller.items.add(wkspGrandParent);
+      projGrandParent = controller.items.get(projSettings.id);
+      if (!projGrandParent) {
+        const projName = projSettings.name;
+        projGrandParent = controller.createTestItem(projSettings.id, projName);
+        projGrandParent.canResolveChildren = true;
+        controller.items.add(projGrandParent);
       }
     }
 
@@ -262,11 +262,11 @@ export class FileParser {
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (!sfp.includes("/") && wkspSettings.relativeFeaturePaths.length > 1) {
-      sfp = uri.path.substring(wkspSettings.uri.path.length + 1);
+    if (!sfp.includes("/") && projSettings.relativeFeaturePaths.length > 1) {
+      sfp = uri.path.substring(projSettings.uri.path.length + 1);
     }
     else {
-      const fullFeaturesPath = getFeaturesUriForFeatureFileUri(wkspSettings, uri)?.path;
+      const fullFeaturesPath = getFeaturesUriForFeatureFileUri(projSettings, uri)?.path;
       if (fullFeaturesPath)
         sfp = uri.path.substring(fullFeaturesPath.length + 1);
     }
@@ -277,16 +277,16 @@ export class FileParser {
       for (let i = 0; i < folders.length; i++) {
         const path = folders.slice(0, i + 1).join("/");
         const folderName = "$(folder) " + folders[i]; // $(folder) = folder icon
-        const folderTestItemId = `${uriId(wkspSettings.uri)}/${path}`;
+        const folderTestItemId = `${uriId(projSettings.uri)}/${path}`;
 
         if (i === 0)
-          parent = wkspGrandParent;
+          parent = projGrandParent;
 
         if (parent)
           current = parent.children.get(folderTestItemId);
 
         if (!current) { // TODO: move getAllTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getAllTestItems(wkspSettings.id, controller.items);
+          const allTestItems = getAllTestItems(projSettings.id, controller.items);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
 
@@ -309,12 +309,12 @@ export class FileParser {
       }
     }
 
-    if (wkspGrandParent) {
+    if (projGrandParent) {
       if (firstFolder) {
-        wkspGrandParent.children.add(firstFolder);
+        projGrandParent.children.add(firstFolder);
       }
       else {
-        wkspGrandParent.children.add(testItem);
+        projGrandParent.children.add(testItem);
       }
     }
 
@@ -338,8 +338,8 @@ export class FileParser {
       testData.delete(item);
     }
 
-    for (const wkspUri of getUrisOfWkspFoldersWithFeatures()) {
-      this.parseFilesForWorkspace(wkspUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`,
+    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+      this.parseFilesForWorkspace(projUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`,
         firstRun, cancelToken);
     }
   }
@@ -348,100 +348,101 @@ export class FileParser {
   // NOTE:
   // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
   // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled. 
-  async parseFilesForWorkspace(wkspUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
-    callerCancelToken?: vscode.CancellationToken): Promise<WkspParseCounts | undefined> {
+  async parseFilesForWorkspace(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
+    callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
 
-    const wkspPath = wkspUri.path;
+    const projPath = projUri.path;
     this._finishedFeaturesParseForAllWorkspaces = false;
     this._finishedStepsParseForAllWorkspaces = false;
-    this._finishedFeaturesParseForWorkspace[wkspPath] = false;
-    this._finishedStepsParseForWorkspace[wkspPath] = false;
+    this._finishedFeaturesParseForWorkspace[projPath] = false;
+    this._finishedStepsParseForWorkspace[projPath] = false;
 
     // if caller cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
-      if (this._cancelTokenSources[wkspPath])
-        this._cancelTokenSources[wkspPath].cancel();
+      if (this._cancelTokenSources[projPath])
+        this._cancelTokenSources[projPath].cancel();
     });
 
 
     try {
 
       this._parseFilesCallCounts++;
-      const wkspName = getWorkspaceFolder(wkspUri).name;
-      const wkspId = uriId(wkspUri);
-      const callName = `parseFiles #${this._parseFilesCallCounts} ${wkspName} (${intiator})`;
+      const projName = getWorkspaceFolder(projUri).name;
+      const projId = uriId(projUri);
+      const callName = `parseFiles #${this._parseFilesCallCounts} ${projName} (${intiator})`;
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
 
       diagLog(`\n===== ${callName}: started =====`);
 
       // this function is not generally awaited, and therefore re-entrant, so 
       // cancel any existing parseFiles call for this workspace
-      if (this._cancelTokenSources[wkspPath]) {
-        diagLog(`cancelling previous parseFiles call for ${wkspName}`);
-        this._cancelTokenSources[wkspPath].cancel();
-        while (this._cancelTokenSources[wkspPath]) {
+      if (this._cancelTokenSources[projPath]) {
+        diagLog(`cancelling previous parseFiles call for ${projName}`);
+        this._cancelTokenSources[projPath].cancel();
+        while (this._cancelTokenSources[projPath]) {
           await new Promise(t => setTimeout(t, 20));
         }
       }
-      this._cancelTokenSources[wkspPath] = new vscode.CancellationTokenSource();
-      const wkspSettings: ProjectSettings = config.workspaceSettings[wkspUri.path];
+      this._cancelTokenSources[projPath] = new vscode.CancellationTokenSource();
+      const projSettings: ProjectSettings = config.projectSettings[projUri.path];
 
 
       const start = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(wkspSettings, testData, ctrl, this._cancelTokenSources[wkspPath].token,
+      const featureFileCount = await this._parseFeatureFiles(projSettings, testData, ctrl, this._cancelTokenSources[projPath].token,
         callName, firstRun);
       const featTime = performance.now() - start;
-      if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
+      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
         return;
       }
-      diagLog(`${callName}: features loaded for workspace ${wkspName}`);
-      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
-      const wkspsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedFeaturesParseForWorkspace[uri.path])
-      if (wkspsStillParsingFeatures.length === 0) {
+      diagLog(`${callName}: features loaded for workspace ${projName}`);
+      this._finishedFeaturesParseForWorkspace[projPath] = true;
+      const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
+        !this._finishedFeaturesParseForWorkspace[uri.path]);
+      if (projectsStillParsingFeatures.length === 0) {
         this._finishedFeaturesParseForAllWorkspaces = true;
         diagLog(`${callName}: features loaded for all workspaces`);
       }
       else {
-        diagLog(`${callName}: waiting on feature parse for ${wkspsStillParsingFeatures.map(w => w.path)}`)
+        diagLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
       }
 
 
       let mappingsCount = 0;
       let buildMappingsTime = 0;
       const stepsStart = performance.now();
-      const stepFileCount = await this._parseStepsFiles(wkspSettings, this._cancelTokenSources[wkspPath].token, callName);
+      const stepFileCount = await this._parseStepsFiles(projSettings, this._cancelTokenSources[projPath].token, callName);
       const stepsTime = performance.now() - stepsStart;
-      if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
+      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
         return;
       }
 
-      this._finishedStepsParseForWorkspace[wkspPath] = true;
+      this._finishedStepsParseForWorkspace[projPath] = true;
       diagLog(`${callName}: steps loaded`);
 
       const updateMappingsStart = performance.now();
-      mappingsCount = rebuildStepMappings(wkspSettings.uri);
+      mappingsCount = rebuildStepMappings(projSettings.uri);
       buildMappingsTime = performance.now() - updateMappingsStart;
       diagLog(`${callName}: stepmappings built`);
 
-      const wkspsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForWorkspace[uri.path])
-      if (wkspsStillParsingSteps.length === 0) {
+      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForWorkspace[uri.path]);
+      if (projectsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllWorkspaces = true;
         diagLog(`${callName}: steps loaded for all workspaces`);
       }
       else {
-        diagLog(`${callName}: waiting on steps parse for ${wkspsStillParsingSteps.map(w => w.path)}`)
+        diagLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
       }
 
 
-      if (this._cancelTokenSources[wkspPath].token.isCancellationRequested) {
+      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
         diagLog(`${callName}: cancellation complete`);
         return;
       }
 
       diagLog(`${callName}: complete`);
-      testCounts = countTestItemsInCollection(wkspId, testData, ctrl.items);
+      testCounts = countTestItemsInCollection(projId, testData, ctrl.items);
       this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
 
       if (!config.integrationTestRun)
@@ -451,16 +452,16 @@ export class FileParser {
         tests: testCounts,
         featureFilesExceptEmptyOrCommentedOut: featureFileCount,
         stepFilesExceptEmptyOrCommentedOut: stepFileCount,
-        stepFileStepsExceptCommentedOut: getStepFilesSteps(wkspSettings.uri).length,
-        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(wkspSettings.uri).length,
-        stepMappings: getStepMappings(wkspSettings.uri).length
+        stepFileStepsExceptCommentedOut: getStepFilesSteps(projSettings.uri).length,
+        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(projSettings.uri).length,
+        stepMappings: getStepMappings(projSettings.uri).length
       };
     }
     catch (e: unknown) {
       // unawaited async func, must log the error 
 
-      this._finishedFeaturesParseForWorkspace[wkspPath] = true;
-      this._finishedStepsParseForWorkspace[wkspPath] = true;
+      this._finishedFeaturesParseForWorkspace[projPath] = true;
+      this._finishedStepsParseForWorkspace[projPath] = true;
       this._finishedFeaturesParseForAllWorkspaces = true;
       this._finishedStepsParseForAllWorkspaces = true;
 
@@ -473,22 +474,22 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        config.logger.showError(e, wkspUri);
+        config.logger.showError(e, projUri);
       }
 
       return;
     }
     finally {
 
-      this._cancelTokenSources[wkspPath]?.dispose();
-      delete this._cancelTokenSources[wkspPath];
+      this._cancelTokenSources[projPath]?.dispose();
+      delete this._cancelTokenSources[projPath];
       cancellationHandler?.dispose();
     }
   }
 
 
 
-  async reparseFile(fileUri: vscode.Uri, content: string | undefined, wkspSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController) {
+  async reparseFile(fileUri: vscode.Uri, content: string | undefined, projSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController) {
     try {
       this._reparsingFile = true;
 
@@ -499,16 +500,16 @@ export class FileParser {
         content = await getContentFromFilesystem(fileUri);
 
       if (isStepsFile(fileUri))
-        await this._updateStepsFromStepsFileContent(wkspSettings.uri, content, fileUri, "reparseFile");
+        await this._updateStepsFromStepsFileContent(projSettings.uri, content, fileUri, "reparseFile");
 
       if (isFeatureFile(fileUri))
-        await this._updateTestItemFromFeatureFileContent(wkspSettings, content, testData, ctrl, fileUri, "reparseFile", false);
+        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, fileUri, "reparseFile", false);
 
-      rebuildStepMappings(wkspSettings.uri);
+      rebuildStepMappings(projSettings.uri);
     }
     catch (e: unknown) {
       // unawaited async func, must log the error
-      config.logger.showError(e, wkspSettings.uri);
+      config.logger.showError(e, projSettings.uri);
     }
     finally {
       this._reparsingFile = false;

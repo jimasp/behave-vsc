@@ -37,9 +37,9 @@ export class TestResult implements ITestResult {
 }
 
 
-export function applyTestConfiguration(wkspSettings: ProjectSettings, expectedResults: TestResult[]) {
+export function applyTestConfiguration(projSettings: ProjectSettings, expectedResults: TestResult[]) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
-    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", wkspSettings.relativeFeaturePaths);
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", projSettings.relativeFeaturePaths);
     returnResults[index] = JSON.parse(json);
   });
 

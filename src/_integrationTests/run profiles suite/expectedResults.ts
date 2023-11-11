@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { WkspParseCounts } from "../../parsers/fileParser";
+import { ProjParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
-export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
-  const testCount = getExpectedResultsForTag1RunProfile(wkspUri, config).length;
+export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
+  const testCount = getExpectedResultsForTag1RunProfile(projUri, config).length;
   return {
     tests: { nodeCount: 13, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 1,
@@ -14,7 +14,7 @@ export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): W
 
 
 
-export const getExpectedResultsForNoRunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -212,12 +212,12 @@ export const getExpectedResultsForNoRunProfile = (wkspUri: vscode.Uri, config: C
   ];
 
 
-  const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(wkspSettings, expectedResults);
+  const projSettings = config.projectSettings[projUri.path];
+  return applyTestConfiguration(projSettings, expectedResults);
 }
 
 
-export const getExpectedResultsForTag1RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -415,12 +415,12 @@ export const getExpectedResultsForTag1RunProfile = (wkspUri: vscode.Uri, config:
   ];
 
 
-  const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(wkspSettings, expectedResults);
+  const projSettings = config.projectSettings[projUri.path];
+  return applyTestConfiguration(projSettings, expectedResults);
 }
 
 
-export const getExpectedResultsForTag2RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -618,12 +618,12 @@ export const getExpectedResultsForTag2RunProfile = (wkspUri: vscode.Uri, config:
   ];
 
 
-  const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(wkspSettings, expectedResults);
+  const projSettings = config.projectSettings[projUri.path];
+  return applyTestConfiguration(projSettings, expectedResults);
 }
 
 
-export const getExpectedResultsForTag1Or2RunProfile = (wkspUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForTag1Or2RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -821,8 +821,8 @@ export const getExpectedResultsForTag1Or2RunProfile = (wkspUri: vscode.Uri, conf
   ];
 
 
-  const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(wkspSettings, expectedResults);
+  const projSettings = config.projectSettings[projUri.path];
+  return applyTestConfiguration(projSettings, expectedResults);
 }
 
 

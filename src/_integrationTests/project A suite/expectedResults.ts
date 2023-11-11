@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
-import { WkspParseCounts } from "../../parsers/fileParser";
+import { ProjParseCounts } from "../../parsers/fileParser";
 import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
 
 
-export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
-  const testCount = getExpectedResults(wkspUri, config).length;
+export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
+  const testCount = getExpectedResults(projUri, config).length;
   return {
     tests: { nodeCount: 71, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 24, stepFilesExceptEmptyOrCommentedOut: 5,
@@ -14,7 +14,7 @@ export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): W
   };
 }
 
-export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): TestResult[] {
+export function getExpectedResults(projUri: vscode.Uri, config: Configuration): TestResult[] {
 
   const expectedResults: TestResult[] = [
     new TestResult({
@@ -724,6 +724,6 @@ export function getExpectedResults(wkspUri: vscode.Uri, config: Configuration): 
   ];
 
 
-  const wkspSettings = config.workspaceSettings[wkspUri.path];
-  return applyTestConfiguration(wkspSettings, expectedResults);
+  const projSettings = config.projectSettings[projUri.path];
+  return applyTestConfiguration(projSettings, expectedResults);
 }

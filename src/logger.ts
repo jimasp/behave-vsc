@@ -5,58 +5,58 @@ import { getUrisOfWkspFoldersWithFeatures } from './common';
 
 export class Logger {
 
-  private channels: { [wkspUri: string]: vscode.OutputChannel } = {};
+  private channels: { [projUri: string]: vscode.OutputChannel } = {};
   public visible = false;
 
   syncChannelsToWorkspaceFolders() {
 
-    const wkspUris = getUrisOfWkspFoldersWithFeatures(true);
+    const projUris = getUrisOfWkspFoldersWithFeatures(true);
 
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].dispose();
-      delete this.channels[wkspPath];
+    for (const projPath in this.channels) {
+      this.channels[projPath].dispose();
+      delete this.channels[projPath];
     }
 
-    const wkspPaths = wkspUris.map(u => u.path);
-    if (wkspPaths.length < 2) {
-      this.channels[wkspUris[0].path] = vscode.window.createOutputChannel("Behave VSC");
+    const projPaths = projUris.map(u => u.path);
+    if (projPaths.length < 2) {
+      this.channels[projUris[0].path] = vscode.window.createOutputChannel("Behave VSC");
       return;
     }
 
-    wkspPaths.forEach(wkspPath => {
-      const name = wkspPath.split("/").pop();
+    projPaths.forEach(projPath => {
+      const name = projPath.split("/").pop();
       if (!name)
         throw new Error("can't get workspace name from uri path");
-      this.channels[wkspPath] = vscode.window.createOutputChannel(`Behave VSC: ${name}`);
+      this.channels[projPath] = vscode.window.createOutputChannel(`Behave VSC: ${name}`);
     });
   }
 
   dispose() {
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].dispose();
+    for (const projPath in this.channels) {
+      this.channels[projPath].dispose();
     }
   }
 
-  show = (wkspUri: vscode.Uri) => {
-    this.channels[wkspUri.path].show();
+  show = (projUri: vscode.Uri) => {
+    this.channels[projUri.path].show();
   };
 
-  clear = (wkspUri: vscode.Uri) => {
-    this.channels[wkspUri.path].clear();
+  clear = (projUri: vscode.Uri) => {
+    this.channels[projUri.path].clear();
   };
 
-  clearAllWksps = () => {
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].clear();
+  clearAllProjects = () => {
+    for (const projPath in this.channels) {
+      this.channels[projPath].clear();
     }
   };
 
 
-  logInfoAllWksps = (text: string, run?: vscode.TestRun) => {
+  logInfoAllProjects = (text: string, run?: vscode.TestRun) => {
     diagLog(text);
 
-    for (const wkspPath in this.channels) {
-      this.channels[wkspPath].appendLine(text);
+    for (const projPath in this.channels) {
+      this.channels[projPath].appendLine(text);
     }
 
     if (run)
@@ -64,67 +64,67 @@ export class Logger {
   };
 
 
-  logInfo = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+  logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text);
 
-    this.channels[wkspUri.path].appendLine(text);
+    this.channels[projUri.path].appendLine(text);
     if (run)
       run.appendOutput(text + "\r\n");
   };
 
   // log info without a line feed (used for logging behave output)
-  logInfoNoLF = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
+  logInfoNoLF = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     diagLog(text);
 
-    this.channels[wkspUri.path].append(text);
+    this.channels[projUri.path].append(text);
     if (run)
       run.appendOutput(text);
   };
 
   // used by settings.ts 
-  logSettingsWarning = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text, wkspUri, DiagLogType.warn);
+  logSettingsWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+    diagLog(text, projUri, DiagLogType.warn);
 
-    this.channels[wkspUri.path].appendLine(text);
-    this.channels[wkspUri.path].show(true);
+    this.channels[projUri.path].appendLine(text);
+    this.channels[projUri.path].show(true);
 
     if (run)
       run.appendOutput(text + "\r\n");
   };
 
 
-  showWarn = (text: string, wkspUri: vscode.Uri, run?: vscode.TestRun) => {
-    this._show(text, wkspUri, run, DiagLogType.warn);
+  showWarn = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+    this._show(text, projUri, run, DiagLogType.warn);
   }
 
 
-  showError = (error: unknown, wkspUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
+  showError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
 
     let text: string;
 
     if (error instanceof Error) {
       text = error.message;
-      if (error.stack && config && config.globalSettings && config.globalSettings.xRay)
+      if (error.stack && config && config.instanceSettings && config.instanceSettings.xRay)
         text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
     }
     else {
       text = `${error}`;
     }
 
-    this._show(text, wkspUri, run, DiagLogType.error);
+    this._show(text, projUri, run, DiagLogType.error);
   }
 
 
-  private _show = (text: string, wkspUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
+  private _show = (text: string, projUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
 
-    diagLog(text, wkspUri, logType);
+    diagLog(text, projUri, logType);
 
-    if (wkspUri) {
-      this.channels[wkspUri.path].appendLine(text);
+    if (projUri) {
+      this.channels[projUri.path].appendLine(text);
     }
     else {
-      for (const wkspPath in this.channels) {
-        this.channels[wkspPath].appendLine(text);
+      for (const projPath in this.channels) {
+        this.channels[projPath].appendLine(text);
       }
     }
 
@@ -134,12 +134,12 @@ export class Logger {
 
 
     let winText = text;
-    if (wkspUri) {
+    if (projUri) {
       // note - don't use config.workspaceSettings here (possible inifinite loop)
-      const wskpFolder = vscode.workspace.getWorkspaceFolder(wkspUri);
+      const wskpFolder = vscode.workspace.getWorkspaceFolder(projUri);
       if (wskpFolder) {
-        const wkspName = wskpFolder?.name;
-        winText = `${wkspName} workspace: ${text}`;
+        const projName = wskpFolder?.name;
+        winText = `${projName} workspace: ${text}`;
       }
     }
 
@@ -168,12 +168,12 @@ export enum DiagLogType {
   "info", "warn", "error"
 }
 
-export const diagLog = (message: string, wkspUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (config && !config.globalSettings.xRay && !config.integrationTestRun && !config.exampleProject)
+export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLogType) => {
+  if (config && !config.instanceSettings.xRay && !config.integrationTestRun && !config.exampleProject)
     return;
 
-  if (wkspUri)
-    message = `${wkspUri}: ${message}`;
+  if (projUri)
+    message = `${projUri}: ${message}`;
 
   message = `[Behave VSC] ${message}`;
 

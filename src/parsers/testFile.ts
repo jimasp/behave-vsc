@@ -13,7 +13,7 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: ProjectSettings, content: string, testData: TestData,
+  public async createScenarioTestItemsFromFeatureFileContent(projSettings: ProjectSettings, content: string, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     if (!item.uri)
       throw new Error("missing test item uri");
@@ -24,7 +24,7 @@ export class TestFile {
 
     const featureUri = item.uri;
     const featureName = item.label;
-    const featureFileWkspRelativePath = vscode.workspace.asRelativePath(featureUri, false);
+    const featureFileProjRelativePath = vscode.workspace.asRelativePath(featureUri, false);
     const featureFilename = featureUri.path.split('/').pop();
     if (featureFilename === undefined)
       throw new Error("featureFilename is undefined");
@@ -48,7 +48,7 @@ export class TestFile {
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
             // don't throw here, show it and carry on
-            config.logger.showWarn(err, wkspSettings.uri);
+            config.logger.showWarn(err, projSettings.uri);
           }
           else
             throw e;
@@ -59,7 +59,7 @@ export class TestFile {
     const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
       const parent = ancestors[ancestors.length - 1];
 
-      const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline);
+      const data = new Scenario(featureFilename, featureFileProjRelativePath, featureName, scenarioName, thisGeneration, isOutline);
       const id = `${uriId(featureUri)}/${data.getLabel()}`;
       const tcase = controller.createTestItem(id, data.getLabel(), featureUri);
       testData.set(tcase, data);
@@ -74,7 +74,7 @@ export class TestFile {
       ancestors.push({ item: item, children: [] });
     }
 
-    parseFeatureContent(wkspSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(projSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

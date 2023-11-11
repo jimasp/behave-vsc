@@ -3,8 +3,8 @@ import { RunProfilesSetting, StepLibrariesSetting } from '../../settings';
 
 
 // used only in the extension tests themselves
-export class TestWorkspaceConfigWithWkspUri {
-	constructor(public testConfig: TestWorkspaceConfig, public wkspUri: vscode.Uri) { }
+export class TestWorkspaceConfigWithprojUri {
+	constructor(public testConfig: TestWorkspaceConfig, public projUri: vscode.Uri) { }
 }
 
 // used in extension code to allow us to dynamically inject a test workspace configuration
@@ -126,9 +126,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	}
 
 
-	getExpected<T>(section: string, wkspUri?: vscode.Uri): T | undefined {
+	getExpected<T>(section: string, projUri?: vscode.Uri): T | undefined {
 
-		const getExpectedWorkspaceRelativeFeaturesPath = (): string => {
+		const getexpectedProjectRelativeFeaturesPath = (): string => {
 			switch (this.featuresPath) {
 				case "":
 				case undefined:
@@ -139,9 +139,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		}
 
 		const getExpectedFeaturesUri = (): vscode.Uri => {
-			if (!wkspUri)
-				throw "you must supply wkspUri to call getExpectedFeaturesUri";
-			return vscode.Uri.joinPath(wkspUri, getExpectedWorkspaceRelativeFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
+			if (!projUri)
+				throw "you must supply projUri to call getExpectedFeaturesUri";
+			return vscode.Uri.joinPath(projUri, getexpectedProjectRelativeFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
 		}
 
 
@@ -151,7 +151,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
 			case "workspaceRelativeFeaturesPath":
-				return <T><unknown>getExpectedWorkspaceRelativeFeaturesPath();
+				return <T><unknown>getexpectedProjectRelativeFeaturesPath();
 			case "featuresUri":
 				return <T><unknown>getExpectedFeaturesUri();
 			case "justMyCode":

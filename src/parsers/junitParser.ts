@@ -3,9 +3,9 @@ import * as os from 'os';
 import * as xml2js from 'xml2js';
 import * as path from 'path';
 import { QueueItem } from "../extension";
-import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, WkspError } from '../common';
+import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common';
 import { config } from '../configuration';
-import { getJunitWkspRunDirUri } from '../watchers/junitWatcher';
+import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
 import { ProjectSettings } from '../settings';
 import { Scenario } from './testFile';
 
@@ -98,7 +98,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
 }
 
 
-function CreateParseResult(wkspSettings: ProjectSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
+function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
 
   let xmlDuration = testCase.$.time * 1000;
   const xmlStatus = testCase.$.status;
@@ -113,7 +113,7 @@ function CreateParseResult(wkspSettings: ProjectSettings, debug: boolean, testCa
     if (debug)
       showDebugWindow();
     else
-      config.logger.show(wkspSettings.uri);
+      config.logger.show(projSettings.uri);
     return { status: "untested", duration: xmlDuration };
   }
 
@@ -166,13 +166,13 @@ function CreateParseResult(wkspSettings: ProjectSettings, debug: boolean, testCa
 
 
 
-function getJunitFeatureName(wkspSettings: ProjectSettings, scenario: Scenario): string {
+function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario): string {
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "make_feature_filename()".
   // if that function changes in behave, then it is likely this will also have to change.    
   let fileName = null;
   const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
-  for (const relConfigPath of wkspSettings.relativeConfigPaths) {
+  for (const relConfigPath of projSettings.relativeConfigPaths) {
     if (relFeatureFilePath.startsWith(relConfigPath)) {
       fileName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
       break;
@@ -180,7 +180,7 @@ function getJunitFeatureName(wkspSettings: ProjectSettings, scenario: Scenario):
   }
 
   if (!fileName)
-    fileName = path.relative(wkspSettings.relativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
+    fileName = path.relative(projSettings.relativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
 
   fileName = fileName.split('.').slice(0, -1).join('.');
   fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');
@@ -188,10 +188,10 @@ function getJunitFeatureName(wkspSettings: ProjectSettings, scenario: Scenario):
 }
 
 
-function getJunitFileUri(wkspSettings: ProjectSettings, queueItem: QueueItem, wkspJunitRunDirUri: vscode.Uri): vscode.Uri {
+function getJunitFileUri(projSettings: ProjectSettings, queueItem: QueueItem, projJunitRunDirUri: vscode.Uri): vscode.Uri {
 
-  const junitName = getJunitFeatureName(wkspSettings, queueItem.scenario);
-  const junitFileUri = vscode.Uri.joinPath(wkspJunitRunDirUri, `TESTS-${junitName}.xml`);
+  const junitName = getJunitFeatureName(projSettings, queueItem.scenario);
+  const junitFileUri = vscode.Uri.joinPath(projJunitRunDirUri, `TESTS-${junitName}.xml`);
 
   if (os.platform() !== "win32")
     return junitFileUri;
@@ -207,35 +207,35 @@ export class QueueItemMapEntry {
   constructor(
     public readonly queueItem: QueueItem,
     public readonly junitFileUri: vscode.Uri,
-    public readonly wkspSettings: ProjectSettings,
+    public readonly projSettings: ProjectSettings,
     public updated = false
   ) { }
 }
 
 
-export function getWkspQueueJunitFileMap(wkspSettings: ProjectSettings, run: vscode.TestRun, wkspQueueItems: QueueItem[]) {
-  const wkspJunitRunDirUri = getJunitWkspRunDirUri(run, wkspSettings.name);
-  return wkspQueueItems.map(qi => {
-    const junitFileUri = getJunitFileUri(wkspSettings, qi, wkspJunitRunDirUri);
-    return new QueueItemMapEntry(qi, junitFileUri, wkspSettings);
+export function getProjQueueJunitFileMap(projSettings: ProjectSettings, run: vscode.TestRun, projQueueItems: QueueItem[]) {
+  const projJunitRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
+  return projQueueItems.map(qi => {
+    const junitFileUri = getJunitFileUri(projSettings, qi, projJunitRunDirUri);
+    return new QueueItemMapEntry(qi, junitFileUri, projSettings);
   });
 }
 
 
 
 
-export async function parseJunitFileAndUpdateTestResults(wkspSettings: ProjectSettings, run: vscode.TestRun, debug: boolean,
+export async function parseJunitFileAndUpdateTestResults(projSettings: ProjectSettings, run: vscode.TestRun, debug: boolean,
   junitFileUri: vscode.Uri, filteredQueue: QueueItem[]): Promise<void> {
 
   if (!junitFileUri.fsPath.toLowerCase().endsWith(".xml"))
-    throw new WkspError("junitFileUri must be an xml file", wkspSettings.uri);
+    throw new projError("junitFileUri must be an xml file", projSettings.uri);
 
   let junitXml: string;
   try {
     junitXml = await getContentFromFilesystem(junitFileUri);
   }
   catch {
-    updateTestResultsForUnreadableJunitFile(wkspSettings, run, filteredQueue, junitFileUri);
+    updateTestResultsForUnreadableJunitFile(projSettings, run, filteredQueue, junitFileUri);
     return;
   }
 
@@ -245,13 +245,13 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: ProjectSe
     junitContents = await parser.parseStringPromise(junitXml);
   }
   catch {
-    throw new WkspError(`Unable to parse junit file ${junitFileUri.fsPath}`, wkspSettings.uri);
+    throw new projError(`Unable to parse junit file ${junitFileUri.fsPath}`, projSettings.uri);
   }
 
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getJunitFeatureName(wkspSettings, queueItem.scenario);
+    const fullFeatureName = getJunitFeatureName(projSettings, queueItem.scenario);
     const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
     const scenarioName = queueItem.scenario.scenarioName;
 
@@ -294,13 +294,13 @@ export async function parseJunitFileAndUpdateTestResults(wkspSettings: ProjectSe
       }
     }
 
-    const parseResult = CreateParseResult(wkspSettings, debug, queueItemResult);
+    const parseResult = CreateParseResult(projSettings, debug, queueItemResult);
     updateTest(run, debug, parseResult, queueItem);
   }
 }
 
 
-export function updateTestResultsForUnreadableJunitFile(wkspSettings: ProjectSettings, run: vscode.TestRun,
+export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSettings, run: vscode.TestRun,
   queueItems: QueueItem[], junitFileUri: vscode.Uri) {
 
   const parseResult: ParseResult = {
@@ -318,5 +318,5 @@ export function updateTestResultsForUnreadableJunitFile(wkspSettings: ProjectSet
     throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
   }
 
-  config.logger.show(wkspSettings.uri);
+  config.logger.show(projSettings.uri);
 }

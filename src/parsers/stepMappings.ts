@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getWorkspaceUriForFile, sepr, urisMatch } from '../common';
+import { getProjectUriForFile, sepr, urisMatch } from '../common';
 import { parser } from '../extension';
 import { diagLog, DiagLogType } from '../logger';
 import { getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
@@ -16,7 +16,7 @@ export class StepMapping {
   constructor(
     // there is ONE stepFileStep to MANY featureFileSteps
     // but this is a flat table for performance
-    public readonly wkspFolderUri: vscode.Uri,
+    public readonly projUri: vscode.Uri,
     public readonly stepFileStep: StepFileStep,
     public readonly featureFileStep: FeatureFileStep,
   ) {
@@ -38,13 +38,13 @@ export function getStepMappingsForStepsFileFunction(stepsFileUri: vscode.Uri, li
 }
 
 
-export function getStepMappings(wkspFolderUri: vscode.Uri): StepMapping[] {
-  return stepMappings.filter(sm => urisMatch(sm.wkspFolderUri, wkspFolderUri));
+export function getStepMappings(projUri: vscode.Uri): StepMapping[] {
+  return stepMappings.filter(sm => urisMatch(sm.projUri, projUri));
 }
 
 
-export function deleteStepMappings(wkspFolderUri: vscode.Uri) {
-  stepMappings = stepMappings.filter(sm => !urisMatch(sm.wkspFolderUri, wkspFolderUri));
+export function deleteStepMappings(projUri: vscode.Uri) {
+  stepMappings = stepMappings.filter(sm => !urisMatch(sm.projUri, projUri));
 }
 
 
@@ -53,42 +53,42 @@ export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
-    config.logger.showWarn(msg, getWorkspaceUriForFile(uri));
+    config.logger.showWarn(msg, getProjectUriForFile(uri));
   }
 
   return ready;
 }
 
-export function rebuildStepMappings(wkspFolderUri: vscode.Uri): number {
+export function rebuildStepMappings(projUri: vscode.Uri): number {
 
   const start = performance.now();
-  deleteStepMappings(wkspFolderUri);
+  deleteStepMappings(projUri);
 
   // get filtered objects before we loop
-  const { featureFileSteps, exactSteps, paramsSteps } = _getFilteredSteps(wkspFolderUri);
+  const { featureFileSteps, exactSteps, paramsSteps } = _getFilteredSteps(projUri);
 
   let processed = 0;
   for (const [, featureFileStep] of featureFileSteps) {
     const stepFileStep = _getStepFileStepMatch(featureFileStep, exactSteps, paramsSteps);
     if (stepFileStep)
-      stepMappings.push(new StepMapping(wkspFolderUri, stepFileStep, featureFileStep));
+      stepMappings.push(new StepMapping(projUri, stepFileStep, featureFileStep));
     processed++;
   }
 
   retriggerSemanticHighlighting();
   refreshStepReferencesView();
 
-  diagLog(`rebuilding step mappings for ${wkspFolderUri.path} took ${performance.now() - start} ms`);
+  diagLog(`rebuilding step mappings for ${projUri.path} took ${performance.now() - start} ms`);
 
   return processed;
 }
 
 
-function _getFilteredSteps(wkspFolderUri: vscode.Uri) {
-  const featureFileSteps = getFeatureFilesSteps(wkspFolderUri);
-  const wkspStepFileSteps = getStepFilesSteps(wkspFolderUri);
-  const exactSteps = new Map(wkspStepFileSteps.filter(([k,]) => !k.includes(parseRepWildcard)));
-  const paramsSteps = new Map(wkspStepFileSteps.filter(([k,]) => k.includes(parseRepWildcard)));
+function _getFilteredSteps(projUri: vscode.Uri) {
+  const featureFileSteps = getFeatureFilesSteps(projUri);
+  const projStepFileSteps = getStepFilesSteps(projUri);
+  const exactSteps = new Map(projStepFileSteps.filter(([k,]) => !k.includes(parseRepWildcard)));
+  const paramsSteps = new Map(projStepFileSteps.filter(([k,]) => k.includes(parseRepWildcard)));
   return { featureFileSteps, exactSteps, paramsSteps };
 }
 
