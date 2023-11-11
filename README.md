@@ -131,7 +131,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Extension settings
 
-- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, `featuresPath`, and `envVarOverrides`.
+- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, and `envVarOverrides`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Note that environment variables (and behave tags) can also be set on a per run basis via the test run profiles in the test explorer UI.
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.

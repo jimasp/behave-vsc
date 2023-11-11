@@ -328,7 +328,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 }
 
 export const getFeaturesUriForFeatureFileUri = (wkspSettings: WorkspaceFolderSettings, featureFileUri: vscode.Uri) => {
-  for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
+  for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
     const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
       return featuresUri;

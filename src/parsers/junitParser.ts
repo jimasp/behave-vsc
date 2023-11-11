@@ -172,7 +172,7 @@ function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Sc
   // if that function changes in behave, then it is likely this will also have to change.    
   let fileName = null;
   const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
-  for (const relConfigPath of wkspSettings.projectRelativeConfigPaths) {
+  for (const relConfigPath of wkspSettings.relativeConfigPaths) {
     if (relFeatureFilePath.startsWith(relConfigPath)) {
       fileName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
       break;
@@ -180,7 +180,7 @@ function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Sc
   }
 
   if (!fileName)
-    fileName = path.relative(wkspSettings.projectRelativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
+    fileName = path.relative(wkspSettings.relativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
 
   fileName = fileName.split('.').slice(0, -1).join('.');
   fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');

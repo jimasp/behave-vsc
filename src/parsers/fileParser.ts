@@ -107,7 +107,7 @@ export class FileParser {
     deleteStepMappings(wkspSettings.uri);
 
     let processed = 0;
-    for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
+    for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
       const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
       if (!fs.existsSync(featuresUri.fsPath)) {
         // e.g. user has deleted/renamed folder
@@ -143,14 +143,14 @@ export class FileParser {
     deleteStepFileSteps(wkspSettings.uri);
 
     let processed = 0;
-    const allRelStepsPaths = wkspSettings.projectRelativeFeaturePaths.concat(wkspSettings.projectRelativeAdditionalStepsPaths);
+    const allRelStepsPaths = wkspSettings.relativeFeaturePaths.concat(wkspSettings.relativeStepsPathsOutsideFeaturePaths);
     for (const relStepsSearchPath of allRelStepsPaths) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
         continue;
 
-      if (wkspSettings.projectRelativeFeaturePaths.includes(relStepsSearchPath))
+      if (wkspSettings.relativeFeaturePaths.includes(relStepsSearchPath))
         stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
       else
         stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
@@ -262,7 +262,7 @@ export class FileParser {
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (!sfp.includes("/") && wkspSettings.projectRelativeFeaturePaths.length > 1) {
+    if (!sfp.includes("/") && wkspSettings.relativeFeaturePaths.length > 1) {
       sfp = uri.path.substring(wkspSettings.uri.path.length + 1);
     }
     else {

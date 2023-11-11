@@ -86,9 +86,9 @@ function assertWorkspaceSettingsAsExpected(wkspName: string, wkspUri: vscode.Uri
 
 	const wkspSettings = config.workspaceSettings[wkspUri.path];
 	assert.deepStrictEqual(wkspSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), wkspName);
-	assert.strictEqual(wkspSettings.workspaceRelativeFeaturesPaths, testConfig.getExpected("workspaceRelativeFeaturesPath"), wkspName);
+	assert.strictEqual(wkspSettings.relativeFeaturePaths, testConfig.getExpected("workspaceRelativeFeaturesPath"), wkspName);
 	assert.strictEqual(wkspSettings.workspaceRelativeStepsSearchPath, expectedWorkspaceRelativeStepsSearchPath, wkspName);
-	assert.strictEqual(wkspSettings.workspaceRelativeBaseDirPath, expectedWorkspaceRelativeBaseDirPath, wkspName);
+	assert.strictEqual(wkspSettings.relativeBaseDirPath, expectedWorkspaceRelativeBaseDirPath, wkspName);
 	const expectedFeaturesUri = testConfig.getExpected("featuresUri", wkspUri) as vscode.Uri;
 	assert.strictEqual(true, urisMatch(wkspSettings.featuresUris, expectedFeaturesUri), wkspName);
 	assert.strictEqual(wkspSettings.justMyCode, testConfig.getExpected("justMyCode"), wkspName);
@@ -131,7 +131,7 @@ function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<File
 async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceFolderSettings) {
 
 	const stepLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPaths}/**/*.feature`);
+	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
@@ -148,7 +148,7 @@ async function getAllStepLinesFromFeatureFiles(wkspSettings: WorkspaceFolderSett
 async function getAllStepFunctionLinesFromStepsFiles(wkspSettings: WorkspaceFolderSettings) {
 
 	const funcLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.workspaceRelativeFeaturesPaths}/steps/*.py`);
+	const pattern = new vscode.RelativePattern(wkspSettings.uri, `${wkspSettings.relativeFeaturePaths}/steps/*.py`);
 	const stepFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const stepFileUri of stepFileUris) {

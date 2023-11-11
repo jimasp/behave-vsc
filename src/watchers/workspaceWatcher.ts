@@ -80,14 +80,14 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
   // NOTE - for all watchers we use the pattern ** because we want watch our for 
   // FOLDER changes, as well as changes to .feature and .py files
-  for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
+  for (const relFeaturesPath of wkspSettings.relativeFeaturePaths) {
     const featureFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relFeaturesPath}/**`);
     const featuresFolderWatcher = vscode.workspace.createFileSystemWatcher(featureFolderPattern);
     watchers.push(featuresFolderWatcher);
     setEventHandlers(featuresFolderWatcher);
   }
 
-  for (const relStepsPath of wkspSettings.projectRelativeAdditionalStepsPaths) {
+  for (const relStepsPath of wkspSettings.relativeStepsPathsOutsideFeaturePaths) {
     const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relStepsPath}/**`);
     const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(siblingStepsFolderWatcher);
