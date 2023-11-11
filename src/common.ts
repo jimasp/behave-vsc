@@ -125,8 +125,7 @@ export const normalise_relative_path = (path: string) => {
   return path.replace(/\\/g, "/").replace(/^\//, "").replace(/\/$/, "").trim();
 }
 
-// THIS FUNCTION MUST BE FAST (ideally < 1ms) 
-// (check performance if you change it)
+
 let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
@@ -136,49 +135,13 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
+  // NOTE THIS FUNCTION MUST BE FAST (ideally < 1ms) 
+  // (check performance diagLog below if you change it)
   function hasFeaturesFolder(folder: vscode.WorkspaceFolder): boolean {
-
-    // default features path, no settings.json required
-    let featuresUri = vscode.Uri.joinPath(folder.uri, "features");
-
-    // try/catch with await vwfs.stat(uri) is much too slow atm
-    const hasDefaultFeaturesFolder = fs.existsSync(featuresUri.fsPath);
-
-    // check if featuresPath specified in settings.json
-    // NOTE: this will return package.json defaults (or failing that, type defaults) if no settings.json found, i.e. "features" if no settings.json
-    const wkspConfig = vscode.workspace.getConfiguration("behave-vsc", folder.uri);
-    const featurePathsCfg = getActualWorkspaceSetting(wkspConfig, "featuresPath") as string;
-    let relativeFeaturesPathsCfg = getActualWorkspaceSetting(wkspConfig, "relativeFeaturesPaths") as string[];
-
-    if (featurePathsCfg && !relativeFeaturesPathsCfg) {
-      relativeFeaturesPathsCfg = [];
-      relativeFeaturesPathsCfg.push(featurePathsCfg);
-    }
-
-    if (!relativeFeaturesPathsCfg && !hasDefaultFeaturesFolder)
-      return false; // probably a workspace with no behave requirements
-
-    // default features folder and nothing specified in settings.json (or default specified)
-    if (hasDefaultFeaturesFolder && !relativeFeaturesPathsCfg)
-      return true;
-
-    for (const featurePath of relativeFeaturesPathsCfg) {
-      const featuresPath = normalise_relative_path(featurePath);
-
-      featuresUri = vscode.Uri.joinPath(folder.uri, featuresPath);
-      if (fs.existsSync(featuresUri.fsPath) && vscode.workspace.getWorkspaceFolder(featuresUri) === folder)
-        continue;
-
-      // we don't use config.logger.showWarn here, because we may not have a logger yet
-      vscode.window.showWarningMessage(`Specified features path "${featuresPath}" not found in workspace "${folder.name}". ` +
-        `Behave VSC will ignore this workspace until this is corrected.`, "OK");
-
-      return false;
-    }
-
-    return true;
+    const configPaths = getProjectRelativeConfigPaths(folder.uri);
+    const featurePaths = getProjectRelativeFeaturePaths(folder.uri, configPaths);
+    return featurePaths.length > 0;
   }
-
 
   const folders = vscode.workspace.workspaceFolders;
   if (!folders)
@@ -232,7 +195,76 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export function findSubDirectorySync(searchPath: string, targetDirName: string): string | null {
+export const getProjectRelativeFeaturePaths = (wkspUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
+  const allFeatureRelPaths: string[] = [];
+  for (const fPath of projectRelativeConfigPaths) {
+    const featureUri = findFilesSync(wkspUri, fPath, ".feature");
+    const relPaths = featureUri.map(featureUri => path.relative(wkspUri.fsPath, path.dirname(featureUri.fsPath)).replace(/\\/g, "/"));
+    allFeatureRelPaths.push(...relPaths);
+  }
+  /* 
+  we want the longest common .feature paths, such that this structure:
+    my_project
+    └── tests
+        ├── doctest
+        │   └── mydoctest.py
+        ├── pytest
+        │    └── unittest.py    
+        ├── features
+        │   ├── a.feature
+        │   └── web
+        │       └── a.feature
+        └── features2
+            └── a.feature
+  will return:
+  - "tests/features"
+  - "tests/features2"
+  */
+  const longestCommonPaths = findLongestCommonPaths(allFeatureRelPaths);
+
+  // default to watching for features path
+  // TODO: check if this works, i.e. if the watch works on it being created
+  if (longestCommonPaths.length === 0)
+    longestCommonPaths.push("features");
+
+  return longestCommonPaths;
+}
+
+
+export const getProjectRelativeConfigPaths = (wkspUri: vscode.Uri): string[] => {
+  const projectRelativeConfigPaths: string[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let config: { [key: string]: any; } | undefined = undefined;
+  let section = "behave";
+  // match order of preference in behave source "config_filenames()" function
+  for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+    const file = path.join(wkspUri.fsPath, configFile);
+    if (fs.existsSync(file)) {
+      if (configFile === "pyproject.toml")
+        section = "tool.behave";
+      config = _configParser(file)
+      break;
+    }
+  }
+
+  if (config) {
+    let configPaths = config[section]?.paths;
+    if (configPaths) {
+      if (typeof configPaths === "string")
+        configPaths = [configPaths];
+      configPaths.forEach((path: string) => {
+        path = path.trim().replace(wkspUri.fsPath, "");
+        path = normalise_relative_path(path);
+        projectRelativeConfigPaths.push(path);
+      });
+    }
+  }
+
+  return projectRelativeConfigPaths
+}
+
+
+export const findSubDirectorySync = (searchPath: string, targetDirName: string): string | null => {
   const files = fs.readdirSync(searchPath);
   for (const file of files) {
     const filePath = path.join(searchPath, file);
@@ -427,7 +459,6 @@ export function findLongestCommonPaths(paths: string[]): string[] {
 }
 
 
-
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }
@@ -454,3 +485,65 @@ export function basename(uri: vscode.Uri) {
 export function getLines(text: string) {
   return text.split(/\r\n|\r|\n/);
 }
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function _configParser(filePath: string): { [key: string]: any; } {
+
+  const data = fs.readFileSync(filePath, 'utf-8');
+  const lines = data.split('\n');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const config: { [key: string]: any } = {};
+  let currentSection = '';
+  let currentValue: string | string[] = '';
+  let currentKey = '';
+
+  let toml = false;
+  if (filePath.endsWith(".toml"))
+    toml = true;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line.startsWith('#') || line.startsWith(';'))
+      continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentSection = line.slice(1, -1);
+      config[currentSection] = {};
+    }
+    else if (line.includes('=')) {
+      let [key, value] = line.split('=');
+      key = key.trim();
+      value = value.trim();
+      if (toml) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+          const arr = value.split(",");
+          config[currentSection][key] = arr;
+          continue;
+        }
+      }
+      else {
+        currentValue = value;
+        currentKey = key;
+      }
+      config[currentSection][key] = value;
+    }
+    else {
+      if (toml)
+        continue;
+      if (line.length > 0) {
+        const arr: string[] = [];
+        if (currentValue instanceof Array)
+          arr.push(...currentValue);
+        else
+          arr.push(currentValue);
+        arr.push(line);
+        currentValue = arr;
+        config[currentSection][currentKey] = arr;
+      }
+    }
+  }
+
+  return config;
+}
+
