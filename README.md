@@ -21,13 +21,13 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Extensive run customisation settings (e.g. `runParallel`, `featuresPath`, `envVarOverrides`, run profiles for per-run settings, etc.)
+- Extensive run customisation settings (e.g. `runParallel`, `envVarOverrides`, run profiles for per-run settings, etc.)
 
 ---
 
 ## Terminology
 
-- In this readme, "project" is shorthand for "a root workspace folder that contains your feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+- In this readme, "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
 
 ## Workspace requirements
 
@@ -41,13 +41,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ### Compatible project directory structures
 
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
-  - A single `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
-  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder (as shown in the examples below).  
+  - At least  one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
+  - If you have an `environment.py` file, then it *must* be at the same level as the `steps` folder (as shown in the examples below).  
   - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.  
-  - Multiple `features` folders are only supported in a multi-root workspace, i.e. you can only have one `features` folder per project.
+  - Multiple features folders are supported, but must be specified in your behave configuration.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
+  - Note - in the below examples the behave configuration file is `behave.ini`, but you can also use `pyproject.toml`, `.behaverc`, `setup.cfg`, or `tox.ini`.  
   
-  - Example 1 - features folder contains a child steps folder:
+  - Example 1 - steps folder is a child of the features folder:
 
     ```text
     my-project/
@@ -65,7 +66,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             └── web.py
     ```
 
-  - Example 2 - features folder has a sibling steps folder:
+  - Example 2 - steps folder is at the same level as the features folder:
 
     ```text
     my-project/
@@ -82,7 +83,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `.behaverc`) to your project folder and add a `paths` setting and then update the `featuresPath` setting in extension settings to match. This is a relative path to your project folder.
+- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `pyproject.toml`) to your project folder to specify the name:
 
   - For example:
 
@@ -92,13 +93,6 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     paths=my_tests/behave_features
     ```
 
-    ```json
-    // settings.json
-    { 
-      "behave-vsc.featuresPath": "my_tests/behave_features" 
-    }
-    ```
-
 - If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
 
   - Example:
@@ -106,7 +100,6 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ```json
     // settings.json
     {
-      "behave-vsc.featuresPath": "myfolder/features",
       "behave-vsc.envVarOverrides": {
           "PYTHONPATH": "myfolder"
       },
@@ -161,6 +154,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
 
+- Run profiles can be used for per-run settings (see [Running a subset of tests](#running-a-subset-of-tests)).
+
 ### How debug works
 
 - It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
@@ -210,10 +205,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
       Separately, here are some ideas about how you could use an environment variable in you `environment.py` file:
 
-    - to control a behave `active_tag_value_provider`
-    - to control `scenario.skip()`
-    - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-    - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+      - to control a behave `active_tag_value_provider`
+      - to control `scenario.skip()`
+      - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+      - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
 
 ## Q&A
 
@@ -284,9 +279,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Does your project meet the [workspace requirements](#workspace-requirements) and have a [compatible project directory structure](#compatible-project-directory-structures)?
 
-- If you have set the `featuresPath` in extension settings, make sure it matches the `paths` setting in your behave configuration file.
+- Make sure the `paths` setting in your behave configuration file is correct.
 
-- Does restarting vscode solve your issue?
+- Does refreshing the Test explorer, or restarting vscode solve your issue?
 
 - Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
 

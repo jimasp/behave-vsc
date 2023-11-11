@@ -109,6 +109,10 @@ export class FileParser {
     let processed = 0;
     for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
       const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
+      if (!fs.existsSync(featuresUri.fsPath)) {
+        // e.g. user has deleted/renamed folder
+        continue;
+      }
       const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)

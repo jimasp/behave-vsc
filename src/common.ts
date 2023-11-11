@@ -125,19 +125,19 @@ export const normalise_relative_path = (path: string) => {
   return path.replace(/\\/g, "/").replace(/^\//, "").replace(/\/$/, "").trim();
 }
 
-
 let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
+  // NOTE: this function must be fast (ideally < 1ms) 
+  // so we'll default to returning a simple cached value
   if (!forceRefresh && workspaceFoldersWithFeatures)
     return workspaceFoldersWithFeatures;
 
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
-  // NOTE THIS FUNCTION MUST BE FAST (ideally < 1ms) 
-  // (check performance diagLog below if you change it)
   function hasFeaturesFolder(folder: vscode.WorkspaceFolder): boolean {
+    // check performance (diagLog below) if you change these functions
     const configPaths = getProjectRelativeConfigPaths(folder.uri);
     const featurePaths = getProjectRelativeFeaturePaths(folder.uri, configPaths);
     return featurePaths.length > 0;
@@ -158,10 +158,6 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   if (workspaceFoldersWithFeatures.length === 0) {
     if (folders.length === 1 && folders[0].name === "behave-vsc")
       throw `Please disable the marketplace Behave VSC extension before beginning development!`;
-    else
-      throw `Extension was activated because a '*.feature' file was found in a workspace folder, but ` +
-      `none of the workspace folders contain either a root 'features' folder or a settings.json that specifies a valid 'behave-vsc.featuresPath'.\n` +
-      `Please add a valid 'behave-vsc.featuresPath' property to your workspace settings.json file and then restart vscode.`;
   }
 
   return workspaceFoldersWithFeatures;
@@ -196,6 +192,9 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 
 
 export const getProjectRelativeFeaturePaths = (wkspUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
+
+  // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function  
+
   const allFeatureRelPaths: string[] = [];
   for (const fPath of projectRelativeConfigPaths) {
     const featureUri = findFilesSync(wkspUri, fPath, ".feature");
@@ -232,6 +231,9 @@ export const getProjectRelativeFeaturePaths = (wkspUri: vscode.Uri, projectRelat
 
 
 export const getProjectRelativeConfigPaths = (wkspUri: vscode.Uri): string[] => {
+
+  // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function
+
   const projectRelativeConfigPaths: string[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let config: { [key: string]: any; } | undefined = undefined;

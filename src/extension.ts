@@ -182,7 +182,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want 
         // that behaviour because we want to distinguish between some properties being set vs being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
-        // (separately, just note that the settings change could be a global window setting from *.code-workspace file, rather than from settings.json)
+        // (separately, just note that the settings change could be a global window setting 
+        // from *.code-workspace file, rather than from settings.json)
         const affected = event && event.affectsConfiguration("behave-vsc");
         if (!affected && !forceFullRefresh && !testCfg)
           return;
@@ -190,8 +191,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         if (!testCfg)
           config.logger.clearAllWksps();
 
-        // changing featuresPath in settings.json/*.vscode-workspace to a valid path, or adding/removing/renaming workspaces
-        // will not only change the set of workspaces we are watching, but also the output channels
+        // adding/removing/renaming workspaces will not only change the 
+        // set of workspaces we are watching, but also the output channels
         config.logger.syncChannelsToWorkspaceFolders();
 
         for (const wkspUri of getUrisOfWkspFoldersWithFeatures(true)) {
@@ -211,16 +212,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           watchers.forEach(w => context.subscriptions.push(w));
         }
 
-        // configuration has now changed, e.g. featuresPath, so we need to reparse files
+        // code.workspace or settings.json configuration has now changed, so we need to reparse files
 
-        // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel workspace integration test runs)
+        // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel 
+        // workspace integration test runs)
         if (testCfg) {
           parser.parseFilesForWorkspace(testCfg.wkspUri, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
-        // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes to rebuild the top level nodes)
+        // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
+        // to rebuild the top level nodes)
         parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler", false);
       }
       catch (e: unknown) {

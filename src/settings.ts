@@ -147,8 +147,7 @@ export class WorkspaceFolderSettings {
     // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)    
     const baseDirPath = this._getRelativeBaseDirPath(this, this.projectRelativeConfigPaths, logger);
     if (baseDirPath === null) {
-      this._fatalErrors.push(`Could not find a valid base directory for this workspace.`);
-      this._logSettings(logger, winSettings);
+      // e.g. an empty workspace folder
       return;
     }
 
@@ -203,9 +202,6 @@ export class WorkspaceFolderSettings {
       if (relativeConfigPaths.length > 0) {
         logger.showWarn(`Could not find "${steps_dir}" directory. Please specify "paths" in your behave configuration.`,
           wkspSettings.uri);
-      }
-      else {
-        logger.showWarn(`Could not find "${steps_dir}" directory in path "${base_dir}"`, wkspSettings.uri);
       }
       return null;
     }
