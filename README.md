@@ -106,7 +106,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `features/steps` or `steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `behave-vsc.stepLibraries` setting.
+- Step navigation is automatically enabled for your `features/steps` or `steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting.
 
   - Example:
 
@@ -116,7 +116,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       "behave-vsc.stepLibraries": [
           {
               "relativePath": ".venv/lib/python3.9/site-packages/package-steps-lib",
-              "stepFilesRx": ".*/steps/.*|.*/steps.py"
+              "stepFilesRx": ".*/steps.py|.*/steps/.*"
           },
           {
               "relativePath": "my_steps_lib",
@@ -160,7 +160,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
 
-- You can control whether debug steps into external code via the extension setting `behave-vsc.justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
+- You can control whether debug steps into external code via the extension setting `justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 
 - Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 
@@ -180,9 +180,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - C. Run tagged tests:
     - Via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
-    - Via run profiles. Use the `behave-vsc.runProfiles` to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+    - Via run profiles. Use the `runProfiles` setting to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
       ```json
+      // settings.json
       "behave-vsc.runProfiles": {
           "tagA profile": {
               "tagExpression": "@a",            
@@ -225,28 +226,28 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
 
 - *How do I enable automatic feature file formatting on save?*
-  - via a standard vscode setting:
+  - using a standard vscode setting:
 
     ```json
     "[gherkin]": { "editor.formatOnSave": true }
     ```
 
 - *How do I disable feature file snippets?*
-  - via a standard vscode setting:
+  - using a standard vscode setting:
 
     ```json
     "[gherkin]": { "editor.suggest.showSnippets": false }
     ```
 
 - *How do I disable extension autocomplete for feature files?*
-  - via a standard vscode setting:
+  - using a standard vscode setting:
 
     ```json
     "[gherkin]": { "editor.suggest.showFunctions": false }
     ```
 
 - *How do I disable Copilot autocomplete for feature files?*
-  - via a standard vscode setting:
+  - using a standard vscode setting:
 
     ```json
       "github.copilot.enable": {
@@ -261,11 +262,11 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - *Where is the behave junit output stored?*
 
-  - In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature via a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the file and mark scenarios not included in that execution as "skipped".)
+  - In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature using a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the same file and mark scenarios not included in that execution as "skipped".)
   
 - *When will this extension have a release version?*
 
-  - When the code is more stable. At the moment the code is subject to rewrites/refactoring which makes breaking changes (and bugs) more likely.
+  - When the code is more stable. At the moment the code is subject to big rewrites/refactoring which makes breaking changes (and bugs) more likely.
 
 ---
 
@@ -317,7 +318,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
-  - Step navigation only finds steps that are in `.py` files in a folder called `steps` inside your project folder. If you import steps in python from a steps library folder outside your project folder it won't find them.
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them. (You can however install external steps as a package and use the `stepLibraries` setting.)
 
 - There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
 
@@ -327,7 +328,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 
-- Test durations are taken from behave junit xml files, not an actual execution time.
+- Test durations are taken from behave junit xml files, not actual execution time.
 
 - vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
 
