@@ -25,6 +25,7 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
     }
   }
 
+
   const setEventHandlers = (watcher: vscode.FileSystemWatcher) => {
 
     // fires on either new file/folder creation OR rename (inc. git actions)
@@ -79,29 +80,20 @@ export function startWatchingWorkspace(wkspUri: vscode.Uri, ctrl: vscode.TestCon
 
   // NOTE - for all watchers we use the pattern ** because we want watch our for 
   // FOLDER changes, as well as changes to .feature and .py files
-
-  for (const relFeaturesPath of wkspSettings.workspaceRelativeFeaturesPaths) {
+  for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
     const featureFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relFeaturesPath}/**`);
     const featuresFolderWatcher = vscode.workspace.createFileSystemWatcher(featureFolderPattern);
     watchers.push(featuresFolderWatcher);
     setEventHandlers(featuresFolderWatcher);
   }
 
-  if (!wkspSettings.stepsFolderIsInFeaturesFolder) {
-    for (const relStepsPath of wkspSettings.workspaceRelativeStepsNavigationPaths) {
-      const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relStepsPath}/**`);
-      const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
-      setEventHandlers(siblingStepsFolderWatcher);
-      watchers.push(siblingStepsFolderWatcher);
-    }
+  for (const relStepsPath of wkspSettings.projectRelativeAdditionalStepsPaths) {
+    const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relStepsPath}/**`);
+    const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
+    setEventHandlers(siblingStepsFolderWatcher);
+    watchers.push(siblingStepsFolderWatcher);
   }
 
-  for (const relStepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
-    const stepsFolderPattern = new vscode.RelativePattern(wkspSettings.uri, `${relStepsLibPath}/**`);
-    const stepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
-    setEventHandlers(stepsFolderWatcher);
-    watchers.push(stepsFolderWatcher);
-  }
 
   for (const configFile of BEHAVE_CONFIG_FILES) {
     const configFilePattern = new vscode.RelativePattern(wkspSettings.uri, `${configFile}`);

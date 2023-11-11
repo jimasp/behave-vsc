@@ -75,8 +75,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       break;
     case "no-junit-file":
       run.errored(item.test, new vscode.TestMessage(`${result.failedText}.\nCheck output in ${window}.\n` +
-        "(If there is no behave error, then check that your behave-vsc.featuresPath in settings.json\n" +
-        "matches your behave.ini paths setting.)"));
+        '(If there is no behave error, then check your behave configuration "paths" setting.)'));
       break;
     case "untested":
       run.errored(item.test, new vscode.TestMessage(`JUnit result was "untested". Check output in ${window}.`));
@@ -168,18 +167,20 @@ function CreateParseResult(wkspSettings: WorkspaceFolderSettings, debug: boolean
 
 
 function getJunitFeatureName(wkspSettings: WorkspaceFolderSettings, scenario: Scenario): string {
-  // mostly a copy of make_feature_filename() in behave source code
+  // NOTE: this function MUST have basically the same logic as the 
+  // behave source code function "make_feature_filename()".
+  // if that function changes in behave, then it is likely this will also have to change.    
   let fileName = null;
   const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
-  for (const relConfigPath of wkspSettings.relativeConfigPaths) {
+  for (const relConfigPath of wkspSettings.projectRelativeConfigPaths) {
     if (relFeatureFilePath.startsWith(relConfigPath)) {
-      fileName = relFeatureFilePath.slice(relConfigPath.length + 1);
+      fileName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
       break;
     }
   }
 
   if (!fileName)
-    fileName = path.relative(wkspSettings.workspaceRelativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
+    fileName = path.relative(wkspSettings.projectRelativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
 
   fileName = fileName.split('.').slice(0, -1).join('.');
   fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');

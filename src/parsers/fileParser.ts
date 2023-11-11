@@ -107,11 +107,12 @@ export class FileParser {
     deleteStepMappings(wkspSettings.uri);
 
     let processed = 0;
-    for (const featuresUri of wkspSettings.featuresUris) {
+    for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
+      const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
       const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        config.logger.showWarn(`No feature files found in ${featuresUri.fsPath}`, wkspSettings.uri);
+        config.logger.showWarn(`No feature files found in ${relFeaturesPath}`, wkspSettings.uri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)
@@ -138,28 +139,21 @@ export class FileParser {
     deleteStepFileSteps(wkspSettings.uri);
 
     let processed = 0;
-    for (const relStepsSearchPath of wkspSettings.workspaceRelativeStepsNavigationPaths) {
+    const allRelStepsPaths = wkspSettings.projectRelativeFeaturePaths.concat(wkspSettings.projectRelativeAdditionalStepsPaths);
+    for (const relStepsSearchPath of allRelStepsPaths) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(wkspSettings.uri, relStepsSearchPath);
-      if (!fs.existsSync(stepsSearchUri.fsPath)) {
-        config.logger.showWarn(`No steps directory found at ${stepsSearchUri.fsPath}.`, wkspSettings.uri);
-        return processed;
-      }
+      if (!fs.existsSync(stepsSearchUri.fsPath))
+        continue;
 
-      if (wkspSettings.stepsFolderIsInFeaturesFolder)
+      if (wkspSettings.projectRelativeFeaturePaths.includes(relStepsSearchPath))
         stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
       else
         stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
 
-      for (const stepsLibPath of wkspSettings.stepLibraries.map(s => s.relativePath)) {
-        const stepsLibUri = vscode.Uri.joinPath(wkspSettings.uri, stepsLibPath);
-        let stepLibFiles = await findFiles(stepsLibUri, undefined, ".py", cancelToken);
-        stepLibFiles = stepLibFiles.filter(uri => isStepsFile(uri));
-        stepFiles = stepFiles.concat(stepLibFiles);
-      }
 
       if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
-        return processed;
+        continue;
 
       for (const uri of stepFiles) {
         if (cancelToken.isCancellationRequested)
@@ -264,7 +258,7 @@ export class FileParser {
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (!sfp.includes("/") && wkspSettings.featuresUris.length > 1) {
+    if (!sfp.includes("/") && wkspSettings.projectRelativeFeaturePaths.length > 1) {
       sfp = uri.path.substring(wkspSettings.uri.path.length + 1);
     }
     else {

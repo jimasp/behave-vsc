@@ -294,7 +294,8 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 }
 
 export const getFeaturesUriForFeatureFileUri = (wkspSettings: WorkspaceFolderSettings, featureFileUri: vscode.Uri) => {
-  for (const featuresUri of wkspSettings.featuresUris) {
+  for (const relFeaturesPath of wkspSettings.projectRelativeFeaturePaths) {
+    const featuresUri = vscode.Uri.joinPath(wkspSettings.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
       return featuresUri;
   }
@@ -357,13 +358,13 @@ export function cleanBehaveText(text: string) {
 // custom function to replace vscode.workspace.findFiles() functionality when required
 // due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
 export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
-  extension: string, cancelToken: vscode.CancellationToken): Promise<vscode.Uri[]> {
+  extension: string, cancelToken?: vscode.CancellationToken | undefined): Promise<vscode.Uri[]> {
 
   const entries = await vwfs.readDirectory(directory);
   const results: vscode.Uri[] = [];
 
   for (const entry of entries) {
-    if (cancelToken.isCancellationRequested)
+    if (cancelToken && cancelToken.isCancellationRequested)
       return results;
     const fileName = entry[0];
     const fileType = entry[1];
@@ -380,6 +381,52 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 
   return results;
 }
+
+
+export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string | undefined, extension: string): vscode.Uri[] {
+  const entries = fs.readdirSync(directory.fsPath);
+  const results: vscode.Uri[] = [];
+
+  for (const fileName of entries) {
+    const entryPath = path.join(directory.fsPath, fileName);
+    const entryUri = vscode.Uri.file(entryPath);
+    if (fs.statSync(entryPath).isDirectory()) {
+      results.push(...findFilesSync(entryUri, matchSubDirectory, extension));
+    }
+    else {
+      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
+        results.push(entryUri);
+      }
+    }
+  }
+
+  return results;
+}
+
+
+export function findLongestCommonPaths(paths: string[]): string[] {
+  const commonPaths: string[] = [];
+
+  for (const filePath of paths) {
+    const pathParts = filePath.split('/');
+    let commonPath = pathParts[0];
+
+    for (let i = 1; i < pathParts.length - 1; i++) {
+      commonPath += '/' + pathParts[i];
+      if (!paths.some(path => path.startsWith(commonPath + '/'))) {
+        break;
+      }
+    }
+
+    if (!commonPaths.includes(commonPath)) {
+      commonPaths.push(commonPath);
+    }
+  }
+
+  return commonPaths;
+}
+
+
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");

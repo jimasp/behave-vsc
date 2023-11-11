@@ -14,9 +14,9 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "DEPRECATED and ignored. Feature paths are now read direct from the behave config file.",
+					"markdownDescription": "This setting is deprecated and IGNORED. Feature paths are now determined automatically.",
 					"default": "features",
-					"deprecationMessage": "DEPRECATED and ignored. Feature paths are now read direct from the behave config file."
+					"deprecationMessage": "This setting is deprecated and IGNORED. Feature paths are now determined automatically."
 				},
 				"behave-vsc.stepLibraries": {
 					"scope": "resource",

@@ -18,7 +18,7 @@ Feature: Mixed outline
 		"""
 
 		Given I put "<thing>" in a blender
-		when I switch the blender on
+		When I switch the blender on
 		then it should transform into "<other thing>"
 
 		# format test comment
@@ -64,7 +64,7 @@ Feature: Mixed outline
 		Examples: Consumer Electronics
 			| thing         | other thing |
 			| iPhone        | toxic waste |
-			| Galaxy Nexus  | toxic waste |      
+			| Galaxy Nexus  | toxic waste |
 
 	Scenario Outline: Blenders Fail 2
 		Given I put "<thing>" in a blender
@@ -79,7 +79,7 @@ Feature: Mixed outline
 			| thing         | other thing |
 			| ERROR         | FAIL        |
 			| iPhone        | toxic waste |
-			| Galaxy Nexus  | toxic waste |   
+			| Galaxy Nexus  | toxic waste |
 
 	Scenario Outline: Blenders Success 2
 		Given I put "<thing>" in a blender
@@ -93,4 +93,4 @@ Feature: Mixed outline
 		Examples: Consumer Electronics
 			| thing         | other thing |
 			| iPhone        | toxic waste |
-			| Galaxy Nexus  | toxic waste |   
+			| Galaxy Nexus  | toxic waste |

@@ -7,7 +7,7 @@
         },
         {
             "relativePath": "folder2\\steps_lib_2",
-            "stepFilesRx": ".*/steps/.*|more_steps/.*|.*/steps2.py|.*/steps3.py",
+            "stepFilesRx": ".*\\steps\\.*|more_steps\\.*|.*\\steps2.py|.*\\steps3.py",
         }
     ],
     "mypy-type-checker.ignorePatterns": [

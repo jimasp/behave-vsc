@@ -1,6 +1,6 @@
 {
     "behave-vsc.xRay": true,
-    "behave-vsc.relativeFeaturesPaths": [
+    "behave-vsc.featuresPath": [
         "features",
         "features2"
     ],
