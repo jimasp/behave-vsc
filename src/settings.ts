@@ -344,7 +344,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, relativeConfigPaths: string
     return null;
   }
 
-  return vscode.workspace.asRelativePath(new_base_dir, false);
+  return path.relative(projUri.fsPath, new_base_dir);
 }
 
 

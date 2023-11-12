@@ -240,7 +240,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 
   if (!lcPath.includes("/steps/")) {
     const projSettings = getProjectSettingsForFile(fileUri);
-    const relPath = vscode.workspace.asRelativePath(fileUri, false);
+    const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
     const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
 
     if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
