@@ -156,10 +156,10 @@ export class ProjectSettings {
     const projRelPaths = getProjectRelativePaths(projUri, this.stepLibraries, logger);
     if (!projRelPaths)
       return; // empty workspace folder - TODO can this happen? shouldn't getWorkspaceFoldersWithFeatures() filter this out?
-    this.relativeBaseDirPath = projRelPaths?.relativeBaseDirPath;
-    this.relativeConfigPaths = projRelPaths?.relativeConfigPaths;
-    this.relativeFeatureFolders = projRelPaths?.relativeFeatureFolders;
-    this.relativeStepsFoldersOutsideFeatureFolders = projRelPaths?.relativeStepsFoldersOutsideFeatureFolders;
+    this.relativeBaseDirPath = projRelPaths.relativeBaseDirPath;
+    this.relativeConfigPaths = projRelPaths.relativeConfigPaths;
+    this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
+    this.relativeStepsFoldersOutsideFeatureFolders = projRelPaths.relativeStepsFoldersOutsideFeatureFolders;
 
     this._logSettings(logger, winSettings);
   }
@@ -276,15 +276,14 @@ function getProjectRelativePaths(projUri: vscode.Uri, stepLibraries: StepLibrari
 
   // base dir is a concept borrowed from behave's source code
   // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        
-  const baseDirPath = getRelativeBaseDirPath(projUri, relativeConfigPaths, logger);
-  if (baseDirPath === null) {
+  const relativeBaseDirPath = getRelativeBaseDirPath(projUri, relativeConfigPaths, logger);
+  if (relativeBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
   }
 
-  const relativeBaseDirPath = baseDirPath;
-  if (!relativeConfigPaths.includes(baseDirPath))
-    relativeConfigPaths.push(baseDirPath);
+  if (!relativeConfigPaths.includes(relativeBaseDirPath))
+    relativeConfigPaths.push(relativeBaseDirPath);
 
   const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri);
 
@@ -387,7 +386,9 @@ function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
   const start = performance.now();
   const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
-  const relFeatureFolders = featureFolders.map(folder => vscode.workspace.asRelativePath(folder, false));
+  let relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
+  // disallow root folder as it should not contain feature files
+  relFeatureFolders = relFeatureFolders.filter(f => f !== "");
 
   /* 
   we want the longest common .feature paths, such that this structure:

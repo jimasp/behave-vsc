@@ -370,25 +370,21 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 
 
 export function findLongestCommonPaths(paths: string[]): string[] {
-  const commonPaths: string[] = [];
+  const commonFolderPaths: string[] = [paths[0]];
+  let matched = false;
 
-  for (const filePath of paths) {
-    const pathParts = filePath.split('/');
-    let commonPath = pathParts[0];
-
-    for (let i = 1; i < pathParts.length - 1; i++) {
-      commonPath += '/' + pathParts[i];
-      if (!paths.some(path => path.startsWith(commonPath + '/'))) {
-        break;
-      }
+  for (const path of paths) {
+    matched = false;
+    for (const cfp of commonFolderPaths) {
+      if (path.startsWith(cfp + "/") || path === cfp)
+        matched = true;
     }
-
-    if (!commonPaths.includes(commonPath)) {
-      commonPaths.push(commonPath);
-    }
+    if (matched)
+      continue;
+    commonFolderPaths.push(path);
   }
 
-  return commonPaths;
+  return commonFolderPaths;
 }
 
 

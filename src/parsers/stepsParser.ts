@@ -25,15 +25,19 @@ export class StepFileStep {
 export function getStepFilesSteps(projUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
   const projUriMatchString = uriId(projUri);
   let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
+
+  // return with keys as they are
   if (!removeFileUriPrefix)
     return steps;
+
+  // remove the project uri from the key so the key can be used for string matching (i.e. in _getStepFileStepMatch)
   steps = [...new Map([...steps].map(([k, v]) => [afterFirstSepr(k), v]))];
   return steps;
 }
 
 
 export function deleteStepFileSteps(projUri: vscode.Uri) {
-  const projStepFileSteps = getStepFilesSteps(projUri);
+  const projStepFileSteps = getStepFilesSteps(projUri, false);
   for (const [key,] of projStepFileSteps) {
     stepFileSteps.delete(key);
   }
