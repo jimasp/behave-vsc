@@ -237,7 +237,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       await configurationChangedHandler(event);
     }));
 
-    diagLog(`perf info: activate took  ${performance.now() - start} ms`);
+    diagLog(`PERF: activate took  ${performance.now() - start} ms`);
 
     return {
       // return instances to support integration testing

@@ -521,17 +521,17 @@ export class FileParser {
     mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
     diagLog(
       `---` +
-      `\nperf info: ${callName} completed.` +
-      `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
+      `\nPERF: ${callName} completed.` +
+      `\nPERF: Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
-      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
-      `\nIgnore times if any of these are true:` +
-      `\n  (a) time taken was during vscode startup contention, ` +
-      `\n  (b) busy cpu due to background processes, ` +
-      `\n  (c) another test extension is also refreshing, ` +
-      `\n  (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
-      `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
-      `\n(Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
+      `\nPERF: Breakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
+      `\nPERF: Ignore times if any of these are true:` +
+      `\nPERF:   (a) time taken was during vscode startup contention, ` +
+      `\nPERF:   (b) busy cpu due to background processes, ` +
+      `\nPERF:   (c) another test extension is also refreshing, ` +
+      `\nPERF:   (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
+      `\nPERF: For a more representative time, disable other test extensions then click the test refresh button a few times.` +
+      `\nPERF: (Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
       `\n==================`
     );
   }
