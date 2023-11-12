@@ -41,10 +41,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ### Compatible project directory structures
 
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
-  - At least  one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
-  - If you have an `environment.py` file, then it *must* be at the same level as the `steps` folder (as shown in the examples below).  
-  - Note that for the extension to work, the `features` and `steps` folders must be somewhere *inside* the project folder.  
-  - Multiple top-level features folders (e.g. `./features` and `./features2`) are supported, but they must be specified in your behave configuration `paths` setting.
+  - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
+  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder.  
+  - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
   - Note - in the below examples the behave configuration file is `behave.ini`, but you can also use `pyproject.toml`, `.behaverc`, `setup.cfg`, or `tox.ini`.  
   
@@ -55,11 +54,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ├── behave.ini
     └── features/
         ├── environment.py    
-        ├── features/
-        │   ├── db_features
-        │   │   └── db1.feature   
-        │   └── web_features
-        │       └── web1.feature   
+        ├── db_features
+        │   └── db1.feature   
+        ├── web_features
+        │   └── web1.feature   
         └── steps/
             ├── shared.py
             ├── db.py                             

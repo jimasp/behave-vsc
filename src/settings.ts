@@ -5,7 +5,10 @@ import {
   getProjectRelativeConfigPaths,
   getProjectRelativeFeaturePaths,
   getUrisOfWkspFoldersWithFeatures,
-  getWorkspaceFolder, normalise_relative_path, uriId, projError
+  getWorkspaceFolder,
+  normaliseUserSuppliedRelativePath,
+  uriId,
+  projError
 } from './common';
 import { Logger } from './logger';
 
@@ -222,7 +225,7 @@ export class ProjectSettings {
     const stepLibraryPaths: string[] = [];
 
     for (const stepLibrary of requestedStepLibraries) {
-      const relativePath = normalise_relative_path(stepLibrary.relativePath);
+      const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
       const stepFilesRx = stepLibrary.stepFilesRx;
 
       if (!relativePath) {

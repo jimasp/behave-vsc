@@ -121,8 +121,12 @@ export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfigu
   return (value as T);
 }
 
-export const normalise_relative_path = (path: string) => {
-  return path.replace(/\\/g, "/").replace(/^\//, "").replace(/\/$/, "").trim();
+export const normaliseUserSuppliedRelativePath = (path: string) => {
+  return path.trim()
+    .replace(/\\/g, "/")
+    .replace(/^\.\//, "")
+    .replace(/^\//, "")
+    .replace(/\/$/, "");
 }
 
 let workspaceFoldersWithFeatures: vscode.Uri[];
@@ -205,8 +209,6 @@ export const getProjectRelativeFeaturePaths = (projUri: vscode.Uri, projectRelat
   we want the longest common .feature paths, such that this structure:
     my_project
     └── tests
-        ├── doctest
-        │   └── mydoctest.py
         ├── pytest
         │    └── unittest.py    
         ├── features
@@ -215,9 +217,10 @@ export const getProjectRelativeFeaturePaths = (projUri: vscode.Uri, projectRelat
         │       └── a.feature
         └── features2
             └── a.feature
+
   will return:
-  - "tests/features"
-  - "tests/features2"
+    "tests/features"
+    "tests/features2"
   */
   const longestCommonPaths = findLongestCommonPaths(allFeatureRelPaths);
 
@@ -255,8 +258,8 @@ export const getProjectRelativeConfigPaths = (projUri: vscode.Uri): string[] => 
       if (typeof configPaths === "string")
         configPaths = [configPaths];
       configPaths.forEach((path: string) => {
-        path = path.trim().replace(projUri.fsPath, "");
-        path = normalise_relative_path(path);
+        path = path.replace(projUri.fsPath, "");
+        path = normaliseUserSuppliedRelativePath(path);
         projectRelativeConfigPaths.push(path);
       });
     }
