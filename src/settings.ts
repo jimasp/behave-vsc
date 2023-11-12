@@ -2,13 +2,14 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-  getProjectRelativeConfigPaths,
-  getProjectRelativeFeaturePaths,
   getUrisOfWkspFoldersWithFeatures,
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  projError
+  projError,
+  findLongestCommonPaths,
+  findFilesSync,
+  BEHAVE_CONFIG_FILES
 } from './common';
 import { Logger } from './logger';
 
@@ -151,7 +152,7 @@ export class ProjectSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    this.relativeConfigPaths = getProjectRelativeConfigPaths(this.uri);
+    this.relativeConfigPaths = this._getProjectRelativeConfigPaths(this.uri);
 
     // base dir is a concept borrowed from behave's source code
     // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)    
@@ -165,7 +166,7 @@ export class ProjectSettings {
     if (!this.relativeConfigPaths.includes(baseDirPath))
       this.relativeConfigPaths.push(baseDirPath);
 
-    this.relativeFeaturePaths = getProjectRelativeFeaturePaths(this.uri, this.relativeConfigPaths);
+    this.relativeFeaturePaths = this._getProjectRelativeFeaturePaths(this.uri, this.relativeConfigPaths);
 
     if (!this.relativeFeaturePaths.includes(this.relativeBaseDirPath)) {
       // (doesn't matter if this path exists or not)
@@ -218,6 +219,83 @@ export class ProjectSettings {
 
     return path.relative(projSettings.uri.fsPath, new_base_dir);
   }
+
+
+
+  private _getProjectRelativeConfigPaths = (projUri: vscode.Uri): string[] => {
+
+    // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function
+
+    const projectRelativeConfigPaths: string[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let config: { [key: string]: any; } | undefined = undefined;
+    let section = "behave";
+    // match order of preference in behave source "config_filenames()" function
+    for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+      const file = path.join(projUri.fsPath, configFile);
+      if (fs.existsSync(file)) {
+        if (configFile === "pyproject.toml")
+          section = "tool.behave";
+        config = configParser(file)
+        break;
+      }
+    }
+
+    if (config) {
+      let configPaths = config[section]?.paths;
+      if (configPaths) {
+        if (typeof configPaths === "string")
+          configPaths = [configPaths];
+        configPaths.forEach((path: string) => {
+          path = path.replace(projUri.fsPath, "");
+          path = normaliseUserSuppliedRelativePath(path);
+          projectRelativeConfigPaths.push(path);
+        });
+      }
+    }
+
+    return projectRelativeConfigPaths
+  }
+
+
+
+  private _getProjectRelativeFeaturePaths = (projUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
+
+    // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function  
+
+    const allFeatureRelPaths: string[] = [];
+    for (const fPath of projectRelativeConfigPaths) {
+      const featureUri = findFilesSync(projUri, fPath, ".feature");
+      const relPaths = featureUri.map(featureUri => path.relative(projUri.fsPath, path.dirname(featureUri.fsPath)).replace(/\\/g, "/"));
+      allFeatureRelPaths.push(...relPaths);
+    }
+    /* 
+    we want the longest common .feature paths, such that this structure:
+      my_project
+      └── tests
+          ├── pytest
+          │    └── unittest.py    
+          ├── features
+          │   ├── a.feature
+          │   └── web
+          │       └── a.feature
+          └── features2
+              └── a.feature
+  
+    will return:
+      "tests/features"
+      "tests/features2"
+    */
+    const longestCommonPaths = findLongestCommonPaths(allFeatureRelPaths);
+
+    // default to watching for features path
+    // TODO: check if this works, i.e. if the watch works on it being created
+    if (longestCommonPaths.length === 0)
+      longestCommonPaths.push("features");
+
+    return longestCommonPaths;
+  }
+
 
 
   private _getStepLibraryStepPaths(requestedStepLibraries: StepLibrariesSetting, logger: Logger, projUri: vscode.Uri): string[] {
@@ -309,4 +387,67 @@ export class ProjectSettings {
 }
 
 
+
+
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function configParser(filePath: string): { [key: string]: any; } {
+
+  const data = fs.readFileSync(filePath, 'utf-8');
+  const lines = data.split('\n');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const config: { [key: string]: any } = {};
+  let currentSection = '';
+  let currentValue: string | string[] = '';
+  let currentKey = '';
+
+  let toml = false;
+  if (filePath.endsWith(".toml"))
+    toml = true;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line.startsWith('#') || line.startsWith(';'))
+      continue;
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      currentSection = line.slice(1, -1);
+      config[currentSection] = {};
+    }
+    else if (line.includes('=')) {
+      let [key, value] = line.split('=');
+      key = key.trim();
+      value = value.trim();
+      if (toml) {
+        if (value.startsWith("[") && value.endsWith("]")) {
+          const arr = value.split(",");
+          config[currentSection][key] = arr;
+          continue;
+        }
+      }
+      else {
+        currentValue = value;
+        currentKey = key;
+      }
+      config[currentSection][key] = value;
+    }
+    else {
+      if (toml)
+        continue;
+      if (line.length > 0) {
+        const arr: string[] = [];
+        if (currentValue instanceof Array)
+          arr.push(...currentValue);
+        else
+          arr.push(currentValue);
+        arr.push(line);
+        currentValue = arr;
+        config[currentSection][currentKey] = arr;
+      }
+    }
+  }
+
+  return config;
+}
 
