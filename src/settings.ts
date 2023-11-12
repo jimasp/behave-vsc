@@ -344,7 +344,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, relativeConfigPaths: string
     return null;
   }
 
-  return path.relative(projUri.fsPath, new_base_dir);
+  return vscode.workspace.asRelativePath(new_base_dir, false);
 }
 
 
@@ -386,8 +386,8 @@ function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
 
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
   const start = performance.now();
-  const featureUris = findFilesSync(projUri, undefined, ".feature");
-  const relFeaturePaths = featureUris.map(featureUri => vscode.workspace.asRelativePath(path.dirname(featureUri.fsPath)));
+  const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
+  const relFeatureFolders = featureFolders.map(folder => vscode.workspace.asRelativePath(folder, false));
 
   /* 
   we want the longest common .feature paths, such that this structure:
@@ -406,10 +406,9 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
     "tests/features"
     "tests/features2"
   */
-  const longestCommonPaths = findLongestCommonPaths(relFeaturePaths);
+  const longestCommonPaths = findLongestCommonPaths(relFeatureFolders);
 
   // default to watching for features path
-  // TODO: check if this works, i.e. if the watch works on it being created
   if (longestCommonPaths.length === 0)
     longestCommonPaths.push("features");
 

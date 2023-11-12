@@ -240,7 +240,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 
   if (!lcPath.includes("/steps/")) {
     const projSettings = getProjectSettingsForFile(fileUri);
-    const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
+    const relPath = vscode.workspace.asRelativePath(fileUri, false);
     const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
 
     if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
@@ -350,7 +350,11 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
     const entryPath = path.join(directory.fsPath, fileName);
     const entryUri = vscode.Uri.file(entryPath);
     if (fs.statSync(entryPath).isDirectory()) {
-      results.push(...findFilesSync(entryUri, matchSubDirectory, extension));
+      const subDirResults = findFilesSync(entryUri, matchSubDirectory, extension, stopOnFirstMatch);
+      results.push(...subDirResults);
+      if (stopOnFirstMatch && subDirResults.length > 0) {
+        return results;
+      }
     }
     else {
       if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
