@@ -14,33 +14,48 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
   const updater = async (uri: vscode.Uri) => {
     if (uri.scheme !== "file")
       return;
-
-    try {
-      console.log(`updater: ${uri.fsPath}`);
-      parser.reparseFile(uri, undefined, projSettings, testData, ctrl);
-    }
-    catch (e: unknown) {
-      // entry point function (handler) - show error
-      config.logger.showError(e, projUri);
-    }
+    console.log(`updater: ${uri.fsPath}`);
+    parser.reparseFile(uri, undefined, projSettings, testData, ctrl);
   }
 
 
-  const setEventHandlers = (watcher: vscode.FileSystemWatcher) => {
+  const setEventHandlers = (watcher: vscode.FileSystemWatcher, excludeExtension?: string) => {
 
     // fires on either new file/folder creation OR rename (inc. git actions)
     watcher.onDidCreate(uri => {
-      const lcPath = uri.path.toLowerCase();
-      if (lcPath.endsWith("/steps") || lcPath.endsWith("environment.py")) {
-        config.reloadSettings(projSettings.uri);
-        parser.parseFilesForWorkspace(projUri, testData, ctrl, "OnDidCreate", false);
-        return;
+      try {
+        const lcPath = uri.path.toLowerCase();
+        if (excludeExtension && lcPath.endsWith(excludeExtension))
+          return;
+
+        if (lcPath.endsWith("/steps") || lcPath.endsWith("environment.py")) {
+          config.reloadSettings(projSettings.uri);
+          parser.parseFilesForWorkspace(projUri, testData, ctrl, "OnDidCreate", false);
+          return;
+        }
+        updater(uri);
       }
-      updater(uri);
+      catch (e: unknown) {
+        // entry point function (handler) - show error
+        config.logger.showError(e, projUri);
+      }
+
     });
 
     // fires on file save (inc. git actions)
-    watcher.onDidChange(uri => updater(uri));
+    watcher.onDidChange(uri => {
+      try {
+        const lcPath = uri.path.toLowerCase();
+        if (excludeExtension && lcPath.endsWith(excludeExtension))
+          return;
+
+        updater(uri);
+      }
+      catch (e: unknown) {
+        // entry point function (handler) - show error
+        config.logger.showError(e, projUri);
+      }
+    });
 
     // fires on either file/folder delete OR rename (inc. git actions)
     watcher.onDidDelete(uri => {
@@ -49,6 +64,8 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 
       try {
         const lcPath = uri.path.toLowerCase();
+        if (excludeExtension && lcPath.endsWith(excludeExtension))
+          return;
 
         // we want folders in our pattern to be watched as e.g. renaming a folder does not raise events for child 
         // files, but we cannot determine if this is a file or folder deletion as:
@@ -78,23 +95,33 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 
   const watchers: vscode.FileSystemWatcher[] = [];
 
-  // NOTE - for all watchers we use the pattern ** because we want watch our for 
-  // FOLDER changes, as well as changes to .feature and .py files
+  // watch for feature file changes anywhere because they may not exist when 
+  // we start up and we can't predict the folder name/structure they will be created in
+  const featureFilePattern = new vscode.RelativePattern(projUri, `**/*.feature`);
+  const featuresFileWatcher = vscode.workspace.createFileSystemWatcher(featureFilePattern);
+  watchers.push(featuresFileWatcher);
+  setEventHandlers(featuresFileWatcher);
+
   for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
-    const featureFolderPattern = new vscode.RelativePattern(projUri, `${relFeaturesPath}/**`);
-    const featuresFolderWatcher = vscode.workspace.createFileSystemWatcher(featureFolderPattern);
-    watchers.push(featuresFolderWatcher);
-    setEventHandlers(featuresFolderWatcher);
+    // watch for features-child steps files, e.g. features/steps or myfeatures/subfolder/steps
+    // (** pattern because we want watch our for FOLDER changes, as well as changes to .py files)
+    const featureStepsFolderPattern = new vscode.RelativePattern(projUri, `${relFeaturesPath}/**`);
+    const featuresStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(featureStepsFolderPattern);
+    watchers.push(featuresStepsFolderWatcher);
+    setEventHandlers(featuresStepsFolderWatcher, ".feature"); // exclude feature files (already watched by featuresFileWatcher)
   }
 
   for (const relStepsPath of projSettings.relativeStepsFoldersOutsideFeatureFolders) {
-    const stepsFolderPattern = new vscode.RelativePattern(projUri, `${relStepsPath}/**`);
-    const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
-    setEventHandlers(siblingStepsFolderWatcher);
-    watchers.push(siblingStepsFolderWatcher);
+    // watch for non-features-child steps files, e.g. ./steps or lib/mysteplib
+    // (** pattern because we want watch our for FOLDER changes, as well as changes to .py files)
+    const otherStepsFolderPattern = new vscode.RelativePattern(projUri, `${relStepsPath}/**`);
+    const otherStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(otherStepsFolderPattern);
+    setEventHandlers(otherStepsFolderWatcher);
+    watchers.push(otherStepsFolderWatcher);
   }
 
   for (const configFile of BEHAVE_CONFIG_FILES) {
+    // watch for behave config file changes
     const configFilePattern = new vscode.RelativePattern(projUri, `${configFile}`);
     const configFileWatcher = vscode.workspace.createFileSystemWatcher(configFilePattern);
     configFileWatcher.onDidCreate(behaveConfigChange);
