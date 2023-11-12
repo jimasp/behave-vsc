@@ -133,30 +133,24 @@ let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
   // NOTE: this function must be fast (ideally < 1ms) 
-  // so we'll default to returning a simple cached value
+  // so we'll default to returning a cached result
   if (!forceRefresh && workspaceFoldersWithFeatures)
     return workspaceFoldersWithFeatures;
 
   const start = performance.now();
   workspaceFoldersWithFeatures = [];
 
-  function hasFeaturesFolder(folder: vscode.WorkspaceFolder): boolean {
-    // check performance (diagLog below) if you change these functions
-    const configPaths = getProjectRelativeConfigPaths(folder.uri);
-    const featurePaths = getProjectRelativeFeaturePaths(folder.uri, configPaths);
-    return featurePaths.length > 0;
-  }
-
   const folders = vscode.workspace.workspaceFolders;
   if (!folders)
     throw "No workspace folders found";
 
   for (const folder of folders) {
-    if (hasFeaturesFolder(folder))
+    const featureFiles = findFilesSync(folder.uri, undefined, ".feature", true);
+    if (featureFiles.length === 1)
       workspaceFoldersWithFeatures.push(folder.uri);
   }
 
-  diagLog(`perf info: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
+  diagLog(`PERF: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   if (workspaceFoldersWithFeatures.length === 0) {
@@ -257,7 +251,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
 }
 
 export const getFeaturesUriForFeatureFileUri = (projSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
-  for (const relFeaturesPath of projSettings.relativeFeaturePaths) {
+  for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
     const featuresUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
       return featuresUri;
@@ -346,7 +340,9 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
 }
 
 
-export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string | undefined, extension: string): vscode.Uri[] {
+export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string | undefined, extension: string,
+  stopOnFirstMatch = false): vscode.Uri[] {
+
   const entries = fs.readdirSync(directory.fsPath);
   const results: vscode.Uri[] = [];
 
@@ -359,6 +355,8 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
     else {
       if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
         results.push(entryUri);
+        if (stopOnFirstMatch)
+          return results;
       }
     }
   }

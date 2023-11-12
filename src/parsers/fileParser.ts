@@ -96,6 +96,8 @@ export class FileParser {
   private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, controller: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
+    const projUri = projSettings.uri;
+
     diagLog("removing existing test nodes/items for workspace: " + projSettings.name);
     const items = getAllTestItems(projSettings.id, controller.items);
     for (const item of items) {
@@ -103,12 +105,12 @@ export class FileParser {
       controller.items.delete(item.id);
     }
 
-    deleteFeatureFilesSteps(projSettings.uri);
-    deleteStepMappings(projSettings.uri);
+    deleteFeatureFilesSteps(projUri);
+    deleteStepMappings(projUri);
 
     let processed = 0;
-    for (const relFeaturesPath of projSettings.relativeFeaturePaths) {
-      const featuresUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
+    for (const relFeaturesFolder of projSettings.relativeFeatureFolders) {
+      const featuresUri = vscode.Uri.joinPath(projUri, relFeaturesFolder);
       if (!fs.existsSync(featuresUri.fsPath)) {
         // e.g. user has deleted/renamed folder
         continue;
@@ -116,7 +118,7 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        config.logger.showWarn(`No feature files found in ${relFeaturesPath}`, projSettings.uri);
+        config.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)
@@ -139,18 +141,20 @@ export class FileParser {
   private _parseStepsFiles = async (projSettings: ProjectSettings, cancelToken: vscode.CancellationToken,
     caller: string): Promise<number> => {
 
+    const projUri = projSettings.uri;
+
     diagLog("removing existing steps for workspace: " + projSettings.name);
-    deleteStepFileSteps(projSettings.uri);
+    deleteStepFileSteps(projUri);
 
     let processed = 0;
-    const allRelStepsPaths = projSettings.relativeFeaturePaths.concat(projSettings.relativeStepsPathsOutsideFeaturePaths);
+    const allRelStepsPaths = projSettings.relativeFeatureFolders.concat(projSettings.relativeStepsFoldersOutsideFeatureFolders);
     for (const relStepsSearchPath of allRelStepsPaths) {
       let stepFiles: vscode.Uri[] = [];
-      const stepsSearchUri = vscode.Uri.joinPath(projSettings.uri, relStepsSearchPath);
+      const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
         continue;
 
-      if (projSettings.relativeFeaturePaths.includes(relStepsSearchPath))
+      if (projSettings.relativeFeatureFolders.includes(relStepsSearchPath))
         stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
       else
         stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
@@ -163,7 +167,7 @@ export class FileParser {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateStepsFromStepsFileContent(projSettings.uri, content, uri, caller);
+        await this._updateStepsFromStepsFileContent(projUri, content, uri, caller);
         processed++;
       }
 
@@ -262,7 +266,7 @@ export class FileParser {
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (!sfp.includes("/") && projSettings.relativeFeaturePaths.length > 1) {
+    if (!sfp.includes("/") && projSettings.relativeFeatureFolders.length > 1) {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
     }
     else {
@@ -525,7 +529,7 @@ export class FileParser {
       `\nPERF: Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
       `\nPERF: Breakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
-      `\nPERF: Ignore times if any of these are true:` +
+      `\nPERF: NOTE: Ignore parseFile times if any of these are true:` +
       `\nPERF:   (a) time taken was during vscode startup contention, ` +
       `\nPERF:   (b) busy cpu due to background processes, ` +
       `\nPERF:   (c) another test extension is also refreshing, ` +

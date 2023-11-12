@@ -39,7 +39,7 @@ export class TestResult implements ITestResult {
 
 export function applyTestConfiguration(projSettings: ProjectSettings, expectedResults: TestResult[]) {
   expectedResults.forEach((expectedResult, index, returnResults) => {
-    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", projSettings.relativeFeaturePaths);
+    const json = JSON.stringify(expectedResult).replaceAll("{{featurePath}}", projSettings.relativeFeatureFolders);
     returnResults[index] = JSON.parse(json);
   });
 

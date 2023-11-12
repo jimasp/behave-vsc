@@ -11,7 +11,8 @@ import {
   findFilesSync,
   BEHAVE_CONFIG_FILES
 } from './common';
-import { Logger } from './logger';
+import { Logger, diagLog } from './logger';
+import { performance } from 'perf_hooks';
 
 
 
@@ -99,8 +100,8 @@ export class ProjectSettings {
   public readonly name: string;
   public readonly relativeBaseDirPath: string = "";
   public readonly relativeConfigPaths: string[] = [];
-  public readonly relativeFeaturePaths: string[] = [];
-  public readonly relativeStepsPathsOutsideFeaturePaths: string[] = [];
+  public readonly relativeFeatureFolders: string[] = [];
+  public readonly relativeStepsFoldersOutsideFeatureFolders: string[] = [];
   // internal
   private readonly _fatalErrors: string[] = [];
 
@@ -152,197 +153,15 @@ export class ProjectSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    this.relativeConfigPaths = this._getProjectRelativeConfigPaths(this.uri);
-
-    // base dir is a concept borrowed from behave's source code
-    // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)    
-    const baseDirPath = this._getRelativeBaseDirPath(this, this.relativeConfigPaths, logger);
-    if (baseDirPath === null) {
-      // e.g. an empty workspace folder
-      return;
-    }
-
-    this.relativeBaseDirPath = baseDirPath;
-    if (!this.relativeConfigPaths.includes(baseDirPath))
-      this.relativeConfigPaths.push(baseDirPath);
-
-    this.relativeFeaturePaths = this._getProjectRelativeFeaturePaths(this.uri, this.relativeConfigPaths);
-
-    if (!this.relativeFeaturePaths.includes(this.relativeBaseDirPath)) {
-      // (doesn't matter if this path exists or not)
-      this.relativeStepsPathsOutsideFeaturePaths.push(path.join(this.relativeBaseDirPath, "steps"));
-    }
-
-    this.relativeStepsPathsOutsideFeaturePaths.push(...this._getStepLibraryStepPaths(this.stepLibraries, logger, projUri));
+    const projRelPaths = getProjectRelativePaths(projUri, this.stepLibraries, logger);
+    if (!projRelPaths)
+      return; // empty workspace folder - TODO can this happen? shouldn't getWorkspaceFoldersWithFeatures() filter this out?
+    this.relativeBaseDirPath = projRelPaths?.relativeBaseDirPath;
+    this.relativeConfigPaths = projRelPaths?.relativeConfigPaths;
+    this.relativeFeatureFolders = projRelPaths?.relativeFeatureFolders;
+    this.relativeStepsFoldersOutsideFeatureFolders = projRelPaths?.relativeStepsFoldersOutsideFeatureFolders;
 
     this._logSettings(logger, winSettings);
-  }
-
-
-  private _getRelativeBaseDirPath(projSettings: ProjectSettings, relativeConfigPaths: string[], logger: Logger): string | null {
-    // NOTE: this function MUST have basically the same logic as the 
-    // behave source code function "setup_paths()".
-    // if that function changes in behave, then it is likely this will also have to change.  
-    let base_dir;
-
-    if (relativeConfigPaths.length > 0)
-      base_dir = relativeConfigPaths[0];
-    else
-      base_dir = "features";
-
-
-    const project_parent_dir = path.dirname(projSettings.uri.fsPath);
-    let new_base_dir = path.join(projSettings.uri.fsPath, base_dir);
-    const steps_dir = "steps";
-    const environment_file = "environment.py";
-
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      if (fs.existsSync(path.join(new_base_dir, steps_dir)))
-        break;
-      if (fs.existsSync(path.join(new_base_dir, environment_file)))
-        break;
-      if (new_base_dir === project_parent_dir)
-        break;
-
-      new_base_dir = path.dirname(new_base_dir);
-    }
-
-    if (new_base_dir === project_parent_dir) {
-      if (relativeConfigPaths.length > 0) {
-        logger.showWarn(`Could not find "${steps_dir}" directory. Please specify "paths" in your behave configuration.`,
-          projSettings.uri);
-      }
-      return null;
-    }
-
-    return path.relative(projSettings.uri.fsPath, new_base_dir);
-  }
-
-
-
-  private _getProjectRelativeConfigPaths = (projUri: vscode.Uri): string[] => {
-
-    // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function
-
-    const projectRelativeConfigPaths: string[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let config: { [key: string]: any; } | undefined = undefined;
-    let section = "behave";
-    // match order of preference in behave source "config_filenames()" function
-    for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
-      const file = path.join(projUri.fsPath, configFile);
-      if (fs.existsSync(file)) {
-        if (configFile === "pyproject.toml")
-          section = "tool.behave";
-        config = configParser(file)
-        break;
-      }
-    }
-
-    if (config) {
-      let configPaths = config[section]?.paths;
-      if (configPaths) {
-        if (typeof configPaths === "string")
-          configPaths = [configPaths];
-        configPaths.forEach((path: string) => {
-          path = path.replace(projUri.fsPath, "");
-          path = normaliseUserSuppliedRelativePath(path);
-          projectRelativeConfigPaths.push(path);
-        });
-      }
-    }
-
-    return projectRelativeConfigPaths
-  }
-
-
-
-  private _getProjectRelativeFeaturePaths = (projUri: vscode.Uri, projectRelativeConfigPaths: string[]): string[] => {
-
-    // NOTE: check performance of getUrisOfWkspFoldersWithFeatures if you change this function  
-
-    const allFeatureRelPaths: string[] = [];
-    for (const fPath of projectRelativeConfigPaths) {
-      const featureUri = findFilesSync(projUri, fPath, ".feature");
-      const relPaths = featureUri.map(featureUri => path.relative(projUri.fsPath, path.dirname(featureUri.fsPath)).replace(/\\/g, "/"));
-      allFeatureRelPaths.push(...relPaths);
-    }
-    /* 
-    we want the longest common .feature paths, such that this structure:
-      my_project
-      └── tests
-          ├── pytest
-          │    └── unittest.py    
-          ├── features
-          │   ├── a.feature
-          │   └── web
-          │       └── a.feature
-          └── features2
-              └── a.feature
-  
-    will return:
-      "tests/features"
-      "tests/features2"
-    */
-    const longestCommonPaths = findLongestCommonPaths(allFeatureRelPaths);
-
-    // default to watching for features path
-    // TODO: check if this works, i.e. if the watch works on it being created
-    if (longestCommonPaths.length === 0)
-      longestCommonPaths.push("features");
-
-    return longestCommonPaths;
-  }
-
-
-
-  private _getStepLibraryStepPaths(requestedStepLibraries: StepLibrariesSetting, logger: Logger, projUri: vscode.Uri): string[] {
-
-    const stepLibraryPaths: string[] = [];
-
-    for (const stepLibrary of requestedStepLibraries) {
-      const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
-      const stepFilesRx = stepLibrary.stepFilesRx;
-
-      if (!relativePath) {
-        // the path is required as it is used to set the watcher path
-        logger.showWarn('step library path specified in "behave-vsc.stepLibraries" cannot be an empty ' +
-          'string and will be ignored', this.uri);
-        continue;
-      }
-
-      // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folder
-      const rxPath = relativePath + "/" + stepFilesRx;
-      const lowerRelativePath = relativePath.toLowerCase();
-      let rxMatch = false;
-      for (const relStepSearchPath of this.relativeStepsPathsOutsideFeaturePaths) {
-        if (RegExp(rxPath).test(relStepSearchPath)) {
-          rxMatch = true;
-          break;
-        }
-      }
-      if (rxMatch
-        || this.relativeStepsPathsOutsideFeaturePaths.includes(relativePath)
-        // check standard paths even if they are not currently in use    
-        || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
-        logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
-          "because it is a known steps path).", this.uri);
-        continue;
-      }
-
-      const folderUri = vscode.Uri.joinPath(projUri, relativePath);
-      if (!fs.existsSync(folderUri.fsPath)) {
-        logger.showWarn(`step library path "${folderUri.fsPath}" specified in "behave-vsc.stepLibraries" not found ` +
-          `and will be ignored`, this.uri);
-      }
-      else {
-        stepLibraryPaths.push(relativePath);
-      }
-    }
-
-    return stepLibraryPaths;
   }
 
 
@@ -359,9 +178,9 @@ export class ProjectSettings {
     });
 
     // build sorted output dict of resource settings
-    const filterprojSettings = ["envVarOverrides", "justMyCode", "runParallel", "stepLibraries"];
+    const userSettableProjSettings = ["envVarOverrides", "justMyCode", "runParallel", "stepLibraries"];
     let projEntries = Object.entries(this).sort();
-    projEntries = projEntries.filter(([key]) => filterprojSettings.includes(key));
+    projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
     projEntries = projEntries.sort();
     const resourceSettingsDic: { [name: string]: string; } = {};
     projEntries.forEach(([key, value]) => {
@@ -385,8 +204,6 @@ export class ProjectSettings {
   }
 
 }
-
-
 
 
 
@@ -451,3 +268,202 @@ function configParser(filePath: string): { [key: string]: any; } {
   return config;
 }
 
+
+
+
+function getProjectRelativePaths(projUri: vscode.Uri, stepLibraries: StepLibrariesSetting, logger: Logger) {
+  const relativeConfigPaths = getProjectRelativeConfigPaths(projUri);
+
+  // base dir is a concept borrowed from behave's source code
+  // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        
+  const baseDirPath = getRelativeBaseDirPath(projUri, relativeConfigPaths, logger);
+  if (baseDirPath === null) {
+    // e.g. an empty workspace folder
+    return;
+  }
+
+  const relativeBaseDirPath = baseDirPath;
+  if (!relativeConfigPaths.includes(baseDirPath))
+    relativeConfigPaths.push(baseDirPath);
+
+  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri);
+
+  const relativeStepsFoldersOutsideFeatureFolders: string[] = [];
+  if (!relativeFeatureFolders.includes(relativeBaseDirPath)) {
+    // (doesn't matter if this path exists or not)
+    relativeStepsFoldersOutsideFeatureFolders.push(path.join(relativeBaseDirPath, "steps"));
+  }
+
+  relativeStepsFoldersOutsideFeatureFolders.push(
+    ...getStepLibraryStepPaths(projUri, stepLibraries, relativeStepsFoldersOutsideFeatureFolders, logger));
+
+  return {
+    relativeConfigPaths,
+    relativeBaseDirPath,
+    relativeFeatureFolders,
+    relativeStepsFoldersOutsideFeatureFolders
+  };
+}
+
+
+function getRelativeBaseDirPath(projUri: vscode.Uri, relativeConfigPaths: string[], logger: Logger): string | null {
+  // NOTE: this function MUST have basically the same logic as the 
+  // behave source code function "setup_paths()".
+  // if that function changes in behave, then it is likely this will also have to change.  
+  let base_dir;
+
+  if (relativeConfigPaths.length > 0)
+    base_dir = relativeConfigPaths[0];
+  else
+    base_dir = "features";
+
+
+  const project_parent_dir = path.dirname(projUri.fsPath);
+  let new_base_dir = path.join(projUri.fsPath, base_dir);
+  const steps_dir = "steps";
+  const environment_file = "environment.py";
+
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    if (fs.existsSync(path.join(new_base_dir, steps_dir)))
+      break;
+    if (fs.existsSync(path.join(new_base_dir, environment_file)))
+      break;
+    if (new_base_dir === project_parent_dir)
+      break;
+
+    new_base_dir = path.dirname(new_base_dir);
+  }
+
+  if (new_base_dir === project_parent_dir) {
+    if (relativeConfigPaths.length > 0) {
+      logger.showWarn(`Could not find "${steps_dir}" directory. Please specify "paths" in your behave configuration.`,
+        projUri);
+    }
+    return null;
+  }
+
+  return path.relative(projUri.fsPath, new_base_dir);
+}
+
+
+
+function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
+  const projectRelativeConfigPaths: string[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let config: { [key: string]: any; } | undefined = undefined;
+  let section = "behave";
+  // match order of preference in behave source "config_filenames()" function
+  for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+    const file = path.join(projUri.fsPath, configFile);
+    if (fs.existsSync(file)) {
+      if (configFile === "pyproject.toml")
+        section = "tool.behave";
+      config = configParser(file)
+      break;
+    }
+  }
+
+  if (config) {
+    let configPaths = config[section]?.paths;
+    if (configPaths) {
+      if (typeof configPaths === "string")
+        configPaths = [configPaths];
+      configPaths.forEach((path: string) => {
+        path = path.replace(projUri.fsPath, "");
+        path = normaliseUserSuppliedRelativePath(path);
+        projectRelativeConfigPaths.push(path);
+      });
+    }
+  }
+
+  return projectRelativeConfigPaths
+}
+
+
+
+function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
+  const start = performance.now();
+  const featureUris = findFilesSync(projUri, undefined, ".feature");
+  const relFeaturePaths = featureUris.map(featureUri => vscode.workspace.asRelativePath(path.dirname(featureUri.fsPath)));
+
+  /* 
+  we want the longest common .feature paths, such that this structure:
+    my_project
+    └── tests
+        ├── pytest
+        │    └── unittest.py    
+        ├── features
+        │   ├── a.feature
+        │   └── web
+        │       └── a.feature
+        └── features2
+            └── a.feature
+
+  will return:
+    "tests/features"
+    "tests/features2"
+  */
+  const longestCommonPaths = findLongestCommonPaths(relFeaturePaths);
+
+  // default to watching for features path
+  // TODO: check if this works, i.e. if the watch works on it being created
+  if (longestCommonPaths.length === 0)
+    longestCommonPaths.push("features");
+
+  diagLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
+
+  return longestCommonPaths;
+}
+
+
+
+function getStepLibraryStepPaths(projUri: vscode.Uri, requestedStepLibraries: StepLibrariesSetting,
+  relativeStepsFoldersOutsideFeatureFolders: string[], logger: Logger): string[] {
+
+  const stepLibraryPaths: string[] = [];
+
+  for (const stepLibrary of requestedStepLibraries) {
+    const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
+    const stepFilesRx = stepLibrary.stepFilesRx;
+
+    if (!relativePath) {
+      // the path is required as it is used to set the watcher path
+      logger.showWarn('step library path specified in "behave-vsc.stepLibraries" cannot be an empty ' +
+        'string and will be ignored', projUri);
+      continue;
+    }
+
+    // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folder
+    const rxPath = relativePath + "/" + stepFilesRx;
+    const lowerRelativePath = relativePath.toLowerCase();
+    let rxMatch = false;
+    for (const relStepSearchPath of relativeStepsFoldersOutsideFeatureFolders) {
+      if (RegExp(rxPath).test(relStepSearchPath)) {
+        rxMatch = true;
+        break;
+      }
+    }
+    if (rxMatch
+      || relativeStepsFoldersOutsideFeatureFolders.includes(relativePath)
+      // check standard paths even if they are not currently in use    
+      || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
+      logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
+        "because it is a known steps path).", projUri);
+      continue;
+    }
+
+    const folderUri = vscode.Uri.joinPath(projUri, relativePath);
+    if (!fs.existsSync(folderUri.fsPath)) {
+      logger.showWarn(`step library path "${folderUri.fsPath}" specified in "behave-vsc.stepLibraries" not found ` +
+        `and will be ignored`, projUri);
+    }
+    else {
+      stepLibraryPaths.push(relativePath);
+    }
+  }
+
+  return stepLibraryPaths;
+}

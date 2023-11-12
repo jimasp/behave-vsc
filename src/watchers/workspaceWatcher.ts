@@ -64,7 +64,7 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
         }
 
         if (lcPath.endsWith("/steps") || lcPath.endsWith("environment.py"))
-          config.reloadSettings(projSettings.uri);
+          config.reloadSettings(projUri);
 
         parser.parseFilesForWorkspace(projUri, testData, ctrl, "OnDidDelete", false);
       }
@@ -80,28 +80,32 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 
   // NOTE - for all watchers we use the pattern ** because we want watch our for 
   // FOLDER changes, as well as changes to .feature and .py files
-  for (const relFeaturesPath of projSettings.relativeFeaturePaths) {
-    const featureFolderPattern = new vscode.RelativePattern(projSettings.uri, `${relFeaturesPath}/**`);
+  for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
+    const featureFolderPattern = new vscode.RelativePattern(projUri, `${relFeaturesPath}/**`);
     const featuresFolderWatcher = vscode.workspace.createFileSystemWatcher(featureFolderPattern);
     watchers.push(featuresFolderWatcher);
     setEventHandlers(featuresFolderWatcher);
   }
 
-  for (const relStepsPath of projSettings.relativeStepsPathsOutsideFeaturePaths) {
-    const stepsFolderPattern = new vscode.RelativePattern(projSettings.uri, `${relStepsPath}/**`);
+  for (const relStepsPath of projSettings.relativeStepsFoldersOutsideFeatureFolders) {
+    const stepsFolderPattern = new vscode.RelativePattern(projUri, `${relStepsPath}/**`);
     const siblingStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(stepsFolderPattern);
     setEventHandlers(siblingStepsFolderWatcher);
     watchers.push(siblingStepsFolderWatcher);
   }
 
-
   for (const configFile of BEHAVE_CONFIG_FILES) {
-    const configFilePattern = new vscode.RelativePattern(projSettings.uri, `${configFile}`);
+    const configFilePattern = new vscode.RelativePattern(projUri, `${configFile}`);
     const configFileWatcher = vscode.workspace.createFileSystemWatcher(configFilePattern);
-    configFileWatcher.onDidCreate(() => config.reloadSettings(projSettings.uri));
-    configFileWatcher.onDidChange(() => config.reloadSettings(projSettings.uri));
-    configFileWatcher.onDidDelete(() => config.reloadSettings(projSettings.uri));
+    configFileWatcher.onDidCreate(behaveConfigChange);
+    configFileWatcher.onDidChange(behaveConfigChange);
+    configFileWatcher.onDidDelete(behaveConfigChange);
     watchers.push(configFileWatcher);
+  }
+
+  function behaveConfigChange() {
+    config.reloadSettings(projUri);
+    parser.parseFilesForWorkspace(projUri, testData, ctrl, "behaveConfigChange", false);
   }
 
   return watchers;
