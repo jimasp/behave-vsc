@@ -43,7 +43,10 @@ export function getStepMappings(projUri: vscode.Uri): StepMapping[] {
 }
 
 
-export function deleteStepMappings(projUri: vscode.Uri) {
+export function clearStepMappings(projUri: vscode.Uri) {
+  // note that this just deletes the mappings, it does not delete stepFileSteps or featureFileSteps.
+  // (the deletion functions deleteStepFileSteps and deleteFeatureFilesSteps are called 
+  // as needed from _parseStepsFiles and _parseFeatureFiles respectively)
   stepMappings = stepMappings.filter(sm => !urisMatch(sm.projUri, projUri));
 }
 
@@ -62,7 +65,7 @@ export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.
 export function rebuildStepMappings(projUri: vscode.Uri): number {
 
   const start = performance.now();
-  deleteStepMappings(projUri);
+  clearStepMappings(projUri);
 
   // get filtered objects before we loop
   const { featureFileSteps, exactSteps, paramsSteps } = _getFilteredSteps(projUri);

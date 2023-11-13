@@ -11,7 +11,7 @@ import {
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileSteps } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
-import { deleteStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
+import { clearStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
 
 
 // for integration test assertions      
@@ -106,7 +106,7 @@ export class FileParser {
     }
 
     deleteFeatureFilesSteps(projUri);
-    deleteStepMappings(projUri);
+    clearStepMappings(projUri);
 
     let processed = 0;
     for (const relFeaturesFolder of projSettings.relativeFeatureFolders) {
