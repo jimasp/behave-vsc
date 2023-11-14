@@ -23,7 +23,7 @@ export class SharedWorkspaceTests {
 
     // default = everything undefined
     const testConfig = new TestWorkspaceConfig({
-      runParallel: undefined, multiRootRunWorkspacesInParallel: undefined,
+      runParallel: undefined, multiRootProjectsRunInParallel: undefined,
       envVarOverrides: undefined, featuresPath: undefined,
       justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: undefined
     });
@@ -47,7 +47,7 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: false, multiRootRunWorkspacesInParallel: true,
+      runParallel: false, multiRootProjectsRunInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
@@ -71,7 +71,7 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: true, multiRootRunWorkspacesInParallel: true,
+      runParallel: true, multiRootProjectsRunInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
@@ -94,7 +94,7 @@ export class SharedWorkspaceTests {
   ) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: true, multiRootRunWorkspacesInParallel: true,
+      runParallel: true, multiRootProjectsRunInParallel: true,
       envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: true
     });

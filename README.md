@@ -9,8 +9,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run or Debug behave tests, either from the test explorer or from inside a feature file.
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-  - Select to run tests with tags and/or environment variables via run profiles.
-  - See failed test run result inside the feature file. (Full run results are available in the Behave VSC output window.)
+  - Select to run tests with tags and/or environment variables via run profiles (inc. ad-hoc).
+  - See failed test run result inside the feature file. (Full behave output is available in the Behave VSC output window.)
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
@@ -21,13 +21,13 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Extensive run customisation settings (e.g. `runParallel`, `envVarOverrides`, run profiles for per-run settings, etc.)
+- Extensive customisation settings (e.g. `runParallel`, `envVarOverrides`, run profiles for per-run settings, etc.)
 
 ---
 
 ## Terminology
 
-- In this readme, "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+- "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
 
 ## Workspace requirements
 
@@ -270,7 +270,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Troubleshooting
 
-### If you have used a previous version of this extension, and a new version has created a problem
+### If you have used a previous version of this extension (or a previous version of vscode), and a new version has created a problem
 
 - Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). (Please note that choosing a specific version will stop the extension from upgrading in future, so you will need to manually upgrade to a newer version when the issue has been fixed.)
   
@@ -278,13 +278,15 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Does your project meet the [workspace requirements](#workspace-requirements) and have a [compatible project directory structure](#compatible-project-directory-structures)?
 
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
+
 - Make sure the `paths` setting in your behave configuration file is correct.
 
-- Does refreshing the Test explorer, or restarting vscode solve your issue?
+- Does refreshing the Test explorer solve your issue?
+
+- Does restarting vscode solve your issue?
 
 - Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
-
-- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 
@@ -306,7 +308,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 
-- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects) . It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own.)
+- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects). It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own.)
 
 ---
 
@@ -322,7 +324,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
   
-  - b. Do not to use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
+  - b. Do not use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
 
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 

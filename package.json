@@ -32,18 +32,18 @@
 					"markdownDescription": "If set to false (disabled), the debugger will step into external code when debugging a behave test.",
 					"default": true
 				},
-				"behave-vsc.multiRootRunProjectsInParallel": {
+				"behave-vsc.multiRootProjectsRunInParallel": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "For multi-root workspaces only. If enabled, then when behave tests are run from more than one workspace, behave tests from those projects are run at the same time. This setting should be in your `*.code-workspace` file.",
+					"markdownDescription": "For multi-root workspaces only. If enabled, then when behave tests are started for more than one project, they are run at the same time. This setting should be in your `*.code-workspace` file.",
 					"default": true
 				},
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "This setting is deprecated. Please use the new setting multiRootRunProjectsInParallel.",
+					"markdownDescription": "This setting is deprecated. Please use the new setting multiRootProjectsRunInParallel.",
 					"default": true,
-					"deprecationMessage": "This setting is deprecated. Please use the new setting multiRootRunProjectsInParallel."
+					"deprecationMessage": "This setting is deprecated. Please use the new setting multiRootProjectsRunInParallel."
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",

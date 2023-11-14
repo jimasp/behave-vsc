@@ -14,7 +14,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private envVarOverrides: { [name: string]: string } | undefined;
 	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
-	private multiRootRunWorkspacesInParallel: boolean | undefined;
+	private multiRootProjectsRunInParallel: boolean | undefined;
 	private runParallel: boolean | undefined;
 	private stepLibraries: StepLibrariesSetting | undefined;
 	private runProfiles: RunProfilesSetting | undefined;
@@ -23,13 +23,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
 		envVarOverrides, featuresPath: featuresPath, justMyCode,
-		multiRootRunWorkspacesInParallel,
+		multiRootProjectsRunInParallel,
 		runParallel, stepLibraries, runProfiles, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
 		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
-		multiRootRunWorkspacesInParallel: boolean | undefined,
+		multiRootProjectsRunInParallel: boolean | undefined,
 		runParallel: boolean | undefined,
 		stepLibraries: StepLibrariesSetting | undefined,
 		runProfiles: RunProfilesSetting | undefined,
@@ -39,7 +39,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.featuresPath = featuresPath;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
-		this.multiRootRunWorkspacesInParallel = multiRootRunWorkspacesInParallel;
+		this.multiRootProjectsRunInParallel = multiRootProjectsRunInParallel;
 		this.stepLibraries = stepLibraries;
 		this.runProfiles = runProfiles;
 		this.xRay = xRay;
@@ -59,8 +59,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
 			case "featuresPath":
 				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
-			case "multiRootRunWorkspacesInParallel":
-				return <T><unknown>(this.multiRootRunWorkspacesInParallel === undefined ? true : this.multiRootRunWorkspacesInParallel);
+			case "multiRootProjectsRunInParallel":
+				return <T><unknown>(this.multiRootProjectsRunInParallel === undefined ? true : this.multiRootProjectsRunInParallel);
 			case "justMyCode":
 				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "runParallel":
@@ -97,8 +97,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "featuresPath":
 				response = <T><unknown>this.featuresPath;
 				break;
-			case "multiRootRunWorkspacesInParallel":
-				response = <T><unknown>this.multiRootRunWorkspacesInParallel;
+			case "multiRootProjectsRunInParallel":
+				response = <T><unknown>this.multiRootProjectsRunInParallel;
 				break;
 			case "runParallel":
 				response = <T><unknown>this.runParallel;
@@ -156,8 +156,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>getExpectedFeaturesUri();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
-			case "multiRootRunWorkspacesInParallel":
-				return <T><unknown>(this.get("multiRootRunWorkspacesInParallel"));
+			case "multiRootProjectsRunInParallel":
+				return <T><unknown>(this.get("multiRootProjectsRunInParallel"));
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
 			case "runProfiles":
