@@ -103,24 +103,24 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
   // steps files paths to be recalculated, e.g. see configurationChangedHandler)
   const featureFilePattern = new vscode.RelativePattern(projUri, `**/*.feature`);
   const featuresFileWatcher = vscode.workspace.createFileSystemWatcher(featureFilePattern);
-  watchers.push(featuresFileWatcher);
   setEventHandlers(featuresFileWatcher);
+  watchers.push(featuresFileWatcher);
 
   for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
     // watch for features-child steps files, e.g. features/steps or myfeatures/subfolder/steps
-    // (** pattern because we want watch our for FOLDER changes, as well as changes to steps (.py) files)
+    // (** pattern to watch for FOLDER changes, as well as changes to steps (.py) files)
     const featureStepsFolderPattern = new vscode.RelativePattern(projUri, `${relFeaturesPath}/**`);
     const featuresStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(featureStepsFolderPattern);
-    watchers.push(featuresStepsFolderWatcher);
     setEventHandlers(featuresStepsFolderWatcher, ".feature"); // exclude feature files (already watched by featuresFileWatcher)
+    watchers.push(featuresStepsFolderWatcher);
   }
 
   for (const relStepsPath of projSettings.relativeStepsFoldersOutsideFeatureFolders) {
     // watch for non-features-child steps files, e.g. ./steps or ./lib/mysteplib
-    // (** pattern because we want watch our for FOLDER changes, as well as changes to steps (.py) files)
+    // (** pattern to watch for FOLDER changes, as well as changes to steps (.py) files)
     const otherStepsFolderPattern = new vscode.RelativePattern(projUri, `${relStepsPath}/**`);
     const otherStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(otherStepsFolderPattern);
-    setEventHandlers(otherStepsFolderWatcher);
+    setEventHandlers(otherStepsFolderWatcher, ".feature"); // exclude feature files (shouldn't be any and already watched)
     watchers.push(otherStepsFolderWatcher);
   }
 
