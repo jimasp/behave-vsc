@@ -45,7 +45,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - If you have an `environment.py` file, then it must be at the same level as the `steps` folder.  
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
-  - Note - in the below examples the behave configuration file is `behave.ini`, but you can also use `pyproject.toml`, `.behaverc`, `setup.cfg`, or `tox.ini`.  
+  - (In the below examples the behave configuration file is `behave.ini`, but you can also use `pyproject.toml`, `.behaverc`, `setup.cfg`, or `tox.ini`.)
   
   - Example 1 - steps folder is a child of the features folder:
 

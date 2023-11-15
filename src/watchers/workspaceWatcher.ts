@@ -95,8 +95,12 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 
   const watchers: vscode.FileSystemWatcher[] = [];
 
-  // watch for feature file changes anywhere because they may not exist when 
-  // we start up and we can't predict the folder name/structure they will be created in
+  // watch for feature file changes anywhere because although one feature file must exist somewhere for 
+  // the extension to be acivated we cannot use that as a watch path, because after startup stuff can 
+  // be moved around, e.g. a features folder could be renamed, or another top-level features folder could 
+  // be created that did not exist on start up etc. and we can't predict the folder name/structure they will be created in.
+  // this watcher will trigger events as required to rediscover feature files (these events will also cause 
+  // steps files paths to be recalculated, e.g. see configurationChangedHandler)
   const featureFilePattern = new vscode.RelativePattern(projUri, `**/*.feature`);
   const featuresFileWatcher = vscode.workspace.createFileSystemWatcher(featureFilePattern);
   watchers.push(featuresFileWatcher);
@@ -104,7 +108,7 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 
   for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
     // watch for features-child steps files, e.g. features/steps or myfeatures/subfolder/steps
-    // (** pattern because we want watch our for FOLDER changes, as well as changes to .py files)
+    // (** pattern because we want watch our for FOLDER changes, as well as changes to steps (.py) files)
     const featureStepsFolderPattern = new vscode.RelativePattern(projUri, `${relFeaturesPath}/**`);
     const featuresStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(featureStepsFolderPattern);
     watchers.push(featuresStepsFolderWatcher);
@@ -112,8 +116,8 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
   }
 
   for (const relStepsPath of projSettings.relativeStepsFoldersOutsideFeatureFolders) {
-    // watch for non-features-child steps files, e.g. ./steps or lib/mysteplib
-    // (** pattern because we want watch our for FOLDER changes, as well as changes to .py files)
+    // watch for non-features-child steps files, e.g. ./steps or ./lib/mysteplib
+    // (** pattern because we want watch our for FOLDER changes, as well as changes to steps (.py) files)
     const otherStepsFolderPattern = new vscode.RelativePattern(projUri, `${relStepsPath}/**`);
     const otherStepsFolderWatcher = vscode.workspace.createFileSystemWatcher(otherStepsFolderPattern);
     setEventHandlers(otherStepsFolderWatcher);

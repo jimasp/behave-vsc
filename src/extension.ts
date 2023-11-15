@@ -120,7 +120,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
-        await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", false, cancelToken);
+        for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
+          config.reloadSettings(projUri);
+          await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", false, cancelToken);
+        }
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        

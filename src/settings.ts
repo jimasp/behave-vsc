@@ -153,9 +153,9 @@ export class ProjectSettings {
     this.justMyCode = justMyCodeCfg;
     this.runParallel = runParallelCfg;
 
-    const projRelPaths = getProjectRelativePaths(projUri, this.stepLibraries, logger);
+    const projRelPaths = getProjectRelativePaths(projUri, this.name, this.stepLibraries, logger);
     if (!projRelPaths)
-      return; // empty workspace folder - TODO can this happen? shouldn't getWorkspaceFoldersWithFeatures() filter this out?
+      return; // empty workspace folder - TODO can this happen? shouldn't getUrisOfWkspFoldersWithFeatures() filter this out?
     this.relativeBaseDirPath = projRelPaths.relativeBaseDirPath;
     this.relativeConfigPaths = projRelPaths.relativeConfigPaths;
     this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
@@ -271,12 +271,12 @@ function configParser(filePath: string): { [key: string]: any; } {
 
 
 
-function getProjectRelativePaths(projUri: vscode.Uri, stepLibraries: StepLibrariesSetting, logger: Logger) {
+function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibraries: StepLibrariesSetting, logger: Logger) {
   const relativeConfigPaths = getProjectRelativeConfigPaths(projUri);
 
   // base dir is a concept borrowed from behave's source code
   // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        
-  const relativeBaseDirPath = getRelativeBaseDirPath(projUri, relativeConfigPaths, logger);
+  const relativeBaseDirPath = getRelativeBaseDirPath(projUri, projName, relativeConfigPaths, logger);
   if (relativeBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
@@ -305,7 +305,7 @@ function getProjectRelativePaths(projUri: vscode.Uri, stepLibraries: StepLibrari
 }
 
 
-function getRelativeBaseDirPath(projUri: vscode.Uri, relativeConfigPaths: string[], logger: Logger): string | null {
+function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeConfigPaths: string[], logger: Logger): string | null {
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "setup_paths()".
   // if that function changes in behave, then it is likely this will also have to change.  
@@ -336,10 +336,8 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, relativeConfigPaths: string
   }
 
   if (new_base_dir === project_parent_dir) {
-    if (relativeConfigPaths.length > 0) {
-      logger.showWarn(`Could not find "${steps_dir}" directory. Please specify "paths" in your behave configuration.`,
-        projUri);
-    }
+    logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
+      'Please add missing steps directory or specify correct "paths" in your behave configuration for this project.', projUri);
     return null;
   }
 
@@ -386,9 +384,7 @@ function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
   const start = performance.now();
   const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
-  let relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
-  // disallow root folder as it should not contain feature files
-  relFeatureFolders = relFeatureFolders.filter(f => f !== "");
+  const relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
 
   /* 
   we want the longest common .feature paths, such that this structure:

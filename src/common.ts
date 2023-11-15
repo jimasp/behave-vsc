@@ -370,6 +370,9 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 
 
 export function findLongestCommonPaths(paths: string[]): string[] {
+  if (paths.length === 0)
+    return [];
+
   const commonFolderPaths: string[] = [paths[0]];
   let matched = false;
 
