@@ -13,8 +13,10 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
   try {
 
     if (!docUri || !isFeatureFile(docUri)) {
-      // this should never happen - command availability context is controlled by package.json editor/context
-      throw `Go to step definition must be used from a feature file, uri was: ${docUri}`;
+      // note that context menu command availability is controlled by the package.json editor/context "when" clause 
+      config.logger.showWarn("Go to step definition must be used from a feature file path. Relative file path was" +
+        `"${docUri ? vscode.workspace.asRelativePath(docUri) : "undefined"}`, getProjectUriForFile(docUri));
+      return;
     }
 
     const lineNo = textEditor.selection.active.line;

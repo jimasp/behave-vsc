@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES, isFeatureFile, isStepsFile } from '../common';
+import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common';
 import { config } from "../configuration";
 import { diagLog, DiagLogType } from '../logger';
 import { FileParser } from '../parsers/fileParser';

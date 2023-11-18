@@ -163,6 +163,9 @@ export class ProjectSettings {
     this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
     this.relativeStepsFolders = projRelPaths.relativeStepsFolders;
 
+    // setContext vars are used in package.json
+    vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.stepLibraries.length > 0);
+
     this._logSettings(logger, winSettings);
   }
 

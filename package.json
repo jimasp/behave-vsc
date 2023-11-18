@@ -150,7 +150,7 @@
 					"group": "navigation"
 				},
 				{
-					"when": "!isInEmbeddedEditor && editorTextFocus && resourcePath =~ /steps/ && resourceExtname =~ /\\.py$/",
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (bvsc_StepLibsActive || resourcePath =~ /steps/) ",
 					"command": "behave-vsc.findStepReferences",
 					"group": "navigation"
 				}

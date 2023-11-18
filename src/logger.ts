@@ -26,7 +26,7 @@ export class Logger {
     projPaths.forEach(projPath => {
       const name = projPath.split("/").pop();
       if (!name)
-        throw new Error("can't get workspace name from uri path");
+        throw new Error("can't get project name from uri path");
       this.channels[projPath] = vscode.window.createOutputChannel(`Behave VSC: ${name}`);
     });
   }
@@ -139,7 +139,7 @@ export class Logger {
       const wskpFolder = vscode.workspace.getWorkspaceFolder(projUri);
       if (wskpFolder) {
         const projName = wskpFolder?.name;
-        winText = `${projName} workspace: ${text}`;
+        winText = `${projName} project: ${text}`;
       }
     }
 
