@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { getProjectUriForFile, sepr, urisMatch } from '../common';
+import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common';
 import { parser } from '../extension';
 import { diagLog, DiagLogType } from '../logger';
-import { getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
-import { FeatureFileStep, getFeatureFilesSteps } from './featureParser';
+import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
+import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
@@ -39,14 +39,29 @@ export function getStepMappingsForStepsFileFunction(stepsFileUri: vscode.Uri, li
 
 
 export function getStepMappings(projUri: vscode.Uri): StepMapping[] {
-  return stepMappings.filter(sm => urisMatch(sm.projUri, projUri));
+  const projUriMatchString = uriId(projUri);
+  return stepMappings.filter(sm => uriId(sm.projUri) === projUriMatchString);
+}
+
+
+export function deleteStepsAndStepMappingsForStepsFile(stepsFileUri: vscode.Uri) {
+  const stepsFileUriMatchString = uriId(stepsFileUri);
+  stepMappings = stepMappings.filter(sm => uriId(sm.stepFileStep.uri) !== stepsFileUriMatchString);
+  deleteStepFilesStepsForFile(stepsFileUri);
+}
+
+
+export function deleteStepsAndStepMappingsForFeatureFile(featureFileUri: vscode.Uri) {
+  const featureFileUriMatchString = uriId(featureFileUri);
+  stepMappings = stepMappings.filter(sm => uriId(sm.featureFileStep.uri) !== featureFileUriMatchString);
+  deleteFeatureFilesStepsForFile(featureFileUri);
 }
 
 
 export function clearStepMappings(projUri: vscode.Uri) {
-  // note that this just deletes the mappings, it does not delete stepFileSteps or featureFileSteps.
-  // (the deletion functions deleteStepFileSteps and deleteFeatureFilesSteps are called 
-  // as needed from _parseStepsFiles and _parseFeatureFiles respectively)
+  // NOTE: this just deletes the mappings, it does NOT delete stepFileSteps or featureFileSteps.
+  // (for efficiency, the deletion functions deleteStepFileSteps and deleteFeatureFilesSteps are only called 
+  // when needed from _parseStepsFiles and _parseFeatureFiles respectively)
   stepMappings = stepMappings.filter(sm => !urisMatch(sm.projUri, projUri));
 }
 

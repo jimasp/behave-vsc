@@ -36,7 +36,16 @@ export function getStepFilesSteps(projUri: vscode.Uri, removeFileUriPrefix = tru
 }
 
 
-export function deleteStepFileSteps(projUri: vscode.Uri) {
+export function deleteStepFilesStepsForFile(stepsFileUri: vscode.Uri) {
+  const stepsFileUriMatchString = uriId(stepsFileUri);
+  const delEntries = [...stepFileSteps].filter(([, v]) => uriId(v.uri) === stepsFileUriMatchString);
+  for (const [key,] of delEntries) {
+    stepFileSteps.delete(key);
+  }
+}
+
+
+export function deleteStepFileStepsForProject(projUri: vscode.Uri) {
   const projStepFileSteps = getStepFilesSteps(projUri, false);
   for (const [key,] of projStepFileSteps) {
     stepFileSteps.delete(key);

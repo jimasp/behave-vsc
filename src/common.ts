@@ -19,6 +19,9 @@ export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-
 export const FOLDERNAME_CHARS_VALID_ON_ALLPLATFORMS = /[^ a-zA-Z0-9_.-]/g;
 export const BEHAVE_EXECUTION_ERROR_MESSAGE = "--- BEHAVE EXECUTION ERROR DETECTED ---"
 export const BEHAVE_CONFIG_FILES = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
+export const STEPS_FOLDERNAMES = [path.sep + "steps", path.sep + "*_steps"]; // *_steps = behave --stage steps folders
+export const STEPS_FOLDERNAMES_RX = new RegExp(STEPS_FOLDERNAMES.map(f => ".*" + f.replace("*", ".*") + path.sep + ".*").join('|'));
+
 
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));
@@ -144,6 +147,9 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
   if (!folders)
     throw "No workspace folders found";
 
+  if (folders.length === 1 && folders[0].name === "behave-vsc")
+    throw `Please disable the marketplace Behave VSC extension before beginning extension debugging!`;
+
   for (const folder of folders) {
     const featureFiles = findFilesSync(folder.uri, undefined, ".feature", true);
     if (featureFiles.length === 1)
@@ -152,11 +158,6 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
 
   diagLog(`PERF: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
-
-  if (workspaceFoldersWithFeatures.length === 0) {
-    if (folders.length === 1 && folders[0].name === "behave-vsc")
-      throw `Please disable the marketplace Behave VSC extension before beginning development!`;
-  }
 
   return workspaceFoldersWithFeatures;
 }
@@ -189,23 +190,19 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const findSubDirectorySync = (searchPath: string, targetDirName: string): string | null => {
-  const files = fs.readdirSync(searchPath);
-  for (const file of files) {
-    const filePath = path.join(searchPath, file);
-    const stats = fs.statSync(filePath);
-    if (stats.isDirectory()) {
-      if (file === targetDirName) {
-        return filePath;
-      } else {
-        const result = findSubDirectorySync(filePath, targetDirName);
-        if (result !== null) {
-          return result;
-        }
-      }
+export const getRelativeRxMatchingTopLevelSubdirectoriesSync = (searchFsPath: string, pathRegex: RegExp): string[] => {
+  const matchingSubdirectories: string[] = [];
+
+  const list = fs.readdirSync(searchFsPath);
+  for (const fileOrDir of list) {
+    const filePath = path.join(searchFsPath, fileOrDir);
+    if (fs.statSync(filePath).isDirectory() && pathRegex.test(filePath + path.sep)) {
+      const relPath = vscode.workspace.asRelativePath(filePath);
+      matchingSubdirectories.push(relPath);
     }
   }
-  return null;
+
+  return matchingSubdirectories;
 }
 
 
@@ -215,6 +212,14 @@ export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Pro
   const data = await vwfs.readFile(uri);
   return Buffer.from(data).toString('utf8');
 };
+
+
+export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
+  if (fileUri.scheme !== "file")
+    return false;
+  const lcPath = fileUri.path.toLowerCase();
+  return lcPath.endsWith(".feature");
+}
 
 
 export const isStepsFile = (fileUri: vscode.Uri): boolean => {
@@ -238,11 +243,10 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
     return stepLibMatch;
   }
 
-  if (!lcPath.includes("/steps/")) {
+  if (!STEPS_FOLDERNAMES_RX.test(lcPath)) {
     const projSettings = getProjectSettingsForFile(fileUri);
     const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
     const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
-
     if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
       return false;
   }
@@ -259,24 +263,28 @@ export const getFeaturesUriForFeatureFileUri = (projSettings: ProjectSettings, f
 }
 
 
-export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
-  if (fileUri.scheme !== "file")
-    return false;
-  const lcPath = fileUri.path.toLowerCase();
-  return lcPath.endsWith(".feature");
+export const deleteTestTreeNodes = (projId: string | null, testData: TestData, ctrl: vscode.TestController) => {
+  const items = getTestItems(projId, ctrl.items);
+  for (const item of items) {
+    ctrl.items.delete(item.id);
+  }
+  for (const key of testData.keys()) {
+    if (!projId || key.id.startsWith(projId))
+      testData.delete(key);
+  }
 }
 
 
-export const getAllTestItems = (projId: string | null, collection: vscode.TestItemCollection): vscode.TestItem[] => {
+export const getTestItems = (projId: string | null, testItems: vscode.TestItemCollection): vscode.TestItem[] => {
   const items: vscode.TestItem[] = [];
 
   // get all test items if projUri is null, or
-  // just the ones in the current workspace if projUri is supplied 
-  collection.forEach((item: vscode.TestItem) => {
-    if (projId === null || item.id.includes(projId)) {
+  // just the ones in the current project if projUri is supplied 
+  testItems.forEach((item: vscode.TestItem) => {
+    if (projId === null || item.id.startsWith(projId)) {
       items.push(item);
       if (item.children)
-        items.push(...getAllTestItems(projId, item.children));
+        items.push(...getTestItems(projId, item.children));
     }
   });
 
@@ -285,7 +293,7 @@ export const getAllTestItems = (projId: string | null, collection: vscode.TestIt
 
 
 export const countTestItemsInCollection = (projId: string | null, testData: TestData, items: vscode.TestItemCollection): TestCounts => {
-  const arr = getAllTestItems(projId, items);
+  const arr = getTestItems(projId, items);
   return countTestItems(testData, arr);
 }
 
@@ -416,66 +424,5 @@ export function basename(uri: vscode.Uri) {
 
 export function getLines(text: string) {
   return text.split(/\r\n|\r|\n/);
-}
-
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function _configParser(filePath: string): { [key: string]: any; } {
-
-  const data = fs.readFileSync(filePath, 'utf-8');
-  const lines = data.split('\n');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config: { [key: string]: any } = {};
-  let currentSection = '';
-  let currentValue: string | string[] = '';
-  let currentKey = '';
-
-  let toml = false;
-  if (filePath.endsWith(".toml"))
-    toml = true;
-
-  for (let line of lines) {
-    line = line.trim();
-    if (line.startsWith('#') || line.startsWith(';'))
-      continue;
-
-    if (line.startsWith('[') && line.endsWith(']')) {
-      currentSection = line.slice(1, -1);
-      config[currentSection] = {};
-    }
-    else if (line.includes('=')) {
-      let [key, value] = line.split('=');
-      key = key.trim();
-      value = value.trim();
-      if (toml) {
-        if (value.startsWith("[") && value.endsWith("]")) {
-          const arr = value.split(",");
-          config[currentSection][key] = arr;
-          continue;
-        }
-      }
-      else {
-        currentValue = value;
-        currentKey = key;
-      }
-      config[currentSection][key] = value;
-    }
-    else {
-      if (toml)
-        continue;
-      if (line.length > 0) {
-        const arr: string[] = [];
-        if (currentValue instanceof Array)
-          arr.push(...currentValue);
-        else
-          arr.push(currentValue);
-        arr.push(line);
-        currentValue = arr;
-        config[currentSection][currentKey] = arr;
-      }
-    }
-  }
-
-  return config;
 }
 

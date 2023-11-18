@@ -5,7 +5,7 @@ import { RunProfile, ProjectSettings } from "../settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
-  countTestItems, getAllTestItems, getContentFromFilesystem, uriId,
+  countTestItems, getTestItems, getContentFromFilesystem, uriId,
   getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
 } from '../common';
 import { QueueItem } from '../extension';
@@ -331,7 +331,7 @@ function allTestsForThisProjAreIncluded(request: vscode.TestRunRequest, projSett
     if (projGrandParentItemIncluded)
       allTestsForThisProjIncluded = true;
     else {
-      const allProjItems = getAllTestItems(projSettings.id, ctrl.items);
+      const allProjItems = getTestItems(projSettings.id, ctrl.items);
       const projTestCount = countTestItems(testData, allProjItems).testCount;
       allTestsForThisProjIncluded = request.include?.length === projTestCount;
     }

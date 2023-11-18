@@ -9,7 +9,9 @@ import {
   projError,
   findLongestCommonPaths,
   findFilesSync,
-  BEHAVE_CONFIG_FILES
+  BEHAVE_CONFIG_FILES,
+  getRelativeRxMatchingTopLevelSubdirectoriesSync,
+  STEPS_FOLDERNAMES_RX
 } from './common';
 import { Logger, diagLog } from './logger';
 import { performance } from 'perf_hooks';
@@ -101,7 +103,7 @@ export class ProjectSettings {
   public readonly relativeBaseDirPath: string = "";
   public readonly relativeConfigPaths: string[] = [];
   public readonly relativeFeatureFolders: string[] = [];
-  public readonly relativeStepsFoldersOutsideFeatureFolders: string[] = [];
+  public readonly relativeStepsFolders: string[] = [];
   // internal
   private readonly _fatalErrors: string[] = [];
 
@@ -159,7 +161,7 @@ export class ProjectSettings {
     this.relativeBaseDirPath = projRelPaths.relativeBaseDirPath;
     this.relativeConfigPaths = projRelPaths.relativeConfigPaths;
     this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
-    this.relativeStepsFoldersOutsideFeatureFolders = projRelPaths.relativeStepsFoldersOutsideFeatureFolders;
+    this.relativeStepsFolders = projRelPaths.relativeStepsFolders;
 
     this._logSettings(logger, winSettings);
   }
@@ -287,38 +289,39 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
 
   const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri);
 
-  const relativeStepsFoldersOutsideFeatureFolders: string[] = [];
-  if (!relativeFeatureFolders.includes(relativeBaseDirPath)) {
-    // (doesn't matter if this path exists or not)
-    relativeStepsFoldersOutsideFeatureFolders.push(path.join(relativeBaseDirPath, "steps"));
-  }
+  const baseDirFsPath = vscode.Uri.joinPath(projUri, relativeBaseDirPath).fsPath;
+  const relativeStepsFolders = getRelativeRxMatchingTopLevelSubdirectoriesSync(baseDirFsPath, STEPS_FOLDERNAMES_RX);
 
-  relativeStepsFoldersOutsideFeatureFolders.push(
-    ...getStepLibraryStepPaths(projUri, stepLibraries, relativeStepsFoldersOutsideFeatureFolders, logger));
+  relativeStepsFolders.push(
+    ...getStepLibraryStepPaths(projUri, stepLibraries, relativeStepsFolders, logger));
 
   return {
     relativeConfigPaths,
     relativeBaseDirPath,
     relativeFeatureFolders,
-    relativeStepsFoldersOutsideFeatureFolders
+    relativeStepsFolders
   };
 }
 
 
-function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeConfigPaths: string[], logger: Logger): string | null {
+function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveConfigRelativeConfigPaths: string[],
+  logger: Logger): string | null {
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "setup_paths()".
   // if that function changes in behave, then it is likely this will also have to change.  
-  let base_dir;
+  let baseDir;
 
-  if (relativeConfigPaths.length > 0)
-    base_dir = relativeConfigPaths[0];
+  // this function will determine the baseDir
+  // where baseDir = the directory that contains the "steps" folder / environment.py file
+
+  if (behaveConfigRelativeConfigPaths.length > 0)
+    baseDir = behaveConfigRelativeConfigPaths[0];
   else
-    base_dir = "features";
+    baseDir = "features";
 
 
-  const project_parent_dir = path.dirname(projUri.fsPath);
-  let new_base_dir = path.join(projUri.fsPath, base_dir);
+  const project_root_dir = path.dirname(projUri.fsPath);
+  let new_base_dir = path.join(projUri.fsPath, baseDir);
   const steps_dir = "steps";
   const environment_file = "environment.py";
 
@@ -329,15 +332,21 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeC
       break;
     if (fs.existsSync(path.join(new_base_dir, environment_file)))
       break;
-    if (new_base_dir === project_parent_dir)
+    if (new_base_dir === project_root_dir)
       break;
 
     new_base_dir = path.dirname(new_base_dir);
   }
 
-  if (new_base_dir === project_parent_dir) {
-    logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-      'Please add missing steps directory or specify correct "paths" in your behave configuration for this project.', projUri);
+  if (new_base_dir === project_root_dir) {
+    if (behaveConfigRelativeConfigPaths.length === 0) {
+      logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
+        'Please specify a "paths" setting in your behave configuration file for this project.', projUri);
+    }
+    else {
+      logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
+        `Using behave configuration path "${new_base_dir}".`, projUri);
+    }
     return null;
   }
 

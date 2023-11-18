@@ -8,7 +8,7 @@ import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
 import { ProjParseCounts } from '../../parsers/fileParser';
-import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
+import { getUrisOfWkspFoldersWithFeatures, getTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
 
@@ -87,7 +87,7 @@ function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri
 	const projSettings = config.projectSettings[projUri.path];
 	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), projName);
 	assert.strictEqual(projSettings.relativeFeatureFolders, testConfig.getExpected("relativeFeaturesFolders"), projName);
-	assert.strictEqual(projSettings.relativeStepsFoldersOutsideFeatureFolders, expectedRelativeStepsFoldersOutsideFeatureFolders, projName);
+	assert.strictEqual(projSettings.relativeStepsFolders, expectedRelativeStepsFoldersOutsideFeatureFolders, projName);
 	assert.strictEqual(projSettings.relativeBaseDirPath, expectedProjectRelativeBaseDirPath, projName);
 	const expectedFeaturesUri = testConfig.getExpected("featuresUri", projUri) as vscode.Uri;
 	assert.strictEqual(true, urisMatch(projSettings.featuresUris, expectedFeaturesUri), projName);
@@ -423,10 +423,10 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 		instances.config, expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
-	const actualCounts = await instances.parser.parseFilesForWorkspace(projUri, instances.testData, instances.ctrl,
+	const actualCounts = await instances.parser.parseFilesForProject(projUri, instances.testData, instances.ctrl,
 		"runAllTestsAndAssertTheResults", false);
 	assert(actualCounts, "actualCounts was undefined");
-	const allProjItems = getAllTestItems(projId, instances.ctrl.items);
+	const allProjItems = getTestItems(projId, instances.ctrl.items);
 	console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
 	assert(allProjItems.length > 0, "allProjItems.length was 0");
 	const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;

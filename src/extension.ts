@@ -18,12 +18,12 @@ import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForSteps
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
-import { startWatchingProject } from './watchers/workspaceWatcher';
+import { startWatchingProject } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './settings';
 
 
-const testData = new WeakMap<vscode.TestItem, BehaveTestData>();
+const testData = new Map<vscode.TestItem, BehaveTestData>();
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher[]>();
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
@@ -42,6 +42,11 @@ export type TestSupport = {
 };
 
 
+export function deactivate() {
+  // clean up any potentially large non-disposable objects (i.e. not handled by context.subscriptions)
+  testData.clear();
+}
+
 
 // construction function called on extension activation OR the first time a new/unrecognised workspace gets added.
 // - call anything that needs to be initialised/kicked off async on startup, and 
@@ -57,7 +62,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
-    parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "activate", true);
+    parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
 
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
@@ -70,6 +75,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     const junitWatcher = new JunitWatcher();
     junitWatcher.startWatchingJunitFolder();
+
 
     // any function contained in a context.subscriptions.push() will execute immediately, 
     // as well as registering the returned disposable object for a dispose() call on extension deactivation
@@ -122,7 +128,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       try {
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           config.reloadSettings(projUri);
-          await parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "refreshHandler", false, cancelToken);
+          await parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
         }
       }
       catch (e: unknown) {
@@ -220,14 +226,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel 
         // workspace integration test runs)
         if (testCfg) {
-          parser.parseFilesForWorkspace(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
+          parser.parseFilesForProject(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
         // to rebuild the top level nodes)
-        parser.clearTestItemsAndParseFilesForAllWorkspaces(testData, ctrl, "configurationChangedHandler", false);
+        parser.parseFilesForAllProjects(testData, ctrl, "configurationChangedHandler", false);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        

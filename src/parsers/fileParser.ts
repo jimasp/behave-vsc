@@ -3,15 +3,15 @@ import * as fs from 'fs';
 import { performance } from 'perf_hooks';
 import { config } from "../configuration";
 import { ProjectSettings } from "../settings";
-import { deleteFeatureFilesSteps, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
+import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, getAllTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesUriForFeatureFileUri
+  countTestItemsInCollection, getTestItems, uriId, getWorkspaceFolder,
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesUriForFeatureFileUri, deleteTestTreeNodes
 } from '../common';
-import { parseStepsFileContent, getStepFilesSteps, deleteStepFileSteps } from './stepsParser';
-import { TestData, TestFile } from './testFile';
+import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
+import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
-import { clearStepMappings, rebuildStepMappings, getStepMappings } from './stepMappings';
+import { clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile, deleteStepsAndStepMappingsForFeatureFile } from './stepMappings';
 
 
 // for integration test assertions      
@@ -93,19 +93,15 @@ export class FileParser {
   }
 
 
-  private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, controller: vscode.TestController,
+  private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
     const projUri = projSettings.uri;
 
-    diagLog("removing existing test nodes/items for workspace: " + projSettings.name);
-    const items = getAllTestItems(projSettings.id, controller.items);
-    for (const item of items) {
-      testData.delete(item);
-      controller.items.delete(item.id);
-    }
+    diagLog("removing existing test nodes/items for project: " + projSettings.name);
+    deleteTestTreeNodes(projSettings.id, testData, ctrl);
 
-    deleteFeatureFilesSteps(projUri);
+    deleteFeatureFilesStepsForProject(projUri);
     clearStepMappings(projUri);
 
     let processed = 0;
@@ -124,7 +120,7 @@ export class FileParser {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, controller, uri, caller, firstRun);
+        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, uri, caller, firstRun);
         processed++;
       }
 
@@ -144,11 +140,10 @@ export class FileParser {
     const projUri = projSettings.uri;
 
     diagLog("removing existing steps for workspace: " + projSettings.name);
-    deleteStepFileSteps(projUri);
+    deleteStepFileStepsForProject(projUri);
 
     let processed = 0;
-    const allRelStepsPaths = projSettings.relativeFeatureFolders.concat(projSettings.relativeStepsFoldersOutsideFeatureFolders);
-    for (const relStepsSearchPath of allRelStepsPaths) {
+    for (const relStepsSearchPath of projSettings.relativeStepsFolders) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
@@ -290,7 +285,7 @@ export class FileParser {
           current = parent.children.get(folderTestItemId);
 
         if (!current) { // TODO: move getAllTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getAllTestItems(projSettings.id, controller.items);
+          const allTestItems = getTestItems(projSettings.id, controller.items);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
 
@@ -327,7 +322,7 @@ export class FileParser {
   }
 
 
-  async clearTestItemsAndParseFilesForAllWorkspaces(testData: TestData, ctrl: vscode.TestController,
+  async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
     intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
 
     this._finishedFeaturesParseForAllWorkspaces = false;
@@ -335,24 +330,20 @@ export class FileParser {
 
     // this function is called e.g. when a workspace gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
-    diagLog("clearTestItemsAndParseFilesForAllWorkspaces - removing all test nodes/items for all workspaces");
-    const items = getAllTestItems(null, ctrl.items);
-    for (const item of items) {
-      ctrl.items.delete(item.id);
-      testData.delete(item);
-    }
+    diagLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
+    deleteTestTreeNodes(null, testData, ctrl);
 
     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      this.parseFilesForWorkspace(projUri, testData, ctrl, `clearTestItemsAndParseFilesForAllWorkspaces from ${intiator}`,
+      this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
         firstRun, cancelToken);
     }
   }
 
 
   // NOTE:
+  // - It is a self-cancelling RE-ENTRANT function, i.e. any current parse for the same workspace will be cancelled.   
   // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
-  // - It is a self-cancelling re-entrant function, i.e. any current parse for the same workspace will be cancelled. 
-  async parseFilesForWorkspace(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
+  async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
 
     const projPath = projUri.path;
@@ -497,17 +488,25 @@ export class FileParser {
     try {
       this._reparsingFile = true;
 
-      if (!isStepsFile(fileUri) && !isFeatureFile(fileUri))
+      const isAFeatureFile = isFeatureFile(fileUri);
+      let isAStepsFile = false;
+      if (!isAFeatureFile)
+        isAStepsFile = isStepsFile(fileUri);
+      if (!isAStepsFile && !isAFeatureFile)
         return;
 
       if (!content)
         content = await getContentFromFilesystem(fileUri);
 
-      if (isStepsFile(fileUri))
+      if (isAStepsFile) {
+        deleteStepsAndStepMappingsForStepsFile(fileUri);
         await this._updateStepsFromStepsFileContent(projSettings.uri, content, fileUri, "reparseFile");
+      }
 
-      if (isFeatureFile(fileUri))
+      if (isAFeatureFile) {
+        deleteStepsAndStepMappingsForFeatureFile(fileUri);
         await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, fileUri, "reparseFile", false);
+      }
 
       rebuildStepMappings(projSettings.uri);
     }

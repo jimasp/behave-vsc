@@ -7,7 +7,7 @@ import { diagLog } from '../logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Scenario;
-export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
+export type TestData = Map<vscode.TestItem, BehaveTestData>;
 
 
 export class TestFile {

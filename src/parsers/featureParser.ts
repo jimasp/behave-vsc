@@ -31,7 +31,15 @@ export const getFeatureFilesSteps = (projUri: vscode.Uri) => {
   return [...featureFileSteps].filter(([k,]) => k.startsWith(projUriMatchString));
 }
 
-export const deleteFeatureFilesSteps = (projUri: vscode.Uri) => {
+export function deleteFeatureFilesStepsForFile(featureFileUri: vscode.Uri) {
+  const featureFileUriMatchString = uriId(featureFileUri);
+  const delEntries = [...featureFileSteps].filter(([, v]) => uriId(v.uri) === featureFileUriMatchString);
+  for (const [key,] of delEntries) {
+    featureFileSteps.delete(key);
+  }
+}
+
+export const deleteFeatureFilesStepsForProject = (projUri: vscode.Uri) => {
   const projFeatureFileSteps = getFeatureFilesSteps(projUri);
   for (const [key,] of projFeatureFileSteps) {
     featureFileSteps.delete(key);
