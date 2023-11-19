@@ -27,11 +27,7 @@
 		{
 			"path": "./multiroot empty folder",
 			"name": "empty folder"
-		},
-		{
-			"path": "./multiroot ignored",
-			"name": "ignored folder"
-		},
+		}
 	],
 	"settings": {
 		"behave-vsc.multiRootProjectsRunInParallel": true,
