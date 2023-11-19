@@ -1,0 +1,5 @@
+{
+    "mypy-type-checker.ignorePatterns": [
+        ".*"
+    ]
+}

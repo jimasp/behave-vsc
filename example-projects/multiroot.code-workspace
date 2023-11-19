@@ -27,6 +27,10 @@
 		{
 			"path": "./multiroot empty folder",
 			"name": "empty folder"
+		},
+		{
+			"path": "./multiroot bad features path",
+			"name": "bad features path"
 		}
 	],
 	"settings": {

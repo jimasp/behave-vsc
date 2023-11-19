@@ -10,8 +10,8 @@
 - step library - project containg a step library folder
 - projects included in the multiroot.code-workspace:
   - multiroot bad features path - project to test error handling/output for a bad feature path in settings.json
-  - multiroot empty folder - project to test error handling/output for an empty project folder
-  - multiroot ignored - project that should be ignored (see readme inside the project folder)
+  - multiroot empty folder - project to test an empty project folder
+  - multiroot unconfigured features path - project that should show a warning (see readme inside the project folder)
   - project A - (explained above)
   - project B - (explained above)
 

@@ -319,19 +319,19 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveCon
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "setup_paths()".
   // if that function changes in behave, then it is likely this will also have to change.  
-  let baseDir;
+  let configRelBaseDir;
 
   // this function will determine the baseDir
   // where baseDir = the directory that contains the "steps" folder / environment.py file
 
   if (behaveConfigRelativeConfigPaths.length > 0)
-    baseDir = behaveConfigRelativeConfigPaths[0];
+    configRelBaseDir = behaveConfigRelativeConfigPaths[0];
   else
-    baseDir = "features";
+    configRelBaseDir = "features";
 
 
   const project_root_dir = path.dirname(projUri.fsPath);
-  let new_base_dir = path.join(projUri.fsPath, baseDir);
+  let new_base_dir = path.join(projUri.fsPath, configRelBaseDir);
   const steps_dir = "steps";
   const environment_file = "environment.py";
 
@@ -355,7 +355,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveCon
     }
     else {
       logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-        `Using behave configuration path "${new_base_dir}".`, projUri);
+        `Using behave configuration path "${configRelBaseDir}".`, projUri);
     }
     return null;
   }
@@ -388,8 +388,7 @@ function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
       if (typeof configPaths === "string")
         configPaths = [configPaths];
       configPaths.forEach((path: string) => {
-        path = path.replace(projUri.fsPath, "");
-        path = normaliseUserSuppliedRelativePath(path);
+        path = vscode.workspace.asRelativePath(path);
         projectRelativeConfigPaths.push(path);
       });
     }
