@@ -104,7 +104,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `features/steps` or `steps` or `*_steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting.
+- Step navigation is automatically enabled for your `features/steps` or `steps` or `*_steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting. (Note that any path here that is also included in a `files.watcherExclude` setting will not be updated dynamically, i.e. on file/folder changes.)
 
   - Example:
 
@@ -146,9 +146,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
 
 - The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated workspace.
-- The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
-- You can adjust the run behaviour via extension settings in your `settings.json` file (e.g. `runParallel` and `envVarOverrides`).
+- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+
+- You can adjust the run behaviour via extension settings in your `settings.json` file, e.g. `runParallel`, `envVarOverrides`, `runProfiles`.
 
 - Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
 
@@ -162,9 +163,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 
-- The extension parses the junit file output and updates the test result in the UI, and any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+- You can adjust the debug behaviour via extension settings in your `settings.json` file, e.g. `envVarOverrides` or `runProfiles`. Note that debug ignores the `runParallel` setting.
 
-- Debug ignores the `runParallel` setting.
+- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
 ---
 
