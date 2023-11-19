@@ -178,7 +178,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - B. Consider if you can use a naming scheme for feature subfolders/files that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
 
   - C. Run tagged tests:
-    - Via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file). Note that this can be further filtered by your selection in the test tree.
+    - Via the `Run Tests with Tags` profile in the test explorer (or via the `>` and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
     - Via run profiles. Use the `runProfiles` setting to set up run profiles in the test explorer. Remember however that (a) the test tree selection determines the behave command line, and (b) the UI will only update the tests you filtered/selected in the test tree. This combination actually makes it very flexible, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
       ```json
@@ -191,7 +191,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
                   "var2": "2-a"
               },
           },
-          "tagBorC profile": {
+          "tagsBorC profile": {
               "tagExpression": "@b,@c",            
               "envVarOverrides": {
                   "var1": "1-bc",
@@ -201,14 +201,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       },
       ```
 
-      Note that the envVarOverrides property will override any `behave-vsc.envVarOverrides` setting that has the same key.
+      Note that the `envVarOverrides` property in a runProfile will (while running) override any `behave-vsc.envVarOverrides` setting that has the same key.
 
-      Separately, here are some ideas about how you could use an environment variable in you `environment.py` file:
+      Note that you can use an environment variable:
 
-      - to control a behave `active_tag_value_provider`
-      - to control `scenario.skip()`
-      - to set a variable  which `before_all` will read to load a specific config file via `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-      - to set a variable which `before_all` will read to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable, or
+      - in your `environment.py` file:
+        - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
+        - to control `scenario.skip()`
+        - which `before_all` will use to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+        - which `before_all` will use to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
 
 ## Q&A
 

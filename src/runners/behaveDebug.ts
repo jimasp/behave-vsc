@@ -16,7 +16,7 @@ export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyC
     args.push("--no-summary", "--outfile",
       vscode.Uri.joinPath(config.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.projSettings.name}-debug.log`).fsPath);
 
-    const env = { ...process.env, ...wr.projSettings.envVarOverrides };
+    const env = { ...process.env, ...wr.envVarOverrides };
 
     const debugLaunchConfig = {
       name: `behave-vsc-debug`,
