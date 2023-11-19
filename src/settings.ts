@@ -155,8 +155,12 @@ export class ProjectSettings {
     this.runParallel = runParallelCfg;
 
     const projRelPaths = getProjectRelativePaths(projUri, this.name, this.stepLibraries, logger);
-    if (!projRelPaths)
-      return; // empty workspace folder - TODO can this happen? shouldn't getUrisOfWkspFoldersWithFeatures() filter this out?
+    if (!projRelPaths) {
+      // most likely behave config "paths" is misconfigured, 
+      // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
+      return;
+    }
+
     this.relativeBaseDirPath = projRelPaths.relativeBaseDirPath;
     this.relativeConfigPaths = projRelPaths.relativeConfigPaths;
     this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
