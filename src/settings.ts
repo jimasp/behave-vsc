@@ -10,8 +10,7 @@ import {
   findLongestCommonPaths,
   findFilesSync,
   BEHAVE_CONFIG_FILES,
-  getRelativeRxMatchingTopLevelSubdirectoriesSync,
-  STEPS_FOLDERNAMES_RX
+  getStepsDir
 } from './common';
 import { Logger, diagLog } from './logger';
 import { performance } from 'perf_hooks';
@@ -293,10 +292,18 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
   const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri);
 
   const baseDirFsPath = vscode.Uri.joinPath(projUri, relativeBaseDirPath).fsPath;
-  const relativeStepsFolders = getRelativeRxMatchingTopLevelSubdirectoriesSync(baseDirFsPath, STEPS_FOLDERNAMES_RX);
 
+  const relativeStepsFolders: string[] = [];
   relativeStepsFolders.push(
     ...getStepLibraryStepPaths(projUri, stepLibraries, relativeStepsFolders, logger));
+
+  // NOTE - the order of the relativeStepsFolders determines which step folder step is used as the match for 
+  // stepReferences if multiple matches are found across step folders. i.e. the last one wins, so we'll 
+  // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
+  // (also note the line in parseStepsFileContent on the line that says "replacing duplicate step file step")
+  const stepsFolder = getStepsDir(baseDirFsPath);
+  if (stepsFolder)
+    relativeStepsFolders.push(stepsFolder);
 
   return {
     relativeConfigPaths,
@@ -410,7 +417,7 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
         │       └── a.feature
         └── features2
             └── a.feature
-
+ 
   will return:
     "tests/features"
     "tests/features2"

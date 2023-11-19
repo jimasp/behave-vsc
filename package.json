@@ -91,17 +91,17 @@
 			{
 				"command": "behave-vsc.findStepReferences",
 				"key": "alt+f12",
-				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && !(resourceFilename =~ /.*environment\\.py$|.*_environment\\.py$/) && (resourceDirname =~ /.*steps/ || bvsc_StepLibsActive)"
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*\\/steps/ || bvsc_StepLibsActive)"
 			},
 			{
 				"command": "behave-vsc.stepReferences.next",
-				"when": "behave-vsc.stepReferences.navKeysEnabled",
-				"key": "f4"
+				"key": "f4",
+				"when": "behave-vsc.stepReferences.navKeysEnabled"
 			},
 			{
 				"command": "behave-vsc.stepReferences.prev",
-				"when": "behave-vsc.stepReferences.navKeysEnabled",
-				"key": "shift+f4"
+				"key": "shift+f4",
+				"when": "behave-vsc.stepReferences.navKeysEnabled"
 			}
 		],
 		"languages": [
@@ -145,14 +145,14 @@
 		"menus": {
 			"editor/context": [
 				{
-					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/",
 					"command": "behave-vsc.gotoStep",
-					"group": "navigation"
+					"group": "navigation",
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.feature$/"
 				},
 				{
-					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && !(resourceFilename =~ /.*environment\\.py$|.*_environment\\.py$/) && (resourceDirname =~ /.*steps/ || bvsc_StepLibsActive)",
 					"command": "behave-vsc.findStepReferences",
-					"group": "navigation"
+					"group": "navigation",
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*\\/steps/ || bvsc_StepLibsActive)"
 				}
 			]
 		},

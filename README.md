@@ -64,7 +64,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             └── web.py
     ```
 
-  - Example 2 - steps folder is at the same level as the features folder:
+  - Example 2 - steps folder is a sibling of the features folder:
 
     ```text
     my-project/
@@ -104,7 +104,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `features/steps` or `steps` or `*_steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting. (Note that any path here that is also included in a `files.watcherExclude` setting will not be updated dynamically, i.e. on file/folder changes.)
+- Step navigation is automatically enabled for your steps folder, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting. (Note that any path here that is also included in a `files.watcherExclude` setting will not be updated dynamically, i.e. on file/folder changes.)
 
   - Example:
 
@@ -187,15 +187,15 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
           "tagA profile": {
               "tagExpression": "@a",            
               "envVarOverrides": {
-                  "var1": "1-a",
-                  "var2": "2-a"
+                "myvar": "val1",
+                "BEHAVE_STAGE": "mystage"
               },
           },
           "tagsBorC profile": {
               "tagExpression": "@b,@c",            
               "envVarOverrides": {
-                  "var1": "1-bc",
-                  "var2": "2-bc"
+                "myvar": "val2",                
+                "BEHAVE_STAGE": "production"
               },
           }
       },
@@ -206,7 +206,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       Note that you can use an environment variable:
 
       - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable, or
-      - in your `environment.py` file:
+      - in your `environment.py` (or `mystage_environment.py`) file:
         - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
         - to control `scenario.skip()`
         - which `before_all` will use to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run

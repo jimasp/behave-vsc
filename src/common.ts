@@ -19,8 +19,6 @@ export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-
 export const FOLDERNAME_CHARS_VALID_ON_ALLPLATFORMS = /[^ a-zA-Z0-9_.-]/g;
 export const BEHAVE_EXECUTION_ERROR_MESSAGE = "--- BEHAVE EXECUTION ERROR DETECTED ---"
 export const BEHAVE_CONFIG_FILES = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
-export const STEPS_FOLDERNAMES = [path.sep + "steps", path.sep + "*_steps"]; // *_steps = behave --stage steps folders
-export const STEPS_FOLDERNAMES_RX = new RegExp(STEPS_FOLDERNAMES.map(f => ".*" + f.replace("*", ".*") + path.sep + ".*").join('|'));
 
 
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
@@ -60,7 +58,7 @@ export const openDocumentRange = async (uri: vscode.Uri, range: vscode.Range, pr
 
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
-  const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
+  const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")} / releases / tag / v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
   config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
   config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}`);
@@ -190,19 +188,20 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const getRelativeRxMatchingTopLevelSubdirectoriesSync = (searchFsPath: string, pathRegex: RegExp): string[] => {
-  const matchingSubdirectories: string[] = [];
+export const getStepsDir = (baseDirFsPath: string): string | null => {
 
-  const list = fs.readdirSync(searchFsPath);
+  const list = fs.readdirSync(baseDirFsPath);
   for (const fileOrDir of list) {
-    const filePath = path.join(searchFsPath, fileOrDir);
-    if (fs.statSync(filePath).isDirectory() && pathRegex.test(filePath + path.sep)) {
+    if (fileOrDir !== "steps")
+      continue;
+    const filePath = path.join(baseDirFsPath, fileOrDir);
+    if (fs.statSync(filePath).isDirectory()) {
       const relPath = vscode.workspace.asRelativePath(filePath);
-      matchingSubdirectories.push(relPath);
+      return relPath;
     }
   }
 
-  return matchingSubdirectories;
+  return null;
 }
 
 
@@ -244,7 +243,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
     return stepLibMatch;
   }
 
-  if (!STEPS_FOLDERNAMES_RX.test(lcPath)) {
+  if (!/.*\/steps\/.*/.test(lcPath)) {
     const projSettings = getProjectSettingsForFile(fileUri);
     const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
     const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
@@ -339,7 +338,7 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
       results.push(...await findFiles(entryUri, matchSubDirectory, extension, cancelToken));
     }
     else {
-      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
+      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/ ${matchSubDirectory} / `, "i").test(entryUri.path))) {
         results.push(entryUri);
       }
     }
@@ -366,7 +365,7 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
       }
     }
     else {
-      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/${matchSubDirectory}/`, "i").test(entryUri.path))) {
+      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/ ${matchSubDirectory} / `, "i").test(entryUri.path))) {
         results.push(entryUri);
         if (stopOnFirstMatch)
           return results;
