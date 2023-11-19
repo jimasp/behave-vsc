@@ -16,7 +16,9 @@ export class SharedWorkspaceTests {
 
   runTogetherWithDefaultSettings = async (projName: string,
     expectedProjectRelativeBaseDirPath: string,
-    expectedProjectRelativeStepsSearchPath: string,
+    expectedProjectRelativeConfigPaths: string[],
+    expectedProjectrelativeFeatureFolders: string[],
+    expectedProjectRelativeStepsFolders: string[],
     getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
     getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[]
   ) => {
@@ -24,20 +26,26 @@ export class SharedWorkspaceTests {
     // default = everything undefined
     const testConfig = new TestWorkspaceConfig({
       runParallel: undefined, multiRootProjectsRunInParallel: undefined,
-      envVarOverrides: undefined, featuresPath: undefined,
+      envVarOverrides: undefined,
       justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: undefined
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, projName, testConfig,
-      expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath,
+    await runAllTestsAndAssertTheResults(
+      false, projName, testConfig,
+      expectedProjectRelativeBaseDirPath,
+      expectedProjectRelativeConfigPaths,
+      expectedProjectrelativeFeatureFolders,
+      expectedProjectRelativeStepsFolders,
       getExpectedCountsFunc, getExpectedResultsFunc, undefined);
   }
 
 
-  runTogether = async (projName: string, projRelativeFeaturesPath: string,
+  runTogether = async (projName: string,
     expectedProjectRelativeBaseDirPath: string,
-    expectedProjectRelativeStepsSearchPath: string,
+    expectedProjectRelativeConfigPaths: string[],
+    expectedProjectrelativeFeatureFolders: string[],
+    expectedProjectRelativeStepsFolders: string[],
     getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
     getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
     envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
@@ -48,20 +56,25 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: false, multiRootProjectsRunInParallel: true,
-      envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(false, projName, testConfig,
-      expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath,
+      expectedProjectRelativeBaseDirPath,
+      expectedProjectRelativeConfigPaths,
+      expectedProjectrelativeFeatureFolders,
+      expectedProjectRelativeStepsFolders,
       getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
 
 
-  runParallel = async (projName: string, projRelativeFeaturesPath: string,
+  runParallel = async (projName: string,
     expectedProjectRelativeBaseDirPath: string,
-    expectedProjectRelativeStepsSearchPath: string,
+    expectedProjectRelativeConfigPaths: string[],
+    expectedProjectrelativeFeatureFolders: string[],
+    expectedProjectRelativeStepsFolders: string[],
     getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
     getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
     envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
@@ -72,19 +85,24 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootProjectsRunInParallel: true,
-      envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: runProfiles, xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(false, projName, testConfig,
-      expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath,
+      expectedProjectRelativeBaseDirPath,
+      expectedProjectRelativeConfigPaths,
+      expectedProjectrelativeFeatureFolders,
+      expectedProjectRelativeStepsFolders,
       getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
 
-  runDebug = async (projName: string, projRelativeFeaturesPath: string,
+  runDebug = async (projName: string,
     expectedProjectRelativeBaseDirPath: string,
-    expectedProjectRelativeStepsSearchPath: string,
+    expectedProjectRelativeConfigPaths: string[],
+    expectedProjectrelativeFeatureFolders: string[],
+    expectedProjectRelativeStepsFolders: string[],
     getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
     getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
     envVarOverrides: { [name: string]: string } = defaultEnvVarOverrides,
@@ -95,14 +113,17 @@ export class SharedWorkspaceTests {
 
     const testConfig = new TestWorkspaceConfig({
       runParallel: true, multiRootProjectsRunInParallel: true,
-      envVarOverrides: envVarOverrides, featuresPath: projRelativeFeaturesPath,
+      envVarOverrides: envVarOverrides,
       justMyCode: undefined, stepLibraries: stepLibraries, runProfiles: undefined, xRay: true
     });
 
     // NOTE - if this fails, try removing all breakpoints in both vscode instances 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
     await runAllTestsAndAssertTheResults(true, projName, testConfig,
-      expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath,
+      expectedProjectRelativeBaseDirPath,
+      expectedProjectRelativeConfigPaths,
+      expectedProjectrelativeFeatureFolders,
+      expectedProjectRelativeStepsFolders,
       getExpectedCountsFunc, getExpectedResultsFunc, runProfiles?.[selectedRunProfile]);
   }
 

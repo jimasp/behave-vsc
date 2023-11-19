@@ -74,7 +74,8 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 
 function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration,
-	expectedProjectRelativeBaseDirPath: string, expectedRelativeStepsFoldersOutsideFeatureFolders: string) {
+	expectedRelativeBaseDirPath: string, expectedRelativeConfigPaths: string[], expectedRelativeFeatureFolders: string[],
+	expectedRelativeStepsFolders: string[]) {
 
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
@@ -86,9 +87,9 @@ function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri
 
 	const projSettings = config.projectSettings[projUri.path];
 	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), projName);
-	assert.strictEqual(projSettings.relativeFeatureFolders, testConfig.getExpected("relativeFeaturesFolders"), projName);
-	assert.strictEqual(projSettings.relativeStepsFolders, expectedRelativeStepsFoldersOutsideFeatureFolders, projName);
-	assert.strictEqual(projSettings.relativeBaseDirPath, expectedProjectRelativeBaseDirPath, projName);
+	assert.strictEqual(projSettings.relativeFeatureFolders, expectedRelativeFeatureFolders, projName);
+	assert.strictEqual(projSettings.relativeStepsFolders, expectedRelativeStepsFolders, projName);
+	assert.strictEqual(projSettings.relativeBaseDirPath, expectedRelativeBaseDirPath, projName);
 	assert.strictEqual(projSettings.relativeConfigPaths, expectedRelativeConfigPaths, projName);
 	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), projName);
 	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), projName);
@@ -400,7 +401,9 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string,
 	testConfig: TestWorkspaceConfig,
 	expectedProjectRelativeBaseDirPath: string,
-	expectedProjectRelativeStepsSearchPath: string,
+	expectedProjectRelativeConfigPaths: string[],
+	expectedProjectrelativeFeatureFolders: string[],
+	expectedProjectRelativeStepsFolders: string[],
 	getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
 	getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
 	runProfile: RunProfile | undefined = undefined) {
@@ -418,8 +421,15 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
-	assertWorkspaceSettingsAsExpected(wskpFileSystemFolderName, projUri, testConfig,
-		instances.config, expectedProjectRelativeBaseDirPath, expectedProjectRelativeStepsSearchPath);
+	assertWorkspaceSettingsAsExpected(
+		wskpFileSystemFolderName,
+		projUri,
+		testConfig,
+		instances.config,
+		expectedProjectRelativeBaseDirPath,
+		expectedProjectRelativeConfigPaths,
+		expectedProjectrelativeFeatureFolders,
+		expectedProjectRelativeStepsFolders);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForProject(projUri, instances.testData, instances.ctrl,

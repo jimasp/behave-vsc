@@ -22,12 +22,11 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
-		envVarOverrides, featuresPath: featuresPath, justMyCode,
+		envVarOverrides, justMyCode,
 		multiRootProjectsRunInParallel,
 		runParallel, stepLibraries, runProfiles, xRay
 	}: {
 		envVarOverrides: { [name: string]: string } | undefined,
-		featuresPath: string | undefined,
 		justMyCode: boolean | undefined,
 		multiRootProjectsRunInParallel: boolean | undefined,
 		runParallel: boolean | undefined,
@@ -36,7 +35,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		xRay: boolean | undefined
 	}) {
 		this.envVarOverrides = envVarOverrides;
-		this.featuresPath = featuresPath;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
 		this.multiRootProjectsRunInParallel = multiRootProjectsRunInParallel;
@@ -57,8 +55,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
-			case "featuresPath":
-				return <T><unknown>(this.featuresPath === undefined ? "features" : this.featuresPath);
 			case "multiRootProjectsRunInParallel":
 				return <T><unknown>(this.multiRootProjectsRunInParallel === undefined ? true : this.multiRootProjectsRunInParallel);
 			case "justMyCode":
@@ -126,7 +122,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	}
 
 
-	getExpected<T>(section: string, projUri?: vscode.Uri): T | undefined {
+	getExpected<T>(section: string): T | undefined {
 
 		const getexpectedProjectRelativeFeaturesPath = (): string => {
 			switch (this.featuresPath) {

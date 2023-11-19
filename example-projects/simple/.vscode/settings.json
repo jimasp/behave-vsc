@@ -1,5 +1,6 @@
 {
     "behave-vsc.xRay": true,
+    "behave-vsc.featuresPath": "behave tests\\some tests/",
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ]
