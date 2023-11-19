@@ -24,6 +24,7 @@ import { RunProfile } from './settings';
 
 
 const testData = new Map<vscode.TestItem, BehaveTestData>();
+const userTestRunProfiles: vscode.TestRunProfile[] = [];
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher[]>();
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
@@ -213,6 +214,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           }
 
           config.reloadSettings(projUri);
+          reloadRunProfiles(ctrl, runHandler);
+
           const oldWatchers = wkspWatchers.get(projUri);
           if (oldWatchers)
             oldWatchers.forEach(w => w.dispose());
@@ -275,48 +278,64 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
 
   function createRunProfiles(ctrl: vscode.TestController,
-    runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>) {
+    runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
+    configChanged = false) {
 
-    ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
-      async (request: vscode.TestRunRequest) => {
-        await runHandler(false, request);
-      },
-      true);
+    if (configChanged) {
+      for (const profile of userTestRunProfiles) {
+        profile.dispose();
+      }
+    }
+    else {
 
-    ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        await runHandler(true, request);
-      },
-      true);
+      ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
+        async (request: vscode.TestRunRequest) => {
+          await runHandler(false, request);
+        },
+        true);
 
-    ctrl.createRunProfile('Run Features with Tags', vscode.TestRunProfileKind.Run,
-      async (request: vscode.TestRunRequest) => {
-        const tagExpression = await vscode.window.showInputBox(
-          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-        );
-        await runHandler(false, request, new RunProfile(undefined, tagExpression));
-      });
+      ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
+        async (request: vscode.TestRunRequest) => {
+          await runHandler(true, request);
+        },
+        true);
 
-    ctrl.createRunProfile('Debug Features with Tags', vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        const tagExpression = await vscode.window.showInputBox(
-          { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-        );
-        await runHandler(true, request, new RunProfile(undefined, tagExpression));
-      });
+      ctrl.createRunProfile('Run Features with Tags', vscode.TestRunProfileKind.Run,
+        async (request: vscode.TestRunRequest) => {
+          const tagExpression = await vscode.window.showInputBox(
+            { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+          );
+          await runHandler(false, request, new RunProfile(undefined, tagExpression));
+        });
+
+      ctrl.createRunProfile('Debug Features with Tags', vscode.TestRunProfileKind.Debug,
+        async (request: vscode.TestRunRequest) => {
+          const tagExpression = await vscode.window.showInputBox(
+            { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
+          );
+          await runHandler(true, request, new RunProfile(undefined, tagExpression));
+        });
+    }
 
     for (const name in config.instanceSettings.runProfiles) {
       const runProfile = config.instanceSettings.runProfiles[name];
-      ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
+      userTestRunProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           await runHandler(false, request, runProfile);
-        });
-      ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
+        }));
+      userTestRunProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           await runHandler(true, request, runProfile);
-        });
+        }));
     }
   }
+
+  function reloadRunProfiles(ctrl: vscode.TestController,
+    runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>) {
+    createRunProfiles(ctrl, runHandler, true);
+  }
+
+
 } // end activate()
 
 

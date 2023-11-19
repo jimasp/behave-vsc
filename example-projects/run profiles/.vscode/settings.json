@@ -8,7 +8,8 @@
         "just_envVarOverrides profile": {
             "envVarOverrides": {
                 "var1": "ENV-1",
-                "var2": "ENV-2"
+                "var2": "ENV-2",
+                "BEHAVE_STAGE": "stage"
             },
         },
         "just_tagExpression profile": {

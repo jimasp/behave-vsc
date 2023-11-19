@@ -1,5 +1,11 @@
 Feature: Tags and Vars
 
+   @tag1 @tag2
+   Scenario: @tag1 or @tag2 - success stage check
+      Given we have behave installed
+      When envvar BEHAVE_STAGE is set as expected  
+      Then we will see the result       
+
    @tag1
    Scenario: @tag1 - success
       Given we have behave installed

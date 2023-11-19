@@ -9,12 +9,9 @@ def step_inst(context):
 
 @when("envvar BEHAVE_STAGE is set as expected")
 def step_impl(context):
-    assert os.environ.get("BEHAVE_STAGE", None) is None
-    try:
-        assert context.bs_set is None
-    except AttributeError as e:
-        assert str(e) == "'Context' object has no attribute 'bs_set'"
-    
+    assert os.environ.get("BEHAVE_STAGE") == "stage"
+    assert context.bs_set == "set by stage_environment.py"    
+
 @when("envvar {var} is set to '{value}'")
 def step_impl(context, var, value):
     assert os.environ[var] == value
