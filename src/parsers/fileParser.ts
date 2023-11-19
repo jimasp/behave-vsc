@@ -6,10 +6,10 @@ import { ProjectSettings } from "../settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesUriForFeatureFileUri, deleteTestTreeNodes
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes
 } from '../common';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
-import { BehaveTestData, Scenario, TestData, TestFile } from './testFile';
+import { TestData, TestFile } from './testFile';
 import { diagLog } from '../logger';
 import { clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile, deleteStepsAndStepMappingsForFeatureFile } from './stepMappings';
 
@@ -106,12 +106,12 @@ export class FileParser {
 
     let processed = 0;
     for (const relFeaturesFolder of projSettings.relativeFeatureFolders) {
-      const featuresUri = vscode.Uri.joinPath(projUri, relFeaturesFolder);
-      if (!fs.existsSync(featuresUri.fsPath)) {
+      const featuresFolderUri = vscode.Uri.joinPath(projUri, relFeaturesFolder);
+      if (!fs.existsSync(featuresFolderUri.fsPath)) {
         // e.g. user has deleted/renamed folder
         continue;
       }
-      const featureFiles = (await findFiles(featuresUri, undefined, ".feature", cancelToken));
+      const featureFiles = (await findFiles(featuresFolderUri, undefined, ".feature", cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
         config.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
@@ -265,7 +265,7 @@ export class FileParser {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
     }
     else {
-      const fullFeaturesPath = getFeaturesUriForFeatureFileUri(projSettings, uri)?.path;
+      const fullFeaturesPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;
       if (fullFeaturesPath)
         sfp = uri.path.substring(fullFeaturesPath.length + 1);
     }

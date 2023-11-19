@@ -89,8 +89,7 @@ function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri
 	assert.strictEqual(projSettings.relativeFeatureFolders, testConfig.getExpected("relativeFeaturesFolders"), projName);
 	assert.strictEqual(projSettings.relativeStepsFolders, expectedRelativeStepsFoldersOutsideFeatureFolders, projName);
 	assert.strictEqual(projSettings.relativeBaseDirPath, expectedProjectRelativeBaseDirPath, projName);
-	const expectedFeaturesUri = testConfig.getExpected("featuresUri", projUri) as vscode.Uri;
-	assert.strictEqual(true, urisMatch(projSettings.featuresUris, expectedFeaturesUri), projName);
+	assert.strictEqual(projSettings.relativeConfigPaths, expectedRelativeConfigPaths, projName);
 	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), projName);
 	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), projName);
 	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"), projName);

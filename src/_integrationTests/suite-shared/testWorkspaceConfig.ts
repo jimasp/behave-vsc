@@ -138,13 +138,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			}
 		}
 
-		const getExpectedFeaturesUri = (): vscode.Uri => {
-			if (!projUri)
-				throw "you must supply projUri to call getExpectedFeaturesUri";
-			return vscode.Uri.joinPath(projUri, getexpectedProjectRelativeFeaturesPath()); //.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, ""));
-		}
-
-
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
@@ -152,8 +145,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>this.get("envVarOverrides");
 			case "workspaceRelativeFeaturesPath":
 				return <T><unknown>getexpectedProjectRelativeFeaturesPath();
-			case "featuresUri":
-				return <T><unknown>getExpectedFeaturesUri();
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootProjectsRunInParallel":

@@ -254,11 +254,11 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   return true;
 }
 
-export const getFeaturesUriForFeatureFileUri = (projSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
+export const getFeaturesFolderUriForFeatureFileUri = (projSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
   for (const relFeaturesPath of projSettings.relativeFeatureFolders) {
-    const featuresUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
-    if (featureFileUri.fsPath.startsWith(featuresUri.fsPath + path.sep))
-      return featuresUri;
+    const featuresFolderUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
+    if (featureFileUri.fsPath.startsWith(featuresFolderUri.fsPath + path.sep))
+      return featuresFolderUri;
   }
 }
 
