@@ -94,11 +94,9 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
   const watchers: vscode.FileSystemWatcher[] = [];
 
   // watch for feature file changes anywhere because although one feature file must exist somewhere for 
-  // the extension to be acivated we cannot use that as a watch path, because after startup stuff can 
+  // the extension to be acivated, we cannot use that as a watch path, because after startup things can 
   // be moved around, e.g. a features folder could be renamed, or another top-level features folder could 
-  // be created that did not exist on start up etc. and we can't predict the folder name/structure they will be created in.
-  // this watcher will trigger events as required to rediscover feature files (these events will also cause 
-  // steps files paths to be recalculated, e.g. see configurationChangedHandler)
+  // be created that did not exist on start up etc. and we can't predict the folder name/structure they will be created in
   const featureFilePattern = new vscode.RelativePattern(projUri, `**/*.feature`);
   const featuresFileWatcher = vscode.workspace.createFileSystemWatcher(featureFilePattern);
   setEventHandlers(featuresFileWatcher);
