@@ -104,7 +104,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your `features/steps` or `steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting.
+- Step navigation is automatically enabled for your `features/steps` or `steps` or `*_steps` folders, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting.
 
   - Example:
 

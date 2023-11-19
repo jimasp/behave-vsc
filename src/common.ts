@@ -223,13 +223,14 @@ export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
 
 
 export const isStepsFile = (fileUri: vscode.Uri): boolean => {
+  // fast checks first
   if (fileUri.scheme !== "file")
     return false;
   const lcPath = fileUri.path.toLowerCase();
   if (!lcPath.endsWith(".py"))
     return false;
 
-  function getStepLibraryMatch(projSettings: ProjectSettings, relPath: string) {
+  const getStepLibraryMatch = (projSettings: ProjectSettings, relPath: string) => {
     let stepLibMatch: StepLibrary | null = null;
     let currentMatchLen = 0, lenPath = 0;
     for (const stepLib of projSettings.stepLibraries) {

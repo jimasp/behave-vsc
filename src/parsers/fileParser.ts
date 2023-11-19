@@ -179,7 +179,7 @@ export class FileParser {
   private async _updateStepsFromStepsFileContent(projUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
 
     if (!isStepsFile(fileUri))
-      throw new Error(`${fileUri.fsPath} is not a steps file`);
+      return;
 
     await parseStepsFileContent(projUri, content, fileUri, caller);
   }
