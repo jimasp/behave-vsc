@@ -214,22 +214,44 @@ export class ProjectSettings {
 }
 
 
+function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string[] {
+  let paths: string[] | null = null;
+
+  // match order of preference in behave source code function "config_filenames()"
+  for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+    const configFilePath = path.join(projUri.fsPath, configFile);
+    if (fs.existsSync(configFilePath)) {
+      // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
+      if (configFile === "pyproject.toml")
+        continue;
+      paths = getBehavePathsFromIni(configFilePath);
+      if (paths)
+        break;
+    }
+  }
+
+  if (!paths)
+    return [];
+
+  return paths.map((path: string) => vscode.workspace.asRelativePath(path));
+}
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function configParser(filePath: string): { [key: string]: any; } {
+// example ini file:
+//  [behave ]
+//   paths  =features1
+//    features2
+//        features3
+// stdout_capture= true
+//
+// we are only interested in the [behave] paths section
+function getBehavePathsFromIni(filePath: string): string[] | null {
 
   const data = fs.readFileSync(filePath, 'utf-8');
   const lines = data.split('\n');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config: { [key: string]: any } = {};
   let currentSection = '';
   let currentValue: string | string[] = '';
-  let currentKey = '';
-
-  let toml = false;
-  if (filePath.endsWith(".toml"))
-    toml = true;
+  let paths: string[] | null = null;
 
   for (let line of lines) {
     line = line.trim();
@@ -237,29 +259,24 @@ function configParser(filePath: string): { [key: string]: any; } {
       continue;
 
     if (line.startsWith('[') && line.endsWith(']')) {
-      currentSection = line.slice(1, -1);
-      config[currentSection] = {};
+      const newSection = line.slice(1, -1).trim();
+      if (newSection === "")
+        continue;
+      if (newSection !== "behave" && currentSection === "behave")
+        break;
+      currentSection = newSection;
+      continue;
     }
-    else if (line.includes('=')) {
+
+    if (line.includes('=')) {
       let [key, value] = line.split('=');
       key = key.trim();
+      if (key !== "paths")
+        continue;
       value = value.trim();
-      if (toml) {
-        if (value.startsWith("[") && value.endsWith("]")) {
-          const arr = value.split(",");
-          config[currentSection][key] = arr;
-          continue;
-        }
-      }
-      else {
-        currentValue = value;
-        currentKey = key;
-      }
-      config[currentSection][key] = value;
+      currentValue = value;
     }
     else {
-      if (toml)
-        continue;
       if (line.length > 0) {
         const arr: string[] = [];
         if (currentValue instanceof Array)
@@ -267,20 +284,18 @@ function configParser(filePath: string): { [key: string]: any; } {
         else
           arr.push(currentValue);
         arr.push(line);
-        currentValue = arr;
-        config[currentSection][currentKey] = arr;
+        paths = currentValue = arr;
       }
     }
   }
 
-  return config;
+  return paths;
 }
 
 
 
-
 function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibraries: StepLibrariesSetting, logger: Logger) {
-  const relativeConfigPaths = getProjectRelativeConfigPaths(projUri);
+  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri);
 
   // base dir is a concept borrowed from behave's source code
   // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        
@@ -318,7 +333,7 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
 }
 
 
-function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveConfigRelativeConfigPaths: string[],
+function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeBehaveConfigPaths: string[],
   logger: Logger): string | null {
   // NOTE: this function MUST have basically the same logic as the 
   // behave source code function "setup_paths()".
@@ -328,17 +343,15 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveCon
   // this function will determine the baseDir
   // where baseDir = the directory that contains the "steps" folder / environment.py file
 
-  if (behaveConfigRelativeConfigPaths.length > 0)
-    configRelBaseDir = behaveConfigRelativeConfigPaths[0];
+  if (relativeBehaveConfigPaths.length > 0)
+    configRelBaseDir = relativeBehaveConfigPaths[0];
   else
     configRelBaseDir = "features";
-
 
   const project_root_dir = path.dirname(projUri.fsPath);
   let new_base_dir = path.join(projUri.fsPath, configRelBaseDir);
   const steps_dir = "steps";
   const environment_file = "environment.py";
-
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -353,7 +366,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveCon
   }
 
   if (new_base_dir === project_root_dir) {
-    if (behaveConfigRelativeConfigPaths.length === 0) {
+    if (relativeBehaveConfigPaths.length === 0) {
       logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
         'Please specify a "paths" setting in your behave configuration file for this project.', projUri);
     }
@@ -366,41 +379,6 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, behaveCon
 
   return path.relative(projUri.fsPath, new_base_dir);
 }
-
-
-
-function getProjectRelativeConfigPaths(projUri: vscode.Uri): string[] {
-  const projectRelativeConfigPaths: string[] = [];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let config: { [key: string]: any; } | undefined = undefined;
-  let section = "behave";
-  // match order of preference in behave source "config_filenames()" function
-  for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
-    const file = path.join(projUri.fsPath, configFile);
-    if (fs.existsSync(file)) {
-      if (configFile === "pyproject.toml")
-        section = "tool.behave";
-      config = configParser(file)
-      break;
-    }
-  }
-
-  if (config) {
-    let configPaths = config[section]?.paths;
-    if (configPaths) {
-      if (typeof configPaths === "string")
-        configPaths = [configPaths];
-      configPaths.forEach((path: string) => {
-        path = vscode.workspace.asRelativePath(path);
-        projectRelativeConfigPaths.push(path);
-      });
-    }
-  }
-
-  return projectRelativeConfigPaths
-}
-
 
 
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {

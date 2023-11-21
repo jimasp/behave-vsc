@@ -45,7 +45,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - If you have an `environment.py` file, then it must be at the same level as the `steps` folder.  
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
-  - (In the below examples the behave configuration file is `behave.ini`, but you can also use `pyproject.toml`, `.behaverc`, `setup.cfg`, or `tox.ini`.)
+  - (In the below examples the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
   
   - Example 1 - steps folder is a child of the features folder:
 
@@ -81,7 +81,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini` or `pyproject.toml`) to your project folder to specify the name:
+- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the name:
 
   - For example:
 
@@ -173,11 +173,11 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - There are several options here. Using a combination of all of these is recommended:
 
-  - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags, then you can select to run any folder/subfolder from the test tree in the UI and/or combine it with tags.
+  - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags. This way you can select to run any folder/subfolder from the test tree in the test explorer UI.
 
-  - B. Consider if you can use a naming scheme for feature subfolders/files that will allow you to leverage the filtering above the test tree in the test explorer UI to enable you to run just those tests.
+  - B. Consider if you can use a naming scheme for feature subfolders/files that will allow you to leverage the filtering at the top of the test explorer to run just those tests by name.
 
-  - C. Via the `Run Tests with Tags` run profile in the test explorer (or via the `>` and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
+  - C. Via the `Run Tests with Tags` run profile in the test explorer (or via the `>` icon and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
 
   - D. Via custom (reusable) run profiles. Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
@@ -279,9 +279,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Does your project meet the [workspace requirements](#workspace-requirements) and have a [compatible project directory structure](#compatible-project-directory-structures)?
 
-- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
-
 - Make sure the `paths` setting in your behave configuration file is correct.
+
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
 - Does refreshing the Test explorer solve your issue?
 
