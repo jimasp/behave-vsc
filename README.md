@@ -81,14 +81,30 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the name:
+  - Example 3 - multiple top-level features folders:
 
-  - For example:
+    ```text
+    ├── behave.ini
+    ├── environment.py
+    ├── db_features
+    │   └── db1.feature
+    ├── web_features
+    │   └── web1.feature
+    └── steps/
+        ├── shared.py
+        ├── db.py                             
+        └── web.py
+    ```
+
+- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features paths:
+
+  - For Example 3 above:
 
     ```ini
     # behave.ini
     [behave]
-    paths=my_tests/behave_features
+    paths=db_features
+          web_features
     ```
 
 - If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
@@ -329,9 +345,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 
-- Test durations are taken from behave junit xml files, not actual execution time.
-
-- vscode always adds up test durations. For `runParallel` runs this means the parent test node reports a longer time than the test run actually took.
+- Individual test durations are taken from behave junit xml files, not actual execution time.
 
 ---
 
