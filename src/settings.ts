@@ -259,7 +259,11 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       continue;
 
     if (line.startsWith('[') && line.endsWith(']')) {
-      const newSection = line.slice(1, -1).trim();
+
+      // behave's config parser won't trim [behave ], it will 
+      // only match [behave], so we will do the same
+      const newSection = line.slice(1, -1);
+
       if (newSection === "")
         continue;
       if (newSection !== "behave" && currentSection === "behave")
@@ -267,6 +271,9 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       currentSection = newSection;
       continue;
     }
+
+    if (currentSection !== "behave")
+      continue;
 
     if (line.includes('=')) {
       let [key, value] = line.split('=');
