@@ -25,7 +25,7 @@ import { RunProfile } from './settings';
 
 const testData = new Map<vscode.TestItem, BehaveTestData>();
 const userTestRunProfiles: vscode.TestRunProfile[] = [];
-const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher[]>();
+const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
@@ -44,8 +44,11 @@ export type TestSupport = {
 
 
 export function deactivate() {
-  // clean up any potentially large non-disposable objects (i.e. not handled by context.subscriptions)
+  // clean up any potentially large non-disposable objects,  
+  // or any disposable objects not handled by context.subscriptions
   testData.clear();
+  wkspWatchers.forEach(w => w.dispose());
+  wkspWatchers.clear();
 }
 
 
@@ -69,9 +72,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      const watchers = startWatchingProject(projUri, ctrl, testData, parser);
-      wkspWatchers.set(projUri, watchers);
-      watchers.forEach(w => context.subscriptions.push(w));
+      const projWatcher = startWatchingProject(projUri, ctrl, testData, parser);
+      wkspWatchers.set(projUri, projWatcher);
     }
 
     const junitWatcher = new JunitWatcher();
@@ -216,12 +218,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           config.reloadSettings(projUri);
           reloadRunProfiles(ctrl, runHandler);
 
-          const oldWatchers = wkspWatchers.get(projUri);
-          if (oldWatchers)
-            oldWatchers.forEach(w => w.dispose());
-          const watchers = startWatchingProject(projUri, ctrl, testData, parser);
-          wkspWatchers.set(projUri, watchers);
-          watchers.forEach(w => context.subscriptions.push(w));
+          const oldProjWatcher = wkspWatchers.get(projUri);
+          if (oldProjWatcher)
+            oldProjWatcher.dispose();
+          const projWatcher = startWatchingProject(projUri, ctrl, testData, parser);
+          wkspWatchers.set(projUri, projWatcher);
         }
 
         // code.workspace or settings.json configuration has now changed, so we need to reparse files

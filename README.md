@@ -27,7 +27,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Terminology
 
-- "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+- "Project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
 
 ## Workspace requirements
 

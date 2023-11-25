@@ -27,10 +27,10 @@ export type ProjParseCounts = {
 export class FileParser {
 
   private _parseFilesCallCounts = 0;
-  private _finishedFeaturesParseForAllWorkspaces = false;
-  private _finishedStepsParseForAllWorkspaces = false;
-  private _finishedFeaturesParseForWorkspace: { [key: string]: boolean } = {};
-  private _finishedStepsParseForWorkspace: { [key: string]: boolean } = {};
+  private _finishedFeaturesParseForAllProjects = false;
+  private _finishedStepsParseForAllProjects = false;
+  private _finishedFeaturesParseForProject: { [key: string]: boolean } = {};
+  private _finishedStepsParseForProject: { [key: string]: boolean } = {};
   private _cancelTokenSources: { [projUriPath: string]: vscode.CancellationTokenSource } = {};
   private _errored = false;
   private _reparsingFile = false;
@@ -45,7 +45,7 @@ export class FileParser {
     timeout = timeout - 50;
 
     const check = (resolve: (value: boolean) => void) => {
-      if (this._finishedFeaturesParseForAllWorkspaces) {
+      if (this._finishedFeaturesParseForAllProjects) {
         diagLog(`featureParseComplete (${caller}) - is good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
@@ -74,7 +74,7 @@ export class FileParser {
     timeout = timeout - 50;
 
     const check = (resolve: (value: boolean) => void) => {
-      if (this._finishedStepsParseForAllWorkspaces && !this._reparsingFile) {
+      if (this._finishedStepsParseForAllProjects && !this._reparsingFile) {
         diagLog(`stepsParseComplete (${caller}) - is good to go (all steps parsed)`);
         resolve(true);
       }
@@ -139,7 +139,7 @@ export class FileParser {
 
     const projUri = projSettings.uri;
 
-    diagLog("removing existing steps for workspace: " + projSettings.name);
+    diagLog("removing existing steps for project: " + projSettings.name);
     deleteStepFileStepsForProject(projUri);
 
     let processed = 0;
@@ -238,7 +238,7 @@ export class FileParser {
     const testFile = new TestFile();
     testData.set(testItem, testFile);
 
-    // if it's a multi-root workspace, use workspace grandparent nodes, e.g. "workspace_1", "workspace_2"
+    // if it's a multi-root workspace, use project grandparent nodes, e.g. "project_1", "project_2"
     let projGrandParent: vscode.TestItem | undefined;
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
       projGrandParent = controller.items.get(projSettings.id);
@@ -325,10 +325,10 @@ export class FileParser {
   async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
     intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
 
-    this._finishedFeaturesParseForAllWorkspaces = false;
+    this._finishedFeaturesParseForAllProjects = false;
     this._errored = false;
 
-    // this function is called e.g. when a workspace gets added/removed/renamed, so 
+    // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
     diagLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
     deleteTestTreeNodes(null, testData, ctrl);
@@ -341,18 +341,18 @@ export class FileParser {
 
 
   // NOTE:
-  // - It is a self-cancelling RE-ENTRANT function, i.e. any current parse for the same workspace will be cancelled.   
+  // - This is a self-cancelling RE-ENTRANT function, i.e. when called, any current parse for the same project will stop.   
   // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
   async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
 
     const projPath = projUri.path;
-    this._finishedFeaturesParseForAllWorkspaces = false;
-    this._finishedStepsParseForAllWorkspaces = false;
-    this._finishedFeaturesParseForWorkspace[projPath] = false;
-    this._finishedStepsParseForWorkspace[projPath] = false;
+    this._finishedFeaturesParseForAllProjects = false;
+    this._finishedStepsParseForAllProjects = false;
+    this._finishedFeaturesParseForProject[projPath] = false;
+    this._finishedStepsParseForProject[projPath] = false;
 
-    // if caller cancels, pass it on to the internal token
+    // if caller itself cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
       if (this._cancelTokenSources[projPath])
         this._cancelTokenSources[projPath].cancel();
@@ -370,7 +370,7 @@ export class FileParser {
       diagLog(`\n===== ${callName}: started =====`);
 
       // this function is not generally awaited, and therefore re-entrant, so 
-      // cancel any existing parseFiles call for this workspace
+      // cancel any existing parseFiles call for this project
       if (this._cancelTokenSources[projPath]) {
         diagLog(`cancelling previous parseFiles call for ${projName}`);
         this._cancelTokenSources[projPath].cancel();
@@ -390,13 +390,13 @@ export class FileParser {
         diagLog(`${callName}: cancellation complete`);
         return;
       }
-      diagLog(`${callName}: features loaded for workspace ${projName}`);
-      this._finishedFeaturesParseForWorkspace[projPath] = true;
+      diagLog(`${callName}: features loaded for project ${projName}`);
+      this._finishedFeaturesParseForProject[projPath] = true;
       const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
-        !this._finishedFeaturesParseForWorkspace[uri.path]);
+        !this._finishedFeaturesParseForProject[uri.path]);
       if (projectsStillParsingFeatures.length === 0) {
-        this._finishedFeaturesParseForAllWorkspaces = true;
-        diagLog(`${callName}: features loaded for all workspaces`);
+        this._finishedFeaturesParseForAllProjects = true;
+        diagLog(`${callName}: features loaded for all projects`);
       }
       else {
         diagLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
@@ -413,7 +413,7 @@ export class FileParser {
         return;
       }
 
-      this._finishedStepsParseForWorkspace[projPath] = true;
+      this._finishedStepsParseForProject[projPath] = true;
       diagLog(`${callName}: steps loaded`);
 
       const updateMappingsStart = performance.now();
@@ -421,10 +421,10 @@ export class FileParser {
       buildMappingsTime = performance.now() - updateMappingsStart;
       diagLog(`${callName}: stepmappings built`);
 
-      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForWorkspace[uri.path]);
+      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
       if (projectsStillParsingSteps.length === 0) {
-        this._finishedStepsParseForAllWorkspaces = true;
-        diagLog(`${callName}: steps loaded for all workspaces`);
+        this._finishedStepsParseForAllProjects = true;
+        diagLog(`${callName}: steps loaded for all projects`);
       }
       else {
         diagLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
@@ -455,10 +455,10 @@ export class FileParser {
     catch (e: unknown) {
       // unawaited async func, must log the error 
 
-      this._finishedFeaturesParseForWorkspace[projPath] = true;
-      this._finishedStepsParseForWorkspace[projPath] = true;
-      this._finishedFeaturesParseForAllWorkspaces = true;
-      this._finishedStepsParseForAllWorkspaces = true;
+      this._finishedFeaturesParseForProject[projPath] = true;
+      this._finishedStepsParseForProject[projPath] = true;
+      this._finishedFeaturesParseForAllProjects = true;
+      this._finishedStepsParseForAllProjects = true;
 
       // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
       Object.keys(this._cancelTokenSources).forEach(k => {
@@ -534,7 +534,7 @@ export class FileParser {
       `\nPERF:   (c) another test extension is also refreshing, ` +
       `\nPERF:   (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
       `\nPERF: For a more representative time, disable other test extensions then click the test refresh button a few times.` +
-      `\nPERF: (Note that for multi-root, multiple workspaces refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
+      `\nPERF: (Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
       `\n==================`
     );
   }
