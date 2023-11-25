@@ -190,10 +190,14 @@ export class ProjectSettings {
     let projEntries = Object.entries(this).sort();
     projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
     projEntries = projEntries.sort();
-    const resourceSettingsDic: { [name: string]: string; } = {};
-    projEntries.forEach(([key, value]) => {
-      resourceSettingsDic[key] = value;
-    });
+    const resourceSettingsDic: { [name: string]: object; } = {};
+    const userEntries: { [name: string]: object; } = {};
+    projEntries.map(([key, value]) => userEntries[key] = value);
+    resourceSettingsDic["user:"] = userEntries;
+    resourceSettingsDic["calculated:"] = {
+      "featureFolders": this.relativeFeatureFolders,
+      "stepsFolders": this.relativeStepsFolders
+    }
 
     // output settings, and any warnings or errors for settings
 
@@ -201,7 +205,7 @@ export class ProjectSettings {
     if (projUris.length > 0 && this.uri === projUris[0])
       logger.logInfoAllProjects(`\ninstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 
-    logger.logInfo(`\n${this.name} workspace settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
+    logger.logInfo(`\n${this.name} project settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
 
     if (this._fatalErrors.length > 0) {
       throw new projError(`\nFATAL ERROR due to invalid setting in "${this.name}/.vscode/settings.json". Extension cannot continue. ` +
@@ -214,38 +218,54 @@ export class ProjectSettings {
 }
 
 
-function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string[] {
+function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger): string[] {
   let paths: string[] | null = null;
 
   // match order of preference in behave source code function "config_filenames()"
+  let matchedConfigFile;
   for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
     const configFilePath = path.join(projUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
       if (configFile === "pyproject.toml")
         continue;
+      matchedConfigFile = configFile;
       paths = getBehavePathsFromIni(configFilePath);
-      if (paths)
-        break;
+      break;
     }
   }
 
-  if (!paths)
-    return [];
 
-  return paths.map((path: string) => vscode.workspace.asRelativePath(path));
+  if (!paths) {
+    logger.logInfo(`Behave config file "${matchedConfigFile}", paths: ${paths}`, projUri);
+    return [];
+  }
+
+  const relPaths: string[] = [];
+  for (const path of paths) {
+    // paths setting may be relative or absolute
+    const relPath = vscode.workspace.asRelativePath(path);
+    if (!fs.existsSync(vscode.Uri.joinPath(projUri, relPath).fsPath))
+      logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
+    else
+      relPaths.push(relPath);
+  }
+
+  const outPaths = relPaths.map(p => `"${p}"`).join(", ");
+  logger.logInfo(`Behave config file "${matchedConfigFile}" sets relative paths: ${outPaths}`, projUri);
+  return relPaths;
 }
 
 
-// example ini file:
-//  [behave ]
-//   paths  =features1
-//    features2
-//        features3
-// stdout_capture= true
-//
-// we are only interested in the [behave] paths section
 function getBehavePathsFromIni(filePath: string): string[] | null {
+  // example ini file:
+  //  [behave]
+  //   paths  =features1
+  //    features2
+  //        features3
+  // stdout_capture= true
+  //
+  // we are only interested in the [behave] paths section  
 
   const data = fs.readFileSync(filePath, 'utf-8');
   const lines = data.split('\n');
@@ -260,8 +280,8 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
 
     if (line.startsWith('[') && line.endsWith(']')) {
 
-      // behave's config parser won't trim [behave ], it will 
-      // only match [behave], so we will do the same
+      // behave's config parser will only match "[behave]", 
+      // e.g. it won't match "[behave ]", so we will do the same
       const newSection = line.slice(1, -1);
 
       if (newSection === "")
@@ -302,7 +322,7 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
 
 
 function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibraries: StepLibrariesSetting, logger: Logger) {
-  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri);
+  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, logger);
 
   // base dir is a concept borrowed from behave's source code
   // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        

@@ -56,7 +56,7 @@ export const openDocumentRange = async (uri: vscode.Uri, range: vscode.Range, pr
 
 export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
-  const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")} / releases / tag / v${extensionVersion}`;
+  const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
   config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
   config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}`);
