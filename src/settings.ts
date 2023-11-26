@@ -194,7 +194,7 @@ export class ProjectSettings {
     const userEntries: { [name: string]: object; } = {};
     projEntries.map(([key, value]) => userEntries[key] = value);
     resourceSettingsDic["user:"] = userEntries;
-    resourceSettingsDic["calculated:"] = {
+    resourceSettingsDic["auto:"] = {
       "featureFolders": this.relativeFeatureFolders,
       "stepsFolders": this.relativeStepsFolders
     }
@@ -263,19 +263,42 @@ function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger
 
 
 function getBehavePathsFromIni(filePath: string): string[] | null {
-  // example ini file:
+  // we have to follow behave's own paths behaviour here
+  // (see "read_configuration" in behave's source code)
+  //
+  // example ini file #1 - becomes ["features"]
   //  [behave]
-  //   paths  =features1
-  //    features2
-  //        features3
+  // paths = ./features
+  //
+  // example ini file # - becomes ["/home/me/project/features"] (will be converted to a relative path up the call stack)
+  //  [behave]
+  // paths=/home/me/project/features
+  //
+  // example ini file #2 - becomes ["features", "features2"]
+  //  [behave]
+  // paths  =features
+  //     features2
   // stdout_capture= true
   //
-  // we are only interested in the [behave] paths section  
+  // example ini file #3 - becomes [".", "../features"]
+  // [behave]
+  // paths =
+  //   ../features
+  //
+  // example ini file #4 - ignored due to space in "[behave ]"
+  //  [behave ]
+  // paths  =features
+  //
+
+  const normalisePath = (p: string) => {
+    if (p.startsWith("./"))
+      return p.slice(2);
+    return p.replaceAll("/./", "/");
+  }
 
   const data = fs.readFileSync(filePath, 'utf-8');
   const lines = data.split('\n');
   let currentSection = '';
-  let currentValue: string | string[] = '';
   let paths: string[] | null = null;
 
   for (let line of lines) {
@@ -284,11 +307,9 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       continue;
 
     if (line.startsWith('[') && line.endsWith(']')) {
-
       // behave's config parser will only match "[behave]", 
       // e.g. it won't match "[behave ]", so we will do the same
       const newSection = line.slice(1, -1);
-
       if (newSection === "")
         continue;
       if (newSection !== "behave" && currentSection === "behave")
@@ -304,12 +325,17 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       const [key, value] = line.split('=');
       if (key.trim() !== "paths")
         continue;
-      paths = [value.trim()];
+      const trimmed = value.trim();
+      if (trimmed === "") {
+        paths = ["."];
+        continue;
+      }
+      paths = [normalisePath(trimmed)];
+      continue;
     }
-    else {
-      if (line.length > 0)
-        paths?.push(line);
-    }
+
+    if (line.length > 0)
+      paths?.push(normalisePath(line));
   }
 
   return paths;
@@ -406,8 +432,8 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
 
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
 
-  // if specifically set, skip gathering feature paths
-  if (relativeConfigPaths.length > 0)
+  // if paths specifically set, and not set to root path, skip gathering feature paths
+  if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes("."))
     return relativeConfigPaths;
 
   const start = performance.now();
