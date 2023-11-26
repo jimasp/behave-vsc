@@ -221,20 +221,25 @@ export class ProjectSettings {
 function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger): string[] {
   let paths: string[] | null = null;
 
-  // match order of preference in behave source code function "config_filenames()"
+  // BEHAVE_CONFIG_FILES array has the same order of precedence as in the behave 
+  // source code function "config_filenames()",
+  // however we don't need to reverse() it like behave because we are only 
+  // interested in the "paths" setting (not all cumulative 
+  // settings), i.e. we can just break on the first file with a "paths" setting.
   let matchedConfigFile;
-  for (const configFile of BEHAVE_CONFIG_FILES.reverse()) {
+  for (const configFile of BEHAVE_CONFIG_FILES) {
     const configFilePath = path.join(projUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
       if (configFile === "pyproject.toml")
         continue;
-      matchedConfigFile = configFile;
       paths = getBehavePathsFromIni(configFilePath);
-      break;
+      if (paths) {
+        matchedConfigFile = configFile;
+        break;
+      }
     }
   }
-
 
   if (!paths) {
     logger.logInfo(`Behave config file "${matchedConfigFile}", paths: ${paths}`, projUri);
@@ -332,12 +337,12 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
     return;
   }
 
-  if (!relativeConfigPaths.includes(relativeBaseDirPath))
+  if (relativeConfigPaths.length === 0)
     relativeConfigPaths.push(relativeBaseDirPath);
 
-  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri);
+  const baseDirUri = vscode.Uri.joinPath(projUri, relativeBaseDirPath);
 
-  const baseDirFsPath = vscode.Uri.joinPath(projUri, relativeBaseDirPath).fsPath;
+  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri, relativeConfigPaths);
 
   const relativeStepsFolders: string[] = [];
   relativeStepsFolders.push(
@@ -347,7 +352,7 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
   // stepReferences if multiple matches are found across step folders. i.e. the last one wins, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent on the line that says "replacing duplicate step file step")
-  const stepsFolder = getStepsDir(baseDirFsPath);
+  const stepsFolder = getStepsDir(baseDirUri.fsPath);
   if (stepsFolder)
     relativeStepsFolders.push(stepsFolder);
 
@@ -408,10 +413,16 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
 }
 
 
-function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
+function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
   const start = performance.now();
-  const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
-  const relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
+  const allConfigPathsFeatureFolders: string[] = [];
+
+  for (const behaveConfigPath of relativeConfigPaths) {
+    const behaveConfigPathUri = vscode.Uri.joinPath(projUri, behaveConfigPath);
+    const featureFolders = findFilesSync(behaveConfigPathUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
+    const relFeatureFolders = featureFolders.map(folder => path.relative(behaveConfigPathUri.fsPath, folder));
+    allConfigPathsFeatureFolders.push(...relFeatureFolders);
+  }
 
   /* 
   we want the longest common .feature paths, such that this structure:
@@ -430,14 +441,13 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri): string[] {
     "tests/features"
     "tests/features2"
   */
-  const longestCommonPaths = findLongestCommonPaths(relFeatureFolders);
+  const longestCommonPaths = findLongestCommonPaths(allConfigPathsFeatureFolders);
 
   // default to watching for features path
   if (longestCommonPaths.length === 0)
     longestCommonPaths.push("features");
 
   diagLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
-
   return longestCommonPaths;
 }
 

@@ -112,9 +112,6 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
     // interested in are in the same project root, so we'll just have one watcher 
     // for the project root and use this handleIt function as a filter.
 
-    if (uri.path.endsWith(".feature"))
-      return true;
-
     if (uri.path.endsWith(".tmp")) // vscode file history file
       return false;
 
@@ -128,13 +125,12 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
       }
     }
 
-    // at this point we're only interested in steps/feature folders or their descendants
+    // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
     const relFolderPaths = projSettings.relativeFeatureFolders.concat(projSettings.relativeStepsFolders);
     if (!relFolderPaths.some(relPath => uri.path.startsWith(`${projUri.path}/${relPath}`)))
       return false;
 
-    // .py file in a steps folder (inc. feature/steps)
-    if (uri.path.endsWith(".py"))
+    if (uri.path.endsWith(".feature") || uri.path.endsWith(".py"))
       return true;
 
     // if we've got this far, then we know the path is inside a steps/feature folder    
