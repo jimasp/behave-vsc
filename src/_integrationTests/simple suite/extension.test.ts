@@ -10,27 +10,30 @@ suite(`simple suite`, () => {
 
 	const options: TestRunOptions = {
 		projName: folderName,
-		expectedProjectRelativeBaseDirPath: "features",
-		expectedProjectRelativeConfigPaths: ["features"],
-		expectedProjectRelativeFeatureFolders: ["features"],
-		expectedProjectRelativeStepsFolders: ["features/steps"],
-		getExpectedCountsFunc: getExpectedCounts,
-		getExpectedResultsFunc: getExpectedResults,
 		envVarOverrides: undefined,
 		runProfiles: undefined,
 		selectedRunProfile: undefined,
 		stepLibraries: undefined
 	};
 
+	const expectations = {
+		expectedProjectRelativeBaseDirPath: "features",
+		expectedProjectRelativeConfigPaths: ["features"],
+		expectedProjectRelativeFeatureFolders: ["features"],
+		expectedProjectRelativeStepsFolders: ["features/steps"],
+		getExpectedCountsFunc: getExpectedCounts,
+		getExpectedResultsFunc: getExpectedResults,
+	}
+
 
 	test("runDefault", async () =>
-		await sharedWorkspaceTests.runTogetherWithDefaultSettings(options)).timeout(300000);
+		await sharedWorkspaceTests.runTogetherWithDefaultSettings(options, expectations)).timeout(300000);
 
 	test("runParallel", async () =>
-		await sharedWorkspaceTests.runParallel(options)).timeout(300000);
+		await sharedWorkspaceTests.runParallel(options, expectations)).timeout(300000);
 
 	test("runTogether", async () =>
-		await sharedWorkspaceTests.runTogether(options)).timeout(300000);
+		await sharedWorkspaceTests.runTogether(options, expectations)).timeout(300000);
 
 }).timeout(900000);
 

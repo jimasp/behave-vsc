@@ -1,5 +1,5 @@
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
-import { ProjectRunners, TestRunOptions } from "../suite-shared/project.runners";
+import { Expectations, ProjectRunners, TestRunOptions } from "../suite-shared/project.runners";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -14,19 +14,22 @@ suite(`simple suite test debug run`, () => {
 
   const options: TestRunOptions = {
     projName: folderName,
-    expectedProjectRelativeBaseDirPath: "features",
-    expectedProjectRelativeConfigPaths: ["features"],
-    expectedProjectRelativeFeatureFolders: ["features"],
-    expectedProjectRelativeStepsFolders: ["features/steps"],
-    getExpectedCountsFunc: getExpectedCounts,
-    getExpectedResultsFunc: getExpectedResults,
     envVarOverrides: undefined,
     runProfiles: undefined,
     selectedRunProfile: undefined,
     stepLibraries: undefined
   };
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(options)).timeout(300000);
+  const expectations: Expectations = {
+    expectedProjectRelativeBaseDirPath: "features",
+    expectedProjectRelativeConfigPaths: ["features"],
+    expectedProjectRelativeFeatureFolders: ["features"],
+    expectedProjectRelativeStepsFolders: ["features/steps"],
+    getExpectedCountsFunc: getExpectedCounts,
+    getExpectedResultsFunc: getExpectedResults,
+  }
+
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(options, expectations)).timeout(300000);
 
 }).timeout(900000);
 
