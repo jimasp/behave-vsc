@@ -301,23 +301,14 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       continue;
 
     if (line.includes('=')) {
-      let [key, value] = line.split('=');
-      key = key.trim();
-      if (key !== "paths")
+      const [key, value] = line.split('=');
+      if (key.trim() !== "paths")
         continue;
-      value = value.trim();
-      currentValue = value;
+      paths = [value.trim()];
     }
     else {
-      if (line.length > 0) {
-        const arr: string[] = [];
-        if (currentValue instanceof Array)
-          arr.push(...currentValue);
-        else
-          arr.push(currentValue);
-        arr.push(line);
-        paths = currentValue = arr;
-      }
+      if (line.length > 0)
+        paths?.push(line);
     }
   }
 
@@ -414,15 +405,14 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
 
 
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
-  const start = performance.now();
-  const allConfigPathsFeatureFolders: string[] = [];
 
-  for (const behaveConfigPath of relativeConfigPaths) {
-    const behaveConfigPathUri = vscode.Uri.joinPath(projUri, behaveConfigPath);
-    const featureFolders = findFilesSync(behaveConfigPathUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
-    const relFeatureFolders = featureFolders.map(folder => path.relative(behaveConfigPathUri.fsPath, folder));
-    allConfigPathsFeatureFolders.push(...relFeatureFolders);
-  }
+  // if specifically set, skip gathering feature paths
+  if (relativeConfigPaths.length > 0)
+    return relativeConfigPaths;
+
+  const start = performance.now();
+  const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
+  const relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
 
   /* 
   we want the longest common .feature paths, such that this structure:
@@ -441,13 +431,14 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
     "tests/features"
     "tests/features2"
   */
-  const longestCommonPaths = findLongestCommonPaths(allConfigPathsFeatureFolders);
+  const longestCommonPaths = findLongestCommonPaths(relFeatureFolders);
 
   // default to watching for features path
   if (longestCommonPaths.length === 0)
     longestCommonPaths.push("features");
 
   diagLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
+
   return longestCommonPaths;
 }
 
