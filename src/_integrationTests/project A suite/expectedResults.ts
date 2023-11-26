@@ -449,19 +449,19 @@ export function getExpectedResults(projUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/envVarOverrides.feature',
-      scenario_featureName: 'envVarOverrides',
-      scenario_getLabel: 'run an successful envVarOverrides test',
+      scenario_featureFileRelativePath: '{{featurePath}}/group2_features/envvaroverrides.feature',
+      scenario_featureName: 'EnvVarOverrides',
+      scenario_getLabel: 'run a successful envVarOverrides test',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run an successful envVarOverrides test',
+      scenario_scenarioName: 'run a successful envVarOverrides test',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
       test_id: '.../project A/{{featurePath}}/group2_features/envvars.feature/run an successful envvars test',
-      test_label: 'run an successful envvars test',
-      test_parent: '.../project A/{{featurePath}}/group2_features/envvars.feature',
-      test_uri: '.../project A/{{featurePath}}/group2_features/envvars.feature'
+      test_label: 'run a successful envVarOverrides test',
+      test_parent: '.../project A/behave tests/some tests/group2_features/envvaroverrides.feature',
+      test_uri: '.../project A/behave tests/some tests/group2_features/envvaroverrides.feature'
     }),
 
     new TestResult({

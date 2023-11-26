@@ -16,8 +16,8 @@ suite(`project A suite`, () => {
 	};
 
 	const expectations: Expectations = {
-		expectedProjectRelativeBaseDirPath: "features",
-		expectedProjectRelativeConfigPaths: ["/behave tests/some tests/"],
+		expectedProjectRelativeBaseDirPath: "behave tests/some tests",
+		expectedProjectRelativeConfigPaths: ["behave tests/some tests"],
 		expectedProjectRelativeFeatureFolders: ["behave tests/some tests"],
 		expectedProjectRelativeStepsFolders: ["behave tests/some tests/steps"],
 		getExpectedCountsFunc: getExpectedCounts,
