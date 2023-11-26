@@ -363,9 +363,9 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
 
   const relativeStepsFolders: string[] = [];
   relativeStepsFolders.push(
-    ...getStepLibraryStepPaths(projUri, stepLibraries, relativeStepsFolders, logger));
+    ...getStepLibraryStepPaths(projUri, stepLibraries, logger));
 
-  // NOTE - the order of the relativeStepsFolders determines which step folder step is used as the match for 
+  // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
   // stepReferences if multiple matches are found across step folders. i.e. the last one wins, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent on the line that says "replacing duplicate step file step")
@@ -470,38 +470,17 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
 
 
 
-function getStepLibraryStepPaths(projUri: vscode.Uri, requestedStepLibraries: StepLibrariesSetting,
-  relativeStepsFoldersOutsideFeatureFolders: string[], logger: Logger): string[] {
+function getStepLibraryStepPaths(projUri: vscode.Uri, requestedStepLibraries: StepLibrariesSetting, logger: Logger): string[] {
 
   const stepLibraryPaths: string[] = [];
 
   for (const stepLibrary of requestedStepLibraries) {
     const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
-    const stepFilesRx = stepLibrary.stepFilesRx;
 
     if (!relativePath) {
       // the path is required as it is used to set the watcher path
       logger.showWarn('step library path specified in "behave-vsc.stepLibraries" cannot be an empty ' +
         'string and will be ignored', projUri);
-      continue;
-    }
-
-    // add some basic, imperfect checks to try and ensure we don't end up with 2+ watchers on the same folder
-    const rxPath = relativePath + "/" + stepFilesRx;
-    const lowerRelativePath = relativePath.toLowerCase();
-    let rxMatch = false;
-    for (const relStepSearchPath of relativeStepsFoldersOutsideFeatureFolders) {
-      if (RegExp(rxPath).test(relStepSearchPath)) {
-        rxMatch = true;
-        break;
-      }
-    }
-    if (rxMatch
-      || relativeStepsFoldersOutsideFeatureFolders.includes(relativePath)
-      // check standard paths even if they are not currently in use    
-      || lowerRelativePath === "features" || lowerRelativePath === "steps" || lowerRelativePath === "features/steps") {
-      logger.showWarn(`step library path "${relativePath}" specified in "behave-vsc.stepLibraries" will be ignored ` +
-        "because it is a known steps path).", projUri);
       continue;
     }
 

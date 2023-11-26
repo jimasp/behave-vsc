@@ -27,7 +27,7 @@ suite(`simple suite`, () => {
 
 
 	test("runDefault", async () =>
-		await sharedWorkspaceTests.runTogetherWithDefaultSettings(options, expectations)).timeout(300000);
+		await sharedWorkspaceTests.runTogetherWithDefaultConfig(options, expectations)).timeout(300000);
 
 	test("runParallel", async () =>
 		await sharedWorkspaceTests.runParallel(options, expectations)).timeout(300000);

@@ -30,13 +30,17 @@ export class ProjectRunners {
   constructor(readonly testPre: string) { }
 
 
-  runTogetherWithDefaultSettings = async (options: TestRunOptions, expectations: Expectations) => {
+  runTogetherWithDefaultConfig = async (options: TestRunOptions, expectations: Expectations) => {
 
     // default = everything undefined
     const testConfig = new TestWorkspaceConfig({
-      runParallel: undefined, multiRootProjectsRunInParallel: undefined,
+      runParallel: undefined,
+      multiRootProjectsRunInParallel: undefined,
       envVarOverrides: undefined,
-      justMyCode: undefined, stepLibraries: undefined, runProfiles: undefined, xRay: undefined
+      justMyCode: undefined,
+      stepLibraries: undefined,
+      runProfiles: undefined,
+      xRay: undefined
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -47,9 +51,13 @@ export class ProjectRunners {
   runTogether = async (options: TestRunOptions, expectations: Expectations) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: false, multiRootProjectsRunInParallel: true,
+      runParallel: false,
+      multiRootProjectsRunInParallel: true,
       envVarOverrides: options.envVarOverrides || defaultEnvVarOverrides,
-      justMyCode: undefined, stepLibraries: options.stepLibraries, runProfiles: options.runProfiles, xRay: true
+      justMyCode: undefined,
+      stepLibraries: options.stepLibraries,
+      runProfiles: options.runProfiles,
+      xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -60,9 +68,13 @@ export class ProjectRunners {
   runParallel = async (options: TestRunOptions, expectations: Expectations) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: true, multiRootProjectsRunInParallel: true,
+      runParallel: true,
+      multiRootProjectsRunInParallel: true,
       envVarOverrides: options.envVarOverrides || defaultEnvVarOverrides,
-      justMyCode: undefined, stepLibraries: options.stepLibraries, runProfiles: options.runProfiles, xRay: true
+      justMyCode: undefined,
+      stepLibraries: options.stepLibraries,
+      runProfiles: options.runProfiles,
+      xRay: true
     });
 
     console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
@@ -73,9 +85,13 @@ export class ProjectRunners {
   runDebug = async (options: TestRunOptions, expectations: Expectations) => {
 
     const testConfig = new TestWorkspaceConfig({
-      runParallel: true, multiRootProjectsRunInParallel: true,
+      runParallel: true,
+      multiRootProjectsRunInParallel: true,
       envVarOverrides: options.envVarOverrides || defaultEnvVarOverrides,
-      justMyCode: undefined, stepLibraries: options.stepLibraries, runProfiles: undefined, xRay: true
+      justMyCode: undefined,
+      stepLibraries: options.stepLibraries,
+      runProfiles: undefined,
+      xRay: true
     });
 
     // NOTE - if this fails, try removing all breakpoints in both vscode instances 

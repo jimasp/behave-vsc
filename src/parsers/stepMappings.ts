@@ -25,6 +25,7 @@ export class StepMapping {
 
 
 export function getStepFileStepForFeatureFileStep(featureFileUri: vscode.Uri, lineNo: number): StepFileStep | undefined {
+  // note - lineNo is zero-based  
   const stepMappingForFeatureFileStep = stepMappings.find(sm =>
     sm.featureFileStep && urisMatch(sm.featureFileStep.uri, featureFileUri) && sm.featureFileStep.range.start.line === lineNo);
   return stepMappingForFeatureFileStep?.stepFileStep;

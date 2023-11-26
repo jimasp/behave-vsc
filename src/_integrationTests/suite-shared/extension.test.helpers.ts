@@ -209,7 +209,7 @@ async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vsc
 		catch (e: unknown) {
 			debugger; // eslint-disable-line no-debugger
 			if (e instanceof assert.AssertionError)
-				throw new Error(`getStepMappingsForStepsFileFunction() could not find mapping for line ${uri.fsPath}:${lineNo}, (function: "${funcLine}")`);
+				throw new Error(`getStepMappingsForStepsFileFunction() could not find mapping for line ${uri.fsPath}:${lineNo + 1}, (function: "${funcLine}")`);
 			throw e;
 		}
 	}

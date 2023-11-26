@@ -111,7 +111,7 @@ export class FileParser {
         // e.g. user has deleted/renamed folder
         continue;
       }
-      const featureFiles = (await findFiles(featuresFolderUri, undefined, ".feature", cancelToken));
+      const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
         config.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
@@ -142,18 +142,14 @@ export class FileParser {
     diagLog("removing existing steps for project: " + projSettings.name);
     deleteStepFileStepsForProject(projUri);
 
-    let processed = 0;
+    const processed: string[] = [];
     for (const relStepsSearchPath of projSettings.relativeStepsFolders) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
         continue;
 
-      if (projSettings.relativeFeatureFolders.includes(relStepsSearchPath))
-        stepFiles = await findFiles(stepsSearchUri, "steps", ".py", cancelToken);
-      else
-        stepFiles = await findFiles(stepsSearchUri, undefined, ".py", cancelToken);
-
+      stepFiles = await findFiles(stepsSearchUri, new RegExp(".*\\.py$"), cancelToken);
 
       if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
         continue;
@@ -161,9 +157,14 @@ export class FileParser {
       for (const uri of stepFiles) {
         if (cancelToken.isCancellationRequested)
           break;
+        // the steplibraries setting could result in multiple matches, so skip if already processed
+        if (processed.includes(uriId(uri)))
+          continue;
+        if (!isStepsFile(uri))
+          continue;
         const content = await getContentFromFilesystem(uri);
-        await this._updateStepsFromStepsFileContent(projUri, content, uri, caller);
-        processed++;
+        await parseStepsFileContent(projUri, content, uri, caller);
+        processed.push((uriId(uri)));
       }
 
       if (cancelToken.isCancellationRequested) {
@@ -172,16 +173,7 @@ export class FileParser {
       }
     }
 
-    return processed;
-  }
-
-
-  private async _updateStepsFromStepsFileContent(projUri: vscode.Uri, content: string, fileUri: vscode.Uri, caller: string) {
-
-    if (!isStepsFile(fileUri))
-      return;
-
-    await parseStepsFileContent(projUri, content, fileUri, caller);
+    return processed.length;
   }
 
 
@@ -500,7 +492,7 @@ export class FileParser {
 
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
-        await this._updateStepsFromStepsFileContent(projSettings.uri, content, fileUri, "reparseFile");
+        await parseStepsFileContent(projSettings.uri, content, fileUri, "reparseFile");
       }
 
       if (isAFeatureFile) {

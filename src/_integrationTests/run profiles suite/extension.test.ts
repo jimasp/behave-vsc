@@ -48,7 +48,7 @@ suite(`run profiles suite`, () => {
 	const sharedWorkspaceTests = new ProjectRunners(testPre);
 
 	test("runTogether - no runProfileSetting", async () =>
-		await sharedWorkspaceTests.runTogetherWithDefaultSettings(folderName,
+		await sharedWorkspaceTests.runTogetherWithDefaultConfig(folderName,
 			"", "features", getExpectedCounts, getExpectedResultsForNoRunProfile)
 	).timeout(300000);
 

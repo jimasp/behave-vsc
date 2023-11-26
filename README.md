@@ -120,7 +120,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your steps folder, but you can also enable step navigation for imported step libraries that are inside your project folder via the `stepLibraries` setting. (Note that any path here that is also included in a `files.watcherExclude` setting will not be updated dynamically, i.e. on file/folder changes.)
+- Step navigation is automatically enabled for your steps folder, but you can also enable step navigation for:
+  - your own imported steps in non-standard locations, e.g. `features/my_web_features/steps`
+  - step libraries that are inside your project folder via the `stepLibraries` setting
+  - (note that if any path/rx is also included in a `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
 
   - Example:
 

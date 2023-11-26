@@ -320,8 +320,8 @@ export function cleanBehaveText(text: string) {
 
 // custom function to replace vscode.workspace.findFiles() functionality when required
 // due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
-export async function findFiles(directory: vscode.Uri, matchSubDirectory: string | undefined,
-  extension: string, cancelToken?: vscode.CancellationToken | undefined): Promise<vscode.Uri[]> {
+export async function findFiles(directory: vscode.Uri, match: RegExp,
+  cancelToken?: vscode.CancellationToken | undefined): Promise<vscode.Uri[]> {
 
   const entries = await vwfs.readDirectory(directory);
   const results: vscode.Uri[] = [];
@@ -333,13 +333,11 @@ export async function findFiles(directory: vscode.Uri, matchSubDirectory: string
     const fileType = entry[1];
     const entryUri = vscode.Uri.joinPath(directory, fileName);
     if (fileType === vscode.FileType.Directory) {
-      results.push(...await findFiles(entryUri, matchSubDirectory, extension, cancelToken));
+      results.push(...await findFiles(entryUri, match, cancelToken));
+      continue;
     }
-    else {
-      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/ ${matchSubDirectory} / `, "i").test(entryUri.path))) {
-        results.push(entryUri);
-      }
-    }
+    if (match.test(entryUri.path))
+      results.push(entryUri);
   }
 
   return results;
