@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { RunProfile, ProjectSettings } from "../../settings";
+import { ProjectSettings } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
@@ -11,6 +11,7 @@ import { ProjParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
+import { TestRunOptions } from './project.runners';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -73,27 +74,27 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 }
 
 
-function assertWorkspaceSettingsAsExpected(projName: string, projUri: vscode.Uri, testConfig: TestWorkspaceConfig, config: Configuration,
-	expectedRelativeBaseDirPath: string, expectedRelativeConfigPaths: string[], expectedRelativeFeatureFolders: string[],
-	expectedRelativeStepsFolders: string[]) {
+function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, options: TestRunOptions,
+	testConfig: TestWorkspaceConfig, config: Configuration) {
 
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
 		const winSettings = config.instanceSettings;
-		assert.strictEqual(winSettings.multiRootProjectsRunInParallel, testConfig.getExpected("multiRootProjectsRunInParallel"), projName);
-		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), projName);
-		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), projName);
+		assert.strictEqual(winSettings.multiRootProjectsRunInParallel, testConfig.getExpected("multiRootProjectsRunInParallel"),
+			options.projName);
+		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), options.projName);
+		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), options.projName);
 	}
 
 	const projSettings = config.projectSettings[projUri.path];
-	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), projName);
-	assert.strictEqual(projSettings.relativeFeatureFolders, expectedRelativeFeatureFolders, projName);
-	assert.strictEqual(projSettings.relativeStepsFolders, expectedRelativeStepsFolders, projName);
-	assert.strictEqual(projSettings.relativeBaseDirPath, expectedRelativeBaseDirPath, projName);
-	assert.strictEqual(projSettings.relativeConfigPaths, expectedRelativeConfigPaths, projName);
-	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), projName);
-	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), projName);
-	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"), projName);
+	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), options.projName);
+	assert.deepStrictEqual(projSettings.relativeFeatureFolders, options.expectedProjectRelativeFeatureFolders, options.projName);
+	assert.deepStrictEqual(projSettings.relativeStepsFolders, options.expectedProjectRelativeStepsFolders, options.projName);
+	assert.strictEqual(projSettings.relativeBaseDirPath, options.expectedProjectRelativeBaseDirPath, options.projName);
+	assert.deepStrictEqual(projSettings.relativeConfigPaths, options.expectedProjectRelativeConfigPaths, options.projName);
+	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), options.projName);
+	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), options.projName);
+	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"), options.projName);
 }
 
 
@@ -301,7 +302,7 @@ function assertInstances(instances: TestSupport) {
 	assert(instances.configurationChangedHandler);
 }
 
-function getTestWorkspaceUri(projName: string) {
+function getTestProjectUri(projName: string) {
 	const uris = getUrisOfWkspFoldersWithFeatures();
 	const projUri = uris.find(uri => uri.path.includes(projName));
 	assert(projUri, "projUri");
@@ -398,18 +399,10 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
-export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSystemFolderName: string,
-	testConfig: TestWorkspaceConfig,
-	expectedProjectRelativeBaseDirPath: string,
-	expectedProjectRelativeConfigPaths: string[],
-	expectedProjectrelativeFeatureFolders: string[],
-	expectedProjectRelativeStepsFolders: string[],
-	getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
-	getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[],
-	runProfile: RunProfile | undefined = undefined) {
+export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testConfig: TestWorkspaceConfig, options: TestRunOptions) {
 
-	const consoleName = `runAllTestsAndAssertTheResults for ${wskpFileSystemFolderName}`;
-	const projUri = getTestWorkspaceUri(wskpFileSystemFolderName);
+	const consoleName = `runAllTestsAndAssertTheResults for ${options.projName}`;
+	const projUri = getTestProjectUri(options.projName);
 	const projId = uriId(projUri);
 
 	await setLock(consoleName, "acquire");
@@ -421,15 +414,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
-	assertWorkspaceSettingsAsExpected(
-		wskpFileSystemFolderName,
-		projUri,
-		testConfig,
-		instances.config,
-		expectedProjectRelativeBaseDirPath,
-		expectedProjectRelativeConfigPaths,
-		expectedProjectrelativeFeatureFolders,
-		expectedProjectRelativeStepsFolders);
+	assertWorkspaceSettingsAsExpected(projUri, options, testConfig, instances.config);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForProject(projUri, instances.testData, instances.ctrl,
@@ -446,7 +431,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(instances.testData, allProjItems);
-	const expectedResults = getExpectedResultsFunc(projUri, instances.config);
+	const expectedResults = options.getExpectedResultsFunc(projUri, instances.config);
 	if (include.length !== expectedResults.length)
 		debugger; // eslint-disable-line no-debugger
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
@@ -462,14 +447,15 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const request = new vscode.TestRunRequest(include);
-	const resultsPromise = instances.runHandler(debug, request, runProfile);
+	const runProfile = options.runProfiles?.[options.selectedRunProfile];
+	const resultsPromise = instances.runHandler(isDebugRun, request, runProfile);
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
 	await (new Promise(t => setTimeout(t, 50)));
 	await setLock(consoleName, "release");
 
 
-	if (debug) {
+	if (isDebugRun) {
 		// timeout hack to show test ui during debug testing so we can see progress		
 		await new Promise(t => setTimeout(t, 1000));
 		await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -508,7 +494,7 @@ export async function runAllTestsAndAssertTheResults(debug: boolean, wskpFileSys
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(projUri, wskpFileSystemFolderName, instances.config, getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
+	assertExpectedCounts(projUri, options.projName, instances.config, options.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

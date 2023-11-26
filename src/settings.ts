@@ -59,9 +59,9 @@ export class InstanceSettings {
       throw "multiRootRunWorkspacesInParallel is undefined";
     // ------------------
 
-    const multiRootProjectsRunInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
+    const multiRootProjectsRunInParallelCfg: boolean | undefined = winConfig.get("multiRootProjectsRunInParallel");
     if (multiRootProjectsRunInParallelCfg === undefined)
-      throw "multiRootRunWorkspacesInParallel is undefined";
+      throw "multiRootProjectsRunInParallel is undefined";
 
     if (!multiRootRunWorkspacesInParallelCfg || !multiRootProjectsRunInParallelCfg)
       this.multiRootProjectsRunInParallel = false;

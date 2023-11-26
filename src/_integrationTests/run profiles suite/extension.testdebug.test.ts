@@ -1,5 +1,5 @@
 import { getExpectedCounts, getExpectedResultsForTag1RunProfile } from "./expectedResults";
-import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
+import { ProjectRunners } from "../suite-shared/project.runners";
 import { projectEnvVarOverrides, runProfilesSetting } from "./extension.test";
 
 
@@ -9,7 +9,7 @@ import { projectEnvVarOverrides, runProfilesSetting } from "./extension.test";
 suite(`run profiles suite test debug run`, () => {
   const folderName = "run profiles";
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-  const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
+  const sharedWorkspaceTests = new ProjectRunners(testPre);
 
   test("runDebug - tag1 profile", async () =>
     await sharedWorkspaceTests.runDebug(folderName,

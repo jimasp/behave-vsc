@@ -12,7 +12,6 @@ export class TestWorkspaceConfigWithprojUri {
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	private envVarOverrides: { [name: string]: string } | undefined;
-	private featuresPath: string | undefined;
 	private justMyCode: boolean | undefined;
 	private multiRootProjectsRunInParallel: boolean | undefined;
 	private runParallel: boolean | undefined;
@@ -57,6 +56,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
 			case "multiRootProjectsRunInParallel":
 				return <T><unknown>(this.multiRootProjectsRunInParallel === undefined ? true : this.multiRootProjectsRunInParallel);
+			case "multiRootRunWorkspacesInParallel": // deprecated
+				return <T><unknown>(this.multiRootProjectsRunInParallel === undefined ? true : this.multiRootProjectsRunInParallel);
 			case "justMyCode":
 				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "runParallel":
@@ -67,6 +68,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			case "runProfiles":
 				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
+			case "featuresPath": // deprecated
+				return <T><unknown>("ignored");
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);

@@ -1,17 +1,32 @@
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
-import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
+import { ProjectRunners, TestRunOptions } from "../suite-shared/project.runners";
 
 
 // this file is separate because we don't want to run parallel debug 
 // sessions (which is not supported) when running the multi-root tests (i.e. runMultiRootWorkspacesInParallel=true)
 
+
+
 suite(`simple suite test debug run`, () => {
   const folderName = "simple";
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-  const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
+  const sharedWorkspaceTests = new ProjectRunners(testPre);
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName,
-    "", "features", "features",
-    getExpectedCounts, getExpectedResults)).timeout(300000);
+  const options: TestRunOptions = {
+    projName: folderName,
+    expectedProjectRelativeBaseDirPath: "features",
+    expectedProjectRelativeConfigPaths: ["features"],
+    expectedProjectRelativeFeatureFolders: ["features"],
+    expectedProjectRelativeStepsFolders: ["features/steps"],
+    getExpectedCountsFunc: getExpectedCounts,
+    getExpectedResultsFunc: getExpectedResults,
+    envVarOverrides: undefined,
+    runProfiles: undefined,
+    selectedRunProfile: undefined,
+    stepLibraries: undefined
+  };
+
+  test("runDebug", async () => await sharedWorkspaceTests.runDebug(options)).timeout(300000);
+
 }).timeout(900000);
 

@@ -1,5 +1,5 @@
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
-import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
+import { ProjectRunners } from "../suite-shared/project.runners";
 
 
 // this is a separate file because we don't want to run parallel debug 
@@ -8,7 +8,7 @@ import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
 suite(`project B suite test debug run`, () => {
   const folderName = "project B";
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-  const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
+  const sharedWorkspaceTests = new ProjectRunners(testPre);
 
   test("runDebug", async () => await sharedWorkspaceTests.runDebug(folderName, "",
     "features", "features", getExpectedCounts, getExpectedResults)).timeout(300000);

@@ -1,12 +1,12 @@
 import { getExpectedResults } from "./expectedResults";
 import { getExpectedCounts } from "./expectedResults";
-import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
+import { ProjectRunners } from "../suite-shared/project.runners";
 
 
 suite(`sibling steps folder 1 suite`, () => {
 	const folderName = "sibling steps folder 1";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
+	const sharedWorkspaceTests = new ProjectRunners(testPre);
 
 	test("runDefault", async () =>
 		await sharedWorkspaceTests.runTogetherWithDefaultSettings(folderName, "", "steps", getExpectedCounts, getExpectedResults)).timeout(300000);

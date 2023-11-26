@@ -3,7 +3,7 @@ import {
 	getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile,
 	getExpectedResultsForTag2RunProfile, getExpectedCounts
 } from "./expectedResults";
-import { SharedWorkspaceTests } from "../suite-shared/shared.workspace.tests";
+import { ProjectRunners } from "../suite-shared/project.runners";
 import { RunProfilesSetting } from "../../settings";
 
 
@@ -45,7 +45,7 @@ export const runProfilesSetting: RunProfilesSetting = {
 suite(`run profiles suite`, () => {
 	const folderName = "run profiles";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const sharedWorkspaceTests = new SharedWorkspaceTests(testPre);
+	const sharedWorkspaceTests = new ProjectRunners(testPre);
 
 	test("runTogether - no runProfileSetting", async () =>
 		await sharedWorkspaceTests.runTogetherWithDefaultSettings(folderName,
