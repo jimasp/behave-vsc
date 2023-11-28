@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Configuration } from "../../configuration";
 import { ProjParseCounts } from "../../parsers/fileParser";
-import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResults.helpers";
+import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedResults.helpers";
 
 export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
   const testCount = getExpectedResultsForTag1RunProfile(projUri, config).length;

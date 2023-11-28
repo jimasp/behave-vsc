@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { ProjectSettings } from "../../settings";
+import { ProjectSettings, RunProfile, RunProfilesSetting } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
@@ -11,7 +11,7 @@ import { ProjParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
-import { Expectations, TestRunOptions } from './project.runners';
+import { Expectations, ConfigOptions, RunOptions } from './testWorkspaceRunners';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -399,10 +399,10 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
 export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testConfig: TestWorkspaceConfig,
-	options: TestRunOptions, expectations: Expectations) {
+	runOptions: RunOptions, expectations: Expectations) {
 
-	const consoleName = `runAllTestsAndAssertTheResults for ${options.projName}`;
-	const projUri = getTestProjectUri(options.projName);
+	const consoleName = `runAllTestsAndAssertTheResults for ${runOptions.projName}`;
+	const projUri = getTestProjectUri(runOptions.projName);
 	const projId = uriId(projUri);
 
 	await setLock(consoleName, "acquire");
@@ -414,7 +414,7 @@ export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testCo
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
-	assertWorkspaceSettingsAsExpected(projUri, options.projName, testConfig, instances.config, expectations);
+	assertWorkspaceSettingsAsExpected(projUri, runOptions.projName, testConfig, instances.config, expectations);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForProject(projUri, instances.testData, instances.ctrl,
@@ -448,8 +448,8 @@ export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testCo
 	console.log(`${consoleName}: calling runHandler to run tests...`);
 	const request = new vscode.TestRunRequest(include);
 	let runProfile = undefined;
-	if (options.selectedRunProfile)
-		runProfile = options.runProfiles?.[options.selectedRunProfile];
+	if (runOptions.selectedRunProfile)
+		runProfile = (testConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 	const resultsPromise = instances.runHandler(isDebugRun, request, runProfile);
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
@@ -496,7 +496,8 @@ export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testCo
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(projUri, options.projName, instances.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
+	assertExpectedCounts(projUri, runOptions.projName, instances.config, expectations.getExpectedCountsFunc,
+		actualCounts, hasMultiRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }
 

@@ -11,7 +11,7 @@ import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithprojUri } from './_integrationTests/suite-shared/testWorkspaceConfig';
+import { TestWorkspaceConfigWithprojUri } from './_integrationTests/suite-helpers/testWorkspaceConfig';
 import { diagLog } from './logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';

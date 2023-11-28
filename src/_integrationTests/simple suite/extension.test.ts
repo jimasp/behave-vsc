@@ -1,20 +1,24 @@
 import { getExpectedResults } from "./expectedResults";
 import { getExpectedCounts } from "./expectedResults";
-import { ProjectRunners, TestRunOptions } from "../suite-shared/project.runners";
+import { TestWorkspaceRunners, ConfigOptions, RunOptions } from "../suite-helpers/testWorkspaceRunners";
 
 
 suite(`simple suite`, () => {
 	const folderName = "simple";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const sharedWorkspaceTests = new ProjectRunners(testPre);
+	const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
 
-	const options: TestRunOptions = {
+	const cfg: ConfigOptions = {
 		projName: folderName,
 		envVarOverrides: undefined,
 		runProfiles: undefined,
-		selectedRunProfile: undefined,
 		stepLibraries: undefined
-	};
+	}
+
+	const rOpt: RunOptions = {
+		projName: folderName,
+		selectedRunProfile: undefined
+	}
 
 	const expectations = {
 		expectedProjectRelativeBaseDirPath: "features",
@@ -26,14 +30,14 @@ suite(`simple suite`, () => {
 	}
 
 
-	test("runDefault", async () =>
-		await sharedWorkspaceTests.runTogetherWithDefaultConfig(options, expectations)).timeout(300000);
+	test("runAllWithNoConfig", async () =>
+		await testWorkspaceRunners.runAllWithNoConfig(folderName, expectations)).timeout(300000);
 
-	test("runParallel", async () =>
-		await sharedWorkspaceTests.runParallel(options, expectations)).timeout(300000);
+	test("runAllParallel", async () =>
+		await testWorkspaceRunners.runAllParallel(cfg, rOpt, expectations)).timeout(300000);
 
-	test("runTogether", async () =>
-		await sharedWorkspaceTests.runTogether(options, expectations)).timeout(300000);
+	test("runAll", async () =>
+		await testWorkspaceRunners.runAll(cfg, rOpt, expectations)).timeout(300000);
 
 }).timeout(900000);
 

@@ -1,15 +1,15 @@
 import { getExpectedResults } from "./expectedResults";
 import { getExpectedCounts } from "./expectedResults";
-import { ProjectRunners } from "../suite-shared/project.runners";
+import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
 
 
 suite(`step library suite`, () => {
 	const folderName = "step library";
 	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const sharedWorkspaceTests = new ProjectRunners(testPre);
+	const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
 
 	test("runWithStepsLibrary", async () =>
-		await sharedWorkspaceTests.runTogether(folderName, "features", "features",
+		await testWorkspaceRunners.runAll(folderName, "features", "features",
 			"????features????",
 			getExpectedCounts, getExpectedResults, undefined, undefined, undefined,
 			[

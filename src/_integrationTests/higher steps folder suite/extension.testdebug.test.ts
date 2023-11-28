@@ -1,5 +1,5 @@
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
-import { Expectations, ProjectRunners, TestRunOptions } from "../suite-shared/project.runners";
+import { Expectations, TestWorkspaceRunners, ConfigOptions, RunOptions } from "../suite-helpers/testWorkspaceRunners";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -8,15 +8,19 @@ import { Expectations, ProjectRunners, TestRunOptions } from "../suite-shared/pr
 suite(`higher steps folder suite test debug run`, () => {
   const folderName = "higher steps folder";
   const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-  const sharedWorkspaceTests = new ProjectRunners(testPre);
+  const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
 
-  const options: TestRunOptions = {
+  const cfg: ConfigOptions = {
     projName: folderName,
     envVarOverrides: undefined,
     runProfiles: undefined,
-    selectedRunProfile: undefined,
     stepLibraries: undefined
   };
+
+  const rOpt: RunOptions = {
+    projName: folderName,
+    selectedRunProfile: undefined
+  }
 
   const expectations: Expectations = {
     expectedProjectRelativeBaseDirPath: "",
@@ -28,7 +32,7 @@ suite(`higher steps folder suite test debug run`, () => {
   }
 
 
-  test("runDebug", async () => await sharedWorkspaceTests.runDebug(options, expectations)).timeout(300000);
+  test("debugAll", async () => await testWorkspaceRunners.debugAll(cfg, rOpt, expectations)).timeout(300000);
 
 }).timeout(900000);
 
