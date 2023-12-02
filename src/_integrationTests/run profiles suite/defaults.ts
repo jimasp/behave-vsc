@@ -49,6 +49,10 @@ export const cfgOptions: ConfigOptions = {
   ]
 }
 
+export const runOptions: RunOptions = {
+  selectedRunProfile: undefined
+}
+
 export const expectations: Expectations = {
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
@@ -58,6 +62,3 @@ export const expectations: Expectations = {
   getExpectedResultsFunc: getExpectedResultsForAProfileWithoutTags,
 }
 
-export const runOptions: RunOptions = {
-  selectedRunProfile: undefined
-}
