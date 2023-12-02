@@ -3,7 +3,7 @@ from behave import model
 
 
 def before_scenario(context, scenario:model.Scenario): 
-    context.bs_set = "set by stage_environment.py"
+    context.bs_set = "set by stage2_environment.py"
     if "skip" in scenario.effective_tags:
         scenario.skip("Marked with @skip")
         return

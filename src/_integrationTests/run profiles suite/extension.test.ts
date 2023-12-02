@@ -1,105 +1,57 @@
 import {
-	getExpectedResultsForNoRunProfile,
+	getExpectedResultsForAProfileWithoutTags,
 	getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile,
-	getExpectedResultsForTag2RunProfile, getExpectedCounts
+	getExpectedResultsForTag2RunProfile
 } from "./expectedResults";
-import { Expectations, TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { runOptions, cfgOptions, runProfiles, expectations } from "./defaults";
 
 
 
 suite(`run profiles suite`, () => {
-	const folderName = "run profiles";
-	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
+	const testWorkspaceRunners = new TestWorkspaceRunners("run profiles");
 
+	test("runAll - no selected runProfile", async () => {
+		runOptions.selectedRunProfile = undefined;
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
-	const options: TestRunOptions = {
-		projName: folderName,
-		envVarOverrides: { "var1": "OVR-1", "var3": "OVR-3" },
-		runProfiles: {
-			"just_envVarOverrides profile": {
-				"envVarOverrides": {
-					"var1": "ENV-1",
-					"var2": "ENV-2"
-				},
-			},
-			"just_tagExpression profile": {
-				"tagExpression": "@tag1",
-			},
-			"tag1 profile": {
-				"envVarOverrides": {
-					"var1": "TAG1-1",
-					"var2": "TAG1-2"
-				},
-				"tagExpression": "@tag1",
-			},
-			"tag2 profile": {
-				"envVarOverrides": {
-					"var1": "TAG2-1",
-					"var2": "TAG2-2"
-				},
-				"tagExpression": "@tag2",
-			},
-			"tag1or2 profile": {
-				"envVarOverrides": {
-					"var1": "TAG1-OR-2-1",
-					"var2": "TAG1-OR-2-2"
-				},
-				"tagExpression": "@tag1,@tag2",
-			},
-		},
-		selectedRunProfile: undefined,
-		// imports, i.e. features/grouped/steps + features/grouped2/steps
-		stepLibraries: [
-			{
-				"relativePath": "features",
-				"stepFilesRx": ".*/steps/.*"
-			}
-		]
-	};
+	test("runAll - stage2 profile", async () => {
+		runOptions.selectedRunProfile = "stage2 profile";
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
-	const expectations: Expectations = {
-		expectedProjectRelativeBaseDirPath: "features",
-		expectedProjectRelativeConfigPaths: ["features"],
-		expectedProjectRelativeFeatureFolders: ["features"],
-		expectedProjectRelativeStepsFolders: ["features"],
-		getExpectedCountsFunc: getExpectedCounts,
-		getExpectedResultsFunc: getExpectedResultsForNoRunProfile,
-	}
+	test("runAll - tag1 profile", async () => {
+		runOptions.selectedRunProfile = "tag1 profile";
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
+	test("runAll - tag1 vars profile", async () => {
+		runOptions.selectedRunProfile = "tag1 vars profile";
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
-	test("runAllWithNoConfig - no config", async () =>
-		await testWorkspaceRunners.runAllWithNoConfig(options, expectations)).timeout(300000);
+	test("runAll - tag2 vars profile", async () => {
+		runOptions.selectedRunProfile = "tag2 vars profile";
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForTag2RunProfile;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
-	test("runAll - no runProfileSetting", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"", "features", "features", getExpectedCounts, getExpectedResultsForNoRunProfile,
-			projectEnvVarOverrides)
-	).timeout(300000);
-
-	test("runAll - no selected runProfile", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"", "features", "features", getExpectedCounts, getExpectedResultsForNoRunProfile,
-			projectEnvVarOverrides, runProfilesSetting)
-	).timeout(300000);
-
-	test("runAll - tag1 profile", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"", "features", "features", getExpectedCounts, getExpectedResultsForTag1RunProfile,
-			projectEnvVarOverrides, runProfilesSetting, "tag1 profile")
-	).timeout(300000);
-
-	test("runAll - tag2 profile", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"", "features", "features", getExpectedCounts, getExpectedResultsForTag2RunProfile,
-			projectEnvVarOverrides, runProfilesSetting, "tag2 profile")
-	).timeout(300000);
-
-	test("runAll - tag1or2 profile", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"", "features", "features", getExpectedCounts, getExpectedResultsForTag1Or2RunProfile,
-			projectEnvVarOverrides, runProfilesSetting, "tag1Or2 profile")
-	).timeout(300000);
+	test("runAll - tag1or2 vars profile", async () => {
+		runOptions.selectedRunProfile = "tag1or2 vars profile";
+		cfgOptions.runProfiles = runProfiles;
+		expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
+		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+	}).timeout(300000);
 
 
 }).timeout(900000);

@@ -6,17 +6,34 @@ import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedRes
 export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
   const testCount = getExpectedResultsForTag1RunProfile(projUri, config).length;
   return {
-    tests: { nodeCount: 13, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 1,
-    stepFileStepsExceptCommentedOut: 9, featureFileStepsExceptCommentedOut: 41, stepMappings: 41
+    tests: { nodeCount: 14, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 3,
+    stepFileStepsExceptCommentedOut: 8, featureFileStepsExceptCommentedOut: 44, stepMappings: 44
   };
 }
 
 
 
-export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResultsForAProfileWithoutTags = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 - success - stage check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 - success - stage check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 or @tag2 - success - stage check',
+      test_label: '@tag1 or @tag2 - success - stage check',
+      test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
+      test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
+    }),
+
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
@@ -52,15 +69,15 @@ export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: C
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag1 @skip - skip always',
+      scenario_getLabel: '@tag1 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag1 @skip - skip always',
+      scenario_scenarioName: '@tag1 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip always',
-      test_label: '@tag1 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip',
+      test_label: '@tag1 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -116,15 +133,15 @@ export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: C
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag2 @skip - skip always',
+      scenario_getLabel: '@tag2 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag2 @skip - skip always',
+      scenario_scenarioName: '@tag2 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip always',
-      test_label: '@tag2 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip',
+      test_label: '@tag2 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -180,15 +197,15 @@ export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: C
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: 'untagged - @skip - skip always',
+      scenario_getLabel: 'untagged - @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'untagged - @skip - skip always',
+      scenario_scenarioName: 'untagged - @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip always',
-      test_label: 'untagged - @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip',
+      test_label: 'untagged - @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -220,6 +237,23 @@ export const getExpectedResultsForNoRunProfile = (projUri: vscode.Uri, config: C
 export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 - success - stage check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 - success - stage check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 or @tag2 - success - stage check',
+      test_label: '@tag1 or @tag2 - success - stage check',
+      test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
+      test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
+    }),
+
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
@@ -255,15 +289,15 @@ export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag1 @skip - skip always',
+      scenario_getLabel: '@tag1 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag1 @skip - skip always',
+      scenario_scenarioName: '@tag1 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip always',
-      test_label: '@tag1 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip',
+      test_label: '@tag1 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -319,15 +353,15 @@ export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag2 @skip - skip always',
+      scenario_getLabel: '@tag2 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag2 @skip - skip always',
+      scenario_scenarioName: '@tag2 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip always',
-      test_label: '@tag2 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip',
+      test_label: '@tag2 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -383,15 +417,15 @@ export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: 'untagged - @skip - skip always',
+      scenario_getLabel: 'untagged - @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'untagged - @skip - skip always',
+      scenario_scenarioName: 'untagged - @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip always',
-      test_label: 'untagged - @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip',
+      test_label: 'untagged - @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -423,6 +457,23 @@ export const getExpectedResultsForTag1RunProfile = (projUri: vscode.Uri, config:
 export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 - success - stage check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 - success - stage check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 or @tag2 - success - stage check',
+      test_label: '@tag1 or @tag2 - success - stage check',
+      test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
+      test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
+    }),
+
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
@@ -458,15 +509,15 @@ export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag1 @skip - skip always',
+      scenario_getLabel: '@tag1 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag1 @skip - skip always',
+      scenario_scenarioName: '@tag1 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip always',
-      test_label: '@tag1 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip',
+      test_label: '@tag1 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -522,15 +573,15 @@ export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag2 @skip - skip always',
+      scenario_getLabel: '@tag2 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag2 @skip - skip always',
+      scenario_scenarioName: '@tag2 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip always',
-      test_label: '@tag2 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip',
+      test_label: '@tag2 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -586,15 +637,15 @@ export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config:
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: 'untagged - @skip - skip always',
+      scenario_getLabel: 'untagged - @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'untagged - @skip - skip always',
+      scenario_scenarioName: 'untagged - @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip always',
-      test_label: 'untagged - @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip',
+      test_label: 'untagged - @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -626,6 +677,23 @@ export const getExpectedResultsForTag2RunProfile = (projUri: vscode.Uri, config:
 export const getExpectedResultsForTag1Or2RunProfile = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 - success - stage check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 - success - stage check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 or @tag2 - success - stage check',
+      test_label: '@tag1 or @tag2 - success - stage check',
+      test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
+      test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
+    }),
+
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
@@ -661,15 +729,15 @@ export const getExpectedResultsForTag1Or2RunProfile = (projUri: vscode.Uri, conf
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag1 @skip - skip always',
+      scenario_getLabel: '@tag1 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag1 @skip - skip always',
+      scenario_scenarioName: '@tag1 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip always',
-      test_label: '@tag1 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag1 @skip - skip',
+      test_label: '@tag1 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -725,15 +793,15 @@ export const getExpectedResultsForTag1Or2RunProfile = (projUri: vscode.Uri, conf
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: '@tag2 @skip - skip always',
+      scenario_getLabel: '@tag2 @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: '@tag2 @skip - skip always',
+      scenario_scenarioName: '@tag2 @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip always',
-      test_label: '@tag2 @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/@tag2 @skip - skip',
+      test_label: '@tag2 @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),
@@ -789,15 +857,15 @@ export const getExpectedResultsForTag1Or2RunProfile = (projUri: vscode.Uri, conf
     new TestResult({
       scenario_featureFileRelativePath: '{{featurePath}}/tags_and_vars.feature',
       scenario_featureName: 'Tags and Vars',
-      scenario_getLabel: 'untagged - @skip - skip always',
+      scenario_getLabel: 'untagged - @skip - skip',
       scenario_isOutline: false,
       scenario_result: 'skipped',
-      scenario_scenarioName: 'untagged - @skip - skip always',
+      scenario_scenarioName: 'untagged - @skip - skip',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip always',
-      test_label: 'untagged - @skip - skip always',
+      test_id: '.../run profiles/{{featurePath}}/tags_and_vars.feature/untagged - @skip - skip',
+      test_label: 'untagged - @skip - skip',
       test_parent: '.../run profiles/{{featurePath}}/tags_and_vars.feature',
       test_uri: '.../run profiles/{{featurePath}}/tags_and_vars.feature'
     }),

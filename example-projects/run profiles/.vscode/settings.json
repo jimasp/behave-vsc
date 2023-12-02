@@ -1,38 +1,36 @@
 {
     "behave-vsc.xRay": true,
     "behave-vsc.envVarOverrides": {
-        "var1": "OVR-1",
-        "var3": "OVR-3",
+        "var1": "ENV-var1",
+        "var3": "ENV-var3",
     },
     "behave-vsc.runProfiles": {
-        "just_envVarOverrides profile": {
+        "stage2 profile": {
             "envVarOverrides": {
-                "var1": "ENV-1",
-                "var2": "ENV-2",
-                "BEHAVE_STAGE": "stage"
+                "BEHAVE_STAGE": "stage2"
             },
-        },
-        "just_tagExpression profile": {
-            "tagExpression": "@tag1",
         },
         "tag1 profile": {
+            "tagExpression": "@tag1",
+        },
+        "tag1 vars profile": {
             "envVarOverrides": {
-                "var1": "TAG1-1",
-                "var2": "TAG1-2"
+                "var1": "TAG1-var1",
+                "var2": "TAG1-var2"
             },
             "tagExpression": "@tag1",
         },
-        "tag2 profile": {
+        "tag2 vars profile": {
             "envVarOverrides": {
-                "var1": "TAG2-1",
-                "var2": "TAG2-2"
+                "var1": "TAG2-var1",
+                "var2": "TAG2-var2"
             },
             "tagExpression": "@tag2",
         },
-        "tag1or2 profile": {
+        "tag1or2 vars profile": {
             "envVarOverrides": {
-                "var1": "TAG1-OR-2-1",
-                "var2": "TAG1-OR-2-2"
+                "var1": "TAG1_OR_2-var1",
+                "var2": "TAG1_OR_2-var2"
             },
             "tagExpression": "@tag1,@tag2",
         },

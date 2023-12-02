@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../configuration";
-import { ProjectSettings, RunProfile, RunProfilesSetting } from "../../settings";
+import { ProjectSettings, RunProfilesSetting } from "../../settings";
 import { TestSupport } from '../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
@@ -11,7 +11,7 @@ import { ProjParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines } from '../../common';
 import { featureFileStepRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
-import { Expectations, ConfigOptions, RunOptions } from './testWorkspaceRunners';
+import { Expectations, RunOptions } from './testWorkspaceRunners';
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -79,21 +79,32 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
-		const winSettings = config.instanceSettings;
-		assert.strictEqual(winSettings.multiRootProjectsRunInParallel, testConfig.getExpected("multiRootProjectsRunInParallel"), projName);
-		assert.strictEqual(winSettings.xRay, testConfig.getExpected("xRay"), projName);
-		assert.deepStrictEqual(winSettings.runProfiles, testConfig.getExpected("runProfiles"), projName);
+		const instanceSettings = config.instanceSettings;
+		assert.strictEqual(instanceSettings.multiRootProjectsRunInParallel, testConfig.getExpected("multiRootProjectsRunInParallel"),
+			`${projName} project: multiRootProjectsRunInParallel`);
+		assert.strictEqual(instanceSettings.xRay, testConfig.getExpected("xRay"),
+			`${projName} project: xRay`);
+		assert.deepStrictEqual(instanceSettings.runProfiles, testConfig.getExpected("runProfiles"),
+			`${projName} project: runProfiles`);
 	}
 
 	const projSettings = config.projectSettings[projUri.path];
-	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"), projName);
-	assert.deepStrictEqual(projSettings.relativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders, projName);
-	assert.deepStrictEqual(projSettings.relativeStepsFolders, expectations.expectedProjectRelativeStepsFolders, projName);
-	assert.strictEqual(projSettings.relativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath, projName);
-	assert.deepStrictEqual(projSettings.relativeConfigPaths, expectations.expectedProjectRelativeConfigPaths, projName);
-	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"), projName);
-	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"), projName);
-	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"), projName);
+	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"),
+		`${projName} project: envVarOverrides`);
+	assert.deepStrictEqual(projSettings.relativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
+		`${projName} project: relativeFeatureFolders`);
+	assert.deepStrictEqual(projSettings.relativeStepsFolders, expectations.expectedProjectRelativeStepsFolders,
+		`${projName} project: relativeStepsFolders`);
+	assert.strictEqual(projSettings.relativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
+		`${projName} project: relativeBaseDirPath`);
+	assert.deepStrictEqual(projSettings.relativeConfigPaths, expectations.expectedProjectRelativeConfigPaths,
+		`${projName} project: relativeConfigPaths`);
+	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
+		`${projName} project: justMyCode`);
+	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"),
+		`${projName} project: runParallel`);
+	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"),
+		`${projName} project: stepLibraries`);
 }
 
 
@@ -398,11 +409,11 @@ async function getTestSupportFromExtension(): Promise<TestSupport> {
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
-export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testConfig: TestWorkspaceConfig,
+export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testConfig: TestWorkspaceConfig,
 	runOptions: RunOptions, expectations: Expectations) {
 
-	const consoleName = `runAllTestsAndAssertTheResults for ${runOptions.projName}`;
-	const projUri = getTestProjectUri(runOptions.projName);
+	const consoleName = `runAllTestsAndAssertTheResults for ${projName}`;
+	const projUri = getTestProjectUri(projName);
 	const projId = uriId(projUri);
 
 	await setLock(consoleName, "acquire");
@@ -414,7 +425,7 @@ export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testCo
 	// but we need call it manually to insert a test config
 	console.log(`${consoleName}: calling configurationChangedHandler`);
 	await instances.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
-	assertWorkspaceSettingsAsExpected(projUri, runOptions.projName, testConfig, instances.config, expectations);
+	assertWorkspaceSettingsAsExpected(projUri, projName, testConfig, instances.config, expectations);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await instances.parser.parseFilesForProject(projUri, instances.testData, instances.ctrl,
@@ -496,7 +507,7 @@ export async function runAllTestsAndAssertTheResults(isDebugRun: boolean, testCo
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(projUri, runOptions.projName, instances.config, expectations.getExpectedCountsFunc,
+	assertExpectedCounts(projUri, projName, instances.config, expectations.getExpectedCountsFunc,
 		actualCounts, hasMultiRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }

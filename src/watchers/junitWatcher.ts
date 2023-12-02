@@ -53,6 +53,10 @@ export class JunitWatcher {
     diagLog("junitWatcher: disposing");
     this._watcherEvents.forEach(e => e.dispose());
     watcher?.dispose();
+    if (config.integrationTestRun) {
+      diagLog("Integration test run complete.\n");
+      diagLog('NOTE: if next line says "canceled" and you did not stop the run, then check for previous errors in the log.');
+    }
   }
 
 

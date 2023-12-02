@@ -206,14 +206,15 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
           "tagA profile": {
               "tagExpression": "@a",            
               "envVarOverrides": {
+                "BEHAVE_STAGE": "production",                
                 "myvar": "val1"
               },
           },
           "tagsBorC profile": {
               "tagExpression": "@b,@c",            
               "envVarOverrides": {
-                "myvar": "val2",                
-                "BEHAVE_STAGE": "production"
+                "BEHAVE_STAGE": "staging",                                
+                "myvar": "val2"
               },
           }
       }

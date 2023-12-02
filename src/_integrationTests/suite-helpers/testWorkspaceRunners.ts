@@ -10,14 +10,12 @@ import { RunProfilesSetting, StepLibrariesSetting } from '../../settings';
 const defaultEnvVarOverrides = { "some_var": "double qu\"oted", "some_var2": "single qu'oted", "space_var": " ", "USERNAME": "bob-163487" };
 
 export type ConfigOptions = {
-  projName: string;
   envVarOverrides?: { [name: string]: string };
   runProfiles?: RunProfilesSetting;
   stepLibraries?: StepLibrariesSetting;
 }
 
 export type RunOptions = {
-  projName: string;
   selectedRunProfile?: string
 }
 
@@ -31,9 +29,10 @@ export type Expectations = {
 }
 
 export class TestWorkspaceRunners {
-  constructor(readonly testPre: string) { }
+  constructor(readonly projName: string) { }
 
-  runAllWithNoConfig = async (projName: string, expectations: Expectations) => {
+
+  runAllWithNoConfig = async (expectations: Expectations) => {
 
     // default = everything undefined
     const testConfig = new TestWorkspaceConfig({
@@ -47,37 +46,36 @@ export class TestWorkspaceRunners {
     });
 
     const opt: RunOptions = {
-      projName: projName,
       selectedRunProfile: undefined
     }
 
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, testConfig, opt, expectations);
+    console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
   }
-
 
   runAll = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: false,
-      multiRootProjectsRunInParallel: true,
-      justMyCode: undefined,
-      xRay: true,
-      envVarOverrides: cfg.envVarOverrides || defaultEnvVarOverrides,
-      stepLibraries: cfg.stepLibraries,
-      runProfiles: cfg.runProfiles,
-    });
-
-
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, testConfig, opt, expectations);
+    const testConfig = this._createTestConfig(cfg);
+    console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
   }
-
 
   runAllParallel = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
+    const testConfig = this._createTestConfig(cfg, true);
+    console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
+  }
 
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: true,
+  debugAll = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
+    const testConfig = this._createTestConfig(cfg);
+    console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
+    // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
+    await runAllTestsAndAssertTheResults(this.projName, true, testConfig, opt, expectations);
+  }
+
+
+  private _createTestConfig(cfg: ConfigOptions, runParallel = false) {
+    return new TestWorkspaceConfig({
+      runParallel: runParallel,
       multiRootProjectsRunInParallel: true,
       justMyCode: undefined,
       xRay: true,
@@ -85,29 +83,7 @@ export class TestWorkspaceRunners {
       stepLibraries: cfg.stepLibraries,
       runProfiles: cfg.runProfiles,
     });
-
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(false, testConfig, opt, expectations);
   }
-
-
-  debugAll = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
-
-    const testConfig = new TestWorkspaceConfig({
-      runParallel: true, // should be ignored by debug
-      multiRootProjectsRunInParallel: true,
-      justMyCode: undefined,
-      xRay: true,
-      envVarOverrides: cfg.envVarOverrides || defaultEnvVarOverrides,
-      stepLibraries: cfg.stepLibraries,
-      runProfiles: undefined,
-    });
-
-    // NOTE - if this fails, try removing all breakpoints in both vscode instances 
-    console.log(`${this.testPre}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(true, testConfig, opt, expectations);
-  }
-
 }
 
 

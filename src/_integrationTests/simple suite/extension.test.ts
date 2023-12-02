@@ -9,7 +9,6 @@ suite(`simple suite`, () => {
 	const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
 
 	const cfg: ConfigOptions = {
-		projName: folderName,
 		envVarOverrides: undefined,
 		runProfiles: undefined,
 		stepLibraries: undefined
