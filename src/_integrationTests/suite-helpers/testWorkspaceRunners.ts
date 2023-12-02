@@ -45,31 +45,31 @@ export class TestWorkspaceRunners {
       xRay: undefined
     });
 
-    const opt: RunOptions = {
+    const runOptions: RunOptions = {
       selectedRunProfile: undefined
     }
 
     console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, runOptions, expectations);
   }
 
-  runAll = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
-    const testConfig = this._createTestConfig(cfg);
+  runAll = async (configOptions: ConfigOptions, runOptions: RunOptions, expectations: Expectations) => {
+    const testConfig = this._createTestConfig(configOptions);
     console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, runOptions, expectations);
   }
 
-  runAllParallel = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
-    const testConfig = this._createTestConfig(cfg, true);
+  runAllParallel = async (configOptions: ConfigOptions, runOptions: RunOptions, expectations: Expectations) => {
+    const testConfig = this._createTestConfig(configOptions, true);
     console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
-    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, opt, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, false, testConfig, runOptions, expectations);
   }
 
-  debugAll = async (cfg: ConfigOptions, opt: RunOptions, expectations: Expectations) => {
-    const testConfig = this._createTestConfig(cfg);
+  debugAll = async (configOptions: ConfigOptions, runOptions: RunOptions, expectations: Expectations) => {
+    const testConfig = this._createTestConfig(configOptions);
     console.log(`${this.projName}: ${JSON.stringify(testConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
-    await runAllTestsAndAssertTheResults(this.projName, true, testConfig, opt, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, true, testConfig, runOptions, expectations);
   }
 
 

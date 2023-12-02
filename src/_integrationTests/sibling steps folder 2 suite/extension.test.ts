@@ -1,22 +1,15 @@
-import { getExpectedResults } from "./expectedResults";
-import { getExpectedCounts } from "./expectedResults";
 import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { configOptions, expectations, runOptions } from "./defaults";
 
 
 suite(`sibling steps folder 2 suite`, () => {
-	const folderName = "sibling steps folder 2";
-	const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-	const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
+	const testWorkspaceRunners = new TestWorkspaceRunners("sibling steps folder 2");
 
 	test("runAllParallel", async () =>
-		await testWorkspaceRunners.runAllParallel(folderName,
-			"subfolder 1/subfolder 2/features", "subfolder 1/subfolder 2", "subfolder 1/subfolder 2/steps",
-			getExpectedCounts, getExpectedResults)).timeout(300000);
+		await testWorkspaceRunners.runAllParallel(configOptions, runOptions, expectations)).timeout(300000);
 
 	test("runAll", async () =>
-		await testWorkspaceRunners.runAll(folderName,
-			"subfolder 1/subfolder 2/features", "subfolder 1/subfolder 2", "subfolder 1/subfolder 2/steps",
-			getExpectedCounts, getExpectedResults)).timeout(300000);
+		await testWorkspaceRunners.runAll(configOptions, runOptions, expectations)).timeout(300000);
 
 }).timeout(900000);
 

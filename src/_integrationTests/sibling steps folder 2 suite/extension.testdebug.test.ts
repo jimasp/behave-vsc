@@ -1,17 +1,13 @@
-import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { configOptions, expectations, runOptions } from "./defaults";
 
 
 // this file is separate because we don't want to run parallel debug 
 // sessions (which is not supported) when running the multi-root tests 
 
 suite(`sibling steps folder 2 suite test debug run`, () => {
-  const folderName = "sibling steps folder 2";
-  const testPre = `runHandler should return expected results for "${folderName}" with configuration:`;
-  const testWorkspaceRunners = new TestWorkspaceRunners(testPre);
+  const testWorkspaceRunners = new TestWorkspaceRunners("sibling steps folder 2");
 
-  test("debugAll", async () => await testWorkspaceRunners.debugAll(folderName,
-    "subfolder 1/subfolder 2/features", "subfolder 1/subfolder 2", "subfolder 1/subfolder 2/steps",
-    getExpectedCounts, getExpectedResults)).timeout(300000);
+  test("debugAll", async () => await testWorkspaceRunners.debugAll(configOptions, runOptions, expectations)).timeout(300000);
 }).timeout(900000);
 
