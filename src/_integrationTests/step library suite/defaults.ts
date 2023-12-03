@@ -1,10 +1,8 @@
-import { ConfigOptions, RunOptions } from "../suite-helpers/testWorkspaceRunners"
+import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
-export const configOptions: ConfigOptions = {
-  envVarOverrides: undefined,
-  runProfiles: undefined,
+export const wsConfig = new TestWorkspaceConfig({
   stepLibraries: [
     {
       "relativePath": "folder1/steps_lib_1 ",
@@ -15,11 +13,8 @@ export const configOptions: ConfigOptions = {
       "stepFilesRx": ".*\\steps\\.*|more_steps\\.*|.*\\steps2.py|.*\\steps3.py",
     }
   ]
-}
+});
 
-export const runOptions: RunOptions = {
-  selectedRunProfile: undefined
-}
 
 export const expectations = {
   expectedProjectRelativeBaseDirPath: "features",

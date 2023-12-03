@@ -4,7 +4,7 @@ import {
 	getExpectedResultsForTag2RunProfile
 } from "./expectedResults";
 import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
-import { runOptions, cfgOptions, runProfiles, expectations } from "./defaults";
+import { runOptions, wsConfig, runProfiles, expectations } from "./defaults";
 
 
 
@@ -13,44 +13,44 @@ suite(`run profiles suite`, () => {
 
 	test("runAll - no selected runProfile", async () => {
 		runOptions.selectedRunProfile = undefined;
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 	test("runAll - stage2 profile", async () => {
 		runOptions.selectedRunProfile = "stage2 profile";
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 	test("runAll - tag1 profile", async () => {
 		runOptions.selectedRunProfile = "tag1 profile";
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 	test("runAll - tag1 vars profile", async () => {
 		runOptions.selectedRunProfile = "tag1 vars profile";
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 	test("runAll - tag2 vars profile", async () => {
 		runOptions.selectedRunProfile = "tag2 vars profile";
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag2RunProfile;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 	test("runAll - tag1or2 vars profile", async () => {
 		runOptions.selectedRunProfile = "tag1or2 vars profile";
-		cfgOptions.runProfiles = runProfiles;
+		wsConfig.runProfiles = runProfiles;
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
-		await testWorkspaceRunners.runAll(cfgOptions, runOptions, expectations);
+		await testWorkspaceRunners.runAll(wsConfig, runOptions, expectations);
 	}).timeout(300000);
 
 

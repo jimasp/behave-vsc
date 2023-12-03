@@ -11,28 +11,32 @@ export class TestWorkspaceConfigWithprojUri {
 // (i.e. independent of the actual settings.json)
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
-	private envVarOverrides: { [name: string]: string } | undefined;
-	private justMyCode: boolean | undefined;
-	private multiRootProjectsRunInParallel: boolean | undefined;
-	private runParallel: boolean | undefined;
-	private stepLibraries: StepLibrariesSetting | undefined;
-	private runProfiles: RunProfilesSetting | undefined;
-	private xRay: boolean | undefined;
+	public runParallel?: boolean;
+	private envVarOverrides?: { [name: string]: string };
+	private justMyCode?: boolean;
+	private multiRootProjectsRunInParallel?: boolean;
+	private stepLibraries?: StepLibrariesSetting;
+	private runProfiles?: RunProfilesSetting;
+	private xRay?: boolean;
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
-		envVarOverrides, justMyCode,
-		multiRootProjectsRunInParallel,
-		runParallel, stepLibraries, runProfiles, xRay
+		envVarOverrides = undefined,
+		justMyCode = undefined,
+		multiRootProjectsRunInParallel = undefined,
+		runParallel = undefined,
+		stepLibraries = undefined,
+		runProfiles = undefined,
+		xRay = undefined
 	}: {
-		envVarOverrides: { [name: string]: string } | undefined,
-		justMyCode: boolean | undefined,
-		multiRootProjectsRunInParallel: boolean | undefined,
-		runParallel: boolean | undefined,
-		stepLibraries: StepLibrariesSetting | undefined,
-		runProfiles: RunProfilesSetting | undefined,
-		xRay: boolean | undefined
-	}) {
+		envVarOverrides?: { [name: string]: string },
+		justMyCode?: boolean,
+		multiRootProjectsRunInParallel?: boolean,
+		runParallel?: boolean,
+		stepLibraries?: StepLibrariesSetting,
+		runProfiles?: RunProfilesSetting,
+		xRay?: boolean
+	} = {}) {
 		this.envVarOverrides = envVarOverrides;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
@@ -41,6 +45,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runProfiles = runProfiles;
 		this.xRay = xRay;
 	}
+
 
 	get<T>(section: string): T {
 

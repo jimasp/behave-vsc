@@ -1,5 +1,5 @@
-import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
-import { configOptions, expectations, runOptions } from "./defaults";
+import { TestWorkspaceRunners, noConfig, noRunOptions } from "../suite-helpers/testWorkspaceRunners";
+import { expectations } from "./defaults";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -8,7 +8,9 @@ import { configOptions, expectations, runOptions } from "./defaults";
 suite(`simple suite test debug run`, () => {
   const testWorkspaceRunners = new TestWorkspaceRunners("simple");
 
-  test("debugAll", async () => await testWorkspaceRunners.debugAll(configOptions, runOptions, expectations)).timeout(300000);
+  test("debugAll", async () =>
+    await testWorkspaceRunners.debugAll(noConfig, noRunOptions, expectations)
+  ).timeout(300000);
 
 }).timeout(900000);
 

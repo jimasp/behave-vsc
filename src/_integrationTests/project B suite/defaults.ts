@@ -1,20 +1,23 @@
-import { ConfigOptions, Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners";
+import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
+import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
-export const configOptions: ConfigOptions = {
-  envVarOverrides: undefined,
-  runProfiles: undefined,
-  stepLibraries: [
-    {
-      "relativePath": "features",
-      "stepFilesRx": ".*/steps/.*"
-    }
-  ]
-};
 
-export const runOptions: RunOptions = {
-  selectedRunProfile: undefined
-}
+const stepLibraries = [
+  {
+    "relativePath": "features",
+    "stepFilesRx": ".*/steps/.*"
+  }
+]
+
+export const wsConfig = new TestWorkspaceConfig({
+  stepLibraries: stepLibraries
+});
+
+export const wsConfigParallel = new TestWorkspaceConfig({
+  stepLibraries: stepLibraries,
+  runParallel: true
+});
 
 export const expectations: Expectations = {
   expectedProjectRelativeBaseDirPath: "features",

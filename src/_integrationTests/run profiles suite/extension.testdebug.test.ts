@@ -1,6 +1,6 @@
 import { getExpectedResultsForTag1RunProfile } from "./expectedResults";
 import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
-import { cfgOptions, expectations, runOptions, runProfiles } from "./defaults";
+import { wsConfig, expectations, runOptions, runProfiles } from "./defaults";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -11,9 +11,9 @@ suite(`run profiles suite test debug run`, () => {
 
   test("debugAll - tag1 profile", async () => {
     runOptions.selectedRunProfile = "tag1 profile";
-    cfgOptions.runProfiles = runProfiles;
+    wsConfig.runProfiles = runProfiles;
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-    await testWorkspaceRunners.debugAll(cfgOptions, runOptions, expectations);
+    await testWorkspaceRunners.debugAll(wsConfig, runOptions, expectations);
   }).timeout(300000);
 
 

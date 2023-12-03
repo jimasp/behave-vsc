@@ -1,5 +1,5 @@
 import { RunProfilesSetting } from "../../settings"
-import { ConfigOptions, Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners"
+import { TestWorkspaceConfig, Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners"
 import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./expectedResults"
 
 
@@ -35,7 +35,7 @@ export const runProfiles: RunProfilesSetting = {
   },
 }
 
-export const cfgOptions: ConfigOptions = {
+export const wsConfig: TestWorkspaceConfig = {
   envVarOverrides: {
     "var1": "ENV-var1",
     "var3": "ENV-var3"

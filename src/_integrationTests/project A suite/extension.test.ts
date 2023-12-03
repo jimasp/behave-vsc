@@ -1,5 +1,5 @@
-import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
-import { configOptions, expectations, runOptions } from "./default";
+import { TestWorkspaceRunners, noRunOptions } from "../suite-helpers/testWorkspaceRunners";
+import { wsConfig, expectations, wsConfigParallel } from "./default";
 
 
 suite(`project A suite`, () => {
@@ -7,10 +7,12 @@ suite(`project A suite`, () => {
 
 
 	test("runAll", async () =>
-		await testWorkspaceRunners.runAll(configOptions, runOptions, expectations)).timeout(300000);
+		await testWorkspaceRunners.runAll(wsConfig, noRunOptions, expectations)
+	).timeout(300000);
 
-	test("runAllParallel", async () =>
-		await testWorkspaceRunners.runAllParallel(configOptions, runOptions, expectations)).timeout(300000);
+	test("runAll - parallel", async () =>
+		await testWorkspaceRunners.runAll(wsConfigParallel, noRunOptions, expectations)
+	).timeout(300000);
 
 }).timeout(900000);
 
