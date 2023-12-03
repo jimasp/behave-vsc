@@ -1,10 +1,8 @@
-import * as vscode from 'vscode';
-import { Configuration } from "../../configuration";
 import { ProjParseCounts } from "../../parsers/fileParser";
-import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedResults.helpers";
+import { TestResult } from "../suite-helpers/expectedResults.helpers";
 
-export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
-  const testCount = getExpectedResults(projUri, config).length;
+export function getExpectedCounts(): ProjParseCounts {
+  const testCount = getExpectedResults().length;
   return {
     tests: { nodeCount: 4, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 1,
@@ -12,11 +10,11 @@ export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): P
   };
 }
 
-export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
+      scenario_featureFileRelativePath: 'features/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
@@ -25,14 +23,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple/{{featurePath}}/simple.feature/run a successful test',
+      test_id: '.../simple/features/simple.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../simple/{{featurePath}}/simple.feature',
-      test_uri: '.../simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/features/simple.feature',
+      test_uri: '.../simple/features/simple.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
+      scenario_featureFileRelativePath: 'features/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
@@ -41,14 +39,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple/{{featurePath}}/simple.feature/run a failing test',
+      test_id: '.../simple/features/simple.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../simple/{{featurePath}}/simple.feature',
-      test_uri: '.../simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/features/simple.feature',
+      test_uri: '.../simple/features/simple.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/simple.feature',
+      scenario_featureFileRelativePath: 'features/simple.feature',
       scenario_featureName: 'Simple',
       scenario_getLabel: 'run a skipped test',
       scenario_isOutline: false,
@@ -57,17 +55,17 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../simple/{{featurePath}}/simple.feature/run a skipped test',
+      test_id: '.../simple/features/simple.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../simple/{{featurePath}}/simple.feature',
-      test_uri: '.../simple/{{featurePath}}/simple.feature'
+      test_parent: '.../simple/features/simple.feature',
+      test_uri: '.../simple/features/simple.feature'
     }),
 
   ];
 
 
-  const projSettings = config.projectSettings[projUri.path];
-  return applyTestConfiguration(projSettings, expectedResults);
+
+  return expectedResults;
 }
 
 

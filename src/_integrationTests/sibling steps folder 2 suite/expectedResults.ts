@@ -1,10 +1,8 @@
-import * as vscode from 'vscode';
-import { Configuration } from "../../configuration";
 import { ProjParseCounts } from "../../parsers/fileParser";
-import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedResults.helpers";
+import { TestResult } from "../suite-helpers/expectedResults.helpers";
 
-export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
-  const testCount = getExpectedResults(projUri, config).length;
+export function getExpectedCounts(): ProjParseCounts {
+  const testCount = getExpectedResults().length;
   return {
     tests: { nodeCount: 21, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 4, stepFilesExceptEmptyOrCommentedOut: 3,
@@ -12,7 +10,7 @@ export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): P
   };
 }
 
-export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
 
@@ -244,8 +242,8 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
   ];
 
 
-  const projSettings = config.projectSettings[projUri.path];
-  return applyTestConfiguration(projSettings, expectedResults);
+
+  return expectedResults;
 }
 
 

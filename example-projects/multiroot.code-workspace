@@ -21,6 +21,10 @@
 			"name": "step library"
 		},
 		{
+			"path": "./multiple features folders",
+			"name": "multiple features folders"
+		},
+		{
 			"path": "./multiroot bad paths",
 			"name": "bad paths"
 		},

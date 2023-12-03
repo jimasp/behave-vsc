@@ -1,10 +1,8 @@
-import * as vscode from 'vscode';
-import { Configuration } from "../../configuration";
 import { ProjParseCounts } from "../../parsers/fileParser";
-import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedResults.helpers";
+import { TestResult } from "../suite-helpers/expectedResults.helpers";
 
-export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
-  const testCount = getExpectedResults(projUri, config).length;
+export function getExpectedCounts(): ProjParseCounts {
+  const testCount = getExpectedResults().length;
   return {
     tests: { nodeCount: 81, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 9,
@@ -13,11 +11,11 @@ export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): P
   };
 }
 
-export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): TestResult[] => {
+export const getExpectedResults = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
@@ -26,14 +24,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run a successful test',
+      test_id: '.../project B/features/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a slow test for async testing',
       scenario_isOutline: false,
@@ -42,14 +40,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run a slow test for async testing',
+      test_id: '.../project B/features/basic.feature/run a slow test for async testing',
       test_label: 'run a slow test for async testing',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another slow test for async testing',
       scenario_isOutline: false,
@@ -58,14 +56,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run another slow test for async testing',
+      test_id: '.../project B/features/basic.feature/run another slow test for async testing',
       test_label: 'run another slow test for async testing',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a failing test',
       scenario_isOutline: false,
@@ -74,14 +72,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run a failing test',
+      test_id: '.../project B/features/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run another successful test',
       scenario_isOutline: false,
@@ -90,14 +88,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run another successful test',
+      test_id: '.../project B/features/basic.feature/run another successful test',
       test_label: 'run another successful test',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a test with a missing steps',
       scenario_isOutline: false,
@@ -106,14 +104,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run a test with a missing steps',
+      test_id: '.../project B/features/basic.feature/run a test with a missing steps',
       test_label: 'run a test with a missing steps',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/basic.feature',
+      scenario_featureFileRelativePath: 'features/basic.feature',
       scenario_featureName: 'Basic',
       scenario_getLabel: 'run a skipped test',
       scenario_isOutline: false,
@@ -122,14 +120,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/basic.feature/run a skipped test',
+      test_id: '.../project B/features/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../project B/{{featurePath}}/basic.feature',
-      test_uri: '.../project B/{{featurePath}}/basic.feature'
+      test_parent: '.../project B/features/basic.feature',
+      test_uri: '.../project B/features/basic.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/contains_regexchars.feature',
+      scenario_featureFileRelativePath: 'features/contains_regexchars.feature',
       scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
       scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       scenario_isOutline: false,
@@ -138,10 +136,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      test_id: '.../project B/features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
       test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../project B/{{featurePath}}/contains_regexchars.feature',
-      test_uri: '.../project B/{{featurePath}}/contains_regexchars.feature'
+      test_parent: '.../project B/features/contains_regexchars.feature',
+      test_uri: '.../project B/features/contains_regexchars.feature'
     }),
 
     new TestResult({
@@ -161,7 +159,7 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/duplicate.feature',
+      scenario_featureFileRelativePath: 'features/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -170,14 +168,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/duplicate.feature/run a test',
+      test_id: '.../project B/features/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project B/{{featurePath}}/duplicate.feature',
-      test_uri: '.../project B/{{featurePath}}/duplicate.feature'
+      test_parent: '.../project B/features/duplicate.feature',
+      test_uri: '.../project B/features/duplicate.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/duplicate.feature',
+      scenario_featureFileRelativePath: 'features/grouped/duplicate.feature',
       scenario_featureName: 'Duplicate',
       scenario_getLabel: 'run a test',
       scenario_isOutline: false,
@@ -186,14 +184,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/duplicate.feature/run a test',
+      test_id: '.../project B/features/grouped/duplicate.feature/run a test',
       test_label: 'run a test',
-      test_parent: '.../project B/{{featurePath}}/grouped/duplicate.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/duplicate.feature'
+      test_parent: '.../project B/features/grouped/duplicate.feature',
+      test_uri: '.../project B/features/grouped/duplicate.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success',
       scenario_isOutline: true,
@@ -202,14 +200,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success',
+      test_id: '.../project B/features/grouped/outline_mixed.feature/Blenders Success',
       test_label: 'Blenders Success',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project B/features/grouped/outline_mixed.feature',
+      test_uri: '.../project B/features/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail',
       scenario_isOutline: true,
@@ -218,14 +216,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail',
+      test_id: '.../project B/features/grouped/outline_mixed.feature/Blenders Fail',
       test_label: 'Blenders Fail',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project B/features/grouped/outline_mixed.feature',
+      test_uri: '.../project B/features/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Fail 2',
       scenario_isOutline: true,
@@ -234,14 +232,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Fail 2',
+      test_id: '.../project B/features/grouped/outline_mixed.feature/Blenders Fail 2',
       test_label: 'Blenders Fail 2',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project B/features/grouped/outline_mixed.feature',
+      test_uri: '.../project B/features/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Skip',
       scenario_isOutline: true,
@@ -250,14 +248,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Skip',
+      test_id: '.../project B/features/grouped/outline_mixed.feature/Blenders Skip',
       test_label: 'Blenders Skip',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project B/features/grouped/outline_mixed.feature',
+      test_uri: '.../project B/features/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success 2',
       scenario_isOutline: true,
@@ -266,14 +264,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_mixed.feature/Blenders Success 2',
+      test_id: '.../project B/features/grouped/outline_mixed.feature/Blenders Success 2',
       test_label: 'Blenders Success 2',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_mixed.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_mixed.feature'
+      test_parent: '.../project B/features/grouped/outline_mixed.feature',
+      test_uri: '.../project B/features/grouped/outline_mixed.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success',
       scenario_isOutline: true,
@@ -282,14 +280,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_success.feature/Blend Success',
+      test_id: '.../project B/features/grouped/outline_success.feature/Blend Success',
       test_label: 'Blend Success',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_success.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_success.feature'
+      test_parent: '.../project B/features/grouped/outline_success.feature',
+      test_uri: '.../project B/features/grouped/outline_success.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/outline_success.feature',
+      scenario_featureFileRelativePath: 'features/grouped/outline_success.feature',
       scenario_featureName: 'Outline success',
       scenario_getLabel: 'Blend Success 2',
       scenario_isOutline: true,
@@ -298,14 +296,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/outline_success.feature/Blend Success 2',
+      test_id: '.../project B/features/grouped/outline_success.feature/Blend Success 2',
       test_label: 'Blend Success 2',
-      test_parent: '.../project B/{{featurePath}}/grouped/outline_success.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/outline_success.feature'
+      test_parent: '.../project B/features/grouped/outline_success.feature',
+      test_uri: '.../project B/features/grouped/outline_success.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped2/table.feature',
+      scenario_featureFileRelativePath: 'features/grouped2/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (fail)',
       scenario_isOutline: false,
@@ -314,14 +312,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped2/table.feature/Use a table (fail)',
+      test_id: '.../project B/features/grouped2/table.feature/Use a table (fail)',
       test_label: 'Use a table (fail)',
-      test_parent: '.../project B/{{featurePath}}/grouped2/table.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped2/table.feature'
+      test_parent: '.../project B/features/grouped2/table.feature',
+      test_uri: '.../project B/features/grouped2/table.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped2/table.feature',
+      scenario_featureFileRelativePath: 'features/grouped2/table.feature',
       scenario_featureName: 'Table feature',
       scenario_getLabel: 'Use a table (success)',
       scenario_isOutline: false,
@@ -330,14 +328,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped2/table.feature/Use a table (success)',
+      test_id: '.../project B/features/grouped2/table.feature/Use a table (success)',
       test_label: 'Use a table (success)',
-      test_parent: '.../project B/{{featurePath}}/grouped2/table.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped2/table.feature'
+      test_parent: '.../project B/features/grouped2/table.feature',
+      test_uri: '.../project B/features/grouped2/table.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
+      scenario_featureFileRelativePath: 'features/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a failing textblock test',
       scenario_isOutline: false,
@@ -346,14 +344,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/textblock.feature/run a failing textblock test',
+      test_id: '.../project B/features/grouped/textblock.feature/run a failing textblock test',
       test_label: 'run a failing textblock test',
-      test_parent: '.../project B/{{featurePath}}/grouped/textblock.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/textblock.feature'
+      test_parent: '.../project B/features/grouped/textblock.feature',
+      test_uri: '.../project B/features/grouped/textblock.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/grouped/textblock.feature',
+      scenario_featureFileRelativePath: 'features/grouped/textblock.feature',
       scenario_featureName: 'Text block',
       scenario_getLabel: 'run a successful textblock test',
       scenario_isOutline: false,
@@ -362,10 +360,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/grouped/textblock.feature/run a successful textblock test',
+      test_id: '.../project B/features/grouped/textblock.feature/run a successful textblock test',
       test_label: 'run a successful textblock test',
-      test_parent: '.../project B/{{featurePath}}/grouped/textblock.feature',
-      test_uri: '.../project B/{{featurePath}}/grouped/textblock.feature'
+      test_parent: '.../project B/features/grouped/textblock.feature',
+      test_uri: '.../project B/features/grouped/textblock.feature'
     }),
 
     new TestResult({
@@ -378,10 +376,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error',
+      test_id: '.../project B/features/feature_with_hook_error.feature/create a before hook-error',
       test_label: 'create a before hook-error',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -410,10 +408,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/skip a before hook-error',
+      test_id: '.../project B/features/feature_with_hook_error.feature/skip a before hook-error',
       test_label: 'skip a before hook-error',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -426,10 +424,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/create a before hook-error again',
+      test_id: '.../project B/features/feature_with_hook_error.feature/create a before hook-error again',
       test_label: 'create a before hook-error again',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -442,10 +440,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error',
+      test_id: '.../project B/features/feature_with_hook_error.feature/create an after hook-error',
       test_label: 'create an after hook-error',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -474,10 +472,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/skip an after hook-error',
+      test_id: '.../project B/features/feature_with_hook_error.feature/skip an after hook-error',
       test_label: 'skip an after hook-error',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
@@ -490,14 +488,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/feature_with_hook_error.feature/create an after hook-error again',
+      test_id: '.../project B/features/feature_with_hook_error.feature/create an after hook-error again',
       test_label: 'create an after hook-error again',
-      test_parent: '.../project B/{{featurePath}}/feature_with_hook_error.feature',
-      test_uri: '.../project B/{{featurePath}}/feature_with_hook_error.feature'
+      test_parent: '.../project B/features/feature_with_hook_error.feature',
+      test_uri: '.../project B/features/feature_with_hook_error.feature'
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step',
       scenario_isOutline: false,
@@ -506,14 +504,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/simple step',
+      test_id: '.../project B/features/goto_step.feature/simple step',
       test_label: 'simple step',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'simple step with more text',
       scenario_isOutline: false,
@@ -522,14 +520,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/simple step with more text',
+      test_id: '.../project B/features/goto_step.feature/simple step with more text',
       test_label: 'simple step with more text',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'a cased step',
       scenario_isOutline: false,
@@ -538,14 +536,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/a cased step',
+      test_id: '.../project B/features/goto_step.feature/a cased step',
       test_label: 'a cased step',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step',
       scenario_isOutline: false,
@@ -554,14 +552,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/param step',
+      test_id: '.../project B/features/goto_step.feature/param step',
       test_label: 'param step',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'param step with more text',
       scenario_isOutline: false,
@@ -570,14 +568,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/param step with more text',
+      test_id: '.../project B/features/goto_step.feature/param step with more text',
       test_label: 'param step with more text',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no1',
       scenario_isOutline: false,
@@ -586,14 +584,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/two param step no1',
+      test_id: '.../project B/features/goto_step.feature/two param step no1',
       test_label: 'two param step no1',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'two param step no2',
       scenario_isOutline: false,
@@ -602,14 +600,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/two param step no2',
+      test_id: '.../project B/features/goto_step.feature/two param step no2',
       test_label: 'two param step no2',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with param',
       scenario_isOutline: false,
@@ -618,14 +616,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/step with param',
+      test_id: '.../project B/features/goto_step.feature/step with param',
       test_label: 'step with param',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step without custom flag type',
       scenario_isOutline: false,
@@ -634,14 +632,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/step without custom flag type',
+      test_id: '.../project B/features/goto_step.feature/step without custom flag type',
       test_label: 'step without custom flag type',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'step with custom flag type present',
       scenario_isOutline: false,
@@ -650,14 +648,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/step with custom flag type present',
+      test_id: '.../project B/features/goto_step.feature/step with custom flag type present',
       test_label: 'step with custom flag type present',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'yet another step',
       scenario_isOutline: false,
@@ -666,14 +664,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/yet another step',
+      test_id: '.../project B/features/goto_step.feature/yet another step',
       test_label: 'yet another step',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: '"yet" "another" step double quoted',
       scenario_isOutline: false,
@@ -682,14 +680,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/"yet" "another" step double quoted',
+      test_id: '.../project B/features/goto_step.feature/"yet" "another" step double quoted',
       test_label: '"yet" "another" step double quoted',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: "'yet' 'another' step single quoted",
       scenario_isOutline: false,
@@ -698,14 +696,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: ".../project B/{{featurePath}}/goto_step.feature/'yet' 'another' step single quoted",
+      test_id: ".../project B/features/goto_step.feature/'yet' 'another' step single quoted",
       test_label: "'yet' 'another' step single quoted",
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 1',
       scenario_isOutline: false,
@@ -714,14 +712,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/wrapped step 1',
+      test_id: '.../project B/features/goto_step.feature/wrapped step 1',
       test_label: 'wrapped step 1',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 2',
       scenario_isOutline: false,
@@ -730,14 +728,14 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/wrapped step 2',
+      test_id: '.../project B/features/goto_step.feature/wrapped step 2',
       test_label: 'wrapped step 2',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '{{featurePath}}/goto_step.feature',
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 3',
       scenario_isOutline: false,
@@ -746,10 +744,10 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/{{featurePath}}/goto_step.feature/wrapped step 3',
+      test_id: '.../project B/features/goto_step.feature/wrapped step 3',
       test_label: 'wrapped step 3',
-      test_parent: '.../project B/{{featurePath}}/goto_step.feature',
-      test_uri: '.../project B/{{featurePath}}/goto_step.feature'
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature'
     }),
 
     new TestResult({
@@ -979,8 +977,8 @@ export const getExpectedResults = (projUri: vscode.Uri, config: Configuration): 
   ];
 
 
-  const projSettings = config.projectSettings[projUri.path];
-  return applyTestConfiguration(projSettings, expectedResults);
+
+  return expectedResults;
 }
 
 

@@ -462,7 +462,8 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
     "tests/features"
     "tests/features2"
   */
-  const longestCommonPaths = getLongestCommonPaths(relFeatureFolders);
+  let longestCommonPaths = getLongestCommonPaths(relFeatureFolders);
+  longestCommonPaths = longestCommonPaths.filter(p => p !== "");
 
   // default to watching for features path
   if (longestCommonPaths.length === 0)
