@@ -50,7 +50,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 				throw `test ids matched but result did not match expected result\n` +
 				`expectedResult:${JSON.stringify(expectedResult)}\n` +
 				`actualResult:${JSON.stringify(actualResult)}\n` +
-				`testConfig:${JSON.stringify(testConfig)}\n`;
+				`testConfig:${JSON.stringify(testConfig)}\n` +
+				`note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
+				`then first check if the behave command line output matches the IDE behave command output.`;
 			}
 			throw `result is undefined, was the test run cancelled?\n` +
 			`actualResult:${JSON.stringify(expectedResult)}\n` +
