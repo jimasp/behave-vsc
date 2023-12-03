@@ -6,6 +6,15 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
+					"markdownDescription": "This setting is deprecated. Please use the new setting env.",
+					"deprecationMessage": "This setting is deprecated. Please use the new setting env.",
+					"additionalProperties": {
+						"type": "string"
+					}
+				},
+				"behave-vsc.env": {
+					"scope": "resource",
+					"type": "object",
 					"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using `behave-vsc.runProfiles`.",
 					"additionalProperties": {
 						"type": "string"

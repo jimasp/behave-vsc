@@ -8,7 +8,7 @@ def envvars(context):
     osev = os.getenv("COMPUTERNAME") if os.name == "nt" else os.getenv("HOME")
     assert osev
 
-    # check behave-vsc.envVarOverrides setting worked
+    # check behave-vsc.env setting worked
     some_var = os.getenv("some_var")
     some_var2 = os.getenv("some_var2")
     space_var = os.getenv("space_var")
@@ -16,7 +16,7 @@ def envvars(context):
     assert some_var == 'double qu"oted'
     assert some_var2 == "single qu'oted"
     assert space_var == " "
-    # check that the standard system env var "USERNAME" was overridden successfully by envVarOverrides
+    # check that the standard system env var "USERNAME" was overridden successfully by env
     assert USERNAME == "bob-163487" 
     
 

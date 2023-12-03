@@ -4,13 +4,13 @@ import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./e
 
 
 export const wsConfig = new TestWorkspaceConfig({
-  envVarOverrides: {
+  env: {
     "var1": "ENV-var1",
     "var3": "ENV-var3"
   },
   runProfiles: {
     "stage2 profile": {
-      "envVarOverrides": {
+      "env": {
         "BEHAVE_STAGE": "stage2"
       },
     },
@@ -18,21 +18,21 @@ export const wsConfig = new TestWorkspaceConfig({
       "tagExpression": "@tag1",
     },
     "tag1 vars profile": {
-      "envVarOverrides": {
+      "env": {
         "var1": "TAG1-var1",
         "var2": "TAG1-var2"
       },
       "tagExpression": "@tag1",
     },
     "tag2 vars profile": {
-      "envVarOverrides": {
+      "env": {
         "var1": "TAG2-var1",
         "var2": "TAG2-var2"
       },
       "tagExpression": "@tag2",
     },
     "tag1or2 vars profile": {
-      "envVarOverrides": {
+      "env": {
         "var1": "TAG1_OR_2-var1",
         "var2": "TAG1_OR_2-var2"
       },

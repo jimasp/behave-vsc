@@ -21,7 +21,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Extensive customisation settings (e.g. `runParallel`, `envVarOverrides`, run profiles for per-run settings, etc.)
+- Extensive customisation settings (e.g. `runParallel`, `env`, run profiles for per-run settings, etc.)
 
 ---
 
@@ -107,14 +107,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
           web_features
     ```
 
-- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `envVarOverrides` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
+- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
 
   - Example:
 
     ```json
     // settings.json
     {
-      "behave-vsc.envVarOverrides": {
+      "behave-vsc.env": {
           "PYTHONPATH": "myfolder"
       },
     }
@@ -148,7 +148,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Extension settings
 
-- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, and `envVarOverrides`.
+- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, and `env`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Note that environment variables (and behave tags) can also be set on a per run basis via the test run profiles in the test explorer UI.
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
@@ -168,7 +168,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
-- You can adjust the run behaviour via extension settings in your `settings.json` file, e.g. `runParallel`, `envVarOverrides`, `runProfiles`.
+- You can adjust the run behaviour via extension settings in your `settings.json` file, e.g. `runParallel`, `env`, `runProfiles`.
 
 - Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
 
@@ -182,7 +182,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 
-- You can adjust the debug behaviour via extension settings in your `settings.json` file, e.g. `envVarOverrides` or `runProfiles`. Note that debug ignores the `runParallel` setting.
+- You can adjust the debug behaviour via extension settings in your `settings.json` file, e.g. `env` or `runProfiles`. Note that debug ignores the `runParallel` setting.
 
 - The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
@@ -205,14 +205,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       "behave-vsc.runProfiles": {
           "tagA profile": {
               "tagExpression": "@a",            
-              "envVarOverrides": {
+              "env": {
                 "BEHAVE_STAGE": "production",                
                 "myvar": "val1"
               },
           },
           "tagsBorC profile": {
               "tagExpression": "@b,@c",            
-              "envVarOverrides": {
+              "env": {
                 "BEHAVE_STAGE": "staging",                                
                 "myvar": "val2"
               },
@@ -221,7 +221,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       ```
 
   - Notes on environment variables:
-    - The `envVarOverrides` property in a runProfile will (while running) override any `behave-vsc.envVarOverrides` setting that has the same key.
+    - The `env` property in a runProfile will (while running) override any `behave-vsc.env` setting that has the same key.
     - You can use an environment variable for a high level of customisation:
       - in your `environment.py` (or `mystage_environment.py`) file:
         - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)

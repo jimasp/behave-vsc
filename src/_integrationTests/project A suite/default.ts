@@ -1,9 +1,9 @@
-import { EnvVarOverridesSetting } from "../../settings";
+import { envSetting } from "../../settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
-const envVarOverrides: EnvVarOverridesSetting = {
+const env: envSetting = {
   "some_var": "double qu\"oted",
   "some_var2": "single qu'oted",
   "space_var": " ",
@@ -11,11 +11,11 @@ const envVarOverrides: EnvVarOverridesSetting = {
 }
 
 export const wsConfig = new TestWorkspaceConfig({
-  envVarOverrides: envVarOverrides
+  env: env
 });
 
 export const wsConfigParallel = new TestWorkspaceConfig({
-  envVarOverrides: envVarOverrides
+  env: env
 });
 
 export const expectations: Expectations = {

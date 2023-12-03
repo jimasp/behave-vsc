@@ -91,8 +91,8 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 	}
 
 	const projSettings = config.projectSettings[projUri.path];
-	assert.deepStrictEqual(projSettings.envVarOverrides, testConfig.getExpected("envVarOverrides"),
-		`${projName} project: envVarOverrides`);
+	assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
+		`${projName} project: env`);
 	assert.deepStrictEqual(projSettings.relativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
 		`${projName} project: relativeFeatureFolders`);
 	assert.deepStrictEqual(projSettings.relativeStepsFolders, expectations.expectedProjectRelativeStepsFolders,

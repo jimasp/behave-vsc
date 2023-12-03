@@ -447,19 +447,19 @@ export function getExpectedResults(): TestResult[] {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/envvaroverrides.feature',
-      scenario_featureName: 'EnvVarOverrides',
-      scenario_getLabel: 'run a successful envVarOverrides test',
+      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/envvars.feature',
+      scenario_featureName: 'envvars',
+      scenario_getLabel: 'run a successful envvars test',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful envVarOverrides test',
+      scenario_scenarioName: 'run a successful envvars test',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
       test_id: '.../project A/behave tests/some tests/group2_features/envvars.feature/run an successful envvars test',
-      test_label: 'run a successful envVarOverrides test',
-      test_parent: '.../project A/behave tests/some tests/group2_features/envvaroverrides.feature',
-      test_uri: '.../project A/behave tests/some tests/group2_features/envvaroverrides.feature'
+      test_label: 'run a successful envvars test',
+      test_parent: '.../project A/behave tests/some tests/group2_features/envvars.feature',
+      test_uri: '.../project A/behave tests/some tests/group2_features/envvars.feature'
     }),
 
     new TestResult({

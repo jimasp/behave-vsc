@@ -28,7 +28,7 @@ export class ProjRun {
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
     public readonly tagExpression: string,
-    public readonly envVarOverrides: { [key: string]: string; }
+    public readonly env: { [key: string]: string; }
   ) { }
 }
 
@@ -182,14 +182,14 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
     const sortedQueue = projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 
-    // note that runProfile.envVarOverrides will (and should) override 
-    // any wr.projSettings.envVarOverrides global setting with the same key
-    const allEnvVarOverrides = { ...projSettings.envVarOverrides, ...runProfile.envVarOverrides };
+    // note that runProfile.env will (and should) override 
+    // any wr.projSettings.env global setting with the same key
+    const allenv = { ...projSettings.env, ...runProfile.env };
 
     wr = new ProjRun(
       projSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
-      runProfile.tagExpression ?? "", allEnvVarOverrides
+      runProfile.tagExpression ?? "", allenv
     )
 
     const start = performance.now();

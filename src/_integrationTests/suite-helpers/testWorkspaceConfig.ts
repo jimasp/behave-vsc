@@ -12,7 +12,7 @@ export class TestWorkspaceConfigWithprojUri {
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	public runParallel?: boolean;
-	private envVarOverrides?: { [name: string]: string };
+	private env?: { [name: string]: string };
 	private justMyCode?: boolean;
 	private multiRootProjectsRunInParallel?: boolean;
 	private stepLibraries?: StepLibrariesSetting;
@@ -21,7 +21,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
-		envVarOverrides = undefined,
+		env = undefined,
 		justMyCode = undefined,
 		multiRootProjectsRunInParallel = undefined,
 		runParallel = undefined,
@@ -29,7 +29,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runProfiles = undefined,
 		xRay = undefined
 	}: {
-		envVarOverrides?: { [name: string]: string },
+		env?: { [name: string]: string },
 		justMyCode?: boolean,
 		multiRootProjectsRunInParallel?: boolean,
 		runParallel?: boolean,
@@ -37,7 +37,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runProfiles?: RunProfilesSetting,
 		xRay?: boolean
 	} = {}) {
-		this.envVarOverrides = envVarOverrides;
+		this.env = env;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
 		this.multiRootProjectsRunInParallel = multiRootProjectsRunInParallel;
@@ -57,8 +57,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// 3. the default value for the type (e.g. bool = false, string = "", dict = {}, array = [])
 		// SO WE MUST MIRROR THAT BEHAVIOUR HERE
 		switch (section) {
-			case "envVarOverrides":
-				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
+			case "env":
+				return <T><unknown>(this.env === undefined ? {} : this.env);
 			case "multiRootProjectsRunInParallel":
 				return <T><unknown>(this.multiRootProjectsRunInParallel === undefined ? true : this.multiRootProjectsRunInParallel);
 			case "multiRootRunWorkspacesInParallel": // deprecated
@@ -92,8 +92,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for all user-settable settings in settings.json or *.code-workspace
 		let response;
 		switch (section) {
-			case "envVarOverrides":
-				response = <T><unknown>this.envVarOverrides;
+			case "env":
+				response = <T><unknown>this.env;
 				break;
 			case "justMyCode":
 				response = <T><unknown>this.justMyCode;
@@ -135,8 +135,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
-			case "envVarOverrides":
-				return <T><unknown>this.get("envVarOverrides");
+			case "env":
+				return <T><unknown>this.get("env");
 			case "featuresPath":
 				return <T><unknown>("deprecated");
 			case "justMyCode":

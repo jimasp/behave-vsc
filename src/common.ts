@@ -115,6 +115,7 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
 
 // get the actual value in the file or return undefined, this is
 // for cases where we need to distinguish between an unset value and the default value
+// this can be useful for e.g. handing deprecated settings
 export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfiguration, name: string): T => {
   const value = wkspConfig.inspect(name)?.workspaceFolderValue;
   return (value as T);

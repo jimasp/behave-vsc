@@ -16,13 +16,13 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
     const local_args = [...args];
     local_args.unshift("-m", "behave");
     diagLog(`${wr.pythonExec} ${local_args.join(" ")}`, projUri);
-    const env = { ...process.env, ...wr.envVarOverrides };
+    const env = { ...process.env, ...wr.env };
     const options: SpawnOptions = { cwd: projUri.fsPath, env: env };
     cp = spawn(wr.pythonExec, local_args, options);
 
     if (!cp.pid) {
       throw `unable to launch python or behave, command: ${wr.pythonExec} ${local_args.join(" ")}\n` +
-      `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.envVarOverrides)}`;
+      `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.env)}`;
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order

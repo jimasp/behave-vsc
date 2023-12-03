@@ -10,7 +10,8 @@ import {
   getLongestCommonPaths,
   findFilesSync,
   BEHAVE_CONFIG_FILES,
-  getStepsDir
+  getStepsDir,
+  getActualWorkspaceSetting
 } from './common';
 import { Logger, diagLog } from './logger';
 import { performance } from 'perf_hooks';
@@ -18,20 +19,20 @@ import { performance } from 'perf_hooks';
 
 
 export class RunProfile {
-  envVarOverrides?: { [key: string]: string } = {};
+  env?: { [key: string]: string } = {};
   tagExpression?= "";
 
   constructor(
-    envVarOverrides: { [key: string]: string } = {},
+    env: { [key: string]: string } = {},
     tagExpression = ""
   ) {
-    this.envVarOverrides = envVarOverrides;
+    this.env = env;
     this.tagExpression = tagExpression;
   }
 }
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
-export type EnvVarOverridesSetting = { [name: string]: string };
+export type envSetting = { [name: string]: string };
 
 export type StepLibrary = {
   relativePath: string;
@@ -93,7 +94,7 @@ export class ProjectSettings {
   // these apply to a specific workspace root folder
 
   // user-settable
-  public readonly envVarOverrides: EnvVarOverridesSetting = {};
+  public readonly env: envSetting = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly stepLibraries: StepLibrariesSetting = [];
@@ -127,11 +128,26 @@ export class ProjectSettings {
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
 
+
     try {
-      const envVarOverridesCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
-      if (envVarOverridesCfg === undefined)
-        throw "envVarOverrides is undefined";
-      this.envVarOverrides = envVarOverridesCfg;
+      const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
+      if (envCfg === undefined)
+        throw "env is undefined";
+      this.env = envCfg;
+    }
+    catch {
+      vscode.window.showWarningMessage('Invalid "behave-vsc.env" setting was ignored.', "OK");
+    }
+
+    try {
+      // deprecated, so only use if env not set
+      const envActual = getActualWorkspaceSetting(projConfig, "env");
+      if (envActual === undefined) {
+        const envCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
+        if (envCfg === undefined)
+          throw "env is undefined";
+        this.env = envCfg;
+      }
     }
     catch {
       vscode.window.showWarningMessage('Invalid "behave-vsc.envVarOverrides" setting was ignored.', "OK");
@@ -188,7 +204,7 @@ export class ProjectSettings {
     });
 
     // build sorted output dict of resource settings
-    const userSettableProjSettings = ["envVarOverrides", "justMyCode", "runParallel", "stepLibraries"];
+    const userSettableProjSettings = ["env", "justMyCode", "runParallel", "stepLibraries"];
     let projEntries = Object.entries(this).sort();
     projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
     projEntries = projEntries.sort();
