@@ -99,7 +99,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				response = <T><unknown>this.justMyCode;
 				break;
 			case "featuresPath":
-				response = <T><unknown>this.featuresPath;
+				response = <T><unknown>"deprecated";
 				break;
 			case "multiRootProjectsRunInParallel":
 				response = <T><unknown>this.multiRootProjectsRunInParallel;
@@ -132,23 +132,13 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	getExpected<T>(section: string): T | undefined {
 
-		const getexpectedProjectRelativeFeaturesPath = (): string => {
-			switch (this.featuresPath) {
-				case "":
-				case undefined:
-					return "features";
-				default:
-					return this.featuresPath.trim().replace(/^\\|^\//, "").replace(/\\$|\/$/, "");
-			}
-		}
-
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
 			case "envVarOverrides":
 				return <T><unknown>this.get("envVarOverrides");
-			case "workspaceRelativeFeaturesPath":
-				return <T><unknown>getexpectedProjectRelativeFeaturesPath();
+			case "featuresPath":
+				return <T><unknown>("deprecated");
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "multiRootProjectsRunInParallel":

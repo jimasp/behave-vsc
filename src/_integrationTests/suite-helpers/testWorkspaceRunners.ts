@@ -44,27 +44,11 @@ export class TestWorkspaceRunners {
     await runAllTestsAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
   }
 
-  // runAllNoConfig = async (expectations: Expectations) => {
-  //   console.log(`runAllNoConfig ${this.projName}: no config`);
-  //   await runAllTestsAndAssertTheResults(this.projName, false, noConfig, noRunOptions, expectations);
-  // }
-
-  // runAllParallelNoConfig = async (expectations: Expectations) => {
-  //   console.log(`runAllParallelNoConfig ${this.projName}: no config`);
-  //   await runAllTestsAndAssertTheResults(this.projName, false, noConfigParallel, noRunOptions, expectations);
-  // }
-
   debugAll = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
     await runAllTestsAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
   }
-
-  // debugAllNoConfig = async (expectations: Expectations) => {
-  //   console.log(`debugAllNoConfig ${this.projName}: no config`);
-  //   // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
-  //   await runAllTestsAndAssertTheResults(this.projName, true, noConfig, noRunOptions, expectations);
-  // }
 
 }
 
