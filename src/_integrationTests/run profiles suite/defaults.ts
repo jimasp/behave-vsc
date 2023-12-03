@@ -1,5 +1,6 @@
 import { RunProfilesSetting } from "../../settings"
-import { TestWorkspaceConfig, Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners"
+import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig"
+import { Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners"
 import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./expectedResults"
 
 
@@ -35,7 +36,7 @@ export const runProfiles: RunProfilesSetting = {
   },
 }
 
-export const wsConfig: TestWorkspaceConfig = {
+export const wsConfig = new TestWorkspaceConfig({
   envVarOverrides: {
     "var1": "ENV-var1",
     "var3": "ENV-var3"
@@ -47,7 +48,7 @@ export const wsConfig: TestWorkspaceConfig = {
       "stepFilesRx": ".*/steps/.*"
     }
   ]
-}
+});
 
 export const runOptions: RunOptions = {
   selectedRunProfile: undefined

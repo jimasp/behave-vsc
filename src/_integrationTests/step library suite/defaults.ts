@@ -1,4 +1,5 @@
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
+import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
@@ -16,7 +17,7 @@ export const wsConfig = new TestWorkspaceConfig({
 });
 
 
-export const expectations = {
+export const expectations: Expectations = {
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
   expectedProjectRelativeFeatureFolders: ["features"],

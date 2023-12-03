@@ -31,6 +31,8 @@ export class RunProfile {
 }
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
+export type EnvVarOverridesSetting = { [name: string]: string };
+
 export type StepLibrary = {
   relativePath: string;
   stepFilesRx: string;
@@ -91,7 +93,7 @@ export class ProjectSettings {
   // these apply to a specific workspace root folder
 
   // user-settable
-  public readonly envVarOverrides: { [name: string]: string } = {};
+  public readonly envVarOverrides: EnvVarOverridesSetting = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly stepLibraries: StepLibrariesSetting = [];

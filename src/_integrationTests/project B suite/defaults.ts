@@ -1,9 +1,10 @@
+import { StepLibrariesSetting } from "../../settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
 
-const stepLibraries = [
+const stepLibraries: StepLibrariesSetting = [
   {
     "relativePath": "features",
     "stepFilesRx": ".*/steps/.*"

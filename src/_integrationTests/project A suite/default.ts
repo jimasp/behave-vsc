@@ -1,8 +1,9 @@
+import { EnvVarOverridesSetting } from "../../settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
-const envVarOverrides = {
+const envVarOverrides: EnvVarOverridesSetting = {
   "some_var": "double qu\"oted",
   "some_var2": "single qu'oted",
   "space_var": " ",
