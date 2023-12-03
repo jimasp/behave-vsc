@@ -38,7 +38,7 @@
 		}
 	],
 	"settings": {
-		"behave-vsc.multiRootProjectsRunInParallel": true,
+		"behave-vsc.runMultiRootProjectsInParallel": true,
 		"behave-vsc.xRay": true,
 		"behave-vsc.runProfiles": {
 			"tag1 profile": {

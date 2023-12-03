@@ -48,7 +48,7 @@ export class InstanceSettings {
   // class for package.json scope:"window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
-  public readonly multiRootProjectsRunInParallel: boolean;
+  public readonly runMultiRootProjectsInParallel: boolean;
   public readonly runProfiles: RunProfilesSetting | undefined;
   public readonly xRay: boolean;
 
@@ -62,14 +62,14 @@ export class InstanceSettings {
       throw "multiRootRunWorkspacesInParallel is undefined";
     // ------------------
 
-    const multiRootProjectsRunInParallelCfg: boolean | undefined = winConfig.get("multiRootProjectsRunInParallel");
-    if (multiRootProjectsRunInParallelCfg === undefined)
-      throw "multiRootProjectsRunInParallel is undefined";
+    const runMultiRootProjectsInParallelCfg: boolean | undefined = winConfig.get("runMultiRootProjectsInParallel");
+    if (runMultiRootProjectsInParallelCfg === undefined)
+      throw "runMultiRootProjectsInParallel is undefined";
 
-    if (!multiRootRunWorkspacesInParallelCfg || !multiRootProjectsRunInParallelCfg)
-      this.multiRootProjectsRunInParallel = false;
+    if (!multiRootRunWorkspacesInParallelCfg || !runMultiRootProjectsInParallelCfg)
+      this.runMultiRootProjectsInParallel = false;
     else
-      this.multiRootProjectsRunInParallel = true;
+      this.runMultiRootProjectsInParallel = true;
 
     const xRayCfg: boolean | undefined = winConfig.get("xRay");
     if (xRayCfg === undefined)

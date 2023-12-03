@@ -8,7 +8,7 @@
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": false,
-    "behave-vsc.env": {
+    "behave-vsc.envVarOverrides": {
         "some_var": "double qu\"oted",
         "some_var2": "single qu'oted",
         "space_var": " ",

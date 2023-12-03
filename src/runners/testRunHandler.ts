@@ -151,7 +151,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
       config.logger.clear(projSettings.uri);
 
     // run workspaces sequentially
-    if (!winSettings.multiRootProjectsRunInParallel || debug) {
+    if (!winSettings.runMultiRootProjectsInParallel || debug) {
       await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
       continue;
     }
@@ -200,7 +200,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
   }
   catch (e: unknown) {
     wr?.run.end();
-    // unawaited async function (if multiRootProjectsRunInParallel) - show error
+    // unawaited async function (if runMultiRootProjectsInParallel) - show error
     config.logger.showError(e, projSettings.uri, run);
   }
 

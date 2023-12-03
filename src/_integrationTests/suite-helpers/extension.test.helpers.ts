@@ -82,8 +82,8 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 	// multiroot will read window settings from multiroot.code-workspace file, not config
 	if (!(global as any).multiRootTest) {
 		const instanceSettings = config.instanceSettings;
-		assert.strictEqual(instanceSettings.multiRootProjectsRunInParallel, testConfig.getExpected("multiRootProjectsRunInParallel"),
-			`${projName} project: multiRootProjectsRunInParallel`);
+		assert.strictEqual(instanceSettings.runMultiRootProjectsInParallel, testConfig.getExpected("runMultiRootProjectsInParallel"),
+			`${projName} project: runMultiRootProjectsInParallel`);
 		assert.strictEqual(instanceSettings.xRay, testConfig.getExpected("xRay"),
 			`${projName} project: xRay`);
 		assert.deepStrictEqual(instanceSettings.runProfiles, testConfig.getExpected("runProfiles"),
