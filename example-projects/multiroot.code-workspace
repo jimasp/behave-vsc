@@ -21,8 +21,8 @@
 			"name": "step library"
 		},
 		{
-			"path": "./multiple features folders",
-			"name": "multiple features folders"
+			"path": "./multiple top-level features folders",
+			"name": "multiple top-level features folders"
 		},
 		{
 			"path": "./multiroot bad paths",

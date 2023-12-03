@@ -10,7 +10,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/../mesh",
+				"${workspaceFolder}/../myworkspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -142,11 +142,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: multiple features folders workspace",
+			"name": "Debug: multiple top-level features folders workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/multiple features folders",
+				"${workspaceFolder}/example-projects/multiple top-level features folders",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -315,13 +315,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: multiple features folders workspace",
+			"name": "Run Test Suite: multiple top-level features folders workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/multiple features folders",
+				"${workspaceFolder}/example-projects/multiple top-level features folders",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiple features folders suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiple top-level features folders suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

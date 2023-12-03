@@ -4,7 +4,7 @@ import { expectations } from "./defaults";
 
 suite(`multiple feature folders suite`, () => {
 
-	const testWorkspaceRunners = new TestWorkspaceRunners("multiple features folders");
+	const testWorkspaceRunners = new TestWorkspaceRunners("multiple top-level features folders");
 
 	test("runAll", async () =>
 		await testWorkspaceRunners.runAll(noConfig, noRunOptions, expectations)

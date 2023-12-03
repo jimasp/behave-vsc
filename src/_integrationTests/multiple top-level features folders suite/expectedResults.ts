@@ -23,10 +23,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../multiple features folders/features/f-basic.feature/run a successful test',
+      test_id: '.../multiple top-level features folders/features/f-basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../multiple features folders/features/f-basic.feature',
-      test_uri: '.../multiple features folders/features/f-basic.feature'
+      test_parent: '.../multiple top-level features folders/features/f-basic.feature',
+      test_uri: '.../multiple top-level features folders/features/f-basic.feature'
     }),
 
     new TestResult({
@@ -39,10 +39,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../multiple features folders/features2/f2-basic.feature/run a successful test',
+      test_id: '.../multiple top-level features folders/features2/f2-basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../multiple features folders/features2/f2-basic.feature',
-      test_uri: '.../multiple features folders/features2/f2-basic.feature'
+      test_parent: '.../multiple top-level features folders/features2/f2-basic.feature',
+      test_uri: '.../multiple top-level features folders/features2/f2-basic.feature'
     }),
 
     new TestResult({
@@ -55,10 +55,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../multiple features folders/features2/subfolder/f2-basic-sub.feature/run a successful test',
+      test_id: '.../multiple top-level features folders/features2/subfolder/f2-basic-sub.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../multiple features folders/features2/subfolder/f2-basic-sub.feature',
-      test_uri: '.../multiple features folders/features2/subfolder/f2-basic-sub.feature'
+      test_parent: '.../multiple top-level features folders/features2/subfolder/f2-basic-sub.feature',
+      test_uri: '.../multiple top-level features folders/features2/subfolder/f2-basic-sub.feature'
     }),
 
   ];
