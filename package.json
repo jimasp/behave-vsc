@@ -6,8 +6,8 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "This setting is deprecated. Please use the new \"env\" setting.",
-					"deprecationMessage": "This setting is deprecated. Please use the new \"env\" setting.",
+					"markdownDescription": "This setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
+					"deprecationMessage": "This setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -50,9 +50,9 @@
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "This setting is deprecated. Please use the new \"runMultiRootProjectsInParallel\" setting.",
+					"markdownDescription": "This setting has been renamed. Please use the new \"behave-vsc.runMultiRootProjectsInParallel\" setting.",
 					"default": true,
-					"deprecationMessage": "This setting is deprecated. Please use the new \"runMultiRootProjectsInParallel\" setting."
+					"deprecationMessage": "This setting has been renamed. Please use the new \"behave-vsc.runMultiRootProjectsInParallel\" setting."
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
@@ -63,7 +63,7 @@
 				"behave-vsc.runProfiles": {
 					"scope": "window",
 					"type": "object",
-					"markdownDescription": "Run profiles used to set tags and environment variables for test runs. Applies globally on demand to all projects in the workspace. See example in readme."
+					"markdownDescription": "A list of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to all projects in the workspace. See example in readme."
 				},
 				"behave-vsc.xRay": {
 					"scope": "window",
