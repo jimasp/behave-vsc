@@ -373,25 +373,42 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 }
 
 
-export function findLongestCommonPaths(paths: string[]): string[] {
+export function getLongestCommonPaths(paths: string[]): string[] {
   if (paths.length === 0)
     return [];
 
-  const commonFolderPaths: string[] = [paths[0]];
+  const commonPaths: string[] = [paths[0]];
   let matched = false;
 
   for (const path of paths) {
     matched = false;
-    for (const cfp of commonFolderPaths) {
+    for (const cfp of commonPaths) {
       if (path.startsWith(cfp + "/") || path === cfp)
         matched = true;
     }
     if (matched)
       continue;
-    commonFolderPaths.push(path);
+    commonPaths.push(path);
   }
 
-  return commonFolderPaths;
+  return commonPaths;
+}
+
+
+export function getShortestCommonPathsExcludingLastPart(paths: string[]): string[] {
+  const commonPaths: string[] = [];
+
+  // For each path, remove the last part and add it to the commonPaths array
+  for (const path of paths) {
+    const pathParts = path.split('/');
+    pathParts.pop(); // remove the last part
+    const commonPath = pathParts.join('/');
+    if (!commonPaths.includes(commonPath)) {
+      commonPaths.push(commonPath);
+    }
+  }
+
+  return commonPaths;
 }
 
 

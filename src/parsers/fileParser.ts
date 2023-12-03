@@ -6,7 +6,7 @@ import { ProjectSettings } from "../settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes, getShortestCommonPathsExcludingLastPart
 } from '../common';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
@@ -247,14 +247,21 @@ export class FileParser {
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.
     // note that the id is based on the file path so a new node is created if the folder is renamed
-    // (old nodes are removed when required by parseFeatureFiles())
+    // (old nodes are removed when required by _parseFeatureFiles())
     let firstFolder: vscode.TestItem | undefined = undefined;
     let parent: vscode.TestItem | undefined = undefined;
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (!sfp.includes("/") && projSettings.relativeFeatureFolders.length > 1) {
+    if (projSettings.relativeFeatureFolders.length > 1) {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
+      const shortest = getShortestCommonPathsExcludingLastPart(projSettings.relativeFeatureFolders);
+      for (const folder of shortest) {
+        if (sfp.startsWith(folder + "/")) {
+          sfp = sfp.substring(folder.length + 1);
+          break;
+        }
+      }
     }
     else {
       const fullFeaturesPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;
@@ -265,12 +272,12 @@ export class FileParser {
     if (sfp.includes("/")) {
 
       const folders = sfp.split("/").slice(0, -1);
-      for (let i = 0; i < folders.length; i++) {
-        const path = folders.slice(0, i + 1).join("/");
-        const folderName = "$(folder) " + folders[i]; // $(folder) = folder icon
+      for (let folderNo = 0; folderNo < folders.length; folderNo++) {
+        const path = folders.slice(0, folderNo + 1).join("/");
+        const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon
         const folderTestItemId = `${uriId(projSettings.uri)}/${path}`;
 
-        if (i === 0)
+        if (folderNo === 0)
           parent = projGrandParent;
 
         if (parent)
@@ -287,7 +294,7 @@ export class FileParser {
           controller.items.add(current);
         }
 
-        if (i === folders.length - 1)
+        if (folderNo === folders.length - 1)
           current.children.add(testItem);
 
         if (parent)
@@ -295,7 +302,7 @@ export class FileParser {
 
         parent = current;
 
-        if (i === 0)
+        if (folderNo === 0)
           firstFolder = current;
       }
     }

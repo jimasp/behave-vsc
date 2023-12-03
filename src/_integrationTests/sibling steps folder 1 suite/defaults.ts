@@ -5,7 +5,7 @@ import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 export const expectations: Expectations = {
   expectedProjectRelativeBaseDirPath: "",
   expectedProjectRelativeConfigPaths: [""],
-  expectedProjectRelativeFeatureFolders: [""], // "" = project root
+  expectedProjectRelativeFeatureFolders: ["features_folder"],
   expectedProjectRelativeStepsFolders: ["steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,

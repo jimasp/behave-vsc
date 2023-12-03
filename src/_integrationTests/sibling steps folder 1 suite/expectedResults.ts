@@ -6,7 +6,7 @@ import { TestResult, applyTestConfiguration } from "../suite-helpers/expectedRes
 export function getExpectedCounts(projUri: vscode.Uri, config: Configuration): ProjParseCounts {
   const testCount = getExpectedResults(projUri, config).length;
   return {
-    tests: { nodeCount: 13, testCount: testCount },
+    tests: { nodeCount: 12, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 3,
     stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 28, stepMappings: 28
   };

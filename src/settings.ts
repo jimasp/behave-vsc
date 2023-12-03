@@ -7,7 +7,7 @@ import {
   normaliseUserSuppliedRelativePath,
   uriId,
   projError,
-  findLongestCommonPaths,
+  getLongestCommonPaths,
   findFilesSync,
   BEHAVE_CONFIG_FILES,
   getStepsDir
@@ -355,10 +355,6 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
     // e.g. an empty workspace folder
     return;
   }
-
-  if (relativeConfigPaths.length === 0)
-    relativeConfigPaths.push(relativeBaseDirPath);
-
   const baseDirUri = vscode.Uri.joinPath(projUri, relativeBaseDirPath);
 
   const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri, relativeConfigPaths);
@@ -378,6 +374,9 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
     else
       relativeStepsFolders.push(stepsFolder);
   }
+
+  if (relativeConfigPaths.length === 0)
+    relativeConfigPaths.push(relativeBaseDirPath);
 
   return {
     relativeConfigPaths,
@@ -463,7 +462,7 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
     "tests/features"
     "tests/features2"
   */
-  const longestCommonPaths = findLongestCommonPaths(relFeatureFolders);
+  const longestCommonPaths = getLongestCommonPaths(relFeatureFolders);
 
   // default to watching for features path
   if (longestCommonPaths.length === 0)
