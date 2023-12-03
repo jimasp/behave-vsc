@@ -12,7 +12,7 @@ export const configOptions: ConfigOptions = {
     },
     {
       "relativePath": "folder2\\steps_lib_2",
-      "stepFilesRx": ".*/steps/.*|more_steps/.*|.*/steps2.py|.*/steps3.py",
+      "stepFilesRx": ".*\\steps\\.*|more_steps\\.*|.*\\steps2.py|.*\\steps3.py",
     }
   ]
 }
@@ -25,7 +25,7 @@ export const expectations = {
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
   expectedProjectRelativeFeatureFolders: ["features"],
-  expectedProjectRelativeStepsFolders: ["features/steps", "folder1/steps_lib_1", "folder2/steps_lib_2"],
+  expectedProjectRelativeStepsFolders: ["folder1/steps_lib_1", "folder2/steps_lib_2", "features/steps"], // order is important
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
 }

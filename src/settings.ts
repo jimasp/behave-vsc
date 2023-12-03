@@ -368,10 +368,14 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
   // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
   // stepReferences if multiple matches are found across step folders. i.e. the last one wins, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
-  // (also note the line in parseStepsFileContent on the line that says "replacing duplicate step file step")
+  // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
   const stepsFolder = getStepsDir(baseDirUri.fsPath);
-  if (stepsFolder)
-    relativeStepsFolders.push(stepsFolder);
+  if (stepsFolder) {
+    if (relativeStepsFolders.includes(stepsFolder))
+      logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, projUri);
+    else
+      relativeStepsFolders.push(stepsFolder);
+  }
 
   return {
     relativeConfigPaths,
