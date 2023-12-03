@@ -11,7 +11,7 @@ export class StepReference extends vscode.TreeItem {
     private readonly featureRefDetails: FeatureFileStep[],
   ) {
     super(featureFileName, vscode.TreeItemCollapsibleState.Expanded);
-    this.description = vscode.workspace.asRelativePath(resourceUri).replace(featureFileName, "").slice(0, -1);
+    this.description = vscode.workspace.asRelativePath(resourceUri, false).replace(featureFileName, "").slice(0, -1);
     this.children = this.featureRefDetails.map(featureStep => new StepReferenceDetails(featureStep.text, featureStep, this));
     this.iconPath = new vscode.ThemeIcon('file');
   }

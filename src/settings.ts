@@ -250,8 +250,8 @@ function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger
 
   const relPaths: string[] = [];
   for (const path of paths) {
-    // paths setting may be relative or absolute
-    const relPath = vscode.workspace.asRelativePath(path);
+    // behave config paths setting may be relative or absolute, so standardise to relative
+    const relPath = vscode.workspace.asRelativePath(path, false);
     if (!fs.existsSync(vscode.Uri.joinPath(projUri, relPath).fsPath))
       logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
     else

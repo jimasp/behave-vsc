@@ -194,7 +194,7 @@ export const getStepsDir = (baseDirFsPath: string): string | null => {
       continue;
     const filePath = path.join(baseDirFsPath, fileOrDir);
     if (fs.statSync(filePath).isDirectory()) {
-      const relPath = vscode.workspace.asRelativePath(filePath);
+      const relPath = vscode.workspace.asRelativePath(filePath, false);
       return relPath;
     }
   }
