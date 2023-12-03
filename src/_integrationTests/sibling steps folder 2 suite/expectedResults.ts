@@ -4,63 +4,15 @@ import { TestResult } from "../suite-helpers/expectedResults.helpers";
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 21, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 4, stepFilesExceptEmptyOrCommentedOut: 3,
-    stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 39, stepMappings: 39
+    tests: { nodeCount: 27, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 5, stepFilesExceptEmptyOrCommentedOut: 3,
+    stepFileStepsExceptCommentedOut: 13, featureFileStepsExceptCommentedOut: 46, stepMappings: 46
   };
 }
 
 export const getExpectedResults = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
-
-    new TestResult({
-      scenario_featureName: 'Another',
-      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
-      scenario_getLabel: 'run a successful test',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a successful test',
-      test_label: 'run a successful test',
-      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
-      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
-    }),
-
-    new TestResult({
-      scenario_featureName: 'Another',
-      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
-      scenario_getLabel: 'run a failing test',
-      scenario_isOutline: false,
-      scenario_result: 'failed',
-      scenario_scenarioName: 'run a failing test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a failing test',
-      test_label: 'run a failing test',
-      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
-      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
-    }),
-
-    new TestResult({
-      scenario_featureName: 'Another',
-      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
-      scenario_getLabel: 'run a skipped test',
-      scenario_isOutline: false,
-      scenario_result: 'skipped',
-      scenario_scenarioName: 'run a skipped test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a skipped test',
-      test_label: 'run a skipped test',
-      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
-      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
-    }),
 
     new TestResult({
       scenario_featureFileRelativePath: 'subfolder 1/features2/basic.feature',
@@ -108,6 +60,106 @@ export const getExpectedResults = (): TestResult[] => {
       test_label: 'run a skipped test',
       test_parent: '.../sibling steps folder 2/subfolder 1/features2/basic.feature',
       test_uri: '.../sibling steps folder 2/subfolder 1/features2/basic.feature'
+    }),
+
+
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'subfolder 1/features/basic.feature',
+      scenario_featureName: 'Basic',
+      scenario_getLabel: 'run a successful test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/features/basic.feature/run a successful test',
+      test_label: 'run a successful test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/features/basic.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/features/basic.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'subfolder 1/features/basic.feature',
+      scenario_featureName: 'Basic',
+      scenario_getLabel: 'run a failing test',
+      scenario_isOutline: false,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'run a failing test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/features/basic.feature/run a failing test',
+      test_label: 'run a failing test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/features/basic.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/features/basic.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'subfolder 1/features/basic.feature',
+      scenario_featureName: 'Basic',
+      scenario_getLabel: 'run a skipped test',
+      scenario_isOutline: false,
+      scenario_result: 'skipped',
+      scenario_scenarioName: 'run a skipped test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/features/basic.feature/run a skipped test',
+      test_label: 'run a skipped test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/features/basic.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/features/basic.feature'
+    }),
+
+
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
+      scenario_getLabel: 'run a successful test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a successful test',
+      test_label: 'run a successful test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
+      scenario_getLabel: 'run a failing test',
+      scenario_isOutline: false,
+      scenario_result: 'failed',
+      scenario_scenarioName: 'run a failing test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a failing test',
+      test_label: 'run a failing test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
+    }),
+
+    new TestResult({
+      scenario_featureName: 'Another',
+      scenario_featureFileRelativePath: 'subfolder 1/subfolder 2/features/more/another.feature',
+      scenario_getLabel: 'run a skipped test',
+      scenario_isOutline: false,
+      scenario_result: 'skipped',
+      scenario_scenarioName: 'run a skipped test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature/run a skipped test',
+      test_label: 'run a skipped test',
+      test_parent: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature',
+      test_uri: '.../sibling steps folder 2/subfolder 1/subfolder 2/features/more/another.feature'
     }),
 
     new TestResult({
