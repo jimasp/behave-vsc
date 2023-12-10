@@ -105,8 +105,8 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 		`${projName} project: justMyCode`);
 	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"),
 		`${projName} project: runParallel`);
-	assert.deepStrictEqual(projSettings.stepLibraries, testConfig.getExpected("stepLibraries"),
-		`${projName} project: stepLibraries`);
+	assert.deepStrictEqual(projSettings.importedSteps, testConfig.getExpected("importedSteps"),
+		`${projName} project: importedSteps`);
 }
 
 

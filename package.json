@@ -23,16 +23,16 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "This setting is deprecated and IGNORED. Feature paths are now determined automatically.",
+					"markdownDescription": "This legacy setting is IGNORED. Feature paths are now determined automatically.",
 					"default": "features",
-					"deprecationMessage": "This setting is deprecated and IGNORED. Feature paths are now determined automatically."
+					"deprecationMessage": "This legacy setting is IGNORED. Feature paths are now determined automatically."
 				},
-				"behave-vsc.stepLibraries": {
+				"behave-vsc.importedSteps": {
 					"scope": "resource",
-					"type": "array",
-					"markdownDescription": "An array of step library dictionaries. Each entry has (a) a *project-relative* path to the step library inside the project, and (b) an optional regex of extra filenames to include that are NOT inside `steps` subfolders of the given path. See the readme for an example.",
+					"type": "object",
+					"markdownDescription": "Key-value pairs of additional imported steps (e.g. step libraries) to include for step navigation. Each pair has a key of a *project-relative* path to the imported steps inside the project, and a value of a regex (not glob) of step files to include. See the readme for an example.",
 					"additionalProperties": {
-						"type": "object"
+						"type": "string"
 					}
 				},
 				"behave-vsc.justMyCode": {
@@ -50,9 +50,9 @@
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "This setting has been renamed. Please use the new \"behave-vsc.runMultiRootProjectsInParallel\" setting.",
+					"markdownDescription": "This legacy setting is IGNORED. Please use \"behave-vsc.runMultiRootProjectsInParallel\".",
 					"default": true,
-					"deprecationMessage": "This setting has been renamed. Please use the new \"behave-vsc.runMultiRootProjectsInParallel\" setting."
+					"deprecationMessage": "This legacy setting is IGNORED. Please use \"behave-vsc.runMultiRootProjectsInParallel\"."
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
@@ -61,9 +61,23 @@
 					"default": false
 				},
 				"behave-vsc.runProfiles": {
-					"scope": "window",
 					"type": "object",
-					"markdownDescription": "A list of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to all projects in the workspace. See example in readme."
+					"scope": "window",
+					"markdownDescription": "A dictionary of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to all projects in the workspace. See example in readme.",
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"env": {
+								"type": "object",
+								"additionalProperties": {
+									"type": "string"
+								}
+							},
+							"tagExpression": {
+								"type": "string"
+							}
+						}
+					}
 				},
 				"behave-vsc.xRay": {
 					"scope": "window",

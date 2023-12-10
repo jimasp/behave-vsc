@@ -23,10 +23,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../step library/features/basic.feature/run a successful test',
+      test_id: '.../imported steps/features/basic.feature/run a successful test',
       test_label: 'run a successful test',
-      test_parent: '.../step library/features/basic.feature',
-      test_uri: '.../step library/features/basic.feature'
+      test_parent: '.../imported steps/features/basic.feature',
+      test_uri: '.../imported steps/features/basic.feature'
     }),
 
     new TestResult({
@@ -39,10 +39,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../step library/features/basic.feature/run a failing test',
+      test_id: '.../imported steps/features/basic.feature/run a failing test',
       test_label: 'run a failing test',
-      test_parent: '.../step library/features/basic.feature',
-      test_uri: '.../step library/features/basic.feature'
+      test_parent: '.../imported steps/features/basic.feature',
+      test_uri: '.../imported steps/features/basic.feature'
     }),
 
     new TestResult({
@@ -55,10 +55,10 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../step library/features/basic.feature/run a skipped test',
+      test_id: '.../imported steps/features/basic.feature/run a skipped test',
       test_label: 'run a skipped test',
-      test_parent: '.../step library/features/basic.feature',
-      test_uri: '.../step library/features/basic.feature'
+      test_parent: '.../imported steps/features/basic.feature',
+      test_uri: '.../imported steps/features/basic.feature'
     }),
 
   ];

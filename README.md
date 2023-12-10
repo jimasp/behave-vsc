@@ -15,7 +15,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
   - Quick-navigate in the Step References Window (default F4 + Shift F4).
-  - Includes step library support.
+  - Includes navigation support for imported steps (e.g. step libraries) via the `importedSteps` setting.
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter highlighting.  
 - Smart feature step auto-completion, e.g. typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. (Also some snippets are thrown in.)
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
@@ -121,8 +121,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ```
 
 - Step navigation is automatically enabled for your steps folder, but you can also enable step navigation for:
-  - your own imported steps in non-standard locations, e.g. `features/my_web_features/steps`
-  - step libraries that are inside your project folder via the `stepLibraries` setting
+  - your own imported steps inside your project folder
+  - imported step libraries inside your project folder
   - (note that if any path/rx is also included in a `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
 
   - Example:
@@ -130,16 +130,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ```json
     // settings.json
     {
-      "behave-vsc.stepLibraries": [
-          {
-              "relativePath": ".venv/lib/python3.9/site-packages/package-steps-lib",
-              "stepFilesRx": ".*/steps.py|.*/steps/.*"
-          },
-          {
-              "relativePath": "my_steps_lib",
-              "stepFilesRx": ".*/steps/.*",
-          }
-      ],
+      "behave-vsc.importedSteps": {
+          "my_steps_lib" : ".*",
+          ".venv/lib/python3.9/site-packages/package-steps-lib": ".*/steps/.*|.*/steps.py"          
+      },
       "behave-vsc.justMyCode": false
     }
     ```
@@ -339,7 +333,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
-  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them. (You can however install external steps as a package and use the `stepLibraries` setting.)
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them. (You can however install external steps as a package and use the `importedSteps` setting.)
 
 - There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
 

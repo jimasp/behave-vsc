@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RunProfilesSetting, StepLibrariesSetting } from '../../settings';
+import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../settings';
 
 
 // used only in the extension tests themselves
@@ -13,35 +13,39 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	public runParallel?: boolean;
 	private env?: { [name: string]: string };
+	private envVarOverrides?: { [name: string]: string };
 	private justMyCode?: boolean;
 	private runMultiRootProjectsInParallel?: boolean;
-	private stepLibraries?: StepLibrariesSetting;
+	private importedSteps?: ImportedStepsSetting;
 	private runProfiles?: RunProfilesSetting;
 	private xRay?: boolean;
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
+		envVarOverrides = undefined,
 		env = undefined,
 		justMyCode = undefined,
 		runMultiRootProjectsInParallel = undefined,
 		runParallel = undefined,
-		stepLibraries = undefined,
+		importedSteps = undefined,
 		runProfiles = undefined,
 		xRay = undefined
 	}: {
+		envVarOverrides?: { [name: string]: string },
 		env?: { [name: string]: string },
 		justMyCode?: boolean,
 		runMultiRootProjectsInParallel?: boolean,
 		runParallel?: boolean,
-		stepLibraries?: StepLibrariesSetting,
+		importedSteps?: ImportedStepsSetting,
 		runProfiles?: RunProfilesSetting,
 		xRay?: boolean
 	} = {}) {
+		this.envVarOverrides = envVarOverrides;
 		this.env = env;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
 		this.runMultiRootProjectsInParallel = runMultiRootProjectsInParallel;
-		this.stepLibraries = stepLibraries;
+		this.importedSteps = importedSteps;
 		this.runProfiles = runProfiles;
 		this.xRay = xRay;
 	}
@@ -57,24 +61,22 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// 3. the default value for the type (e.g. bool = false, string = "", dict = {}, array = [])
 		// SO WE MUST MIRROR THAT BEHAVIOUR HERE
 		switch (section) {
+			case "envVarOverrides": // DEPRECATED
+				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
 			case "env":
 				return <T><unknown>(this.env === undefined ? {} : this.env);
 			case "runMultiRootProjectsInParallel":
-				return <T><unknown>(this.runMultiRootProjectsInParallel === undefined ? true : this.runMultiRootProjectsInParallel);
-			case "multiRootRunWorkspacesInParallel": // deprecated
 				return <T><unknown>(this.runMultiRootProjectsInParallel === undefined ? true : this.runMultiRootProjectsInParallel);
 			case "justMyCode":
 				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
 			case "runParallel":
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
-			case "stepLibraries":
-				return <T><unknown>(this.stepLibraries === undefined ? [] : this.stepLibraries);
+			case "importedSteps":
+				return <T><unknown>(this.importedSteps === undefined ? [] : this.importedSteps);
 			case "xRay":
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			case "runProfiles":
 				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
-			case "featuresPath": // deprecated
-				return <T><unknown>("ignored");
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
@@ -92,14 +94,14 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for all user-settable settings in settings.json or *.code-workspace
 		let response;
 		switch (section) {
+			case "envVarOverrides": // DEPRECATED
+				response = <T><unknown>this.envVarOverrides;
+				break;
 			case "env":
 				response = <T><unknown>this.env;
 				break;
 			case "justMyCode":
 				response = <T><unknown>this.justMyCode;
-				break;
-			case "featuresPath":
-				response = <T><unknown>"deprecated";
 				break;
 			case "runMultiRootProjectsInParallel":
 				response = <T><unknown>this.runMultiRootProjectsInParallel;
@@ -107,8 +109,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "runParallel":
 				response = <T><unknown>this.runParallel;
 				break;
-			case "stepLibraries":
-				response = <T><unknown>this.stepLibraries;
+			case "importedSteps":
+				response = <T><unknown>this.importedSteps;
 				break;
 			case "runProfiles":
 				response = <T><unknown>this.runProfiles;
@@ -136,9 +138,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
 			case "env":
-				return <T><unknown>this.get("env");
-			case "featuresPath":
-				return <T><unknown>("deprecated");
+				return <T><unknown>(Object.keys(this.get("env") || {}).length === 0 ? (this.envVarOverrides ? this.envVarOverrides : {}) : this.get("env"));
 			case "justMyCode":
 				return <T><unknown>(this.get("justMyCode"));
 			case "runMultiRootProjectsInParallel":
@@ -147,8 +147,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("runParallel"));
 			case "runProfiles":
 				return <T><unknown>(this.get("runProfiles"));
-			case "stepLibraries":
-				return <T><unknown>(this.get("stepLibraries"));
+			case "importedSteps":
+				return <T><unknown>(this.get("importedSteps") === undefined ? [] : convertimportedStepsToExpectedArray(this.get("importedSteps")));
 			case "xRay":
 				return <T><unknown>(this.get("xRay"));
 			default:
@@ -169,5 +169,19 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		throw new Error('update() method not implemented.');
 	}
 
+}
+
+
+function convertimportedStepsToExpectedArray(importedSteps: ImportedStepsSetting): ImportedSteps {
+	// settings.ts should convert from dict to kvp array and trim keys/values
+	const arr: ImportedSteps = [];
+	if (importedSteps) {
+		for (const key in importedSteps) {
+			const tKey = key.trim().replace(/\\/g, "/");
+			const tValue = importedSteps[key].trim().replace(/\\/g, "/");
+			arr.push({ relativePath: tKey, stepFilesRx: tValue });
+		}
+	}
+	return arr;
 }
 

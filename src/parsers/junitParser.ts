@@ -167,9 +167,9 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
 
 
 function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario): string {
-  // NOTE: this function MUST have basically the same logic as the 
-  // behave source code function "make_feature_filename()".
-  // if that function changes in behave, then it is likely this will also have to change.    
+  // NOTE: THIS FUNCTION MUST HAVE BASICALLY THE SAME LOGIC AS THE 
+  // BEHAVE SOURCE CODE FUNCTION "make_feature_filename()".
+  // IF THAT FUNCTION CHANGES IN BEHAVE, THEN IT IS LIKELY THIS WILL ALSO HAVE TO CHANGE.    
   let fileName = null;
   const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
   for (const relConfigPath of projSettings.relativeConfigPaths) {

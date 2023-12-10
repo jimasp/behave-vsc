@@ -157,7 +157,7 @@ export class FileParser {
       for (const uri of stepFiles) {
         if (cancelToken.isCancellationRequested)
           break;
-        // the steplibraries setting could result in multiple matches, so skip if already processed
+        // the importedSteps setting could result in multiple matches, so skip if already processed
         if (processed.includes(uriId(uri)))
           continue;
         if (!isStepsFile(uri))

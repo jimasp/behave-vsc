@@ -15,9 +15,9 @@
     "python.testing.pytestEnabled": false,
     "behave-vsc.runParallel": true,
     "behave-vsc.xRay": true,
-    "behave-vsc.stepLibraries": [
+    "behave-vsc.importedSteps": [
         {
-	        // imports, i.e. features/grouped/steps + features/grouped2/steps
+            // imports, i.e. features/grouped/steps + features/grouped2/steps
             "relativePath": "features",
             "stepFilesRx": ".*/steps/.*"
         }

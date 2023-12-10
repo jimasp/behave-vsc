@@ -6,7 +6,6 @@ import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  projError,
   getLongestCommonPaths,
   findFilesSync,
   BEHAVE_CONFIG_FILES,
@@ -17,7 +16,9 @@ import { Logger, diagLog } from './logger';
 import { performance } from 'perf_hooks';
 
 
+export type EnvSetting = { [key: string]: string };
 
+export type RunProfilesSetting = { [key: string]: RunProfile };
 export class RunProfile {
   env?: { [key: string]: string } = {};
   tagExpression?= "";
@@ -30,16 +31,13 @@ export class RunProfile {
     this.tagExpression = tagExpression;
   }
 }
-export type RunProfilesSetting = { [key: string]: RunProfile };
 
-export type envSetting = { [name: string]: string };
-
-export type StepLibrary = {
+export type ImportedStepsSetting = { [key: string]: string };
+export type StepImport = {
   relativePath: string;
   stepFilesRx: string;
 }
-
-export type StepLibrariesSetting = StepLibrary[];
+export type ImportedSteps = StepImport[];
 
 
 
@@ -54,22 +52,14 @@ export class InstanceSettings {
 
   constructor(winConfig: vscode.WorkspaceConfiguration) {
 
-    // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-
-    // deprecated setting
-    const multiRootRunWorkspacesInParallelCfg: boolean | undefined = winConfig.get("multiRootRunWorkspacesInParallel");
-    if (multiRootRunWorkspacesInParallelCfg === undefined)
-      throw "multiRootRunWorkspacesInParallel is undefined";
-    // ------------------
+    // note: for all settings, get() should never return undefined (unless packages.json is wrong),
+    // as get() will always return a default value for any packages.json setting.
+    // (if we want the actual settings.json setting (not default) then use getActualWorkspaceSetting.)
 
     const runMultiRootProjectsInParallelCfg: boolean | undefined = winConfig.get("runMultiRootProjectsInParallel");
     if (runMultiRootProjectsInParallelCfg === undefined)
       throw "runMultiRootProjectsInParallel is undefined";
-
-    if (!multiRootRunWorkspacesInParallelCfg || !runMultiRootProjectsInParallelCfg)
-      this.runMultiRootProjectsInParallel = false;
-    else
-      this.runMultiRootProjectsInParallel = true;
+    this.runMultiRootProjectsInParallel = runMultiRootProjectsInParallelCfg;
 
     const xRayCfg: boolean | undefined = winConfig.get("xRay");
     if (xRayCfg === undefined)
@@ -94,10 +84,10 @@ export class ProjectSettings {
   // these apply to a specific workspace root folder
 
   // user-settable
-  public readonly env: envSetting = {};
+  public readonly env: EnvSetting = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
-  public readonly stepLibraries: StepLibrariesSetting = [];
+  public readonly importedSteps: ImportedSteps = [];
   // calculated
   public readonly id: string;
   public readonly uri: vscode.Uri;
@@ -106,8 +96,6 @@ export class ProjectSettings {
   public readonly relativeConfigPaths: string[] = [];
   public readonly relativeFeatureFolders: string[] = [];
   public readonly relativeStepsFolders: string[] = [];
-  // internal
-  private readonly _fatalErrors: string[] = [];
 
 
   constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings, logger: Logger) {
@@ -117,22 +105,24 @@ export class ProjectSettings {
     const wsFolder = getWorkspaceFolder(projUri);
     this.name = wsFolder.name;
 
-    // note: undefined should never happen (or packages.json is wrong) as get will return a default value for packages.json settings
-    const featuresPathCfg: string | undefined = projConfig.get("featuresPath");
-    if (featuresPathCfg === undefined)
-      throw "featuresPath is undefined";
+    // note: for all settings, get() should never return undefined (unless packages.json is wrong),
+    // as get() will always return a default value for any packages.json setting.
+    // (if we want the actual settings.json setting (not default) then use getActualWorkspaceSetting.)    
+
     const justMyCodeCfg: boolean | undefined = projConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
       throw "justMyCode is undefined";
+    this.justMyCode = justMyCodeCfg;
+
     const runParallelCfg: boolean | undefined = projConfig.get("runParallel");
     if (runParallelCfg === undefined)
       throw "runParallel is undefined";
-
+    this.runParallel = runParallelCfg;
 
     try {
       const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
       if (envCfg === undefined)
-        throw "env is undefined";
+        throw "behave-vsc.env is undefined";
       this.env = envCfg;
     }
     catch {
@@ -140,12 +130,12 @@ export class ProjectSettings {
     }
 
     try {
-      // deprecated, so only use if env not set
+      // DEPRECATED, so only used if env is not set in settings.json
       const envActual = getActualWorkspaceSetting(projConfig, "env");
       if (envActual === undefined) {
         const envCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
         if (envCfg === undefined)
-          throw "env is undefined";
+          throw "behave-vsc.envVarOverrides is undefined";
         this.env = envCfg;
       }
     }
@@ -153,26 +143,14 @@ export class ProjectSettings {
       vscode.window.showWarningMessage('Invalid "behave-vsc.envVarOverrides" setting was ignored.', "OK");
     }
 
-    try {
-      const stepLibrariesCfg: StepLibrariesSetting | undefined = projConfig.get("stepLibraries");
-      if (stepLibrariesCfg === undefined)
-        throw "stepLibraries is undefined";
-      for (const stepLibrary of stepLibrariesCfg) {
-        const stepLib = stepLibrary;
-        stepLib.relativePath = stepLibrary.relativePath.replace(/\\/g, "/");
-        stepLib.stepFilesRx = stepLibrary.stepFilesRx.replace(/\\/g, "/");
-      }
+    const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
+    if (importedStepsCfg === undefined)
+      throw "importedSteps is undefined";
+    this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg, logger);
 
-      this.stepLibraries = stepLibrariesCfg;
-    }
-    catch {
-      vscode.window.showWarningMessage('Invalid "behave-vsc.stepLibraries" setting was ignored.', "OK");
-    }
 
-    this.justMyCode = justMyCodeCfg;
-    this.runParallel = runParallelCfg;
 
-    const projRelPaths = getProjectRelativePaths(projUri, this.name, this.stepLibraries, logger);
+    const projRelPaths = getProjectRelativePaths(projUri, this.name, this.importedSteps, logger);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
@@ -185,7 +163,7 @@ export class ProjectSettings {
     this.relativeStepsFolders = projRelPaths.relativeStepsFolders;
 
     // setContext vars are used in package.json
-    vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.stepLibraries.length > 0);
+    vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
 
     this._logSettings(logger, winSettings);
   }
@@ -204,7 +182,7 @@ export class ProjectSettings {
     });
 
     // build sorted output dict of resource settings
-    const userSettableProjSettings = ["env", "justMyCode", "runParallel", "stepLibraries"];
+    const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
     let projEntries = Object.entries(this).sort();
     projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
     projEntries = projEntries.sort();
@@ -221,16 +199,42 @@ export class ProjectSettings {
 
     const projUris = getUrisOfWkspFoldersWithFeatures();
     if (projUris.length > 0 && this.uri === projUris[0])
-      logger.logInfoAllProjects(`\ninstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
+      logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 
-    logger.logInfo(`\n${this.name} project settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
+    logger.logInfo(`\nProject settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
+  }
 
-    if (this._fatalErrors.length > 0) {
-      throw new projError(`\nFATAL ERROR due to invalid setting in "${this.name}/.vscode/settings.json". Extension cannot continue. ` +
-        `${this._fatalErrors.join("\n")}\n` +
-        `NOTE: fatal errors may require you to restart vscode after correcting the problem.) `, this.uri);
+}
+
+function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: ImportedStepsSetting, logger: Logger): ImportedSteps {
+  try {
+
+    const importedSteps: ImportedSteps = [];
+    const stepImps = new Map(Object.entries(importedStepsCfg));
+    for (const stepLibrary of stepImps) {
+      const tKey = stepLibrary[0].trim().replace(/\\/g, "/");
+      const tValue = stepLibrary[1].trim().replace(/\\/g, "/");
+      if (tKey === "") {
+        logger.showWarn("behave-vsc.importedSteps key (i.e. the project relative path) cannot be an empty string", projUri);
+        continue;
+      }
+      if (tValue === "") {
+        logger.showWarn("behave-vsc.importedSteps value (i.e. the sub-path regex) cannot be an empty string", projUri);
+        continue;
+      }
+      if (importedSteps.find(l => l.relativePath === tKey)) {
+        logger.showWarn(`behave-vsc.importedSteps key ${stepLibrary[0]} is a duplicate and will be ignored`, projUri);
+        continue;
+      }
+
+      importedSteps.push({ relativePath: tKey, stepFilesRx: tValue });
     }
 
+    return importedSteps;
+  }
+  catch {
+    vscode.window.showWarningMessage('Invalid "behave-vsc.importedSteps" setting was ignored.', "OK");
+    return [];
   }
 
 }
@@ -239,11 +243,11 @@ export class ProjectSettings {
 function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger): string[] {
   let paths: string[] | null = null;
 
-  // BEHAVE_CONFIG_FILES array has the same order of precedence as in the behave 
-  // source code function "config_filenames()",
-  // however we don't need to reverse() it like behave because we are only 
-  // interested in the "paths" setting (not all cumulative 
-  // settings), i.e. we can just break on the first file with a "paths" setting.
+  // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
+  // SOURCE CODE FUNCTION "config_filenames()",
+  // however we DON'T need to reverse() it like behave because we are only 
+  // interested in the "paths" setting (not all cumulative settings), 
+  // i.e. we can just break on the first file in the order that has a "paths" setting.
   let matchedConfigFile;
   for (const configFile of BEHAVE_CONFIG_FILES) {
     const configFilePath = path.join(projUri.fsPath, configFile);
@@ -259,8 +263,13 @@ function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger
     }
   }
 
+  if (!matchedConfigFile) {
+    logger.logInfo(`No Behave config file found, using default paths.`, projUri);
+    return [];
+  }
+
   if (!paths) {
-    logger.logInfo(`Behave config file "${matchedConfigFile}", paths: ${paths}`, projUri);
+    logger.logInfo(`Behave config file "${matchedConfigFile}" did not set paths, using default paths.`, projUri);
     return [];
   }
 
@@ -281,7 +290,8 @@ function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger
 
 
 function getBehavePathsFromIni(filePath: string): string[] | null {
-  // we have to follow behave's own paths behaviour here
+
+  // WE HAVE TO FOLLOW BEHAVE'S OWN PATHS BEHAVIOUR HERE
   // (see "read_configuration" in behave's source code)
   //
   // example ini file #1 - becomes ["features"]
@@ -361,28 +371,27 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
 
 
 
-function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibraries: StepLibrariesSetting, logger: Logger) {
+function getProjectRelativePaths(projUri: vscode.Uri, projName: string, importedSteps: ImportedSteps, logger: Logger) {
   const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, logger);
 
   // base dir is a concept borrowed from behave's source code
-  // note that it is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)        
+  // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
+  // and it is also used to determine the steps folder (below)
   const relativeBaseDirPath = getRelativeBaseDirPath(projUri, projName, relativeConfigPaths, logger);
   if (relativeBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
   }
-  const baseDirUri = vscode.Uri.joinPath(projUri, relativeBaseDirPath);
-
-  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri, relativeConfigPaths);
 
   const relativeStepsFolders: string[] = [];
   relativeStepsFolders.push(
-    ...getStepLibraryStepPaths(projUri, stepLibraries, logger));
+    ...getStepLibraryStepPaths(projUri, importedSteps, logger));
 
   // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
-  // stepReferences if multiple matches are found across step folders. i.e. the last one wins, so we'll 
+  // stepReferences if multiple matches are found across step folders. i.e. THE LAST ONE WINS, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
+  const baseDirUri = vscode.Uri.joinPath(projUri, relativeBaseDirPath);
   const stepsFolder = getStepsDir(baseDirUri.fsPath);
   if (stepsFolder) {
     if (relativeStepsFolders.includes(stepsFolder))
@@ -390,6 +399,9 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
     else
       relativeStepsFolders.push(stepsFolder);
   }
+
+  // determine relativeFeatureFolders BEFORE we add relativeBaseDirPath to relativeConfigPaths
+  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri, relativeConfigPaths);
 
   if (relativeConfigPaths.length === 0)
     relativeConfigPaths.push(relativeBaseDirPath);
@@ -405,9 +417,10 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, stepLibr
 
 function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeBehaveConfigPaths: string[],
   logger: Logger): string | null {
-  // NOTE: this function MUST have basically the same logic as the 
-  // behave source code function "setup_paths()".
-  // if that function changes in behave, then it is likely this will also have to change.  
+  // NOTE: THIS FUNCTION MUST HAVE SIMILAR LOGIC TO THE 
+  // BEHAVE SOURCE CODE FUNCTION "setup_paths()".
+  // IF THAT FUNCTION LOGIC CHANGES IN BEHAVE, THEN IT IS LIKELY THIS FUNCTION WILL ALSO HAVE TO CHANGE.  
+  // THIS IS BECAUSE THE BASE DIR IS USED TO CALCULATE (PREDICT) THE JUNIT FILENAME THAT BEHAVE WILL USE.
   let configRelBaseDir;
 
   // this function will determine the baseDir
@@ -492,23 +505,23 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
 
 
 
-function getStepLibraryStepPaths(projUri: vscode.Uri, requestedStepLibraries: StepLibrariesSetting, logger: Logger): string[] {
+function getStepLibraryStepPaths(projUri: vscode.Uri, requestedimportedSteps: ImportedSteps, logger: Logger): string[] {
 
   const stepLibraryPaths: string[] = [];
 
-  for (const stepLibrary of requestedStepLibraries) {
+  for (const stepLibrary of requestedimportedSteps) {
     const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
 
     if (!relativePath) {
       // the path is required as it is used to set the watcher path
-      logger.showWarn('step library path specified in "behave-vsc.stepLibraries" cannot be an empty ' +
+      logger.showWarn('imported steps path specified in "behave-vsc.importedSteps" cannot be an empty ' +
         'string and will be ignored', projUri);
       continue;
     }
 
     const folderUri = vscode.Uri.joinPath(projUri, relativePath);
     if (!fs.existsSync(folderUri.fsPath)) {
-      logger.showWarn(`step library path "${folderUri.fsPath}" specified in "behave-vsc.stepLibraries" not found ` +
+      logger.showWarn(`imported steps path "${folderUri.fsPath}" specified in "behave-vsc.importedSteps" not found ` +
         `and will be ignored`, projUri);
     }
     else {

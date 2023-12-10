@@ -17,8 +17,8 @@
 			"name": "run profiles"
 		},
 		{
-			"path": "./step library",
-			"name": "step library"
+			"path": "./imported steps",
+			"name": "imported steps"
 		},
 		{
 			"path": "./multiple top-level features folders",

@@ -4,6 +4,9 @@ import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./e
 
 
 export const wsConfig = new TestWorkspaceConfig({
+  importedSteps: {
+    "features": ".*/steps/.*"
+  },
   env: {
     "var1": "ENV-var1",
     "var3": "ENV-var3"
@@ -38,13 +41,7 @@ export const wsConfig = new TestWorkspaceConfig({
       },
       "tagExpression": "@tag1,@tag2",
     },
-  },
-  stepLibraries: [
-    {
-      "relativePath": "features",
-      "stepFilesRx": ".*/steps/.*"
-    }
-  ]
+  }
 });
 
 export const runOptions: RunOptions = {
@@ -55,7 +52,7 @@ export const expectations: Expectations = {
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
   expectedProjectRelativeFeatureFolders: ["features"],
-  expectedProjectRelativeStepsFolders: ["features", "features/steps"], // "features" = cfgOptions steps setting
+  expectedProjectRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResultsForAProfileWithoutTags,
 }

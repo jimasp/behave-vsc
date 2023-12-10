@@ -5,7 +5,7 @@ import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { config } from "./configuration";
 import { Scenario, TestData } from './parsers/testFile';
-import { StepLibrary, ProjectSettings } from './settings';
+import { StepImport, ProjectSettings } from './settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from './watchers/junitWatcher';
 
@@ -24,12 +24,12 @@ export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sep
 export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
 
 
-// the main purpose of projError is that it enables us to have an error containing a workspace uri that 
+// projError is a wrapper that enables us to have an error containing a project uri that 
 // can (where required) be thrown back up to the top level of the stack. this means that:
-// - the logger can log to the specific workspace output window
-// - the logger can use the workspace name in the notification window
-// - the error is only logged/displayed once 
-// - the top-level catch can simply call config.logger.showError(e) and Logger will handle the rest
+// - the logger can log to the specific project-named output window (for multi-root workspaces)
+// - the logger can use the project name in the notification window
+// - the top-level catch can simply call `config.logger.showError(e)` and Logger will handle the rest
+// - the error is only logged/displayed once
 // for more info on error handling, see contributing.md
 export class projError extends Error {
   constructor(errorOrMsg: unknown, public projUri: vscode.Uri, public run?: vscode.TestRun) {
@@ -59,7 +59,7 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
   config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
-  config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}`);
+  config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
 }
 
 
@@ -113,9 +113,9 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
 
 
 
-// get the actual value in the file or return undefined, this is
+// get the actual value in the settings.json file or return undefined, this is
 // for cases where we need to distinguish between an unset value and the default value
-// this can be useful for e.g. handing deprecated settings
+// this can be useful for e.g. handling deprecated settings
 export const getActualWorkspaceSetting = <T>(wkspConfig: vscode.WorkspaceConfiguration, name: string): T => {
   const value = wkspConfig.inspect(name)?.workspaceFolderValue;
   return (value as T);
@@ -229,9 +229,9 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
     return false;
 
   const getStepLibraryMatch = (projSettings: ProjectSettings, relPath: string) => {
-    let stepLibMatch: StepLibrary | null = null;
+    let stepLibMatch: StepImport | null = null;
     let currentMatchLen = 0, lenPath = 0;
-    for (const stepLib of projSettings.stepLibraries) {
+    for (const stepLib of projSettings.importedSteps) {
       if (relPath.startsWith(stepLib.relativePath))
         lenPath = stepLib.relativePath.length;
       if (lenPath > currentMatchLen) {

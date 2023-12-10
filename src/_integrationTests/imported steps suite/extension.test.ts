@@ -2,8 +2,8 @@ import { TestWorkspaceRunners, noRunOptions } from "../suite-helpers/testWorkspa
 import { wsConfig, expectations } from "./defaults";
 
 
-suite(`step library suite`, () => {
-	const testWorkspaceRunners = new TestWorkspaceRunners("step library");
+suite(`imported steps suite`, () => {
+	const testWorkspaceRunners = new TestWorkspaceRunners("imported steps");
 
 	test("runAll", async () =>
 		await testWorkspaceRunners.runAll(wsConfig, noRunOptions, expectations)).timeout(300000);

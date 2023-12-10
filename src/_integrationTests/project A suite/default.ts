@@ -1,9 +1,9 @@
-import { envSetting } from "../../settings";
+import { EnvSetting } from "../../settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
-const env: envSetting = {
+const env: EnvSetting = {
   "some_var": "double qu\"oted",
   "some_var2": "single qu'oted",
   "space_var": " ",
@@ -11,11 +11,11 @@ const env: envSetting = {
 }
 
 export const wsConfig = new TestWorkspaceConfig({
-  env: env
+  envVarOverrides: env
 });
 
 export const wsConfigParallel = new TestWorkspaceConfig({
-  env: env
+  envVarOverrides: env
 });
 
 export const expectations: Expectations = {

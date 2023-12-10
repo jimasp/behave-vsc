@@ -176,11 +176,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: step library workspace",
+			"name": "Debug: imported steps workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/step library",
+				"${workspaceFolder}/example-projects/imported steps",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -330,13 +330,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: step library workspace",
+			"name": "Run Test Suite: imported steps workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/step library",
+				"${workspaceFolder}/example-projects/imported steps",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/step library suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/imported steps suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

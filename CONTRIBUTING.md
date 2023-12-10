@@ -167,16 +167,23 @@ feature file formatting is provided by:
 
 ### Exception handling
 
-- Here we are talking about extension exceptions, not behave execution errors (which are just logged in the output window).
-- These are general guidelines. If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, only gets shown once, creates an error dialog box to alert the user and has the full expected stack if `xRay` is enabled. Think about the user experience.
-- Note that stack traces will only appear if `behave-vsc.xRay` is enabled.
-- `showError` will show the error in a dialog box to alert the user.
+- Behave execution errors are not extension exceptions and should be handled, (e.g. update the test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate). The following notes are regarding exceptions raised from extension code itself:
+- Any thrown errors are going to reach the user, so they should be things that either:
+  - (a) the user can act upon to fix themselves, or
+  - (b) actual "exceptions", i.e. a bug or "stuff that is never supposed to happen" and should be raised as an issue on github.
 - The most common error handling stack is: `throw "an error message"` -> `throw new projError` -> `config.showError`.
-- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).
-- Entry point (event handlers/hooks) and background tasks (i.e. unawaited async functions/promises) should always contain a `try/catch` with a `config.showError`. Examples are `activate`,`deactivate` and any function called `...Handler` or `onDid...`, or just `on...` (e.g. `onCancellationRequested`). These are the top-level functions and so they need catches.
-- Elsewhere `showError` should be avoided. Instead you want to use either `throw "my message"` or `throw new projError(...)`. The second option (`projError`) should be used if: (a) there is no `catch` above that creates a `new projError` itself, and (b) you have a workspace context (i.e. `wr`, `projSettings` or `wskpUri` is available to the function). Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
-- Any thrown errors are going to reach the user, so they should be things that either (a) the user can act upon to fix like a configuration problem or duplicate test, or (b) exceptions i.e. stuff that is never supposed to happen and should be raised as an issue on github.
-- Behave execution errors are not extension exceptions and should be handled, e.g. update test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate.
+- Entry point (event handlers/hooks) i.e. top-level functions, and background tasks (i.e. unawaited async functions/promises) should *always* contain a `try/catch` with a `config.showError`. Examples are:
+  - any unawaited async function
+  - `activate`,`deactivate`, any function called `...Handler` or `onDid...` or just `on...` (e.g. `onCancellationRequested`)
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw "my message"` or `throw new projError(...)`.
+- `projError` should be used if:
+  - (a) there is no `catch` above that creates a `new projError` itself, AND
+  - (b) you have a workspace context (i.e. `wr`, `projSettings` or `projUri` is available to the function).
+  Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
+- *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).  
+- These are general guidelines. If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, *only gets shown once*, creates an error dialog box to alert the user and has the full expected stack if `xRay` is enabled. i.e. *think about the user experience*.
+- Note that stack traces should only appear if `behave-vsc.xRay` is enabled.
+- `showError` will show the error in a dialog box to alert the user.
 - Generally speaking, Info level events appear in the output window. Warnings and Errors appear in the output window and as a notification window. All of them will appear in console if `xRay` is enabled. See [Logging](#logging) for more information.
 
 ### Logging
