@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
-import { config } from "../configuration";
-import { RunProfile, ProjectSettings } from "../settings";
+import { config } from "../config/configuration";
+import { RunProfile, ProjectSettings } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
   getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
-} from '../common';
+} from '../common/helpers';
 import { QueueItem } from '../extension';
 import { FileParser } from '../parsers/fileParser';
-import { diagLog, DiagLogType } from '../logger';
+import { diagLog, DiagLogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
 

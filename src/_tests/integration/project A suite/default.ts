@@ -1,4 +1,4 @@
-import { EnvSetting } from "../../../settings";
+import { EnvSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";

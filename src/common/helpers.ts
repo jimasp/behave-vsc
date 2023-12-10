@@ -3,11 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
-import { config } from "./configuration";
-import { Scenario, TestData } from './parsers/testFile';
-import { StepImport, ProjectSettings } from './settings';
+import { config } from "../config/configuration";
+import { Scenario, TestData } from '../parsers/testFile';
+import { StepImport, ProjectSettings } from '../config/settings';
 import { diagLog } from './logger';
-import { getJunitDirUri } from './watchers/junitWatcher';
+import { getJunitDirUri } from '../watchers/junitWatcher';
 
 
 

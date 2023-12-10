@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../../settings';
+import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../../config/settings';
 
 
 // used only in the extension tests themselves

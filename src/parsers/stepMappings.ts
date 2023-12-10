@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common';
+import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common/helpers';
 import { parser } from '../extension';
-import { diagLog, DiagLogType } from '../logger';
+import { diagLog, DiagLogType } from '../common/logger';
 import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
-import { config } from '../configuration';
+import { config } from '../config/configuration';
 
 
 let stepMappings: StepMapping[] = [];

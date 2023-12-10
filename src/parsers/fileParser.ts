@@ -1,16 +1,16 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { performance } from 'perf_hooks';
-import { config } from "../configuration";
-import { ProjectSettings } from "../settings";
+import { config } from "../config/configuration";
+import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getTestItems, uriId, getWorkspaceFolder,
   getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes, getShortestCommonPathsExcludingLastPart
-} from '../common';
+} from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
-import { diagLog } from '../logger';
+import { diagLog } from '../common/logger';
 import { clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile, deleteStepsAndStepMappingsForFeatureFile } from './stepMappings';
 
 

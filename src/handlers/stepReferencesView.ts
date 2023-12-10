@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { openDocumentRange, urisMatch } from '../common';
+import { openDocumentRange, urisMatch } from '../common/helpers';
 import { FeatureFileStep } from '../parsers/featureParser';
 
 

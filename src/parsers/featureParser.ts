@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { ProjectSettings } from "../settings";
-import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common';
-import { diagLog } from '../logger';
-import { config } from '../configuration';
+import { ProjectSettings } from "../config/settings";
+import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common/helpers';
+import { diagLog } from '../common/logger';
+import { config } from '../config/configuration';
 
 
 const featureRe = /^\s*Feature:(.*)$/i;

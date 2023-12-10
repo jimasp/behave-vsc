@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
-import { Configuration } from '../../../configuration';
+import { Configuration } from '../../../config/configuration';
 import { TestResult } from './expectedResults.helpers';
 import { ProjParseCounts } from "../../../parsers/fileParser";
 

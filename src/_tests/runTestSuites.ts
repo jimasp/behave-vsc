@@ -5,7 +5,7 @@ import {
   resolveCliArgsFromVSCodeExecutablePath,
   runTests
 } from '@vscode/test-electron';
-import { runner } from './runner';
+
 
 
 // this code handles `npm run test` or `npm run testinsiders`
@@ -44,11 +44,18 @@ async function runTestSuites() {
     console.log("starting test run...");
 
 
-    await runner("unit/**/**.test.js");
-
 
     let launchArgs = [""];
     let extensionTestsPath = "";
+
+    launchArgs = ["unit test workspace"]
+    extensionTestsPath = path.resolve(__dirname, './unit/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
 
     launchArgs = ["example-projects/simple"]
     extensionTestsPath = path.resolve(__dirname, './integration/simple suite/index');

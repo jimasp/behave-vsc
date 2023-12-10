@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
-import { config, Configuration } from "./configuration";
+import { config, Configuration } from "./config/configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   getContentFromFilesystem,
   getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, isFeatureFile,
   isStepsFile, logExtensionVersion, cleanExtensionTempDirectory, urisMatch
-} from './common';
+} from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithprojUri } from './_tests/integration/suite-helpers/testWorkspaceConfig';
-import { diagLog } from './logger';
+import { diagLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
@@ -20,7 +20,7 @@ import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 import { startWatchingProject } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
-import { RunProfile } from './settings';
+import { RunProfile } from './config/settings';
 
 
 const testData = new Map<vscode.TestItem, BehaveTestData>();

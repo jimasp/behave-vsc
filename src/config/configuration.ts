@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getUrisOfWkspFoldersWithFeatures } from './common';
-import { diagLog, Logger } from './logger';
+import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
+import { diagLog, Logger } from '../common/logger';
 import { ProjectSettings as ProjectSettings, InstanceSettings } from './settings';
 
 export interface Configuration {

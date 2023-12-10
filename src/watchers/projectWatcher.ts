@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common';
-import { config } from "../configuration";
-import { diagLog, DiagLogType } from '../logger';
+import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common/helpers';
+import { config } from "../config/configuration";
+import { diagLog, DiagLogType } from '../common/logger';
 import { FileParser } from '../parsers/fileParser';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';

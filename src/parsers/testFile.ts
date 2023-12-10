@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
-import { uriId, isFeatureFile } from '../common';
-import { config } from "../configuration";
-import { ProjectSettings } from "../settings";
-import { diagLog } from '../logger';
+import { uriId, isFeatureFile } from '../common/helpers';
+import { config } from "../config/configuration";
+import { ProjectSettings } from "../config/settings";
+import { diagLog } from '../common/logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Scenario;

@@ -3,10 +3,10 @@ import * as os from 'os';
 import * as xml2js from 'xml2js';
 import * as path from 'path';
 import { QueueItem } from "../extension";
-import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common';
-import { config } from '../configuration';
+import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common/helpers';
+import { config } from '../config/configuration';
 import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
-import { ProjectSettings } from '../settings';
+import { ProjectSettings } from '../config/settings';
 import { Scenario } from './testFile';
 
 

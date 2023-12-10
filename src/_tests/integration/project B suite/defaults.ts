@@ -1,4 +1,4 @@
-import { ImportedStepsSetting } from "../../../settings";
+import { ImportedStepsSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig";
 import { Expectations } from "../suite-helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";

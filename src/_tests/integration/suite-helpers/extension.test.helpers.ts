@@ -2,8 +2,8 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
-import { Configuration } from "../../../configuration";
-import { ProjectSettings, RunProfilesSetting } from "../../../settings";
+import { Configuration } from "../../../config/configuration";
+import { ProjectSettings, RunProfilesSetting } from "../../../config/settings";
 import { TestSupport } from '../../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
@@ -11,7 +11,7 @@ import { ProjParseCounts } from "../../../parsers/fileParser";
 import {
 	getUrisOfWkspFoldersWithFeatures, getTestItems,
 	getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines
-} from '../../../common';
+} from '../../../common/helpers';
 import { featureFileStepRe } from '../../../parsers/featureParser';
 import { funcRe } from '../../../parsers/stepsParser';
 import { Expectations, RunOptions } from './testWorkspaceRunners';

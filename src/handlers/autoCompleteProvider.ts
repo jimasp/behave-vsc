@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { getProjectSettingsForFile, getProjectUriForFile, sepr } from '../common';
-import { config } from '../configuration';
+import { getProjectSettingsForFile, getProjectUriForFile, sepr } from '../common/helpers';
+import { config } from '../config/configuration';
 import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFilesSteps } from '../parsers/stepsParser';
 

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { uriId } from '../common';
-import { config } from '../configuration';
-import { diagLog, DiagLogType } from '../logger';
+import { uriId } from '../common/helpers';
+import { config } from '../config/configuration';
+import { diagLog, DiagLogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
 

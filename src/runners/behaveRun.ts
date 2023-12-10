@@ -1,7 +1,7 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { config } from "../configuration";
-import { cleanBehaveText } from '../common';
-import { diagLog } from '../logger';
+import { config } from "../config/configuration";
+import { cleanBehaveText } from '../common/helpers';
+import { diagLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
 
 

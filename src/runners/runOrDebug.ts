@@ -3,7 +3,7 @@ import * as os from 'os';
 import { runBehaveInstance } from './behaveRun';
 import { debugBehaveInstance } from './behaveDebug';
 import { QueueItem } from '../extension';
-import { projError } from '../common';
+import { projError } from '../common/helpers';
 import { ProjRun } from './testRunHandler';
 
 
