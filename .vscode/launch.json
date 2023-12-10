@@ -210,13 +210,13 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Run Test Suite: simple workspace",
+			"name": "Integration Tests: simple workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/simple suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/simple suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -225,13 +225,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: multiroot workspace",
+			"name": "Integration Tests: multiroot workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/multiroot.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiroot suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiroot suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -240,13 +240,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: sibling steps folder 1 workspace",
+			"name": "Integration Tests: sibling steps folder 1 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 1",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 1 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 1 suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -255,13 +255,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: sibling steps folder 2 workspace",
+			"name": "Integration Tests: sibling steps folder 2 workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 2",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/sibling steps folder 2 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 2 suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -270,13 +270,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: higher steps folder workspace",
+			"name": "Integration Tests: higher steps folder workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/higher steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/higher steps folder suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/higher steps folder suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -285,13 +285,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: project A workspace",
+			"name": "Integration Tests: project A workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/project A",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/project A suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project A suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -300,13 +300,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: project B workspace",
+			"name": "Integration Tests: project B workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/project B suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project B suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -315,13 +315,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: multiple top-level features folders workspace",
+			"name": "Integration Tests: multiple top-level features folders workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/multiple top-level features folders",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/multiple top-level features folders suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiple top-level features folders suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -330,13 +330,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: imported steps workspace",
+			"name": "Integration Tests: imported steps workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/imported steps",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/imported steps suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/imported steps suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -345,19 +345,34 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Run Test Suite: run profiles workspace",
+			"name": "Integration Tests: run profiles workspace",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/run profiles",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_integrationTests/run profiles suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
 				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "tasks: watch-tests",
-		}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Unit Tests",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+			"args": [
+				"-u",
+				"tdd",
+				"--timeout",
+				"600000",
+				"--colors",
+				"${workspaceFolder}/out/_tests/unit"
+			],
+			"internalConsoleOptions": "openOnSessionStart"
+		},
 	]
 }

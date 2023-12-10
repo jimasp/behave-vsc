@@ -28,7 +28,7 @@ function getJunitRunDirUri(run: vscode.TestRun): vscode.Uri {
 class Run {
   // NOTE: runs are not necessarily one-at-a-time but also staggered, for example a
   // user can click to start one workspace/feature/scenario, then then click to run another
-  // (staggered workspace runs are simulated/tested by "Run Test Suite: multiroot workspace")
+  // (staggered workspace runs are simulated/tested by "Integration Tests: multiroot workspace")
   constructor(
     public readonly run: vscode.TestRun,
     public readonly debug: boolean,

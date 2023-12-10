@@ -294,26 +294,25 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
   // WE HAVE TO FOLLOW BEHAVE'S OWN PATHS BEHAVIOUR HERE
   // (see "read_configuration" in behave's source code)
   //
-  // example ini file #1 - becomes ["features"]
+  // example ini file #1 - becomes []
+  // [behave]
+  // paths =
+  //
+  // example #2 - becomes ["features"]
   //  [behave]
   // paths = ./features
   //
-  // example ini file # - becomes ["/home/me/project/features"] (will be converted to a relative path up the call stack)
+  // example #3 - becomes ["/home/me/project/features"] (will be converted to a relative path up the call stack)
   //  [behave]
   // paths=/home/me/project/features
   //
-  // example ini file #2 - becomes ["features", "features2"]
+  // example #4 - becomes ["features", "features2"]
   //  [behave]
   // paths  =features
   //     features2
   // stdout_capture= true
   //
-  // example ini file #3 - becomes [".", "../features"]
-  // [behave]
-  // paths =
-  //   ../features
-  //
-  // example ini file #4 - ignored due to space in "[behave ]"
+  // example #5 - ignored due to space in "[behave ]"
   //  [behave ]
   // paths  =features
   //
@@ -354,10 +353,8 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
       if (key.trim() !== "paths")
         continue;
       const trimmed = value.trim();
-      if (trimmed === "") {
-        paths = ["."];
+      if (trimmed === "")
         continue;
-      }
       paths = [normalisePath(trimmed)];
       continue;
     }
@@ -455,7 +452,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
     }
     else {
       logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-        `Using behave configuration path "${configRelBaseDir}".`, projUri);
+        `Using behave configuration path "${configRelBaseDir}"`, projUri);
     }
     return null;
   }
