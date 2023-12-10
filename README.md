@@ -9,7 +9,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run or Debug behave tests, either from the test explorer or from inside a feature file.
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
-  - Select to run tests with tags and/or environment variables via run profiles (inc. ad-hoc).
+  - Select to run tests with tags and/or environment variables via run profiles.
   - See failed test run result inside the feature file. (Full behave output is available in the Behave VSC output window.)
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
@@ -190,39 +190,52 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
   - B. Consider if you can use a naming scheme for feature subfolders/files that will allow you to leverage the filtering at the top of the test explorer to run just those tests by name.
 
-  - C. Via the `Run Tests with Tags` run profile in the test explorer (or via the `>` icon and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
+  - C. Via the `Run Feature Tests with Tags (ad-hoc)` run profile in test explorer (or via the `>` icon and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
 
   - D. Via custom (reusable) run profiles. Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
 
       ```json
       // settings.json
+      "behave-vsc.env": {
+          // default env vars
+          "BEHAVE_STAGE": "Local",
+          "ENDPOINT": "http://localhost:4566"
+      },
       "behave-vsc.runProfiles": {
-          "tagA profile": {
-              "tagExpression": "@a",            
-              "env": {
-                "BEHAVE_STAGE": "production",                
-                "myvar": "val1"
-              },
-          },
-          "tagsBorC profile": {
-              "tagExpression": "@b,@c",            
-              "env": {
-                "BEHAVE_STAGE": "staging",                                
-                "myvar": "val2"
-              },
+        "Tags: A": {
+          "tagExpression": "@tagA",
+        },   
+        "Tags: B,C": {
+          "tagExpression": "@tagB, @tagC",
+        },                
+        "System": {
+          "env": {
+            // override ONE of the default env vars
+            "BEHAVE_STAGE": "System"           
           }
+        },          
+        "Staging: Tag B": {         
+          "env": {
+            // override BOTH of the default env vars
+            "BEHAVE_STAGE": "Staging",
+            "ENDPOINT": "http://123.456.789.012:4766"  
+          },
+          "tagExpression": "@tagB"
+        }
       }
       ```
 
-  - Notes on environment variables:
-    - The `env` property in a runProfile will (while running) override any `behave-vsc.env` setting that has the same key.
-    - You can use an environment variable for a high level of customisation:
-      - in your `environment.py` (or `mystage_environment.py`) file:
-        - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
-        - to control `scenario.skip()`
-        - which `before_all` will use to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-        - which `before_all` will use to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
-      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
+  - Notes:
+    - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` and it would run all tests with tags A, B and C by default.
+    - Regarding environment variables in runProfiles:
+      - The `env` property in a runProfile will (while running) override any `behave-vsc.env` setting that has the same key.
+      - You can use an environment variable for a high level of customisation:
+        - in your `environment.py` (or `mystage_environment.py`) file:
+          - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
+          - to control `scenario.skip()`
+          - which `before_all` will use to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+          - which `before_all` will use to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+        - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
 
 ## Q&A
 

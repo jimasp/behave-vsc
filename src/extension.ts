@@ -301,7 +301,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
         },
         true);
 
-      ctrl.createRunProfile('Run Features with Tags', vscode.TestRunProfileKind.Run,
+      ctrl.createRunProfile('Run Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           const tagExpression = await vscode.window.showInputBox(
             { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
