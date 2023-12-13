@@ -23,7 +23,8 @@ Please detail the steps that are required to recreate your issue.
 (Optional) can you supply a link to a public repo that recreates the problem?
 
 **Operating system (required):**
-Please note that only Windows and Linux are directly supported, i.e. if your issue is Mac-specific, you'll need to raise a PR.
+Please note that only Windows and Linux are directly supported.
+If you are using a Mac, then are you able to check if the same problem occurs in Linux?
 
 **Directory structure (optional, but often relevant):**
 Include your project directory structure if it is relevant (e.g. use the `tree` command).
@@ -35,7 +36,7 @@ If recording an animated gif of vscode, please enable "Developer: Toggle Screenc
 (One easy way to record vscode gifs is to use [chronicler](https://marketplace.visualstudio.com/items?itemName=arcsine.chronicler) with the gif setting enabled: `"chronicler.recording-defaults": { "animatedGif": true }`.)
 
 **Debug result (optional):**
-Did you enable the "behave-vsc.xRay" setting? Did it give you any more information about the problem?
+Did you enable the `behave-vsc.xRay` setting and check the chromium logs using vscode Developer Tools? Did it give you any more information about the problem?
 Have you tried debugging the extension itself with your own workspace (via the instructions in <https://github.com/jimasp/behave-vsc/blob/main/CONTRIBUTING.md>)?
 If so, what was the result?
 

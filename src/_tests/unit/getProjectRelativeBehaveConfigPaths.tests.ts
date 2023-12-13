@@ -99,6 +99,76 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
   });
 
 
+  test("should return correct order of precedence for config file paths setting", () => {
+    const fileContent = ' [behave]\n  paths =features';
+    const behaveIni = path.join(projUri.fsPath, "behave.ini");
+    const behaveRc = path.join(projUri.fsPath, ".behaverc");
+    const setupCfg = path.join(projUri.fsPath, "setup.cfg");
+    const toxIni = path.join(projUri.fsPath, "tox.ini");
+    const pyprojectToml = path.join(projUri.fsPath, "pyproject.toml");
+
+    // behave.ini
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
+    sandbox.stub(fs, 'existsSync').returns(true);
+    let result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    assert.deepStrictEqual(result, ["features"]);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file "behave.ini" sets relative paths: "features"', projUri));
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+
+    // .behaverc
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
+    sandbox.stub(fs, 'existsSync')
+      .withArgs(path.join(projUri.fsPath, "features")).returns(true)
+      .withArgs(behaveIni).returns(false)
+      .withArgs(behaveRc).returns(true)
+      .withArgs(setupCfg).returns(true)
+      .withArgs(toxIni).returns(true)
+      .withArgs(pyprojectToml).returns(true);
+    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    assert.deepStrictEqual(result, ["features"]);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file ".behaverc" sets relative paths: "features"', projUri));
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+
+
+    // setup.cfg
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
+    sandbox.stub(fs, 'existsSync')
+      .withArgs(path.join(projUri.fsPath, "features")).returns(true)
+      .withArgs(behaveIni).returns(false)
+      .withArgs(behaveRc).returns(false)
+      .withArgs(setupCfg).returns(true)
+      .withArgs(toxIni).returns(true)
+      .withArgs(pyprojectToml).returns(true);
+    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    assert.deepStrictEqual(result, ["features"]);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file "setup.cfg" sets relative paths: "features"', projUri));
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+
+    // tox.ini
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
+    sandbox.stub(fs, 'existsSync')
+      .withArgs(path.join(projUri.fsPath, "features")).returns(true)
+      .withArgs(behaveIni).returns(false)
+      .withArgs(behaveRc).returns(false)
+      .withArgs(setupCfg).returns(false)
+      .withArgs(toxIni).returns(true)
+      .withArgs(pyprojectToml).returns(true);
+    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    assert.deepStrictEqual(result, ["features"]);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" sets relative paths: "features"', projUri));
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+
+  });
+
+
 });
 
 

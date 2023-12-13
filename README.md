@@ -54,9 +54,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ├── behave.ini
     └── features/
         ├── environment.py    
-        ├── db_features
+        ├── db_features/
         │   └── db1.feature   
-        ├── web_features
+        ├── web_features/
         │   └── web1.feature   
         └── steps/
             ├── shared.py
@@ -71,9 +71,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ├── behave.ini
     ├── environment.py       
     ├── features/
-    │   ├── db_features
+    │   ├── db_features/
     │   │   └── db1.feature   
-    │   └── web_features
+    │   └── web_features/
     │       └── web1.feature       
     └── steps/
         ├── shared.py
@@ -86,9 +86,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     ```text
     ├── behave.ini
     ├── environment.py
-    ├── db_features
+    ├── db_features/
     │   └── db1.feature
-    ├── web_features
+    ├── web_features/
     │   └── web1.feature
     └── steps/
         ├── shared.py
@@ -120,10 +120,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     }
     ```
 
-- Step navigation is automatically enabled for your steps folder, but you can also enable step navigation for:
-  - your own imported steps inside your project folder
-  - imported step libraries inside your project folder
-  - (note that if any path/rx is also included in a `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
+- Step navigation is automatically enabled for your steps folder, but by using `importedSteps` setting you can also enable step navigation for:
+  - imported step libraries in your project folder
+  - your own imported steps in your project folder
+  - (note that if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
 
   - Example:
 
@@ -131,8 +131,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
     // settings.json
     {
       "behave-vsc.importedSteps": {
+          // project-relative path : regex (not glob)
           "my_steps_lib" : ".*",
-          ".venv/lib/python3.9/site-packages/package-steps-lib": ".*/steps/.*|.*/steps.py"          
+          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"          
       },
       "behave-vsc.justMyCode": false
     }
