@@ -9,10 +9,10 @@ import {
 
 
 // this code handles `npm run test` or `npm run testinsiders`
+// (to debug the tests themselves, just launch from the usual debug link in vscode and select the suite to run)
 // to debug this code, add a breakpoint here, then open package.json and click the "Debug >" link 
 // and choose "test" or "testinsiders" from the dropdown
-// (to debug the tests themselves, just launch from the usual debug link in vscode and select the suite to run)
-async function runTestSuites() {
+async function npmRunTest() {
   try {
     const version = process.argv[2].slice(2);
     const extensionDevelopmentPath = path.resolve(__dirname, '../../');
@@ -147,4 +147,4 @@ async function runTestSuites() {
 }
 
 
-runTestSuites();
+npmRunTest();

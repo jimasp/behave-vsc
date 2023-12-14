@@ -110,7 +110,7 @@ OR
 3. Optionally add a breakpoint in e.g. `runAllTestsAndAssertTheResults`.
 4. Hit play or press `F5` to run the tests in a new window with your extension loaded.
 5. See the output of the test result in the debug console (in your original source environment, not the host environment).
-6. To debug `npm run test` itself (as opposed the test suite), see the comment in `runTestSuites.ts`.  
+6. To debug `npm run test` itself (as opposed the test suite), see the comment in `npmRunTest.ts`.  
 If you want to add a test, they should go somewhere in `src/test`.
     - The provided test runner will only consider files matching the name pattern `**.test.ts`.
     - You can create folders inside the `test` folder to structure your tests.
