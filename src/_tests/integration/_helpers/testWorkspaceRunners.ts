@@ -19,6 +19,13 @@ export type Expectations = {
   getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[];
 }
 
+export type BehaveConfigStub = {
+  paths: string[];
+}
+
+export const noBehaveConfig: BehaveConfigStub = {
+  paths: []
+}
 
 export const noRunOptions: RunOptions = {
   selectedRunProfile: undefined
@@ -39,15 +46,15 @@ export const parallelConfig = new TestWorkspaceConfig({
 export class TestWorkspaceRunners {
   constructor(readonly projName: string) { }
 
-  runAll = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  runAll = async (wsConfig: TestWorkspaceConfig, behaveConfig: BehaveConfigStub, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`runAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runAllTestsAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, false, wsConfig, behaveConfig, runOptions, expectations);
   }
 
-  debugAll = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  debugAll = async (wsConfig: TestWorkspaceConfig, behaveConfig: BehaveConfigStub, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
-    await runAllTestsAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
+    await runAllTestsAndAssertTheResults(this.projName, true, wsConfig, behaveConfig, runOptions, expectations);
   }
 
 }

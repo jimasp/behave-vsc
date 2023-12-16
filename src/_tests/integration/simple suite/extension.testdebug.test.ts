@@ -1,4 +1,4 @@
-import { TestWorkspaceRunners, noConfig, noRunOptions } from "../_helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, noBehaveConfig, noConfig, noRunOptions } from "../_helpers/testWorkspaceRunners";
 import { expectations } from "./defaults";
 
 
@@ -9,8 +9,8 @@ suite(`simple suite test debug run`, () => {
   const testWorkspaceRunners = new TestWorkspaceRunners("simple");
 
   test("debugAll", async () =>
-    await testWorkspaceRunners.debugAll(noConfig, noRunOptions, expectations)
-  ).timeout(300000);
+    await testWorkspaceRunners.debugAll(noConfig, noBehaveConfig, noRunOptions, expectations)
+  )
 
-}).timeout(900000);
+});
 

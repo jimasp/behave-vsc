@@ -34,25 +34,25 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
       if (parallelMode)
         asyncBuff.push(str);
       else
-        services.config.logger.logInfoNoLF(str, projUri);
+        services.extConfig.logger.logInfoNoLF(str, projUri);
     }
 
     cp.stderr?.on('data', chunk => log(chunk.toString()));
     cp.stdout?.on('data', chunk => log(chunk.toString()));
 
     if (!parallelMode)
-      services.config.logger.logInfo(`\n${friendlyCmd}\n`, projUri);
+      services.extConfig.logger.logInfo(`\n${friendlyCmd}\n`, projUri);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
     if (asyncBuff.length > 0) {
-      services.config.logger.logInfo(`\n---\n${friendlyCmd}\n`, projUri);
-      services.config.logger.logInfo(asyncBuff.join("").trim(), projUri);
-      services.config.logger.logInfo("---", projUri);
+      services.extConfig.logger.logInfo(`\n---\n${friendlyCmd}\n`, projUri);
+      services.extConfig.logger.logInfo(asyncBuff.join("").trim(), projUri);
+      services.extConfig.logger.logInfo("---", projUri);
     }
 
     if (wr.run.token.isCancellationRequested)
-      services.config.logger.logInfo(`\n-- TEST RUN ${wr.run.name} CANCELLED --`, projUri, wr.run);
+      services.extConfig.logger.logInfo(`\n-- TEST RUN ${wr.run.name} CANCELLED --`, projUri, wr.run);
 
   }
   finally {

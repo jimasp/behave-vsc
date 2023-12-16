@@ -114,7 +114,7 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        services.config.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
+        services.extConfig.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)
@@ -380,7 +380,7 @@ export class FileParser {
         }
       }
       this._cancelTokenSources[projPath] = new vscode.CancellationTokenSource();
-      const projSettings: ProjectSettings = services.config.projectSettings[projUri.path];
+      const projSettings: ProjectSettings = services.extConfig.projectSettings[projUri.path];
 
 
       const start = performance.now();
@@ -441,7 +441,7 @@ export class FileParser {
       testCounts = countTestItemsInCollection(projId, testData, ctrl.items);
       this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
 
-      if (!services.config.integrationTestRun)
+      if (!services.extConfig.integrationTestRun)
         return;
 
       return {
@@ -470,7 +470,7 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        services.config.logger.showError(e, projUri);
+        services.extConfig.logger.showError(e, projUri);
       }
 
       return;
@@ -513,7 +513,7 @@ export class FileParser {
     }
     catch (e: unknown) {
       // unawaited async func, must log the error
-      services.config.logger.showError(e, projSettings.uri);
+      services.extConfig.logger.showError(e, projSettings.uri);
     }
     finally {
       this._reparsingFile = false;

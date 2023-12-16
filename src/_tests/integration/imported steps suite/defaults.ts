@@ -1,5 +1,5 @@
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { Expectations } from "../_helpers/testWorkspaceRunners";
+import { BehaveConfigStub, Expectations } from "../_helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
@@ -18,4 +18,8 @@ export const expectations: Expectations = {
   expectedProjectRelativeStepsFolders: ["folder1/steps_lib_1", "folder2/steps_lib_2", "features/steps"], // order is important
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
+}
+
+export const behaveConfig: BehaveConfigStub = {
+  paths: expectations.expectedProjectRelativeFeatureFolders
 }

@@ -10,8 +10,8 @@ suite(`project B suite test debug run`, () => {
 
   test("debugAll", async () =>
     await testWorkspaceRunners.debugAll(wsConfig, noRunOptions, expectations)
-  ).timeout(300000);
+  )
 
 
-}).timeout(900000);
+});
 

@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../../config/configuration";
 import { ProjectSettings, RunProfilesSetting } from "../../../config/settings";
-import { API } from '../../../extension';
+import { IntegrationTestAPI } from '../../../extension';
 import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
 import { ProjParseCounts } from "../../../parsers/fileParser";
@@ -14,7 +14,10 @@ import {
 } from '../../../common/helpers';
 import { featureFileStepRe } from '../../../parsers/featureParser';
 import { funcRe } from '../../../parsers/stepsParser';
-import { Expectations, RunOptions } from './testWorkspaceRunners';
+import { BehaveConfigStub, Expectations, RunOptions } from './testWorkspaceRunners';
+import { services } from '../../../diService';
+import { BehaveConfigType } from '../../../config/behaveConfig';
+import sinon = require('sinon');
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -180,9 +183,9 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 
 
 
-async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: API) {
+async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-	const projSettings = instances.services.config.projectSettings[projUri.path];
+	const projSettings = services.extConfig.projectSettings[projUri.path];
 	const featureFileSteps = await getAllStepLinesFromFeatureFiles(projSettings);
 
 	for (const [step, stepText] of featureFileSteps) {
@@ -205,9 +208,9 @@ async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.U
 }
 
 
-async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: API) {
+async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-	const projSettings = instances.services.config.projectSettings[projUri.path];
+	const projSettings = services.extConfig.projectSettings[projUri.path];
 	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(projSettings);
 
 	for (const [step, funcLine] of stepFileSteps) {
@@ -305,9 +308,8 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
 }
 
 
-function assertInstances(instances: API) {
+function assertInstances(instances: IntegrationTestAPI) {
 	assert(instances);
-	assert(instances.services.config);
 	assert(instances.ctrl);
 	assert(instances.getStepFileStepForFeatureFileStep);
 	assert(instances.getStepMappingsForStepsFileFunction);
@@ -374,9 +376,9 @@ async function setLock(consoleName: string, acquireOrRelease: string) {
 
 // gets the extension API
 // also does some other stuff we only want to happen once for each integration test run
-// including where multiple projects are running in parallel (i.e. multiroot workspace)
-let api: API | undefined = undefined;
-async function checkExtensionIsReady(): Promise<API> {
+// e.g. where multiple projects are running in parallel (i.e. multiroot workspace)
+let api: IntegrationTestAPI | undefined = undefined;
+async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 
 	if (api)
 		return api;
@@ -391,10 +393,11 @@ async function checkExtensionIsReady(): Promise<API> {
 
 	// because the extension is already active (see assert above)
 	// this doesn't actually call activate() again, it just returns the API	
-	api = await extension.activate() as API;
+	api = await extension.activate() as IntegrationTestAPI;
+	console.log(extension);
 
 	assertInstances(api);
-	api.services.config.integrationTestRun = true;
+	services.extConfig.integrationTestRun = true;
 
 	await vscode.commands.executeCommand("testing.clearTestResults");
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -402,29 +405,48 @@ async function checkExtensionIsReady(): Promise<API> {
 }
 
 
+export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
+	behaveConfig: BehaveConfigStub, runOptions: RunOptions, expectations: Expectations): Promise<void> {
+
+	console.log(`runAllTestsAndAssertTheResults for ${projName} initialising`);
+	const api = await checkExtensionIsReady();
+	const sandbox = sinon.createSandbox();
+
+	if (!api.isMultiRoot && behaveConfig) {
+		assert(services.behaveConfig.getProjectRelativeBehaveConfigPaths);
+		sandbox.stub(services.behaveConfig, "getProjectRelativeBehaveConfigPaths").returns(behaveConfig.paths);
+	}
+
+	try {
+		await runAllAndAssert(api, projName, isDebugRun, testExtConfig, runOptions, expectations);
+		console.log(`runAllTestsAndAssertTheResults for ${projName} completed ok`);
+	}
+	finally {
+		sandbox.restore();
+	}
+
+}
+
+
 // A user can kick off one project and then another and then another, (i.e. staggered), they do not have to wait for the first to complete,
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
-export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testConfig: TestWorkspaceConfig,
-	runOptions: RunOptions, expectations: Expectations) {
+export async function runAllAndAssert(api: IntegrationTestAPI, projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
+	runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
-	const consoleName = `runAllTestsAndAssertTheResults for ${projName}`;
 	const projUri = getTestProjectUri(projName);
 	const projId = uriId(projUri);
-
+	const consoleName = `runAllAndAssert for ${projName}`;
 	await setLock(consoleName, "acquire");
-	console.log(`${consoleName} initialising`);
-
-	const api = await checkExtensionIsReady();
 
 	// NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
 	// and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
 	// it afterwards - we do this here by calling configurationChangedHandler() with our own test config.
 	// So the configuration will be loaded twice, once on the initial load of the extension, then again here to insert our test config.
 	console.log(`${consoleName}: calling configurationChangedHandler`);
-	await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testConfig, projUri));
-	assertWorkspaceSettingsAsExpected(projUri, projName, testConfig, api.services.config, expectations);
+	await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testExtConfig, projUri));
+	assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.extConfig, expectations);
 
 	// parse to get check counts (checked later, but we want to do this inside the lock)
 	const actualCounts = await api.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
@@ -441,7 +463,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 
 	// sanity check include length matches expected length
 	const include = getScenarioTests(api.testData, allProjItems);
-	const expectedResults = expectations.getExpectedResultsFunc(projUri, api.services.config);
+	const expectedResults = expectations.getExpectedResultsFunc(projUri, services.extConfig);
 	if (include.length !== expectedResults.length)
 		debugger; // eslint-disable-line no-debugger
 	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
@@ -459,7 +481,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 	const request = new vscode.TestRunRequest(include);
 	let runProfile = undefined;
 	if (runOptions.selectedRunProfile)
-		runProfile = (testConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+		runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 	const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
 
 	// give run handler a chance to pass the featureParseComplete() check, then release the lock
@@ -502,11 +524,11 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 
 
 		assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testConfig);
+		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
 	});
 
 	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(projUri, projName, api.services.config, expectations.getExpectedCountsFunc,
+	assertExpectedCounts(projUri, projName, services.extConfig, expectations.getExpectedCountsFunc,
 		actualCounts, hasMultiRootWkspNode);
 	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 }

@@ -13,8 +13,8 @@ suite(`run profiles suite test debug run`, () => {
     runOptions.selectedRunProfile = "tag1 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
     await testWorkspaceRunners.debugAll(wsConfig, runOptions, expectations);
-  }).timeout(300000);
+  })
 
 
-}).timeout(900000);
+});
 

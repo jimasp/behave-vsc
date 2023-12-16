@@ -1,5 +1,5 @@
 import { TestWorkspaceRunners, noRunOptions } from "../_helpers/testWorkspaceRunners";
-import { expectations, wsConfig } from "./default";
+import { behaveConfig, expectations, wsConfig } from "./default";
 
 
 // this file is separate because we don't want to run parallel debug 
@@ -9,9 +9,9 @@ suite(`higher steps folder suite test debug run`, () => {
   const testWorkspaceRunners = new TestWorkspaceRunners("project A");
 
   test("debugAll", async () =>
-    await testWorkspaceRunners.debugAll(wsConfig, noRunOptions, expectations)
-  ).timeout(300000);
+    await testWorkspaceRunners.debugAll(wsConfig, behaveConfig, noRunOptions, expectations)
+  )
 
 
-}).timeout(900000);
+});
 

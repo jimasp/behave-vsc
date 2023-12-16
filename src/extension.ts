@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services, Services } from './diService';
+import { services } from './diService';
 import { Configuration } from "./config/configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
@@ -32,10 +32,11 @@ const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
-// the exported API can be used by other extensions, but 
-// we're using it to expose instances for integration testing
-export type API = {
-  services: Services,
+// public API can be called from other extensions,
+// but we're just using it to return activate's private instances for integration test support.
+// (integration tests can also use the instances exposed via diService.services)
+export type IntegrationTestAPI = {
+  // instances created by activate() 
   runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
   ctrl: vscode.TestController,
   parser: FileParser,
@@ -43,7 +44,8 @@ export type API = {
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   testData: TestData,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
-    forceRefresh?: boolean) => Promise<void>
+    forceRefresh?: boolean) => Promise<void>,
+  isMultiRoot: boolean
 };
 
 export function deactivate() {
@@ -60,13 +62,13 @@ export function deactivate() {
 // - set up all relevant event handlers/hooks/subscriptions to the vscode api
 // NOTE - THIS MUST RETURN FAST: AVOID using "await" here unless absolutely necessary (except inside handlers)
 // this function should only contain initialisation, registering event handlers, and unawaited async calls
-export async function activate(context: vscode.ExtensionContext): Promise<API | undefined> {
+export async function activate(context: vscode.ExtensionContext): Promise<IntegrationTestAPI | undefined> {
 
   try {
     const start = performance.now();
     diagLog("activate called, node pid:" + process.pid);
 
-    config = services.config;
+    config = services.extConfig;
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
@@ -92,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<API | 
     context.subscriptions.push(
       ctrl,
       treeView,
-      services.config,
+      services.extConfig,
       cleanExtensionTempDirectoryCancelSource,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -256,17 +258,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<API | 
 
     diagLog(`PERF: activate took  ${performance.now() - start} ms`);
 
+    if (context.extensionMode !== vscode.ExtensionMode.Test)
+      return;
+
     return {
-      // return instances to support integration testing
-      services: services,
+      // test mode = return instances in API to support integration testing
       runHandler: runHandler,
       ctrl: ctrl,
       parser: parser,
       getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
       getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
       testData: testData,
-      configurationChangedHandler: configurationChangedHandler
-    };
+      configurationChangedHandler: configurationChangedHandler,
+      isMultiRoot: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 1 || false,
+    }
 
   }
   catch (e: unknown) {

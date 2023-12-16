@@ -1,6 +1,6 @@
 import { EnvSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { Expectations } from "../_helpers/testWorkspaceRunners";
+import { BehaveConfigStub, Expectations } from "../_helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
 const env: EnvSetting = {
@@ -25,4 +25,8 @@ export const expectations: Expectations = {
   expectedProjectRelativeStepsFolders: ["behave tests/some tests/steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
+}
+
+export const behaveConfig: BehaveConfigStub = {
+  paths: expectations.expectedProjectRelativeFeatureFolders
 }

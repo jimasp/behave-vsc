@@ -3,7 +3,7 @@ import { ExtensionConfiguration } from './config/configuration';
 
 
 export interface Services {
-    config: ExtensionConfiguration;
+    extConfig: ExtensionConfiguration;
     behaveConfig: BehaveConfigImport.BehaveConfigType;
 }
 
@@ -14,10 +14,10 @@ interface Global {
 class ServicesClass implements Services {
     // any singleton services,
     // e.g. imported modules that we want to stub out for testing
-    config: ExtensionConfiguration;
+    extConfig: ExtensionConfiguration;
     behaveConfig: BehaveConfigImport.BehaveConfigType;
     constructor() {
-        this.config = ExtensionConfiguration.configuration;
+        this.extConfig = ExtensionConfiguration.configuration;
         this.behaveConfig = BehaveConfigImport;
     }
 }

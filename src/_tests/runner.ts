@@ -7,7 +7,8 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 	const mocha = new Mocha({
 		ui: 'tdd',
 		color: true,
-		bail: true
+		bail: true,
+		timeout: 300000,
 	});
 
 	const testsRoot = __dirname;

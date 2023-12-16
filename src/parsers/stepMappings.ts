@@ -72,7 +72,7 @@ export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
-    services.config.logger.showWarn(msg, getProjectUriForFile(uri));
+    services.extConfig.logger.showWarn(msg, getProjectUriForFile(uri));
   }
 
   return ready;

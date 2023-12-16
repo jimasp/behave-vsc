@@ -113,7 +113,7 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
     if (debug)
       showDebugWindow();
     else
-      services.config.logger.show(projSettings.uri);
+      services.extConfig.logger.show(projSettings.uri);
     return { status: "untested", duration: xmlDuration };
   }
 
@@ -313,10 +313,10 @@ export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSet
     updateTest(run, false, parseResult, queueItem);
   }
 
-  if (services.config.exampleProject) {
+  if (services.extConfig.exampleProject) {
     debugger; // eslint-disable-line no-debugger
     throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
   }
 
-  services.config.logger.show(projSettings.uri);
+  services.extConfig.logger.show(projSettings.uri);
 }

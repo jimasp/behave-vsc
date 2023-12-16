@@ -9,7 +9,7 @@ import { performance } from 'perf_hooks';
 
 
 export function getJunitDirUri(): vscode.Uri {
-  return vscode.Uri.joinPath(services.config.extensionTempFilesUri, "junit");
+  return vscode.Uri.joinPath(services.extConfig.extensionTempFilesUri, "junit");
 }
 
 
@@ -53,7 +53,7 @@ export class JunitWatcher {
     diagLog("junitWatcher: disposing");
     this._watcherEvents.forEach(e => e.dispose());
     watcher?.dispose();
-    if (services.config.integrationTestRun) {
+    if (services.extConfig.integrationTestRun) {
       diagLog("Integration test run complete.\n");
       diagLog('NOTE: if next line says "canceled" and you did not stop the run, then check for previous errors in the log.');
     }
@@ -120,7 +120,7 @@ export class JunitWatcher {
       // high will cause the test updates and run end to be slowed down. 
       // so keep the grace period low (<=500ms) for a good user experience.
       const poll = 50;
-      const grace = services.config.integrationTestRun ? 2000 : 400; // give more time if an integration test to avoid throwing false positives       
+      const grace = services.extConfig.integrationTestRun ? 2000 : 400; // give more time if an integration test to avoid throwing false positives       
       for (let ms = 0; ms < grace; ms += poll) {
         await new Promise(r => setTimeout(r, poll));
         if (notUpdated().length === 0)
@@ -128,7 +128,7 @@ export class JunitWatcher {
       }
 
       const notUpdatedAfterGrace = notUpdated();
-      if (services.config.exampleProject && notUpdatedAfterGrace.length === stoppedRun.queue.length &&
+      if (services.extConfig.exampleProject && notUpdatedAfterGrace.length === stoppedRun.queue.length &&
         fs.existsSync(notUpdatedAfterGrace[0].junitFileUri.fsPath)) {
         debugger; // eslint-disable-line no-debugger          
         throw `No test results were updated by _updateResult for ${run.name}. If you did not hit run stop or debug stop, ` +
@@ -232,7 +232,7 @@ export class JunitWatcher {
         `some or all test results may not be updated until the run has ended.`;
       diagLog(msg, undefined, DiagLogType.warn);
 
-      if (services.config.exampleProject) {
+      if (services.extConfig.exampleProject) {
         debugger; // eslint-disable-line no-debugger
         throw msg;
       }
@@ -298,7 +298,7 @@ export class JunitWatcher {
       const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
       matchedRun?.run.end();
       // entry point function (handler) - show error
-      services.config.logger.showError(err);
+      services.extConfig.logger.showError(err);
     }
 
   }

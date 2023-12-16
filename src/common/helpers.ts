@@ -56,8 +56,8 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
-  services.config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
-  services.config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
+  services.extConfig.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
+  services.extConfig.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
 }
 
 
@@ -81,7 +81,7 @@ export function uriStartsWith(uriToCheck: vscode.Uri, checkIfStartsWithUri: vsco
 
 export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
 
-  const dirUri = services.config.extensionTempFilesUri;
+  const dirUri = services.extConfig.extensionTempFilesUri;
   const junitDirUri = getJunitDirUri();
 
   // note - this function runs asynchronously, and we do not wait for it to complete before we start 
@@ -173,7 +173,7 @@ export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): v
 
 export const getProjectSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
   const projUri = getProjectUriForFile(fileorFolderUri);
-  return services.config.projectSettings[projUri.path];
+  return services.extConfig.projectSettings[projUri.path];
 }
 
 

@@ -1,10 +1,9 @@
 import * as sinon from 'sinon';
-import { TestWorkspaceRunners, noConfig, noRunOptions, parallelConfig } from "../_helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, behaveConfig_paths_features, noBehaveConfig, noConfig, noRunOptions, parallelConfig } from "../_helpers/testWorkspaceRunners";
 import { expectations } from "./defaults";
-import { services } from '../../../diService';
 
 
-suite(`simple suite`, () => {
+suite(`simple suite`, function () {
 	let sandbox: sinon.SinonSandbox;
 
 	setup(() => {
@@ -18,20 +17,18 @@ suite(`simple suite`, () => {
 	const testWorkspaceRunners = new TestWorkspaceRunners("simple");
 
 	test("runAll", async () => {
-		await testWorkspaceRunners.runAll(noConfig, noRunOptions, expectations);
-	}).timeout(300000);
+		await testWorkspaceRunners.runAll(noConfig, noBehaveConfig, noRunOptions, expectations);
+	})
 
 	test("runAll - with behave config paths", async () => {
-		// what about multiroot??? can we stop this replacing for that?
-		sandbox.stub(services.behaveConfig, "getProjectRelativeBehaveConfigPaths").returns(["features"]);
-		await testWorkspaceRunners.runAll(noConfig, noRunOptions, expectations);
-	}).timeout(300000);
+		await testWorkspaceRunners.runAll(noConfig, behaveConfig_paths_features, noRunOptions, expectations);
+	})
 
 	test("runAll - parallel", async () => {
-		await testWorkspaceRunners.runAll(parallelConfig, noRunOptions, expectations)
-	}).timeout(300000);
+		await testWorkspaceRunners.runAll(parallelConfig, noBehaveConfig, noRunOptions, expectations)
+	})
 
-}).timeout(900000);
+});
 
 
 

@@ -49,7 +49,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
       vscode.window.showWarningMessage(msg, "OK");
-      if (services.config.integrationTestRun)
+      if (services.extConfig.integrationTestRun)
         throw msg;
       return;
     }
@@ -69,7 +69,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     }
     catch (e: unknown) {
       // entry point (handler) - show error
-      services.config.logger.showError(e, undefined);
+      services.extConfig.logger.showError(e, undefined);
     }
     finally {
       run.end();
@@ -120,9 +120,9 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     throw "empty queue - nothing to do";
 
   const projRunPromises: Promise<void>[] = [];
-  const winSettings = services.config.instanceSettings;
+  const winSettings = services.extConfig.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
-  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => services.config.projectSettings[projUri.path]);
+  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => services.extConfig.projectSettings[projUri.path]);
 
   for (const projSettings of allProjectsSettings) {
     const idMatch = uriId(projSettings.uri);
@@ -148,7 +148,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
       continue;
 
     if (!debug)
-      services.config.logger.clear(projSettings.uri);
+      services.extConfig.logger.clear(projSettings.uri);
 
     // run workspaces sequentially
     if (!winSettings.runMultiRootProjectsInParallel || debug) {
@@ -178,7 +178,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
 
     const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, projSettings, ctrl, testData);
     const projIncludedFeatures = getIncludedFeaturesForProj(projSettings.uri, request);
-    const pythonExec = await services.config.getPythonExecutable(projSettings.uri, projSettings.name);
+    const pythonExec = await services.extConfig.getPythonExecutable(projSettings.uri, projSettings.name);
     const sortedQueue = projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 
@@ -201,7 +201,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
   catch (e: unknown) {
     wr?.run.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
-    services.config.logger.showError(e, projSettings.uri, run);
+    services.extConfig.logger.showError(e, projSettings.uri, run);
   }
 
   diagLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
@@ -355,7 +355,7 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logProjRunStarted(wr: ProjRun) {
   if (!wr.debug) {
-    services.config.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
+    services.extConfig.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
       wr.projSettings.uri, wr.run);
   }
 }
@@ -364,7 +364,7 @@ function logProjRunStarted(wr: ProjRun) {
 function logProjRunComplete(wr: ProjRun, start: number) {
   const end = performance.now();
   if (!wr.debug) {
-    services.config.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
+    services.extConfig.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
       wr.projSettings.uri, wr.run);
   }

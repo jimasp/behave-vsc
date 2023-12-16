@@ -51,10 +51,10 @@ export const formatFeatureProvider = {
       // entry point function (handler) - show error  
       try {
         const projUri = getProjectUriForFile(document.uri);
-        services.config.logger.showError(e, projUri);
+        services.extConfig.logger.showError(e, projUri);
       }
       catch {
-        services.config.logger.showError(e);
+        services.extConfig.logger.showError(e);
       }
     }
   }

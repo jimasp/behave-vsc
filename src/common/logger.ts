@@ -104,7 +104,7 @@ export class Logger {
 
     if (error instanceof Error) {
       text = error.message;
-      if (error.stack && services.config && services.config.instanceSettings && services.config.instanceSettings.xRay)
+      if (error.stack && services.extConfig && services.extConfig.instanceSettings && services.extConfig.instanceSettings.xRay)
         text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
     }
     else {
@@ -128,7 +128,7 @@ export class Logger {
       }
     }
 
-    if (services.config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
+    if (services.extConfig.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
       debugger; // eslint-disable-line no-debugger
     }
 
@@ -169,7 +169,7 @@ export enum DiagLogType {
 }
 
 export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (services && services.config && !services.config.instanceSettings.xRay && !services.config.integrationTestRun && !services.config.exampleProject)
+  if (services && services.extConfig && !services.extConfig.instanceSettings.xRay && !services.extConfig.integrationTestRun && !services.extConfig.exampleProject)
     return;
 
   if (projUri)

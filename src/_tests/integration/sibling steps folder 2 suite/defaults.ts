@@ -1,4 +1,4 @@
-import { Expectations } from "../_helpers/testWorkspaceRunners"
+import { BehaveConfigStub, Expectations } from "../_helpers/testWorkspaceRunners"
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
@@ -9,4 +9,8 @@ export const expectations: Expectations = {
   expectedProjectRelativeStepsFolders: ["subfolder 1/subfolder 2/steps"], // current behave behaviour is to match the first config path steps folder
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
+}
+
+export const behaveConfig: BehaveConfigStub = {
+  paths: expectations.expectedProjectRelativeFeatureFolders
 }

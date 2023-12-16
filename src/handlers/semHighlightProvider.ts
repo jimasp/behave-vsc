@@ -57,10 +57,10 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 			try {
 				// not worth showing the error to user for this, just log it
 				const projUri = getProjectUriForFile(document.uri);
-				services.config.logger.logInfo(`${e}`, projUri);
+				services.extConfig.logger.logInfo(`${e}`, projUri);
 			}
 			catch {
-				services.config.logger.showError(`${e}`);
+				services.extConfig.logger.showError(`${e}`);
 			}
 			return new vscode.SemanticTokens(new Uint32Array(0));
 		}

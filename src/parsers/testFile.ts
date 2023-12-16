@@ -48,7 +48,7 @@ export class TestFile {
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
             // don't throw here, show it and carry on
-            services.config.logger.showWarn(err, projSettings.uri);
+            services.extConfig.logger.showWarn(err, projSettings.uri);
           }
           else
             throw e;
