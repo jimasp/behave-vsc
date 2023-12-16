@@ -13,6 +13,7 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 	const testsRoot = __dirname;
 
 	return new Promise((c, e) => {
+
 		glob(globStr, { cwd: testsRoot, ignore: ignore }, (err, files) => {
 			if (err) {
 				return e(err);

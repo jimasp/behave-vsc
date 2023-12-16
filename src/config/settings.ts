@@ -13,7 +13,7 @@ import {
 } from '../common/helpers';
 import { Logger, diagLog } from '../common/logger';
 import { performance } from 'perf_hooks';
-import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
+import { services } from '../diService';
 
 
 export type EnvSetting = { [key: string]: string };
@@ -21,7 +21,7 @@ export type EnvSetting = { [key: string]: string };
 export type RunProfilesSetting = { [key: string]: RunProfile };
 export class RunProfile {
   env?: { [key: string]: string } = {};
-  tagExpression?= "";
+  tagExpression? = "";
 
   constructor(
     env: { [key: string]: string } = {},
@@ -243,7 +243,7 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 function getProjectRelativePaths(projUri: vscode.Uri, projName: string, importedSteps: ImportedSteps, logger: Logger) {
-  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, logger);
+  const relativeConfigPaths = services.behaveConfig.getProjectRelativeBehaveConfigPaths(projUri, logger);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, getLines } from '../common/helpers';
-import { config } from '../config/configuration';
+import { services } from '../diService';
 
 const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
 const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;
@@ -51,10 +51,10 @@ export const formatFeatureProvider = {
       // entry point function (handler) - show error  
       try {
         const projUri = getProjectUriForFile(document.uri);
-        config.logger.showError(e, projUri);
+        services.config.logger.showError(e, projUri);
       }
       catch {
-        config.logger.showError(e);
+        services.config.logger.showError(e);
       }
     }
   }

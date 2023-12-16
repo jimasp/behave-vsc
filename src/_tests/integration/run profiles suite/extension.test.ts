@@ -3,7 +3,7 @@ import {
 	getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile,
 	getExpectedResultsForTag2RunProfile
 } from "./expectedResults";
-import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners } from "../_helpers/testWorkspaceRunners";
 import { runOptions, wsConfig, expectations } from "./defaults";
 
 

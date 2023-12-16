@@ -365,7 +365,7 @@
 			"request": "launch",
 			"args": [
 				// vscode object requires a vscode instance	(would be nice if this was headless)
-				"${workspaceFolder}/src/_tests/unit/unit test workspace",
+				"${workspaceFolder}/src/_tests/unit/no workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/_tests/unit/index"
 			],

@@ -1,5 +1,5 @@
-import { TestWorkspaceConfig } from "../suite-helpers/testWorkspaceConfig"
-import { Expectations, RunOptions } from "../suite-helpers/testWorkspaceRunners"
+import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig"
+import { Expectations, RunOptions } from "../_helpers/testWorkspaceRunners"
 import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./expectedResults"
 
 

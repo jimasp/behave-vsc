@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { config } from '../config/configuration';
+import { services } from '../diService';
 import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 
 
@@ -104,7 +104,7 @@ export class Logger {
 
     if (error instanceof Error) {
       text = error.message;
-      if (error.stack && config && config.instanceSettings && config.instanceSettings.xRay)
+      if (error.stack && services.config && services.config.instanceSettings && services.config.instanceSettings.xRay)
         text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
     }
     else {
@@ -128,7 +128,7 @@ export class Logger {
       }
     }
 
-    if (config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
+    if (services.config.exampleProject && !text.includes("Canceled") && !text.includes("Cancelled")) {
       debugger; // eslint-disable-line no-debugger
     }
 
@@ -169,7 +169,7 @@ export enum DiagLogType {
 }
 
 export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (config && !config.instanceSettings.xRay && !config.integrationTestRun && !config.exampleProject)
+  if (services && services.config && !services.config.instanceSettings.xRay && !services.config.integrationTestRun && !services.config.exampleProject)
     return;
 
   if (projUri)

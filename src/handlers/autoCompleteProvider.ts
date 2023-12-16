@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectSettingsForFile, getProjectUriForFile, sepr } from '../common/helpers';
-import { config } from '../config/configuration';
+import { services } from '../diService';
 import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFilesSteps } from '../parsers/stepsParser';
 
@@ -58,10 +58,10 @@ export const autoCompleteProvider = {
       // entry point function (handler) - show error  
       try {
         const projUri = getProjectUriForFile(document.uri);
-        config.logger.showError(e, projUri);
+        services.config.logger.showError(e, projUri);
       }
       catch {
-        config.logger.showError(e);
+        services.config.logger.showError(e);
       }
     }
   }

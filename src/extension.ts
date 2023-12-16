@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { config, Configuration } from "./config/configuration";
+import { services, Services } from './diService';
+import { Configuration } from "./config/configuration";
 import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
 import {
   getContentFromFilesystem,
@@ -11,7 +12,7 @@ import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithprojUri } from './_tests/integration/suite-helpers/testWorkspaceConfig';
+import { TestWorkspaceConfigWithprojUri } from './_tests/integration/_helpers/testWorkspaceConfig';
 import { diagLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
@@ -23,16 +24,19 @@ import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
 
 
+let config: Configuration;
 const testData = new Map<vscode.TestItem, BehaveTestData>();
-const userTestRunProfiles: vscode.TestRunProfile[] = [];
+const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
+
 export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
-
-export type TestSupport = {
+// the exported API can be used by other extensions, but 
+// we're using it to expose instances for integration testing
+export type API = {
+  services: Services,
   runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
-  config: Configuration,
   ctrl: vscode.TestController,
   parser: FileParser,
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
@@ -41,7 +45,6 @@ export type TestSupport = {
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
     forceRefresh?: boolean) => Promise<void>
 };
-
 
 export function deactivate() {
   // clean up any potentially large non-disposable objects,  
@@ -57,12 +60,13 @@ export function deactivate() {
 // - set up all relevant event handlers/hooks/subscriptions to the vscode api
 // NOTE - THIS MUST RETURN FAST: AVOID using "await" here unless absolutely necessary (except inside handlers)
 // this function should only contain initialisation, registering event handlers, and unawaited async calls
-export async function activate(context: vscode.ExtensionContext): Promise<TestSupport | undefined> {
+export async function activate(context: vscode.ExtensionContext): Promise<API | undefined> {
 
   try {
-
     const start = performance.now();
     diagLog("activate called, node pid:" + process.pid);
+
+    config = services.config;
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
@@ -88,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     context.subscriptions.push(
       ctrl,
       treeView,
-      config,
+      services.config,
       cleanExtensionTempDirectoryCancelSource,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -254,8 +258,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     return {
       // return instances to support integration testing
+      services: services,
       runHandler: runHandler,
-      config: config,
       ctrl: ctrl,
       parser: parser,
       getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
@@ -283,7 +287,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
     configChanged = false) {
 
     if (configChanged) {
-      for (const profile of userTestRunProfiles) {
+      for (const profile of userDefinedTestRunProfiles) {
         profile.dispose();
       }
     }
@@ -309,7 +313,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
           await runHandler(false, request, new RunProfile(undefined, tagExpression));
         });
 
-      ctrl.createRunProfile('Debug Features with Tags', vscode.TestRunProfileKind.Debug,
+      ctrl.createRunProfile('Debug Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           const tagExpression = await vscode.window.showInputBox(
             { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
@@ -320,11 +324,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
 
     for (const name in config.instanceSettings.runProfiles) {
       const runProfile = config.instanceSettings.runProfiles[name];
-      userTestRunProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
+      userDefinedTestRunProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           await runHandler(false, request, runProfile);
         }));
-      userTestRunProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
+      userDefinedTestRunProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           await runHandler(true, request, runProfile);
         }));

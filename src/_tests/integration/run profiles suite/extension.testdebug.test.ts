@@ -1,5 +1,5 @@
 import { getExpectedResultsForTag1RunProfile } from "./expectedResults";
-import { TestWorkspaceRunners } from "../suite-helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners } from "../_helpers/testWorkspaceRunners";
 import { wsConfig, expectations, runOptions, } from "./defaults";
 
 

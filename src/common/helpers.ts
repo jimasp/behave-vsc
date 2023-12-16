@@ -3,13 +3,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
-import { config } from "../config/configuration";
+import { services } from "../diService";
 import { Scenario, TestData } from '../parsers/testFile';
 import { StepImport, ProjectSettings } from '../config/settings';
 import { diagLog } from './logger';
 import { getJunitDirUri } from '../watchers/junitWatcher';
-
-
 
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -58,8 +56,8 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
-  config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
-  config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
+  services.config.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
+  services.config.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
 }
 
 
@@ -83,7 +81,7 @@ export function uriStartsWith(uriToCheck: vscode.Uri, checkIfStartsWithUri: vsco
 
 export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
 
-  const dirUri = config.extensionTempFilesUri;
+  const dirUri = services.config.extensionTempFilesUri;
   const junitDirUri = getJunitDirUri();
 
   // note - this function runs asynchronously, and we do not wait for it to complete before we start 
@@ -175,7 +173,7 @@ export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): v
 
 export const getProjectSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
   const projUri = getProjectUriForFile(fileorFolderUri);
-  return config.projectSettings[projUri.path];
+  return services.config.projectSettings[projUri.path];
 }
 
 

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common/helpers';
-import { config } from "../config/configuration";
+import { services } from "../diService";
 import { diagLog, DiagLogType } from '../common/logger';
 import { FileParser } from '../parsers/fileParser';
 import { TestData } from '../parsers/testFile';
@@ -21,7 +21,7 @@ export function startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestContr
 const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData,
   parser: FileParser) => {
 
-  const projSettings = config.projectSettings[projUri.path];
+  const projSettings = services.config.projectSettings[projUri.path];
 
   watcher.onDidCreate(async (uri) => {
     // onDidCreate fires on either new file/folder creation OR rename (inc. git actions)
@@ -33,7 +33,7 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
       const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
       if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {
         // reparse the entire project        
-        config.reloadSettings(projSettings.uri);
+        services.config.reloadSettings(projSettings.uri);
         parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
         return;
       }
@@ -42,7 +42,7 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
-      config.logger.showError(e, projUri);
+      services.config.logger.showError(e, projUri);
     }
 
   });
@@ -56,7 +56,7 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
-      config.logger.showError(e, projUri);
+      services.config.logger.showError(e, projUri);
     }
   });
 
@@ -90,12 +90,12 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
         return;
 
       // reparse the entire project
-      config.reloadSettings(projUri);
+      services.config.reloadSettings(projUri);
       parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
     }
     catch (e: unknown) {
       // entry point function (handler) - show error
-      config.logger.showError(e, projUri);
+      services.config.logger.showError(e, projUri);
     }
   });
 
@@ -119,7 +119,7 @@ const setWatcherEventHandlers = (watcher: vscode.FileSystemWatcher, projUri: vsc
       const configPath = `${projUri.path}/${configFile}`;
       if (uri.path.startsWith(configPath)) {
         // reparse the entire project        
-        config.reloadSettings(projUri);
+        services.config.reloadSettings(projUri);
         parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
         return false; // already handled
       }

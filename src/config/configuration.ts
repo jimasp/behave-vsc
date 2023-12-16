@@ -16,8 +16,7 @@ export interface Configuration {
 }
 
 
-// don't export this, use the interface
-class ExtensionConfiguration implements Configuration {
+export class ExtensionConfiguration implements Configuration {
   public integrationTestRun = false;
   public exampleProject = false;
   public readonly extensionTempFilesUri;
@@ -99,10 +98,3 @@ class ExtensionConfiguration implements Configuration {
 
 }
 
-
-
-// global = stop the constructor getting called twice in extension integration tests
-declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-if (!global.config)
-  global.config = ExtensionConfiguration.configuration;
-export const config: ExtensionConfiguration = global.config;

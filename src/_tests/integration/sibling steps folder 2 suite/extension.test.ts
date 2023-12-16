@@ -1,4 +1,4 @@
-import { TestWorkspaceRunners, noConfig, noRunOptions, parallelConfig } from "../suite-helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, noConfig, noRunOptions, parallelConfig } from "../_helpers/testWorkspaceRunners";
 import { expectations } from "./defaults";
 
 
