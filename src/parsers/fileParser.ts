@@ -5,13 +5,18 @@ import { services } from "../diService";
 import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, getTestItems, uriId, getWorkspaceFolder,
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile, TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes, getShortestCommonPathsExcludingLastPart
+  countTestItemsInCollection, getTestItems, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
+  TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes,
+  getShortestCommonPathsExcludingLastPart,
+  getProjectSettingsForFile
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
 import { diagLog } from '../common/logger';
-import { clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile, deleteStepsAndStepMappingsForFeatureFile } from './stepMappings';
+import {
+  clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile,
+  deleteStepsAndStepMappingsForFeatureFile
+} from './stepMappings';
 
 
 // for integration test assertions      
@@ -26,14 +31,199 @@ export type ProjParseCounts = {
 
 export class FileParser {
 
-  private _parseFilesCallCounts = 0;
+  private _cancelTokenSources: { [parseId: string]: vscode.CancellationTokenSource } = {};
   private _finishedFeaturesParseForAllProjects = false;
   private _finishedStepsParseForAllProjects = false;
-  private _finishedFeaturesParseForProject: { [key: string]: boolean } = {};
-  private _finishedStepsParseForProject: { [key: string]: boolean } = {};
-  private _cancelTokenSources: { [projUriPath: string]: vscode.CancellationTokenSource } = {};
+  private _finishedFeaturesParseForProject: { [projPath: string]: boolean } = {};
+  private _finishedStepsParseForProject: { [projPath: string]: boolean } = {};
+  private _finishedParseForProject: { [projPath: string]: boolean } = {};
+  private _parseFilesCallCounts: { [projPath: string]: number } = {};
   private _errored = false;
   private _reparsingFile = false;
+
+
+  async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
+    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
+
+    this._finishedFeaturesParseForAllProjects = false;
+    this._errored = false;
+
+    // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
+    // clear everything up-front so that we rebuild the top level nodes
+    diagLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
+    deleteTestTreeNodes(null, testData, ctrl);
+
+    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+      this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
+        firstRun, cancelToken);
+    }
+  }
+
+
+  // NOTE:
+  // - This is a self-cancelling RE-ENTRANT function, i.e. when called, any current parse for the same project will stop.   
+  // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
+  async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
+    callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
+
+    const projPath = projUri.path;
+    this._finishedFeaturesParseForAllProjects = false;
+    this._finishedStepsParseForAllProjects = false;
+    this._finishedFeaturesParseForProject[projPath] = false;
+    this._finishedStepsParseForProject[projPath] = false;
+    this._finishedParseForProject[projPath] = false;
+
+    if (!this._parseFilesCallCounts[projPath])
+      this._parseFilesCallCounts[projPath] = 0;
+    this._parseFilesCallCounts[projPath]++;
+
+    const parseId = `${projPath}#${this._parseFilesCallCounts[projPath]}`;
+    const projSettings: ProjectSettings = services.extConfig.projectSettings[projPath];
+    const projName = projSettings.name;
+    const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
+    this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
+
+    // if caller itself cancels, pass it on to the internal token
+    const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
+      if (this._cancelTokenSources[parseId])
+        this._cancelTokenSources[parseId].cancel();
+    });
+
+    const cancelOtherParsesForThisProject = async () => {
+      for (const key of Object.keys(this._cancelTokenSources)) {
+        if (key !== parseId && key.startsWith(projPath + "#")) {
+          const cancelledLogId = key.replace(projPath + "#", projName + "#");
+          diagLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
+          this._cancelTokenSources[key].cancel();
+          while (this._cancelTokenSources[key]) {
+            await new Promise(t => setTimeout(t, 20));
+          }
+        }
+      }
+    }
+
+    try {
+      let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
+      const callName = `parseFiles[${logId}] (${intiator})`;
+      diagLog(`\n===== ${callName}: started =====`);
+
+      // IMPORTANT: this function is not generally awaited, and therefore re-entrant, so 
+      // cancel any existing parseFiles call for this project
+      await cancelOtherParsesForThisProject();
+
+      if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
+        diagLog(`${callName}: cancellation complete`);
+        return;
+      }
+
+      // FEATURE FILES PARSE
+
+      const featsStart = performance.now();
+      const featureFileCount = await this._parseFeatureFiles(projSettings, testData, ctrl, this._cancelTokenSources[parseId].token,
+        callName, firstRun);
+      const featTime = performance.now() - featsStart;
+      if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
+        diagLog(`${callName}: cancellation complete`);
+        return;
+      }
+      diagLog(`${callName}: features loaded`);
+
+      this._finishedFeaturesParseForProject[projPath] = true;
+      const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
+        !this._finishedFeaturesParseForProject[uri.path]);
+      if (projectsStillParsingFeatures.length === 0) {
+        this._finishedFeaturesParseForAllProjects = true;
+        diagLog(`${callName}: features loaded for all projects`);
+      }
+      else {
+        diagLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
+      }
+
+      // STEPS FILES PARSE
+
+      const stepsStart = performance.now();
+      const stepFileCount = await this._parseStepsFiles(projSettings, this._cancelTokenSources[parseId].token, callName);
+      const stepsTime = performance.now() - stepsStart;
+      if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
+        diagLog(`${callName}: cancellation complete`);
+        return;
+      }
+
+      this._finishedStepsParseForProject[projPath] = true;
+      diagLog(`${callName}: steps loaded`);
+
+      const updateMappingsStart = performance.now();
+      const mappingsCount = rebuildStepMappings(projSettings.uri);
+      const buildMappingsTime = performance.now() - updateMappingsStart;
+      diagLog(`${callName}: stepmappings built`);
+
+      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
+      if (projectsStillParsingSteps.length === 0) {
+        this._finishedStepsParseForAllProjects = true;
+        diagLog(`${callName}: steps loaded for all projects`);
+      }
+      else {
+        diagLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
+      }
+
+      if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
+        diagLog(`${callName}: cancellation complete`);
+        return;
+      }
+
+
+      // LOG STATS
+      if (services.extConfig.instanceSettings.xRay) {
+        testCounts = countTestItemsInCollection(uriId(projUri), testData, ctrl.items);
+        this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
+      }
+
+      this._finishedParseForProject[projPath] = true;
+      diagLog(`${callName}: complete`);
+
+      if (!services.extConfig.integrationTestRun)
+        return;
+
+      return {
+        tests: testCounts,
+        featureFilesExceptEmptyOrCommentedOut: featureFileCount,
+        stepFilesExceptEmptyOrCommentedOut: stepFileCount,
+        stepFileStepsExceptCommentedOut: getStepFilesSteps(projSettings.uri).length,
+        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(projSettings.uri).length,
+        stepMappings: getStepMappings(projSettings.uri).length
+      };
+    }
+    catch (e: unknown) {
+      // unawaited async func, must log the error 
+
+      this._finishedFeaturesParseForProject[projPath] = true;
+      this._finishedStepsParseForProject[projPath] = true;
+      this._finishedParseForProject[projPath] = true;
+      this._finishedFeaturesParseForAllProjects = true;
+      this._finishedStepsParseForAllProjects = true;
+
+      // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
+      Object.keys(this._cancelTokenSources).forEach(k => {
+        this._cancelTokenSources[k].cancel();
+        this._cancelTokenSources[k].dispose();
+        delete this._cancelTokenSources[k];
+      });
+      // only log the first error (i.e. avoid logging the same error multiple times)
+      if (!this._errored) {
+        this._errored = true;
+        services.extConfig.logger.showError(e, projUri);
+      }
+
+    }
+    finally {
+      this._cancelTokenSources[parseId]?.dispose();
+      delete this._cancelTokenSources[parseId];
+      cancellationHandler?.dispose();
+    }
+
+
+  }
+
 
   async featureParseComplete(timeout: number, caller: string) {
     const interval = 100;
@@ -93,14 +283,54 @@ export class FileParser {
   }
 
 
+  async reparseFile(fileUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, caller: string, content?: string) {
+
+    let projSettings: ProjectSettings | undefined;
+
+    try {
+      this._reparsingFile = true;
+
+      const isAFeatureFile = isFeatureFile(fileUri);
+      let isAStepsFile = false;
+      if (!isAFeatureFile)
+        isAStepsFile = isStepsFile(fileUri);
+      if (!isAStepsFile && !isAFeatureFile)
+        return;
+
+      if (!content)
+        content = await getContentFromFilesystem(fileUri);
+
+      projSettings = getProjectSettingsForFile(fileUri);
+
+      if (isAStepsFile) {
+        deleteStepsAndStepMappingsForStepsFile(fileUri);
+        await parseStepsFileContent(projSettings.uri, content, fileUri, `reparseFile (${caller})`);
+      }
+
+      if (isAFeatureFile) {
+        deleteStepsAndStepMappingsForFeatureFile(fileUri);
+        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, fileUri, `reparseFile (${caller})`, false);
+      }
+
+      rebuildStepMappings(projSettings.uri);
+    }
+    catch (e: unknown) {
+      // unawaited async func, show error
+      services.extConfig.logger.showError(e, projSettings ? projSettings.uri : undefined);
+    }
+    finally {
+      this._reparsingFile = false;
+    }
+  }
+
+
   private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
     const projUri = projSettings.uri;
 
-    diagLog("removing existing test nodes/items for project: " + projSettings.name);
+    diagLog(`_parseFeatureFiles (${caller}): removing existing test nodes/items for project: ${projSettings.name}`);
     deleteTestTreeNodes(projSettings.id, testData, ctrl);
-
     deleteFeatureFilesStepsForProject(projUri);
     clearStepMappings(projUri);
 
@@ -126,7 +356,7 @@ export class FileParser {
 
       if (cancelToken.isCancellationRequested) {
         // either findFiles or loop will have exited early, log it either way
-        diagLog(`${caller}: cancelling, _parseFeatureFiles stopped`);
+        diagLog(`_parseFeatureFiles (${caller}): cancelling, _parseFeatureFiles stopped`);
       }
     }
 
@@ -208,7 +438,8 @@ export class FileParser {
     if (!content)
       return;
 
-    // note - get() will only match the top level node (e.g. a folder or root feature)
+    // note - get() will only match a top-level node 
+    // i.e. features/myfolder or features/my.feature
     const existingItem = controller.items.get(uriId(uri));
 
     const featureName = await getFeatureNameFromContent(content, uri, firstRun);
@@ -221,8 +452,11 @@ export class FileParser {
     if (existingItem) {
       diagLog(`${caller}: found existing top-level node for file ${uri.path}`);
       existingItem.label = featureName;
+      existingItem.error = undefined;
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
     }
+
+    console.log(`${caller}: creating test item for ${uri.path}`);
 
     const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;
@@ -241,7 +475,6 @@ export class FileParser {
         controller.items.add(projGrandParent);
       }
     }
-
 
 
     // build folder hierarchy above test item
@@ -285,7 +518,7 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderTestItemId);
 
-        if (!current) { // TODO: move getAllTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
+        if (!current) { // TODO: try to move getTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
           const allTestItems = getTestItems(projSettings.id, controller.items);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
@@ -309,236 +542,39 @@ export class FileParser {
       }
     }
 
-    if (projGrandParent) {
-      if (firstFolder) {
-        projGrandParent.children.add(firstFolder);
-      }
-      else {
-        projGrandParent.children.add(testItem);
-      }
-    }
+    if (projGrandParent)
+      projGrandParent.children.add(firstFolder ? firstFolder : testItem);
 
     diagLog(`${caller}: created test item for ${uri.path}`);
     return { testItem: testItem, testFile: testFile };
   }
 
 
-  async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
-    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
-
-    this._finishedFeaturesParseForAllProjects = false;
-    this._errored = false;
-
-    // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
-    // clear everything up-front so that we rebuild the top level nodes
-    diagLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
-    deleteTestTreeNodes(null, testData, ctrl);
-
-    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
-        firstRun, cancelToken);
-    }
-  }
-
-
-  // NOTE:
-  // - This is a self-cancelling RE-ENTRANT function, i.e. when called, any current parse for the same project will stop.   
-  // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
-  async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
-    callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
-
-    const projPath = projUri.path;
-    this._finishedFeaturesParseForAllProjects = false;
-    this._finishedStepsParseForAllProjects = false;
-    this._finishedFeaturesParseForProject[projPath] = false;
-    this._finishedStepsParseForProject[projPath] = false;
-
-    // if caller itself cancels, pass it on to the internal token
-    const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
-      if (this._cancelTokenSources[projPath])
-        this._cancelTokenSources[projPath].cancel();
-    });
-
-
-    try {
-
-      this._parseFilesCallCounts++;
-      const projName = getWorkspaceFolder(projUri).name;
-      const projId = uriId(projUri);
-      const callName = `parseFiles #${this._parseFilesCallCounts} ${projName} (${intiator})`;
-      let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
-
-      diagLog(`\n===== ${callName}: started =====`);
-
-      // this function is not generally awaited, and therefore re-entrant, so 
-      // cancel any existing parseFiles call for this project
-      if (this._cancelTokenSources[projPath]) {
-        diagLog(`cancelling previous parseFiles call for ${projName}`);
-        this._cancelTokenSources[projPath].cancel();
-        while (this._cancelTokenSources[projPath]) {
-          await new Promise(t => setTimeout(t, 20));
-        }
-      }
-      this._cancelTokenSources[projPath] = new vscode.CancellationTokenSource();
-      const projSettings: ProjectSettings = services.extConfig.projectSettings[projUri.path];
-
-
-      const start = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(projSettings, testData, ctrl, this._cancelTokenSources[projPath].token,
-        callName, firstRun);
-      const featTime = performance.now() - start;
-      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
-        return;
-      }
-      diagLog(`${callName}: features loaded for project ${projName}`);
-      this._finishedFeaturesParseForProject[projPath] = true;
-      const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
-        !this._finishedFeaturesParseForProject[uri.path]);
-      if (projectsStillParsingFeatures.length === 0) {
-        this._finishedFeaturesParseForAllProjects = true;
-        diagLog(`${callName}: features loaded for all projects`);
-      }
-      else {
-        diagLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
-      }
-
-
-      let mappingsCount = 0;
-      let buildMappingsTime = 0;
-      const stepsStart = performance.now();
-      const stepFileCount = await this._parseStepsFiles(projSettings, this._cancelTokenSources[projPath].token, callName);
-      const stepsTime = performance.now() - stepsStart;
-      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
-        return;
-      }
-
-      this._finishedStepsParseForProject[projPath] = true;
-      diagLog(`${callName}: steps loaded`);
-
-      const updateMappingsStart = performance.now();
-      mappingsCount = rebuildStepMappings(projSettings.uri);
-      buildMappingsTime = performance.now() - updateMappingsStart;
-      diagLog(`${callName}: stepmappings built`);
-
-      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
-      if (projectsStillParsingSteps.length === 0) {
-        this._finishedStepsParseForAllProjects = true;
-        diagLog(`${callName}: steps loaded for all projects`);
-      }
-      else {
-        diagLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
-      }
-
-
-      if (this._cancelTokenSources[projPath].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
-        return;
-      }
-
-      diagLog(`${callName}: complete`);
-      testCounts = countTestItemsInCollection(projId, testData, ctrl.items);
-      this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
-
-      if (!services.extConfig.integrationTestRun)
-        return;
-
-      return {
-        tests: testCounts,
-        featureFilesExceptEmptyOrCommentedOut: featureFileCount,
-        stepFilesExceptEmptyOrCommentedOut: stepFileCount,
-        stepFileStepsExceptCommentedOut: getStepFilesSteps(projSettings.uri).length,
-        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(projSettings.uri).length,
-        stepMappings: getStepMappings(projSettings.uri).length
-      };
-    }
-    catch (e: unknown) {
-      // unawaited async func, must log the error 
-
-      this._finishedFeaturesParseForProject[projPath] = true;
-      this._finishedStepsParseForProject[projPath] = true;
-      this._finishedFeaturesParseForAllProjects = true;
-      this._finishedStepsParseForAllProjects = true;
-
-      // multiple functions can be running in parallel, but if any of them fail we'll consider it fatal and bail out all of them
-      Object.keys(this._cancelTokenSources).forEach(k => {
-        this._cancelTokenSources[k].cancel();
-        this._cancelTokenSources[k].dispose();
-        delete this._cancelTokenSources[k];
-      });
-      // only log the first error (i.e. avoid logging the same error multiple times)
-      if (!this._errored) {
-        this._errored = true;
-        services.extConfig.logger.showError(e, projUri);
-      }
-
-      return;
-    }
-    finally {
-
-      this._cancelTokenSources[projPath]?.dispose();
-      delete this._cancelTokenSources[projPath];
-      cancellationHandler?.dispose();
-    }
-  }
-
-
-
-  async reparseFile(fileUri: vscode.Uri, content: string | undefined, projSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController) {
-    try {
-      this._reparsingFile = true;
-
-      const isAFeatureFile = isFeatureFile(fileUri);
-      let isAStepsFile = false;
-      if (!isAFeatureFile)
-        isAStepsFile = isStepsFile(fileUri);
-      if (!isAStepsFile && !isAFeatureFile)
-        return;
-
-      if (!content)
-        content = await getContentFromFilesystem(fileUri);
-
-      if (isAStepsFile) {
-        deleteStepsAndStepMappingsForStepsFile(fileUri);
-        await parseStepsFileContent(projSettings.uri, content, fileUri, "reparseFile");
-      }
-
-      if (isAFeatureFile) {
-        deleteStepsAndStepMappingsForFeatureFile(fileUri);
-        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, fileUri, "reparseFile", false);
-      }
-
-      rebuildStepMappings(projSettings.uri);
-    }
-    catch (e: unknown) {
-      // unawaited async func, must log the error
-      services.extConfig.logger.showError(e, projSettings.uri);
-    }
-    finally {
-      this._reparsingFile = false;
-    }
-  }
-
-
   private _logTimesToConsole = (callName: string, testCounts: TestCounts, featParseTime: number, stepsParseTime: number,
     mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
     diagLog(
-      `---` +
-      `\nPERF: ${callName} completed.` +
-      `\nPERF: Processing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
+      `--- PERF:` +
+      `\n${callName} completed.` +
+      `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
       `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
-      `\nPERF: Breakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
-      `\nPERF: NOTE: Ignore parseFile times if any of these are true:` +
-      `\nPERF:   (a) time taken was during vscode startup contention, ` +
-      `\nPERF:   (b) busy cpu due to background processes, ` +
-      `\nPERF:   (c) another test extension is also refreshing, ` +
-      `\nPERF:   (d) you are debugging the extension itself and have breakpoints, or you are running an extension integration test.` +
-      `\nPERF: For a more representative time, disable other test extensions then click the test refresh button a few times.` +
-      `\nPERF: (Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
+      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
+      `\nNOTE: Ignore parse processing times if any of these are true:` +
+      `\n   (a) times were taken during vscode startup contention, ` +
+      `\n   (b) you are running an extension integration test,` +
+      `\n   (c) you are debugging the extension itself and have breakpoints,` +
+      `\n   (d) busy cpu due to background processes, ` +
+      `\n   (e) another test extension is also refreshing.` +
+      `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
+      `\n(Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
       `\n==================`
     );
   }
 
+
+  parseIsActiveForProject(projUri: vscode.Uri) {
+    if (!services.extConfig.integrationTestRun)
+      throw new Error("parseIsActiveForProject() is only for integration test support");
+    return !this._finishedParseForProject[projUri.path];
+  }
 
 }

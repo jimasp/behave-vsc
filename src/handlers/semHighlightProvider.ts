@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, getLines } from '../common/helpers';
 import { services } from '../diService';
-import { parser } from '../extension';
 import { featureFileStepRe } from '../parsers/featureParser';
 import { getStepFileStepForFeatureFileStep } from '../parsers/stepMappings';
 import { parseRepWildcard } from '../parsers/stepsParser';
@@ -31,7 +30,7 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 
 	async provideDocumentSemanticTokens(document: vscode.TextDocument, cancelToken: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
 
-		await parser.stepsParseComplete(2000, "provideDocumentSemanticTokens");
+		await services.parser.stepsParseComplete(2000, "provideDocumentSemanticTokens");
 
 		// line numbers and contents shift for compares, so wouldn't match up 
 		// with current step mappings, so skip semhighlight for git scheme

@@ -9,7 +9,6 @@ import {
   getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
 } from '../common/helpers';
 import { QueueItem } from '../extension';
-import { FileParser } from '../parsers/fileParser';
 import { diagLog, DiagLogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
@@ -33,7 +32,7 @@ export class ProjRun {
 }
 
 
-export function testRunHandler(testData: TestData, ctrl: vscode.TestController, parser: FileParser, junitWatcher: JunitWatcher,
+export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher,
   removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()) => {
@@ -44,7 +43,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     // (and it will be slow during vscode startup due to contention), 
     // so we DON'T want to await it except on user request (refresh click),
     // BUT at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
-    const ready = await parser.featureParseComplete(1000, "testRunHandler");
+    const ready = await services.parser.featureParseComplete(1000, "testRunHandler");
     if (!ready) {
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
@@ -63,7 +62,10 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     try {
       const queue: QueueItem[] = [];
-      await queueSelectedTestItems(ctrl, run, request, queue, request.include ?? convertToTestItemArray(ctrl.items), testData);
+      const tests = request.include ?? convertToTestItemArray(ctrl.items);
+      diagLog(`testRunHandler: tests length = ${tests.length}`);
+      await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
+      diagLog(`testRunHandler: queue length = ${queue.length}`);
       await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
     }
@@ -100,7 +102,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
       if (data instanceof TestFile && !data.didResolve) {
         const projSettings = getProjectSettingsForFile(test.uri);
         const content = await getContentFromFilesystem(test.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedItems");
+        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedTestItems");
       }
 
       await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);

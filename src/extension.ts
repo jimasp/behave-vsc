@@ -1,57 +1,51 @@
 import * as vscode from 'vscode';
 import { services } from './diService';
 import { Configuration } from "./config/configuration";
-import { BehaveTestData, Scenario, TestData, TestFile } from './parsers/testFile';
+import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {
-  getContentFromFilesystem,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, isFeatureFile,
+  getUrisOfWkspFoldersWithFeatures, isFeatureFile,
   isStepsFile, logExtensionVersion, cleanExtensionTempDirectory, urisMatch
 } from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
-import { FileParser } from './parsers/fileParser';
 import { testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithprojUri } from './_tests/integration/_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfigWithProjUri } from './_tests/integration/_helpers/testWorkspaceConfig';
 import { diagLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
-import { startWatchingProject } from './watchers/projectWatcher';
+import { ProjectWatcherManager } from './watchers/projectWatcherManager';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
 
 
 let config: Configuration;
-const testData = new Map<vscode.TestItem, BehaveTestData>();
+const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
+const projectWatcherManager = new ProjectWatcherManager();
 
-export const parser = new FileParser();
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
-// public API can be called from other extensions,
-// but we're just using it to return activate's private instances for integration test support.
+// public API can be called from other extensions, but we're just using it to 
+// return activate's private instances and methods for integration test support.
 // (integration tests can also use the instances exposed via diService.services)
 export type IntegrationTestAPI = {
-  // instances created by activate() 
-  runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
   ctrl: vscode.TestController,
-  parser: FileParser,
+  testData: TestData,
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
-  testData: TestData,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
-    forceRefresh?: boolean) => Promise<void>,
-  isMultiRoot: boolean
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
+    forceRefresh?: boolean) => Promise<void>
 };
 
 export function deactivate() {
   // clean up any potentially large non-disposable objects,  
   // or any disposable objects not handled by context.subscriptions
-  testData.clear();
   wkspWatchers.forEach(w => w.dispose());
   wkspWatchers.clear();
 }
@@ -72,13 +66,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     config.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
-    parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
+    services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
 
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      const projWatcher = startWatchingProject(projUri, ctrl, testData, parser);
+      const projWatcher = projectWatcherManager.startWatchingProject(projUri, ctrl, testData);
       wkspWatchers.set(projUri, projWatcher);
     }
 
@@ -107,48 +101,53 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     );
 
 
-    const runHandler = testRunHandler(testData, ctrl, parser, junitWatcher, cleanExtensionTempDirectoryCancelSource);
+    const runHandler = testRunHandler(testData, ctrl, junitWatcher, cleanExtensionTempDirectoryCancelSource);
     createRunProfiles(ctrl, runHandler);
 
-    ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
-      let projSettings;
 
-      try {
-        if (!item || !item.uri || item.uri?.scheme !== 'file')
-          return;
+    // initially called with undefined when test explorer is opened by the user for the first time, 
+    // then called whenever a test node is expanded in test explorer if item.canResolveChildren is true.
+    // (a test node expansion can fire this even if not by user interaction, e.g. on startup if it was expanded previously) 
+    // NOTE: we may not actually need this handler, as we are re-parsing files on any change
+    // ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
+    //   try {
+    //     // ignore undefined, we build in background at startup via parseFilesForAllProjects
+    //     // and we also rebuild via file watchers
+    //     if (!item || !item.uri || item.uri?.scheme !== 'file')
+    //       return;
 
-        const data = testData.get(item);
-        if (!(data instanceof TestFile))
-          return;
+    //     // we only build upwards from feature files
+    //     const data = testData.get(item);
+    //     if (!(data instanceof TestFile))
+    //       return;
 
-        projSettings = getProjectSettingsForFile(item.uri);
-        const content = await getContentFromFilesystem(item.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, item, "resolveHandler");
-      }
-      catch (e: unknown) {
-        // entry point function (handler) - show error
-        const projUri = projSettings ? projSettings.uri : undefined;
-        config.logger.showError(e, projUri);
-      }
-    };
+    //     // reparse the file to rebuild children
+    //     services.parser.reparseFile(item.uri, testData, ctrl, "resolveHandler");
+    //   }
+    //   catch (e: unknown) {
+    //     // entry point function (handler) - show error
+    //     config.logger.showError(e);
+    //   }
+    // };
 
 
+    // called by manual refresh button in test explorer    
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           config.reloadSettings(projUri);
-          await parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
+          await services.parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
         }
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e, undefined);
+        config.logger.showError(e);
       }
     };
 
 
     // called when a user renames, adds or removes a workspace folder.
-    // NOTE: the first time a new not-previously recognised workspace gets added a new node host 
+    // NOTE: the first time a new not-previously recognised workspace folder gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
@@ -157,7 +156,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e, undefined);
+        config.logger.showError(e);
       }
     }));
 
@@ -173,12 +172,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         const uri = event.document.uri;
         if (!isFeatureFile(uri) && !isStepsFile(uri))
           return;
-        const projSettings = getProjectSettingsForFile(uri);
-        parser.reparseFile(uri, event.document.getText(), projSettings, testData, ctrl);
+        services.parser.reparseFile(uri, testData, ctrl, "onDidChangeTextDocument", event.document.getText());
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e, undefined);
+        config.logger.showError(e);
       }
     }));
 
@@ -187,7 +185,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithprojUri,
+    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
       forceFullRefresh?: boolean) => {
 
       // for integration test runAllTestsAndAssertTheResults, 
@@ -197,7 +195,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
       try {
 
-        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but  we don't want 
+        // note - affectsConfiguration(ext,uri) i.e. with a scope (uri) param is smart re. default resource values, but we don't want 
         // that behaviour because we want to distinguish between some properties being set vs being absent from 
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting 
@@ -215,9 +213,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
-            if (urisMatch(testCfg.projUri, projUri)) {
+            if (urisMatch(testCfg.projUri, projUri))
               config.reloadSettings(projUri, testCfg.testConfig);
-            }
             continue;
           }
 
@@ -227,7 +224,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           const oldProjWatcher = wkspWatchers.get(projUri);
           if (oldProjWatcher)
             oldProjWatcher.dispose();
-          const projWatcher = startWatchingProject(projUri, ctrl, testData, parser);
+          const projWatcher = projectWatcherManager.startWatchingProject(projUri, ctrl, testData);
           wkspWatchers.set(projUri, projWatcher);
         }
 
@@ -236,18 +233,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel 
         // workspace integration test runs)
         if (testCfg) {
-          parser.parseFilesForProject(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
+          await services.parser.parseFilesForProject(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
         // to rebuild the top level nodes)
-        parser.parseFilesForAllProjects(testData, ctrl, "configurationChangedHandler", false);
+        services.parser.parseFilesForAllProjects(testData, ctrl, "configurationChangedHandler", false);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e, undefined);
+        config.logger.showError(e);
       }
     }
 
@@ -263,14 +260,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
     return {
       // test mode = return instances in API to support integration testing
-      runHandler: runHandler,
       ctrl: ctrl,
-      parser: parser,
+      testData: testData,
+      runHandler: runHandler,
       getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
       getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
-      testData: testData,
       configurationChangedHandler: configurationChangedHandler,
-      isMultiRoot: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 1 || false,
     }
 
   }
@@ -280,7 +275,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       config.logger.showError(e, undefined);
     }
     else {
-      // no logger, use vscode.window.showErrorMessage directly
+      // no logger yet, use vscode.window.showErrorMessage directly
       const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
       vscode.window.showErrorMessage(text);
     }

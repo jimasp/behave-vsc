@@ -5,10 +5,6 @@ import { BEHAVE_CONFIG_FILES } from "../common/helpers";
 import { Logger } from '../common/logger';
 
 
-export type BehaveConfigType = {
-  getProjectRelativeBehaveConfigPaths: (projUri: vscode.Uri, logger: Logger) => string[];
-};
-
 export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger): string[] {
   let paths: string[] | null = null;
 

@@ -1,14 +1,18 @@
 import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';
+import inspector = require('inspector');
+
 
 export async function runner(globStr: string, ignore?: string[]): Promise<void> {
-	// Create the mocha test
+
+	const debugging = inspector.url() !== undefined;
+
 	const mocha = new Mocha({
 		ui: 'tdd',
 		color: true,
 		bail: true,
-		timeout: 300000,
+		timeout: debugging ? 900000 : 30000,
 	});
 
 	const testsRoot = __dirname;
@@ -20,11 +24,9 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 				return e(err);
 			}
 
-			// Add files to the test suite
 			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
 			try {
-				// Run the mocha test
 				mocha.run(failures => {
 					if (failures > 0) {
 						e(new Error(`${failures} tests failed.`));

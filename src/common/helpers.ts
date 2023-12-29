@@ -105,7 +105,7 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
     }
   }
   catch (e: unknown) {
-    // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open
+    // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open, e.g. in windows explorer
   }
 }
 
@@ -264,10 +264,7 @@ export const deleteTestTreeNodes = (projId: string | null, testData: TestData, c
   const items = getTestItems(projId, ctrl.items);
   for (const item of items) {
     ctrl.items.delete(item.id);
-  }
-  for (const key of testData.keys()) {
-    if (!projId || key.id.startsWith(projId))
-      testData.delete(key);
+    testData.delete(item);
   }
 }
 

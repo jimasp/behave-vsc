@@ -1,5 +1,5 @@
 import { getExpectedResultsForTag1RunProfile } from "./expectedResults";
-import { TestWorkspaceRunners } from "../_helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, noBehaveIni } from "../_helpers/testWorkspaceRunners";
 import { wsConfig, expectations, runOptions, } from "./defaults";
 
 
@@ -12,7 +12,7 @@ suite(`run profiles suite test debug run`, () => {
   test("debugAll - tag1 profile", async () => {
     runOptions.selectedRunProfile = "tag1 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-    await testWorkspaceRunners.debugAll(wsConfig, runOptions, expectations);
+    await testWorkspaceRunners.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   })
 
 

@@ -1,4 +1,4 @@
-import { TestWorkspaceRunners, noRunOptions } from "../_helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, noBehaveIni, noRunOptions } from "../_helpers/testWorkspaceRunners";
 import { wsConfig, expectations } from "./defaults";
 
 
@@ -9,7 +9,7 @@ suite(`project B suite test debug run`, () => {
   const testWorkspaceRunners = new TestWorkspaceRunners("project B");
 
   test("debugAll", async () =>
-    await testWorkspaceRunners.debugAll(wsConfig, noRunOptions, expectations)
+    await testWorkspaceRunners.debugAll(wsConfig, noBehaveIni, noRunOptions, expectations)
   )
 
 

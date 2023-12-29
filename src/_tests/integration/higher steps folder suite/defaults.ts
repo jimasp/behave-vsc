@@ -1,4 +1,4 @@
-import { BehaveConfigStub, Expectations } from "../_helpers/testWorkspaceRunners";
+import { Expectations } from "../_helpers/testWorkspaceRunners";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
 
@@ -11,6 +11,4 @@ export const expectations: Expectations = {
   getExpectedResultsFunc: getExpectedResults,
 }
 
-export const behaveConfig: BehaveConfigStub = {
-  paths: expectations.expectedProjectRelativeFeatureFolders
-}
+export const behaveIni = `[behave]\npaths=${expectations.expectedProjectRelativeFeatureFolders.join("\n\t")}`;

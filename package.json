@@ -6,8 +6,8 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "This setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
-					"deprecationMessage": "This setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
+					"markdownDescription": "envVarOverrides setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
+					"deprecationMessage": "envVarOverrides setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -23,9 +23,9 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "This legacy setting is IGNORED. Feature paths are now determined automatically.",
+					"markdownDescription": "featuresPath legacy setting is IGNORED. Feature paths are now determined automatically.",
 					"default": "features",
-					"deprecationMessage": "This legacy setting is IGNORED. Feature paths are now determined automatically."
+					"deprecationMessage": "featuresPath legacy setting is IGNORED. Feature paths are now determined automatically."
 				},
 				"behave-vsc.importedSteps": {
 					"scope": "resource",

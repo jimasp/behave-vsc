@@ -21,12 +21,13 @@ export class ExtensionConfiguration implements Configuration {
   public exampleProject = false;
   public readonly extensionTempFilesUri;
   public readonly logger: Logger;
-  private static _configuration?: ExtensionConfiguration;
+  //private static _configuration?: ExtensionConfiguration;
   private _windowSettings: InstanceSettings | undefined = undefined;
   private _resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
 
-  private constructor() {
-    ExtensionConfiguration._configuration = this;
+  //private 
+  constructor() {
+    //ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
     this.exampleProject = (vscode.workspace.workspaceFolders?.find(f =>
@@ -38,12 +39,12 @@ export class ExtensionConfiguration implements Configuration {
     this.logger.dispose();
   }
 
-  static get configuration() {
-    if (ExtensionConfiguration._configuration)
-      return ExtensionConfiguration._configuration;
-    ExtensionConfiguration._configuration = new ExtensionConfiguration();
-    return ExtensionConfiguration._configuration;
-  }
+  // static get configuration() {
+  //   if (ExtensionConfiguration._configuration)
+  //     return ExtensionConfiguration._configuration;
+  //   ExtensionConfiguration._configuration = new ExtensionConfiguration();
+  //   return ExtensionConfiguration._configuration;
+  // }
 
   // called by onDidChangeConfiguration
   public reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {

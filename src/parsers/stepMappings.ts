@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common/helpers';
-import { parser } from '../extension';
 import { diagLog, DiagLogType } from '../common/logger';
 import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps } from './featureParser';
@@ -68,7 +67,7 @@ export function clearStepMappings(projUri: vscode.Uri) {
 
 
 export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.Uri) {
-  const ready = await parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
+  const ready = await services.parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);

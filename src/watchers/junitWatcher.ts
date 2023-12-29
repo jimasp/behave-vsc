@@ -55,7 +55,7 @@ export class JunitWatcher {
     watcher?.dispose();
     if (services.extConfig.integrationTestRun) {
       diagLog("Integration test run complete.\n");
-      diagLog('NOTE: if next line says "canceled" and you did not stop the run, then check for previous errors in the log.');
+      diagLog('NOTE: if next line says "canceled" AND you did not stop the run, then check for previous errors in the log.');
     }
   }
 

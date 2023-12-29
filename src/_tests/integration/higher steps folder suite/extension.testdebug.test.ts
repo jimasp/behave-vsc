@@ -1,4 +1,4 @@
-import { TestWorkspaceRunners, noBehaveConfig, noConfig, noRunOptions } from "../_helpers/testWorkspaceRunners";
+import { TestWorkspaceRunners, noBehaveIni, noConfig, noRunOptions } from "../_helpers/testWorkspaceRunners";
 import { expectations } from "./defaults";
 
 
@@ -9,8 +9,7 @@ suite(`higher steps folder suite test debug run`, () => {
   const testWorkspaceRunners = new TestWorkspaceRunners("higher steps folder");
 
   test("debugAll", async () =>
-    await testWorkspaceRunners.debugAll(noConfig, noBehaveConfig, noRunOptions, expectations)
-  )
+    await testWorkspaceRunners.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 });
 

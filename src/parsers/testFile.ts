@@ -7,23 +7,26 @@ import { diagLog } from '../common/logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Scenario;
-export type TestData = Map<vscode.TestItem, BehaveTestData>;
+export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 
 
 export class TestFile {
   public didResolve = false;
 
   public async createScenarioTestItemsFromFeatureFileContent(projSettings: ProjectSettings, content: string, testData: TestData,
-    controller: vscode.TestController, item: vscode.TestItem, caller: string) {
-    if (!item.uri)
+    controller: vscode.TestController, featureItem: vscode.TestItem, caller: string) {
+    if (!featureItem.uri)
       throw new Error("missing test item uri");
-    if (!isFeatureFile(item.uri))
-      throw new Error(`${item.uri.path} is not a feature file`);
+    if (!isFeatureFile(featureItem.uri))
+      throw new Error(`${featureItem.uri.path} is not a feature file`);
 
-    item.error = undefined;
+    // // remove any stale children
+    // for (const child of item.children) {
+    //   testData.delete(child[1]);
+    // }
 
-    const featureUri = item.uri;
-    const featureName = item.label;
+    const featureUri = featureItem.uri;
+    const featureName = featureItem.label;
     const featureFileProjRelativePath = vscode.workspace.asRelativePath(featureUri, false);
     const featureFilename = featureUri.path.split('/').pop();
     if (featureFilename === undefined)
@@ -58,20 +61,19 @@ export class TestFile {
 
     const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
       const parent = ancestors[ancestors.length - 1];
-
       const data = new Scenario(featureFilename, featureFileProjRelativePath, featureName, scenarioName, thisGeneration, isOutline);
       const id = `${uriId(featureUri)}/${data.getLabel()}`;
-      const tcase = controller.createTestItem(id, data.getLabel(), featureUri);
-      testData.set(tcase, data);
-      tcase.range = range;
+      const scenarioItem = controller.createTestItem(id, data.getLabel(), featureUri);
+      testData.set(scenarioItem, data);
+      scenarioItem.range = range;
       parent.item.label = featureName;
-      parent.children.push(tcase);
-      diagLog(`created child test item scenario ${tcase.id} from ${featureUri.path}`);
+      parent.children.push(scenarioItem);
+      diagLog(`onScenarioLine: created child test item scenario ${scenarioItem.id} from ${featureUri.path}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {
-      item.range = range;
-      ancestors.push({ item: item, children: [] });
+      featureItem.range = range;
+      ancestors.push({ item: featureItem, children: [] });
     }
 
     parseFeatureContent(projSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);

@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { Configuration } from "../../../config/configuration";
 import { ProjectSettings, RunProfilesSetting } from "../../../config/settings";
 import { IntegrationTestAPI } from '../../../extension';
 import { TestResult } from "./expectedResults.helpers";
-import { TestWorkspaceConfig, TestWorkspaceConfigWithprojUri } from './testWorkspaceConfig';
+import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from './testWorkspaceConfig';
 import { ProjParseCounts } from "../../../parsers/fileParser";
 import {
 	getUrisOfWkspFoldersWithFeatures, getTestItems,
@@ -14,10 +16,9 @@ import {
 } from '../../../common/helpers';
 import { featureFileStepRe } from '../../../parsers/featureParser';
 import { funcRe } from '../../../parsers/stepsParser';
-import { BehaveConfigStub, Expectations, RunOptions } from './testWorkspaceRunners';
+import { Expectations, RunOptions } from './testWorkspaceRunners';
 import { services } from '../../../diService';
-import { BehaveConfigType } from '../../../config/behaveConfig';
-import sinon = require('sinon');
+
 
 
 function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -292,6 +293,11 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
 		assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, projName + ": stepFileStepsExceptCommentedOut");
 		assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, projName + ": featureFileStepsExceptCommentedOut");
 		assert(actualCounts.stepMappings === expectedCounts.stepMappings, projName + ": stepMappings");
+
+		// (test counts are only calculated if xRay is true)
+		if (!config.instanceSettings.xRay)
+			return;
+
 		assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, projName + ": testCount");
 
 		if (hasMultiRootWkspNode) {
@@ -313,7 +319,6 @@ function assertInstances(instances: IntegrationTestAPI) {
 	assert(instances.ctrl);
 	assert(instances.getStepFileStepForFeatureFileStep);
 	assert(instances.getStepMappingsForStepsFileFunction);
-	assert(instances.parser);
 	assert(instances.runHandler);
 	assert(instances.testData);
 	assert(instances.configurationChangedHandler);
@@ -325,6 +330,66 @@ function getTestProjectUri(projName: string) {
 	assert(projUri, "projUri");
 	return projUri;
 }
+
+function getBehaveIniPaths(projUri: vscode.Uri) {
+	const behaveIniPath = path.join(projUri.fsPath, 'behave.ini');
+	const behaveIniTmpPath = path.join(projUri.fsPath, 'behave.ini.tmp');
+	return { behaveIniPath, behaveIniTmpPath };
+}
+
+async function replaceBehaveIni(api: IntegrationTestAPI, projName: string, projUri: vscode.Uri, content: string) {
+	// behave behaviour is dictated by a file on disk, 
+	// i.e. we cannot mock out behave.ini or we would go out of sync with behave
+	const paths = getBehaveIniPaths(projUri);
+	if (fs.existsSync(paths.behaveIniPath))
+		fs.renameSync(paths.behaveIniPath, paths.behaveIniTmpPath);
+	fs.writeFileSync(paths.behaveIniPath, Buffer.from(content));
+	await waitForWatcherParse(projUri, projName, false);
+}
+
+
+async function restoreBehaveIni(projName: string, projUri: vscode.Uri) {
+	const paths = getBehaveIniPaths(projUri);
+	if (fs.existsSync(paths.behaveIniTmpPath))
+		fs.renameSync(paths.behaveIniTmpPath, paths.behaveIniPath);
+	else
+		fs.unlinkSync(paths.behaveIniPath);
+	await waitForWatcherParse(projUri, projName, true);
+}
+
+
+async function waitForWatcherParse(projUri: vscode.Uri, projName: string, waitUntilComplete: boolean) {
+	// replacing the behave.ini file will, after a DELAY, fire a reparse via the projectWatcher (fileSystemWatcher).
+	// for testing, we need to make sure the delayed parse has kicked off BEFORE config is 
+	// reloaded in runAllTestsAndAssertTheResults via configurationChangedHandler, otherwise:
+	// a. this delayed parse would cancel the reparse inside configurationChangedHandler, and
+	// b. equally it would not be cancelled itself by the configurationChangedHandler reparse because it hasn't started yet.
+	// so we wait for the parse to kick off:
+	let waited = 0;
+	while (waited < 5000) {
+		if (services.parser.parseIsActiveForProject(projUri))
+			break;
+		await new Promise(t => setTimeout(t, 5));
+		waited += 5;
+	}
+	console.log(`waitForWatcherParseToStart ${projName}: waited ${waited}ms for parse instigated by behave config change to start`);
+
+	// wait for parse to complete if requested (this is just to stop the "Canceled" red error appearing 
+	// when we're actually expecting a cancel due to the integration test suite exiting the IDE on successful test completion)
+	if (waitUntilComplete) {
+		waited = 0;
+		while (waited < 5000) {
+			if (!services.parser.parseIsActiveForProject(projUri))
+				break;
+			await new Promise(t => setTimeout(t, 5));
+			waited += 5;
+		}
+		console.log(`waitForWatcherParseToComplete ${projName}: waited ${waited}ms for parse instigated by behave config change to complete`);
+	}
+
+}
+
+
 
 //declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 //global.lock = "";
@@ -383,7 +448,8 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	if (api)
 		return api;
 
-	// give the extension a chance to complete any async initialisation it needs to do on startup
+	// starting up a vscode host instance gets busy with cpu etc., so give the extension a 
+	// chance to complete any async initialisation it needs to do on startup
 	// before our integration tests start messing with it
 	await new Promise(t => setTimeout(t, 3000));
 
@@ -405,132 +471,133 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 }
 
 
-export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
-	behaveConfig: BehaveConfigStub, runOptions: RunOptions, expectations: Expectations): Promise<void> {
-
-	console.log(`runAllTestsAndAssertTheResults for ${projName} initialising`);
-	const api = await checkExtensionIsReady();
-	const sandbox = sinon.createSandbox();
-
-	if (!api.isMultiRoot && behaveConfig) {
-		assert(services.behaveConfig.getProjectRelativeBehaveConfigPaths);
-		sandbox.stub(services.behaveConfig, "getProjectRelativeBehaveConfigPaths").returns(behaveConfig.paths);
-	}
-
-	try {
-		await runAllAndAssert(api, projName, isDebugRun, testExtConfig, runOptions, expectations);
-		console.log(`runAllTestsAndAssertTheResults for ${projName} completed ok`);
-	}
-	finally {
-		sandbox.restore();
-	}
-
-}
-
-
 // A user can kick off one project and then another and then another, (i.e. staggered), they do not have to wait for the first to complete,
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
 // so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
-export async function runAllAndAssert(api: IntegrationTestAPI, projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
-	runOptions: RunOptions, expectations: Expectations): Promise<void> {
+export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
+	behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
 	const projUri = getTestProjectUri(projName);
 	const projId = uriId(projUri);
+	const api = await checkExtensionIsReady();
 	const consoleName = `runAllAndAssert for ${projName}`;
-	await setLock(consoleName, "acquire");
 
-	// NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
-	// and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
-	// it afterwards - we do this here by calling configurationChangedHandler() with our own test config.
-	// So the configuration will be loaded twice, once on the initial load of the extension, then again here to insert our test config.
-	console.log(`${consoleName}: calling configurationChangedHandler`);
-	await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithprojUri(testExtConfig, projUri));
-	assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.extConfig, expectations);
+	try {
+		await setLock(consoleName, "acquire");
 
-	// parse to get check counts (checked later, but we want to do this inside the lock)
-	const actualCounts = await api.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
-		"runAllTestsAndAssertTheResults", false);
-	assert(actualCounts, "actualCounts was undefined");
-	const allProjItems = getTestItems(projId, api.ctrl.items);
-	console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
-	assert(allProjItems.length > 0, "allProjItems.length was 0");
-	const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;
+		// we do this BEFORE we call configurationChangedHandler() to load our test config,
+		// because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
+		// would then reload settings.json from disk and replace the test config we are about to load
+		if (behaveIniContent) {
+			await replaceBehaveIni(api, projName, projUri, behaveIniContent);
+			console.log(`${consoleName}: replaceBehaveIni completed`);
+		}
 
-	// check all steps can be matched
-	await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, api);
-	await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, api);
-
-	// sanity check include length matches expected length
-	const include = getScenarioTests(api.testData, allProjItems);
-	const expectedResults = expectations.getExpectedResultsFunc(projUri, services.extConfig);
-	if (include.length !== expectedResults.length)
-		debugger; // eslint-disable-line no-debugger
-	console.log(`${consoleName}: test includes = ${include.length}, tests expected = ${expectedResults.length}`);
-	// included tests (scenarios) and expected tests lengths should be equal, but 
-	// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if new
-	// tests have recently been added	
-	assert(include.length >= expectedResults.length, consoleName + ", (see counts above)");
-	console.log(`${consoleName}: initialised`);
+		// NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
+		// and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
+		// it afterwards - we do this here by calling configurationChangedHandler() with our own test config.
+		// So the configuration will be loaded twice, once on the initial load of the extension, then again here to insert our test config.
+		console.log(`${consoleName}: calling configurationChangedHandler`);
+		await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
+		assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.extConfig, expectations);
 
 
-	// run behave tests - we kick the runHandler off inside the lock to ensure that featureParseComplete() check
-	// will inside the runHandler, i.e. so no other parsing gets kicked off until it has begun.
-	// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
-	console.log(`${consoleName}: calling runHandler to run tests...`);
-	const request = new vscode.TestRunRequest(include);
-	let runProfile = undefined;
-	if (runOptions.selectedRunProfile)
-		runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-	const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
+		// parse to get check counts (checked later, but we want to do this inside the lock)
+		const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
+			"runAllTestsAndAssertTheResults", false);
+		assert(actualCounts, "actualCounts was undefined");
 
-	// give run handler a chance to pass the featureParseComplete() check, then release the lock
-	await (new Promise(t => setTimeout(t, 50)));
-	await setLock(consoleName, "release");
+		const allProjItems = getTestItems(projId, api.ctrl.items);
+		console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
+		assert(allProjItems.length > 0, "allProjItems.length was 0");
+		const matchingItems = allProjItems.filter(item => api.testData.get(item) !== undefined);
+		assert(matchingItems.length > 0, "matchingItems.length was 0");
+		const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;
+
+		// sanity check included tests length matches expected length
+		const includedTests = getScenarioTests(api.testData, allProjItems);
+		assert(includedTests.length > 0, "includedTests.length was 0");
+		const expectedResults = expectations.getExpectedResultsFunc(projUri, services.extConfig);
+		if (includedTests.length !== expectedResults.length)
+			debugger; // eslint-disable-line no-debugger
+		console.log(`${consoleName}: test includes = ${includedTests.length}, tests expected = ${expectedResults.length}`);
+		// included tests (scenarios) and expected tests lengths should be equal, but 
+		// we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if new
+		// tests have recently been added	
+		assert(includedTests.length >= expectedResults.length, consoleName + ", (see counts above)");
+		console.log(`${consoleName}: initialised`);
+
+		// check all steps can be matched
+		await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, api);
+		await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, api);
+
+		// run behave tests - we kick the runHandler off inside the lock to ensure that featureParseComplete() check
+		// will complete inside the runHandler, i.e. so no other parsing gets kicked off until the parse is complete.
+		// we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
+		console.log(`${consoleName}: calling runHandler to run tests...`);
+		const request = new vscode.TestRunRequest(includedTests);
+		let runProfile = undefined;
+		if (runOptions.selectedRunProfile)
+			runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+		// do NOT await (see comment above)
+		const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
+
+		// give run handler a chance to call the featureParseComplete() check, then 
+		// release the lock so (different) projects can run in parallel
+		await (new Promise(t => setTimeout(t, 50)));
+		await setLock(consoleName, "release");
 
 
-	if (isDebugRun) {
-		// timeout hack to show test ui during debug testing so we can see progress		
-		await new Promise(t => setTimeout(t, 1000));
-		await vscode.commands.executeCommand("workbench.view.testing.focus");
-	}
-	const results = await resultsPromise;
-	console.log(`${consoleName}: runHandler completed`);
+		if (isDebugRun) {
+			// timeout hack to show test ui during debug testing so we can see progress		
+			await new Promise(t => setTimeout(t, 1000));
+			await vscode.commands.executeCommand("workbench.view.testing.focus");
+		}
+		const results = await resultsPromise;
+		console.log(`${consoleName}: runHandler completed`);
 
-	// validate results
 
-	if (!results || results.length === 0) {
-		debugger; // eslint-disable-line no-debugger
-		throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
-	}
+		// validate results
 
-	results.forEach(result => {
+		if (!results || results.length === 0) {
+			debugger; // eslint-disable-line no-debugger
+			throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
+		}
 
-		const scenResult = new TestResult({
-			test_id: standardisePath(result.test.id),
-			test_uri: standardisePath(result.test.uri?.toString()),
-			test_parent: standardisePath(result.test.parent?.id),
-			test_children: getChildrenIds(result.test.children),
-			test_description: result.test.description,
-			test_error: result.test.error?.toString(),
-			test_label: result.test.label,
-			scenario_isOutline: result.scenario.isOutline,
-			scenario_getLabel: result.scenario.getLabel(),
-			scenario_featureFileRelativePath: result.scenario.featureFileWorkspaceRelativePath,
-			scenario_featureName: result.scenario.featureName,
-			scenario_scenarioName: result.scenario.scenarioName,
-			scenario_result: standardiseResult(result.scenario.result)
+		results.forEach(result => {
+
+			const scenResult = new TestResult({
+				test_id: standardisePath(result.test.id),
+				test_uri: standardisePath(result.test.uri?.toString()),
+				test_parent: standardisePath(result.test.parent?.id),
+				test_children: getChildrenIds(result.test.children),
+				test_description: result.test.description,
+				test_error: result.test.error?.toString(),
+				test_label: result.test.label,
+				scenario_isOutline: result.scenario.isOutline,
+				scenario_getLabel: result.scenario.getLabel(),
+				scenario_featureFileRelativePath: result.scenario.featureFileWorkspaceRelativePath,
+				scenario_featureName: result.scenario.featureName,
+				scenario_scenarioName: result.scenario.scenarioName,
+				scenario_result: standardiseResult(result.scenario.result)
+			});
+
+
+			assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+			assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
 		});
 
+		// (keep these below results.forEach, as individual match asserts are more useful to get first)
+		assertExpectedCounts(projUri, projName, services.extConfig, expectations.getExpectedCountsFunc,
+			actualCounts, hasMultiRootWkspNode);
+		assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 
-		assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-		assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-	});
-
-	// (keep these below results.forEach, as individual match asserts are more useful to get first)
-	assertExpectedCounts(projUri, projName, services.extConfig, expectations.getExpectedCountsFunc,
-		actualCounts, hasMultiRootWkspNode);
-	assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
+	}
+	finally {
+		if (behaveIniContent)
+			await restoreBehaveIni(projName, projUri);
+	}
 }
 
 

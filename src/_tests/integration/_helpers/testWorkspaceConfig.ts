@@ -3,7 +3,7 @@ import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../.
 
 
 // used only in the extension tests themselves
-export class TestWorkspaceConfigWithprojUri {
+export class TestWorkspaceConfigWithProjUri {
 	constructor(public testConfig: TestWorkspaceConfig, public projUri: vscode.Uri) { }
 }
 
@@ -29,7 +29,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runParallel = undefined,
 		importedSteps = undefined,
 		runProfiles = undefined,
-		xRay = undefined
+		xRay = true // default true for tests
 	}: {
 		envVarOverrides?: { [name: string]: string },
 		env?: { [name: string]: string },

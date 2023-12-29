@@ -1,10 +1,12 @@
-import * as BehaveConfigImport from './config/behaveConfig';
+import * as vscode from 'vscode';
 import { ExtensionConfiguration } from './config/configuration';
+import { FileParser } from './parsers/fileParser';
+import { diagLog } from './common/logger';
 
 
 export interface Services {
     extConfig: ExtensionConfiguration;
-    behaveConfig: BehaveConfigImport.BehaveConfigType;
+    parser: FileParser;
 }
 
 interface Global {
@@ -12,22 +14,28 @@ interface Global {
 }
 
 class ServicesClass implements Services {
-    // any singleton services,
-    // e.g. imported modules that we want to stub out for testing
+    // any shared singleton services,
+    // e.g. imported modules that we need for test code
     extConfig: ExtensionConfiguration;
-    behaveConfig: BehaveConfigImport.BehaveConfigType;
+    parser: FileParser;
     constructor() {
-        this.extConfig = ExtensionConfiguration.configuration;
-        this.behaveConfig = BehaveConfigImport;
+        this.extConfig = new ExtensionConfiguration();
+        this.parser = new FileParser();
     }
 }
 
-// NOTE: we use a global rather than a singleton implementation, this is required so that tests can stub the services
+// NOTE: we use a global rather than a singleton implementation so that test code can stub the services
 // and to ensure that constructors are only called once when test code is executed
 declare const global: Global;
 if (!global.bvscDiServices) {
-    global.bvscDiServices = new ServicesClass();
-    console.debug("bvscDiServices created");
+    try {
+        global.bvscDiServices = new ServicesClass();
+        diagLog("bvscDiServices created");
+    }
+    catch (e: unknown) {
+        const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
+        vscode.window.showErrorMessage(text);
+    }
 }
 export const services: Services = global.bvscDiServices;
 

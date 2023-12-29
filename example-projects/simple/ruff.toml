@@ -1,2 +1,1 @@
-[ruff]
-exclude=.
+exclude=["**/*"]

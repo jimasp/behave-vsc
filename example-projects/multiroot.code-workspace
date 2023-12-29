@@ -17,12 +17,20 @@
 			"name": "run profiles"
 		},
 		{
+			"path": "./multiple top-level features folders",
+			"name": "multiple top-level features folders"
+		},
+		{
 			"path": "./imported steps",
 			"name": "imported steps"
 		},
 		{
-			"path": "./multiple top-level features folders",
-			"name": "multiple top-level features folders"
+			"path": "./sibling steps folder 1",
+			"name": "sibling steps folder 1"
+		},
+		{
+			"path": "./sibling steps folder 2",
+			"name": "sibling steps folder 2"
 		},
 		{
 			"path": "./multiroot bad paths",

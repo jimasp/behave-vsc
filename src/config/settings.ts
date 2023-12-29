@@ -13,7 +13,7 @@ import {
 } from '../common/helpers';
 import { Logger, diagLog } from '../common/logger';
 import { performance } from 'perf_hooks';
-import { services } from '../diService';
+import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
 
 
 export type EnvSetting = { [key: string]: string };
@@ -243,7 +243,7 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 function getProjectRelativePaths(projUri: vscode.Uri, projName: string, importedSteps: ImportedSteps, logger: Logger) {
-  const relativeConfigPaths = services.behaveConfig.getProjectRelativeBehaveConfigPaths(projUri, logger);
+  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, logger);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
@@ -282,13 +282,14 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, imported
     relativeBaseDirPath,
     relativeFeatureFolders,
     relativeStepsFolders
-  };
+  }
+
 }
 
 
 function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeBehaveConfigPaths: string[],
   logger: Logger): string | null {
-  // NOTE: THIS FUNCTION MUST HAVE SIMILAR LOGIC TO THE 
+  // NOTE: THIS FUNCTION MUST HAVE LOOSELY SIMILAR LOGIC TO THE 
   // BEHAVE SOURCE CODE FUNCTION "setup_paths()".
   // IF THAT FUNCTION LOGIC CHANGES IN BEHAVE, THEN IT IS LIKELY THIS FUNCTION WILL ALSO HAVE TO CHANGE.  
   // THIS IS BECAUSE THE BASE DIR IS USED TO CALCULATE (PREDICT) THE JUNIT FILENAME THAT BEHAVE WILL USE.
@@ -302,7 +303,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
   else
     configRelBaseDir = "features";
 
-  const project_root_dir = path.dirname(projUri.fsPath);
+  const project_parent_dir = path.dirname(projUri.fsPath);
   let new_base_dir = path.join(projUri.fsPath, configRelBaseDir);
   const steps_dir = "steps";
   const environment_file = "environment.py";
@@ -313,13 +314,13 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
       break;
     if (fs.existsSync(path.join(new_base_dir, environment_file)))
       break;
-    if (new_base_dir === project_root_dir)
+    if (new_base_dir === project_parent_dir)
       break;
 
     new_base_dir = path.dirname(new_base_dir);
   }
 
-  if (new_base_dir === project_root_dir) {
+  if (new_base_dir === project_parent_dir) {
     if (relativeBehaveConfigPaths.length === 0) {
       logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
         'Please specify a "paths" setting in your behave configuration file for this project.', projUri);
