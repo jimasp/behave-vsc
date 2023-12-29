@@ -471,10 +471,11 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 }
 
 
-// A user can kick off one project and then another and then another, (i.e. staggered), they do not have to wait for the first to complete,
+// In the real world, a user can kick off one project and then another and then another, 
+// (i.e. staggered) - they do not have to wait for the first to complete,
 // so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
-// function will run in parallel with itself (but as per the promises in that file, only one instance at a time for a given workspace, 
-// so for example project workspaces A/B/Simple can run in parallel, but not e.g. A/A)
+// function will run in parallel with itself (but as per the promises in that file, only one at a time for a given project, 
+// so for example projects A/B/Simple can run in parallel, but not e.g. A/A)
 export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
 	behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
@@ -484,6 +485,14 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 	const consoleName = `runAllAndAssert for ${projName}`;
 
 	try {
+
+		// SET LOCK:
+		// we can't run runHandler while parsing is active, so we lock here until two things have happened for the given project:
+		// 1. all (re)parses have completed, and 
+		// 2. the runHandler has been started.
+		// once that has happened, we will release the lock for the next project.
+		// NOTE: any config change causes a reparse, so behave.ini and test config changes must also be inside 
+		// this lock (as well as parseFilesForProject and runHandler)
 		await setLock(consoleName, "acquire");
 
 		// we do this BEFORE we call configurationChangedHandler() to load our test config,
@@ -497,7 +506,11 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		// NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
 		// and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
 		// it afterwards - we do this here by calling configurationChangedHandler() with our own test config.
-		// So the configuration will be loaded twice, once on the initial load of the extension, then again here to insert our test config.
+		// The configuration will be actually be loaded once, then reloaded 1-3 times:
+		// 1. on the initial load (activate) of the extension,
+		// 2. if behave ini is replaced on disk above,
+		// 3. here to insert our test config.
+		// 4. if behave ini is restored in the finally block (i.e. if 2 happened)
 		console.log(`${consoleName}: calling configurationChangedHandler`);
 		await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
 		assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.extConfig, expectations);
@@ -543,10 +556,12 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		// do NOT await (see comment above)
 		const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
 
+		// RELEASE LOCK: 
 		// give run handler a chance to call the featureParseComplete() check, then 
 		// release the lock so (different) projects can run in parallel
 		await (new Promise(t => setTimeout(t, 50)));
 		await setLock(consoleName, "release");
+
 
 
 		if (isDebugRun) {
@@ -554,11 +569,14 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 			await new Promise(t => setTimeout(t, 1000));
 			await vscode.commands.executeCommand("workbench.view.testing.focus");
 		}
+
+
+		// WAIT FOR TESTRUNHANDLER TO COMPLETE, I.E. GET RESULTS
 		const results = await resultsPromise;
 		console.log(`${consoleName}: runHandler completed`);
 
 
-		// validate results
+		// ASSERT RESULTS
 
 		if (!results || results.length === 0) {
 			debugger; // eslint-disable-line no-debugger

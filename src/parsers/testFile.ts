@@ -20,10 +20,6 @@ export class TestFile {
     if (!isFeatureFile(featureItem.uri))
       throw new Error(`${featureItem.uri.path} is not a feature file`);
 
-    // // remove any stale children
-    // for (const child of item.children) {
-    //   testData.delete(child[1]);
-    // }
 
     const featureUri = featureItem.uri;
     const featureName = featureItem.label;
