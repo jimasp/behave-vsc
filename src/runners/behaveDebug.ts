@@ -14,7 +14,7 @@ export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyC
 
     // --outfile = remove stdout noise from debug console
     args.push("--no-summary", "--outfile",
-      vscode.Uri.joinPath(services.extConfig.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.projSettings.name}-debug.log`).fsPath);
+      vscode.Uri.joinPath(services.config.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.projSettings.name}-debug.log`).fsPath);
 
     const env = { ...process.env, ...wr.env };
 

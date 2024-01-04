@@ -186,7 +186,7 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 
 async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-	const projSettings = services.extConfig.projectSettings[projUri.path];
+	const projSettings = services.config.projectSettings[projUri.path];
 	const featureFileSteps = await getAllStepLinesFromFeatureFiles(projSettings);
 
 	for (const [step, stepText] of featureFileSteps) {
@@ -211,7 +211,7 @@ async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.U
 
 async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-	const projSettings = services.extConfig.projectSettings[projUri.path];
+	const projSettings = services.config.projectSettings[projUri.path];
 	const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(projSettings);
 
 	for (const [step, funcLine] of stepFileSteps) {
@@ -463,7 +463,7 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	console.log(extension);
 
 	assertInstances(api);
-	services.extConfig.integrationTestRun = true;
+	services.config.integrationTestRun = true;
 
 	await vscode.commands.executeCommand("testing.clearTestResults");
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
@@ -513,7 +513,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		// 4. if behave ini is restored in the finally block (i.e. if 2 happened)
 		console.log(`${consoleName}: calling configurationChangedHandler`);
 		await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-		assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.extConfig, expectations);
+		assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.config, expectations);
 
 
 		// parse to get check counts (checked later, but we want to do this inside the lock)
@@ -531,7 +531,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		// sanity check included tests length matches expected length
 		const includedTests = getScenarioTests(api.testData, allProjItems);
 		assert(includedTests.length > 0, "includedTests.length was 0");
-		const expectedResults = expectations.getExpectedResultsFunc(projUri, services.extConfig);
+		const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 		if (includedTests.length !== expectedResults.length)
 			debugger; // eslint-disable-line no-debugger
 		console.log(`${consoleName}: test includes = ${includedTests.length}, tests expected = ${expectedResults.length}`);
@@ -607,7 +607,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		});
 
 		// (keep these below results.forEach, as individual match asserts are more useful to get first)
-		assertExpectedCounts(projUri, projName, services.extConfig, expectations.getExpectedCountsFunc,
+		assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc,
 			actualCounts, hasMultiRootWkspNode);
 		assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
 

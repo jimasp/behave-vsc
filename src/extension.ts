@@ -21,7 +21,7 @@ import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
 
 
-const config = services.extConfig;
+const config = services.config;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();

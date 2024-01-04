@@ -9,13 +9,13 @@ interface Global {
 }
 
 class Singletons {
-    // any shared singleton services
+    // shared singleton services
     logger: Logger;
-    extConfig: Configuration;
+    config: Configuration;
     parser: FileParser;
     constructor() {
         this.logger = new Logger();
-        this.extConfig = new Configuration();
+        this.config = new Configuration();
         this.parser = new FileParser();
     }
     dispose() {
@@ -23,8 +23,8 @@ class Singletons {
     }
 }
 
-// NOTE: we use a global rather than a singleton implementation - this is so that integration tests 
-// code can access the SAME instances (and to ensure that constructors are only called once when integration test code is executed)
+// NOTE: we use a global rather than our own singleton implementation - this is so that integration tests code 
+// can access the same instances (and to ensure that constructors are only called once when integration test code is executed)
 declare const global: Global;
 if (!global.bvscSingletons) {
     try {

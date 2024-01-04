@@ -79,7 +79,7 @@ export class FileParser {
     this._parseFilesCallCounts[projPath]++;
 
     const parseId = `${projPath}#${this._parseFilesCallCounts[projPath]}`;
-    const projSettings: ProjectSettings = services.extConfig.projectSettings[projPath];
+    const projSettings: ProjectSettings = services.config.projectSettings[projPath];
     const projName = projSettings.name;
     const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
     this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
@@ -174,7 +174,7 @@ export class FileParser {
 
 
       // LOG STATS
-      if (services.extConfig.instanceSettings.xRay) {
+      if (services.config.instanceSettings.xRay) {
         testCounts = countTestItemsInCollection(uriId(projUri), testData, ctrl.items);
         this._logTimesToConsole(callName, testCounts, featTime, stepsTime, mappingsCount, buildMappingsTime, featureFileCount, stepFileCount);
       }
@@ -182,7 +182,7 @@ export class FileParser {
       this._finishedParseForProject[projPath] = true;
       diagLog(`${callName}: complete`);
 
-      if (!services.extConfig.integrationTestRun)
+      if (!services.config.integrationTestRun)
         return;
 
       return {
@@ -573,7 +573,7 @@ export class FileParser {
 
 
   parseIsActiveForProject(projUri: vscode.Uri) {
-    if (!services.extConfig.integrationTestRun)
+    if (!services.config.integrationTestRun)
       throw new Error("parseIsActiveForProject() is only for integration test support");
     return !this._finishedParseForProject[projUri.path];
   }

@@ -19,7 +19,7 @@ export class ProjectWatcherManager {
 
   _setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData) {
 
-    const projSettings = services.extConfig.projectSettings[projUri.path];
+    const projSettings = services.config.projectSettings[projUri.path];
 
     watcher.onDidCreate(async (uri) => {
       // onDidCreate fires on either new file/folder creation OR rename (inc. git actions)
@@ -31,7 +31,7 @@ export class ProjectWatcherManager {
         const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
         if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {
           // reparse the entire project        
-          services.extConfig.reloadSettings(projSettings.uri);
+          services.config.reloadSettings(projSettings.uri);
           services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
           return;
         }
@@ -88,7 +88,7 @@ export class ProjectWatcherManager {
           return;
 
         // reparse the entire project
-        services.extConfig.reloadSettings(projUri);
+        services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
       }
       catch (e: unknown) {
@@ -118,7 +118,7 @@ export class ProjectWatcherManager {
         const configPath = `${projUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
           diagLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);
-          services.extConfig.reloadSettings(projUri);
+          services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
           return false; // just handled it
         }

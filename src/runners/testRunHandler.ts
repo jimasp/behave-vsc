@@ -48,7 +48,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
       diagLog(msg, undefined, DiagLogType.warn);
       vscode.window.showWarningMessage(msg, "OK");
-      if (services.extConfig.integrationTestRun)
+      if (services.config.integrationTestRun)
         throw msg;
       return;
     }
@@ -122,9 +122,9 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     throw "empty queue - nothing to do";
 
   const projRunPromises: Promise<void>[] = [];
-  const winSettings = services.extConfig.instanceSettings;
+  const winSettings = services.config.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
-  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => services.extConfig.projectSettings[projUri.path]);
+  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => services.config.projectSettings[projUri.path]);
 
   for (const projSettings of allProjectsSettings) {
     const idMatch = uriId(projSettings.uri);
@@ -180,7 +180,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
 
     const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, projSettings, ctrl, testData);
     const projIncludedFeatures = getIncludedFeaturesForProj(projSettings.uri, request);
-    const pythonExec = await services.extConfig.getPythonExecutable(projSettings.uri, projSettings.name);
+    const pythonExec = await services.config.getPythonExecutable(projSettings.uri, projSettings.name);
     const sortedQueue = projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 

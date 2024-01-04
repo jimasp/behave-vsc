@@ -313,7 +313,7 @@ export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSet
     updateTest(run, false, parseResult, queueItem);
   }
 
-  if (services.extConfig.exampleProject) {
+  if (services.config.exampleProject) {
     debugger; // eslint-disable-line no-debugger
     throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
   }
