@@ -1,76 +1,47 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
-import { diagLog, Logger } from '../common/logger';
 import { ProjectSettings as ProjectSettings, InstanceSettings } from './settings';
 
-export interface Configuration {
-  integrationTestRun: boolean;
-  readonly extensionTempFilesUri: vscode.Uri;
-  readonly logger: Logger;
-  readonly projectSettings: { [projUriPath: string]: ProjectSettings };
-  readonly instanceSettings: InstanceSettings;
-  reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
-  getPythonExecutable(projUri: vscode.Uri, projName: string): Promise<string>;
-  dispose(): void;
-}
 
-
-export class ExtensionConfiguration implements Configuration {
-  public integrationTestRun = false;
-  public exampleProject = false;
-  public readonly extensionTempFilesUri;
-  public readonly logger: Logger;
-  //private static _configuration?: ExtensionConfiguration;
+export class Configuration {
+  integrationTestRun = false;
+  readonly exampleProject: boolean = false;
+  readonly extensionTempFilesUri;
   private _windowSettings: InstanceSettings | undefined = undefined;
   private _resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
 
-  //private 
   constructor() {
-    //ExtensionConfiguration._configuration = this;
-    this.logger = new Logger();
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
     this.exampleProject = (vscode.workspace.workspaceFolders?.find(f =>
       f.uri.path.includes("/behave-vsc/example-projects/")) !== undefined);
-    diagLog("Configuration singleton constructed (this should only fire once)");
   }
-
-  public dispose() {
-    this.logger.dispose();
-  }
-
-  // static get configuration() {
-  //   if (ExtensionConfiguration._configuration)
-  //     return ExtensionConfiguration._configuration;
-  //   ExtensionConfiguration._configuration = new ExtensionConfiguration();
-  //   return ExtensionConfiguration._configuration;
-  // }
 
   // called by onDidChangeConfiguration
-  public reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
+  reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
     if (testConfig) {
       this._windowSettings = new InstanceSettings(testConfig);
-      this._resourceSettings[projUri.path] = new ProjectSettings(projUri, testConfig, this._windowSettings, this.logger);
+      this._resourceSettings[projUri.path] = new ProjectSettings(projUri, testConfig, this._windowSettings);
     }
     else {
       this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
       this._resourceSettings[projUri.path] = new ProjectSettings(projUri,
-        vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings, this.logger);
+        vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings);
     }
   }
 
-  public get instanceSettings(): InstanceSettings {
+  get instanceSettings(): InstanceSettings {
     return this._windowSettings
       ? this._windowSettings
       : this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
   }
 
-  public get projectSettings(): { [projUriPath: string]: ProjectSettings } {
+  get projectSettings(): { [projUriPath: string]: ProjectSettings } {
     const winSettings = this.instanceSettings;
     getUrisOfWkspFoldersWithFeatures().forEach(projUri => {
       if (!this._resourceSettings[projUri.path]) {
         this._resourceSettings[projUri.path] =
-          new ProjectSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings, this.logger);
+          new ProjectSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
       }
     });
     return this._resourceSettings;

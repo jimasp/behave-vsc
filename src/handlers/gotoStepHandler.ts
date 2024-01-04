@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../diService";
+import { services } from "../services";
 import { getProjectUriForFile, isFeatureFile, openDocumentRange } from '../common/helpers';
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { featureFileStepRe } from '../parsers/featureParser';
@@ -14,7 +14,7 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
 
     if (!docUri || !isFeatureFile(docUri)) {
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
-      services.extConfig.logger.showWarn("Go to step definition must be used from a feature file path. Project-relative file path was" +
+      services.logger.showWarn("Go to step definition must be used from a feature file path. Project-relative file path was" +
         `"${docUri ? vscode.workspace.asRelativePath(docUri, false) : "undefined"}`, getProjectUriForFile(docUri));
       return;
     }
@@ -43,10 +43,10 @@ export async function gotoStepHandler(textEditor: vscode.TextEditor) {
     // entry point function (handler) - show error  
     try {
       const projUri = getProjectUriForFile(docUri);
-      services.extConfig.logger.showError(e, projUri);
+      services.logger.showError(e, projUri);
     }
     catch {
-      services.extConfig.logger.showError(e);
+      services.logger.showError(e);
     }
   }
 

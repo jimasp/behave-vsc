@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
-import { services } from "../diService";
+import { services } from "../services";
 import { RunProfile, ProjectSettings } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
@@ -71,7 +71,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     }
     catch (e: unknown) {
       // entry point (handler) - show error
-      services.extConfig.logger.showError(e, undefined);
+      services.logger.showError(e, undefined);
     }
     finally {
       run.end();
@@ -150,7 +150,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
       continue;
 
     if (!debug)
-      services.extConfig.logger.clear(projSettings.uri);
+      services.logger.clear(projSettings.uri);
 
     // run workspaces sequentially
     if (!winSettings.runMultiRootProjectsInParallel || debug) {
@@ -203,7 +203,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
   catch (e: unknown) {
     wr?.run.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
-    services.extConfig.logger.showError(e, projSettings.uri, run);
+    services.logger.showError(e, projSettings.uri, run);
   }
 
   diagLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
@@ -357,7 +357,7 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logProjRunStarted(wr: ProjRun) {
   if (!wr.debug) {
-    services.extConfig.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
+    services.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
       wr.projSettings.uri, wr.run);
   }
 }
@@ -366,7 +366,7 @@ function logProjRunStarted(wr: ProjRun) {
 function logProjRunComplete(wr: ProjRun, start: number) {
   const end = performance.now();
   if (!wr.debug) {
-    services.extConfig.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
+    services.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
       wr.projSettings.uri, wr.run);
   }

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from '../diService';
+import { services } from '../services';
 import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 
 
@@ -169,7 +169,8 @@ export enum DiagLogType {
 }
 
 export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (services && services.extConfig && !services.extConfig.instanceSettings.xRay && !services.extConfig.integrationTestRun && !services.extConfig.exampleProject)
+  if (services && services.extConfig && !services.extConfig.instanceSettings.xRay &&
+    !services.extConfig.integrationTestRun && !services.extConfig.exampleProject)
     return;
 
   if (projUri)

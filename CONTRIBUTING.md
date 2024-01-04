@@ -162,7 +162,7 @@ feature file formatting is provided by:
 ### Diagnostics
 
 - Diagnostic logs are controlled via the extension setting `behave-vsc.xRay` (this is enabled by default in the example projects and for most integration tests).
-- Diagnostics logs are written automatically if you call `config.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
+- Diagnostics logs are written automatically if you call `services.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 
 ### Exception handling
@@ -171,7 +171,8 @@ feature file formatting is provided by:
 - Any thrown errors are going to reach the user, so they should be things that either:
   - (a) the user can act upon to fix themselves, or
   - (b) actual "exceptions", i.e. a bug or "stuff that is never supposed to happen" and should be raised as an issue on github.
-- The most common error handling stack is: `throw "an error message"` -> `throw new projError` -> `config.showError`.
+- The most common error handling stack is: `throw "an error message"` -> `throw new projError` -> `services.logger.showError`.
+- Take a look at `class projError`.
 - Entry point (event handlers/hooks) i.e. top-level functions, and background tasks (i.e. unawaited async functions/promises) should *always* contain a `try/catch` with a `config.showError`. Examples are:
   - any unawaited async function
   - `activate`,`deactivate`, any function called `...Handler` or `onDid...` or just `on...` (e.g. `onCancellationRequested`)
@@ -189,9 +190,9 @@ feature file formatting is provided by:
 ### Logging
 
 - In the case of errors, should not call the logger. You should `throw` for errors (see [Exception handling](#exception-handling)), and `showWarn` for warnings. This will automatically log the error/warning and open a notification window to alert the user.
-- Log info to the Behave VSC project context output window and any active debug window: `config.logger.logInfo("msg", projUri)`. Preferred over `logInfoAllProjects()` wherever possible.
-- Log info to all Behave VSC output windows (regardless of project): `config.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a workspace context does not make sense.*
-- Log info to the vscode test run output at the same time: specify the run parameter: `config.logger.logInfo("msg", projUri, run)`.
+- Log info to the Behave VSC project context output window and any active debug window: `services.logger.logInfo("msg", projUri)`. Preferred over `logInfoAllProjects()` wherever possible.
+- Log info to all Behave VSC output windows (regardless of project): `services.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a workspace context does not make sense.*
+- Log info to the vscode test run output at the same time: specify the run parameter: `services.logger.logInfo("msg", projUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg\r\n")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
 

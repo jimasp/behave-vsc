@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
-import { services } from "../diService";
+import { services } from "../services";
 import { Scenario, TestData } from '../parsers/testFile';
 import { StepImport, ProjectSettings } from '../config/settings';
 import { diagLog } from './logger';
@@ -26,7 +26,7 @@ export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) +
 // can (where required) be thrown back up to the top level of the stack. this means that:
 // - the logger can log to the specific project-named output window (for multi-root workspaces)
 // - the logger can use the project name in the notification window
-// - the top-level catch can simply call `config.logger.showError(e)` and Logger will handle the rest
+// - the top-level catch can simply call `services.logger.showError(e)` and Logger will handle the rest
 // - the error is only logged/displayed once
 // for more info on error handling, see contributing.md
 export class projError extends Error {
@@ -56,8 +56,8 @@ export const logExtensionVersion = (context: vscode.ExtensionContext): void => {
   const extensionVersion = context.extension.packageJSON.version;
   const releaseNotesUrl = `${context.extension.packageJSON.repository.url.replace(".git", "")}/releases/tag/v${extensionVersion}`;
   const outputVersion = extensionVersion.startsWith("0") ? extensionVersion + " pre-release" : extensionVersion;
-  services.extConfig.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
-  services.extConfig.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
+  services.logger.logInfoAllProjects(`Behave VSC v${outputVersion}`);
+  services.logger.logInfoAllProjects(`Release notes: ${releaseNotesUrl}\n`);
 }
 
 

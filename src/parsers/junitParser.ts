@@ -4,7 +4,7 @@ import * as xml2js from 'xml2js';
 import * as path from 'path';
 import { QueueItem } from "../extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common/helpers';
-import { services } from '../diService';
+import { services } from '../services';
 import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
 import { ProjectSettings } from '../config/settings';
 import { Scenario } from './testFile';
@@ -113,7 +113,7 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
     if (debug)
       showDebugWindow();
     else
-      services.extConfig.logger.show(projSettings.uri);
+      services.logger.show(projSettings.uri);
     return { status: "untested", duration: xmlDuration };
   }
 
@@ -318,5 +318,5 @@ export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSet
     throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
   }
 
-  services.extConfig.logger.show(projSettings.uri);
+  services.logger.show(projSettings.uri);
 }

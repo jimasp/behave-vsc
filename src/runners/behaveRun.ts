@@ -1,5 +1,5 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import { services } from "../diService";
+import { services } from "../services";
 import { cleanBehaveText } from '../common/helpers';
 import { diagLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
@@ -34,25 +34,25 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
       if (parallelMode)
         asyncBuff.push(str);
       else
-        services.extConfig.logger.logInfoNoLF(str, projUri);
+        services.logger.logInfoNoLF(str, projUri);
     }
 
     cp.stderr?.on('data', chunk => log(chunk.toString()));
     cp.stdout?.on('data', chunk => log(chunk.toString()));
 
     if (!parallelMode)
-      services.extConfig.logger.logInfo(`\n${friendlyCmd}\n`, projUri);
+      services.logger.logInfo(`\n${friendlyCmd}\n`, projUri);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));
 
     if (asyncBuff.length > 0) {
-      services.extConfig.logger.logInfo(`\n---\n${friendlyCmd}\n`, projUri);
-      services.extConfig.logger.logInfo(asyncBuff.join("").trim(), projUri);
-      services.extConfig.logger.logInfo("---", projUri);
+      services.logger.logInfo(`\n---\n${friendlyCmd}\n`, projUri);
+      services.logger.logInfo(asyncBuff.join("").trim(), projUri);
+      services.logger.logInfo("---", projUri);
     }
 
     if (wr.run.token.isCancellationRequested)
-      services.extConfig.logger.logInfo(`\n-- TEST RUN ${wr.run.name} CANCELLED --`, projUri, wr.run);
+      services.logger.logInfo(`\n-- TEST RUN ${wr.run.name} CANCELLED --`, projUri, wr.run);
 
   }
   finally {

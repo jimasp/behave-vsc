@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../diService";
+import { services } from "../services";
 import { uriId, getProjectUriForFile, isStepsFile, openDocumentRange } from '../common/helpers';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
@@ -52,7 +52,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     if (textEditor && (!fileUri || !isStepsFile(fileUri))) {
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
-      services.extConfig.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
+      services.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
         "(i.e. /steps/ or a behave-vsc.importedSteps setting path). Project-relative file path was: " +
         `"${fileUri ? vscode.workspace.asRelativePath(fileUri, false) : "undefined"}"`, getProjectUriForFile(fileUri));
       return;
@@ -109,10 +109,10 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     // entry point function (handler) - show error  
     try {
       const projUri = getProjectUriForFile(fileUri);
-      services.extConfig.logger.showError(e, projUri);
+      services.logger.showError(e, projUri);
     }
     catch {
-      services.extConfig.logger.showError(e);
+      services.logger.showError(e);
     }
   }
 
@@ -131,7 +131,7 @@ export function prevStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.extConfig.logger.showError(e);
+    services.logger.showError(e);
   }
 }
 
@@ -141,6 +141,6 @@ export function nextStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.extConfig.logger.showError(e);
+    services.logger.showError(e);
   }
 }

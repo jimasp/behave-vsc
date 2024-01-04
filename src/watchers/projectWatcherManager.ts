@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common/helpers';
-import { services } from "../diService";
+import { services } from "../services";
 import { diagLog, DiagLogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
@@ -40,7 +40,7 @@ export class ProjectWatcherManager {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.extConfig.logger.showError(e, projUri);
+        services.logger.showError(e, projUri);
       }
 
     });
@@ -54,7 +54,7 @@ export class ProjectWatcherManager {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.extConfig.logger.showError(e, projUri);
+        services.logger.showError(e, projUri);
       }
     });
 
@@ -93,7 +93,7 @@ export class ProjectWatcherManager {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.extConfig.logger.showError(e, projUri);
+        services.logger.showError(e, projUri);
       }
     });
 

@@ -17,7 +17,7 @@ import {
 import { featureFileStepRe } from '../../../parsers/featureParser';
 import { funcRe } from '../../../parsers/stepsParser';
 import { Expectations, RunOptions } from './testWorkspaceRunners';
-import { services } from '../../../diService';
+import { services } from '../../../services';
 
 
 

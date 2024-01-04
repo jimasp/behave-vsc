@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getProjectRelativeBehaveConfigPaths } from '../../config/behaveConfig';
 import { rndNumeric } from '../../common/helpers';
+import { services } from '../../services';
 
 
 suite("getProjectRelativeBehaveConfigPaths", () => {
@@ -17,6 +18,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     projUri = vscode.Uri.file(rndNumeric());
     sandbox = sinon.createSandbox();
     logger = { logInfo: sandbox.stub() };
+    services.logger = logger;
   });
 
   teardown(() => {
@@ -25,7 +27,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
 
   test("should return empty array when no behave config file found", () => {
     sandbox.stub(fs, 'existsSync').returns(false);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, []);
     assert(logger.logInfo.calledOnceWithExactly('No Behave config file found, using default paths.', projUri));
   });
@@ -37,7 +39,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const fileContent = '[behave ]\n paths  =features\n';
     sandbox.stub(fs, 'existsSync').returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, []);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', projUri));
   });
@@ -50,7 +52,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const filePath = path.join(projUri.fsPath, "tox.ini");
     sandbox.stub(fs, 'existsSync').withArgs(filePath).returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, []);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" did not set paths, using default paths.', projUri));
   });
@@ -61,7 +63,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const fileContent = '[behave]\n  paths = ./features\n';
     sandbox.stub(fs, 'existsSync').returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "behave.ini" sets relative paths: "features"', projUri));
   });
@@ -75,7 +77,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     sandbox.stub(fs, 'existsSync').returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
     sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "behave.ini" sets relative paths: "features"', projUri));
   });
@@ -93,7 +95,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(path.join(projUri.fsPath, "features")).returns(true)
       .withArgs(path.join(projUri.fsPath, "features2")).returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    const result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features", "features2"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "setup.cfg" sets relative paths: "features", "features2"', projUri));
   });
@@ -111,7 +113,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
     sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
     sandbox.stub(fs, 'existsSync').returns(true);
-    let result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    let result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "behave.ini" sets relative paths: "features"', projUri));
     sandbox.restore();
@@ -127,7 +129,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(true)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file ".behaverc" sets relative paths: "features"', projUri));
     sandbox.restore();
@@ -144,7 +146,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(true)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "setup.cfg" sets relative paths: "features"', projUri));
     sandbox.restore();
@@ -160,7 +162,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(false)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(projUri, logger);
+    result = getProjectRelativeBehaveConfigPaths(projUri);
     assert.deepStrictEqual(result, ["features"]);
     assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" sets relative paths: "features"', projUri));
     sandbox.restore();

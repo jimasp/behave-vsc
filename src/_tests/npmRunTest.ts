@@ -48,7 +48,7 @@ async function npmRunTest() {
     let launchArgs = [""];
     let extensionTestsPath = "";
 
-    launchArgs = ["no workspace"]
+    launchArgs = ["unit tests (no workspace)"]
     extensionTestsPath = path.resolve(__dirname, './unit/index');
     await runTests({
       vscodeExecutablePath,

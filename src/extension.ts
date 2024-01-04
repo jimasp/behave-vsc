@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from './diService';
-import { Configuration } from "./config/configuration";
+import { services } from './services';
 import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {
   getUrisOfWkspFoldersWithFeatures, isFeatureFile,
@@ -22,26 +21,13 @@ import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
 
 
-let config: Configuration;
+const config = services.extConfig;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
 const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
 const projectWatcherManager = new ProjectWatcherManager();
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
-
-// public API can be called from other extensions, but we're just using it to 
-// return activate's private instances and methods for integration test support.
-// (integration tests can also use the instances exposed via diService.services)
-export type IntegrationTestAPI = {
-  ctrl: vscode.TestController,
-  testData: TestData,
-  runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
-  getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
-  getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
-    forceRefresh?: boolean) => Promise<void>
-};
 
 export function deactivate() {
   // clean up any potentially large non-disposable objects,  
@@ -62,8 +48,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     const start = performance.now();
     diagLog("activate called, node pid:" + process.pid);
 
-    config = services.extConfig;
-    config.logger.syncChannelsToWorkspaceFolders();
+
+    services.logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
@@ -86,9 +72,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     // to a register command, which returns a disposable so our custom command is deregistered when the extension is deactivated).
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.    
     context.subscriptions.push(
+      services,
       ctrl,
       treeView,
-      services.extConfig,
       cleanExtensionTempDirectoryCancelSource,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -105,10 +91,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     createRunProfiles(ctrl, runHandler);
 
 
+    // TODO: remove? we probably don't need this handler, as we are watching/re-parsing files on any change
     // initially called with undefined when test explorer is opened by the user for the first time, 
     // then called whenever a test node is expanded in test explorer if item.canResolveChildren is true.
     // (a test node expansion can fire this even if not by user interaction, e.g. on startup if it was expanded previously) 
-    // NOTE: we may not actually need this handler, as we are re-parsing files on any change
     // ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
     //   try {
     //     // ignore undefined, we build in background at startup via parseFilesForAllProjects
@@ -126,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     //   }
     //   catch (e: unknown) {
     //     // entry point function (handler) - show error
-    //     config.logger.showError(e);
+    //     services.logger.showError(e);
     //   }
     // };
 
@@ -141,7 +127,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e);
+        services.logger.showError(e);
       }
     };
 
@@ -156,7 +142,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e);
+        services.logger.showError(e);
       }
     }));
 
@@ -176,7 +162,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e);
+        services.logger.showError(e);
       }
     }));
 
@@ -205,11 +191,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           return;
 
         if (!testCfg)
-          config.logger.clearAllProjects();
+          services.logger.clearAllProjects();
 
         // adding/removing/renaming workspaces will not only change the 
         // set of workspaces we are watching, but also the output channels
-        config.logger.syncChannelsToWorkspaceFolders();
+        services.logger.syncChannelsToWorkspaceFolders();
 
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
@@ -244,7 +230,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        config.logger.showError(e);
+        services.logger.showError(e);
       }
     }
 
@@ -271,8 +257,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
   }
   catch (e: unknown) {
     // entry point function (handler) - show error    
-    if (config && config.logger) {
-      config.logger.showError(e, undefined);
+    if (config && services.logger) {
+      services.logger.showError(e, undefined);
     }
     else {
       // no logger yet, use vscode.window.showErrorMessage directly
@@ -344,3 +330,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 } // end activate()
 
 
+
+// public API (i.e. the activate function return type) is normally there to be called from other 
+// extensions, but we're just using it to return activate's private instances and methods for integration test support.
+// (integration tests can also use the instances exposed via diService.services)
+export type IntegrationTestAPI = {
+  ctrl: vscode.TestController,
+  testData: TestData,
+  runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
+  getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
+  getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
+  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
+    forceRefresh?: boolean) => Promise<void>
+};

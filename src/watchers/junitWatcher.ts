@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { uriId } from '../common/helpers';
-import { services } from '../diService';
+import { services } from '../services';
 import { diagLog, DiagLogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
@@ -298,7 +298,7 @@ export class JunitWatcher {
       const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
       matchedRun?.run.end();
       // entry point function (handler) - show error
-      services.extConfig.logger.showError(err);
+      services.logger.showError(err);
     }
 
   }

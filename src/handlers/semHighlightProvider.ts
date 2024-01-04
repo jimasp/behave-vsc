@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, getLines } from '../common/helpers';
-import { services } from '../diService';
+import { services } from '../services';
 import { featureFileStepRe } from '../parsers/featureParser';
 import { getStepFileStepForFeatureFileStep } from '../parsers/stepMappings';
 import { parseRepWildcard } from '../parsers/stepsParser';
@@ -56,10 +56,10 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 			try {
 				// not worth showing the error to user for this, just log it
 				const projUri = getProjectUriForFile(document.uri);
-				services.extConfig.logger.logInfo(`${e}`, projUri);
+				services.logger.logInfo(`${e}`, projUri);
 			}
 			catch {
-				services.extConfig.logger.showError(`${e}`);
+				services.logger.showError(`${e}`);
 			}
 			return new vscode.SemanticTokens(new Uint32Array(0));
 		}

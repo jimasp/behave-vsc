@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { uriId, isFeatureFile } from '../common/helpers';
-import { services } from "../diService";
+import { services } from "../services";
 import { ProjectSettings } from "../config/settings";
 import { diagLog } from '../common/logger';
 
@@ -47,7 +47,7 @@ export class TestFile {
             const scen = err.substring(n);
             err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
             // don't throw here, show it and carry on
-            services.extConfig.logger.showWarn(err, projSettings.uri);
+            services.logger.showWarn(err, projSettings.uri);
           }
           else
             throw e;

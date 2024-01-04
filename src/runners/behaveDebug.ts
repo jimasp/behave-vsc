@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../diService";
+import { services } from "../services";
 import { diagLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
 

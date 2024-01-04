@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { performance } from 'perf_hooks';
-import { services } from "../diService";
+import { services } from "../services";
 import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
@@ -28,6 +28,7 @@ export type ProjParseCounts = {
   featureFileStepsExceptCommentedOut: number,
   stepMappings: number
 };
+
 
 export class FileParser {
 
@@ -211,7 +212,7 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        services.extConfig.logger.showError(e, projUri);
+        services.logger.showError(e, projUri);
       }
 
     }
@@ -316,7 +317,7 @@ export class FileParser {
     }
     catch (e: unknown) {
       // unawaited async func, show error
-      services.extConfig.logger.showError(e, projSettings ? projSettings.uri : undefined);
+      services.logger.showError(e, projSettings ? projSettings.uri : undefined);
     }
     finally {
       this._reparsingFile = false;
@@ -344,7 +345,7 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        services.extConfig.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
+        services.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)

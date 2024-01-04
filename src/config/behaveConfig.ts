@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { BEHAVE_CONFIG_FILES } from "../common/helpers";
-import { Logger } from '../common/logger';
+import { services } from '../services';
 
 
-export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger: Logger): string[] {
+export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string[] {
   let paths: string[] | null = null;
 
   // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
@@ -31,12 +31,12 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger:
   }
 
   if (!lastExistingConfigFile) {
-    logger.logInfo(`No Behave config file found, using default paths.`, projUri);
+    services.logger.logInfo(`No Behave config file found, using default paths.`, projUri);
     return [];
   }
 
   if (!paths) {
-    logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, projUri);
+    services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, projUri);
     return [];
   }
 
@@ -45,13 +45,13 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, logger:
     // behave config paths setting may be relative or absolute, so standardise to relative
     const relPath = vscode.workspace.asRelativePath(path, false);
     if (!fs.existsSync(vscode.Uri.joinPath(projUri, relPath).fsPath))
-      logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
+      services.logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
     else
       relPaths.push(relPath);
   }
 
   const outPaths = relPaths.map(p => `"${p}"`).join(", ");
-  logger.logInfo(`Behave config file "${matchedConfigFile}" sets relative paths: ${outPaths}`, projUri);
+  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets relative paths: ${outPaths}`, projUri);
   return relPaths;
 }
 

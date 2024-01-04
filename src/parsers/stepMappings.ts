@@ -6,7 +6,7 @@ import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps }
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
-import { services } from '../diService';
+import { services } from '../services';
 
 
 let stepMappings: StepMapping[] = [];
@@ -71,7 +71,7 @@ export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
     diagLog(msg, undefined, DiagLogType.warn);
-    services.extConfig.logger.showWarn(msg, getProjectUriForFile(uri));
+    services.logger.showWarn(msg, getProjectUriForFile(uri));
   }
 
   return ready;
