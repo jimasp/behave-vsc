@@ -5,7 +5,7 @@ import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 export const expectationsWithoutBehaveIniPaths: Expectations = {
   expectedProjectRelativeBaseDirPath: "",
   expectedProjectRelativeConfigPaths: [""],
-  expectedProjectRelativeFeatureFolders: ["features_folder"],
+  expectedProjectRelativeFeatureFolders: ["my_features"],
   expectedProjectRelativeStepsFolders: ["steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
@@ -13,8 +13,8 @@ export const expectationsWithoutBehaveIniPaths: Expectations = {
 
 export const expectationsWithBehaveIniPaths: Expectations = {
   expectedProjectRelativeBaseDirPath: "",
-  expectedProjectRelativeConfigPaths: ["features_folder"],
-  expectedProjectRelativeFeatureFolders: ["features_folder"],
+  expectedProjectRelativeConfigPaths: ["my_features"],
+  expectedProjectRelativeFeatureFolders: ["my_features"],
   expectedProjectRelativeStepsFolders: ["steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,

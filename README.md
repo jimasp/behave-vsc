@@ -45,12 +45,12 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
   - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
-  - If you have an `environment.py` file, then it must be at the same level as the `steps` folder.  
+  - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
   - (In the below examples the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
   
-  - Example 1 - steps folder is a child of the features folder:
+  - Basic example 1 - steps folder is a child of the `features` folder:
 
     ```text
     my-project/
@@ -62,93 +62,29 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         ├── web_features/
         │   └── web1.feature   
         └── steps/
-            ├── shared.py
-            ├── db.py                             
-            └── web.py
+            ├── shared_steps.py
+            ├── db_steps.py                             
+            └── web_steps.py
     ```
 
-  - Example 2 - steps folder is a sibling of the features folder:
+  - Basic example 2 - steps folder is a sibling of a `my_features` folder:
 
     ```text
     my-project/
     ├── behave.ini
     ├── environment.py       
-    ├── features/
+    ├── my_features/
     │   ├── db_features/
     │   │   └── db1.feature   
     │   └── web_features/
     │       └── web1.feature       
     └── steps/
-        ├── shared.py
-        ├── db.py                             
-        └── web.py
+        ├── shared_steps.py
+        ├── db_steps.py                             
+        └── web_steps.py
     ```
 
-  - Example 3 - multiple features folders in a project root:
-
-    ```text
-    ├── behave.ini
-    ├── environment.py
-    ├── db_features/
-    │   └── db1.feature
-    ├── web_features/
-    │   └── web1.feature
-    └── steps/
-        ├── shared.py
-        ├── db.py                             
-        └── web.py
-    ```
-
-- If your features folder is not called `features`, or is not in your project root, or you have multiple features folders in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features `paths`:
-
-  - Example A, features folder is a subfolder called `my_folder/my_features`:
-
-    ```ini
-    # behave.ini (or .behaverc, setup.cfg, tox.ini)
-    [behave]
-    paths=my_folder/my_features
-    ```
-
-  - Example B, for Example 3 above (multiple features folders in a project root):
-
-    ```ini
-    # behave.ini (or .behaverc, setup.cfg, tox.ini)
-    [behave]
-    paths=db_features
-          web_features
-    ```
-
-- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
-
-  - Example:
-
-    ```json
-    // settings.json
-    {
-      "behave-vsc.env": {
-          "PYTHONPATH": "myfolder"
-      },
-    }
-    ```
-
-- Step navigation is automatically enabled for your steps folder, but by using `importedSteps` setting you can also enable step navigation for:
-  - imported step libraries in your project folder
-  - your own imported steps in your project folder
-  - (note that if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
-
-  - Example:
-
-    ```json
-    // settings.json
-    {
-      "behave-vsc.importedSteps": {
-          // project-relative path : regex (not glob)
-          "my_steps_lib" : ".*",
-          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"
-      },
-      "behave-vsc.justMyCode": false
-    }
-    ```
+- See [advanced project configuration](#advanced-project-configuration) for more information on how to configure non-standard project structures.
 
 ---
 
@@ -261,7 +197,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - This isn't that obvious in vscode. Click the ellipsis `...` at the top of the test explorer and then click `Clear all results`.
 
 - *Why does the behave command output contain `--show-skipped`?*
-  - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini`/`.behaverc` file specifies `show_skipped=False`.
+  - This flag must be enabled for junit files to be produced for skipped tests (which the extension depends on). It is enabled by default, so this override is there *just in case* your `behave.ini` file specifies `show_skipped=False`.
 
 - *How do I enable automatic feature file formatting on save?*
   - using a standard vscode setting:
@@ -318,6 +254,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
 
+- If your project is not a simple setup, have you read the [advanced project configuration](#advanced-project-configuration)?
+
 - Make sure the `paths` setting in your behave configuration file is correct.
 
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
@@ -372,6 +310,66 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ---
 
+## Advanced project configuration
+
+- If your features folder is non-standard, i.e.:
+  - it is not in your project root, or
+  - it is in the project root, but is not called `features` *and* does not have a sibling `steps` folder, or
+  - you have multiple features folders in your project root,
+
+  then you can use the `paths` setting in your behave configuration file to specify a project-relative path to the features folder(s):
+
+  - Example A, features folder is a subfolder called `my_folder/my_features`:
+
+      ```ini
+      # behave.ini (or .behaverc, setup.cfg, tox.ini)
+      [behave]
+      paths=my_folder/my_features
+      ```
+
+  - Example B, multiple features folders in a project root:
+
+      ```ini
+      # behave.ini (or .behaverc, setup.cfg, tox.ini)
+      [behave]
+      paths=db_features
+            web_features
+      ```
+
+- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution using the `env` setting. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
+
+  - Example:
+
+    ```json
+    // settings.json
+    {
+      "behave-vsc.env": {
+          "PYTHONPATH": "myfolder"
+      },
+    }
+    ```
+
+- Step navigation is automatically enabled for your steps folder, but by using `importedSteps` setting you can also enable step navigation for:
+  - imported step libraries in your project folder
+  - your own imported steps in your project folder
+  - (note that if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
+
+  - Example:
+
+    ```json
+    // settings.json
+    {
+      "behave-vsc.importedSteps": {
+          // project-relative path : regex (not glob)
+          "my_steps_lib" : ".*",
+          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"
+      },
+      "behave-vsc.justMyCode": false
+    }
+    ```
+
+---
+
 ## Contributing
 
-If you would like to submit a pull request, please see the  [contributing](CONTRIBUTING.md) doc.
+If you would like to submit a pull request, please see the [contributing](CONTRIBUTING.md) doc.
