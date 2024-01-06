@@ -6,7 +6,7 @@ import { customAlphabet } from 'nanoid';
 import { services } from "../services";
 import { Scenario, TestData } from '../parsers/testFile';
 import { StepImport, ProjectSettings } from '../config/settings';
-import { diagLog } from './logger';
+import { xRayLog } from './logger';
 import { getJunitDirUri } from '../watchers/junitWatcher';
 
 const vwfs = vscode.workspace.fs;
@@ -151,7 +151,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
       workspaceFoldersWithFeatures.push(folder.uri);
   }
 
-  diagLog(`PERF: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
+  xRayLog(`PERF: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
     `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
 
   return workspaceFoldersWithFeatures;

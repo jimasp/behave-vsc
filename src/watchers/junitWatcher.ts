@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { uriId } from '../common/helpers';
 import { services } from '../services';
-import { diagLog, DiagLogType } from '../common/logger';
+import { xRayLog, LogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
 
@@ -50,12 +50,12 @@ export class JunitWatcher {
 
 
   public dispose() {
-    diagLog("junitWatcher: disposing");
+    xRayLog("junitWatcher: disposing");
     this._watcherEvents.forEach(e => e.dispose());
     watcher?.dispose();
-    if (services.config.integrationTestRun) {
-      diagLog("Integration test run complete.\n");
-      diagLog('NOTE: if next line says "canceled" AND you did not stop the run, then check for previous errors in the log.');
+    if (services.config.isIntegrationTestRun) {
+      xRayLog("Integration test run complete.\n");
+      xRayLog('NOTE: if next line says "canceled" AND you did not stop the run, then check for previous errors in the log.');
     }
   }
 
@@ -71,7 +71,7 @@ export class JunitWatcher {
     watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, true);
     this._watcherEvents.push(watcher.onDidCreate((uri) => this._updateResult(uri, "onDidCreate")));
     this._watcherEvents.push(watcher.onDidChange((uri) => this._updateResult(uri, "onDidChange")));
-    diagLog(`junitWatcher: watcher pattern is ${vscode.Uri.joinPath(pattern.baseUri, pattern.pattern).fsPath}`);
+    xRayLog(`junitWatcher: watcher pattern is ${vscode.Uri.joinPath(pattern.baseUri, pattern.pattern).fsPath}`);
 
     // we want a generous timeout here, because the filesystemwatcher can take a while to "wake up" on extension 
     // start up. (a user will not wait for that long, as it is not checked until startWatchingRun)
@@ -84,7 +84,7 @@ export class JunitWatcher {
 
     // add the run and wait for the watcher to be ready
     this._currentRuns.push(new Run(run, debug, queueItemMap));
-    diagLog(`junitWatcher: run ${run.name} added to currentRuns list`);
+    xRayLog(`junitWatcher: run ${run.name} added to currentRuns list`);
 
     if (!this._firstRun) {
       await vscode.workspace.fs.createDirectory(getJunitRunDirUri(run));
@@ -120,7 +120,7 @@ export class JunitWatcher {
       // high will cause the test updates and run end to be slowed down. 
       // so keep the grace period low (<=500ms) for a good user experience.
       const poll = 50;
-      const grace = services.config.integrationTestRun ? 2000 : 400; // give more time if an integration test to avoid throwing false positives       
+      const grace = services.config.isIntegrationTestRun ? 2000 : 400; // give more time if an integration test to avoid throwing false positives       
       for (let ms = 0; ms < grace; ms += poll) {
         await new Promise(r => setTimeout(r, poll));
         if (notUpdated().length === 0)
@@ -139,7 +139,7 @@ export class JunitWatcher {
         return;
 
       // force any updates that the filesystemwatcher did not trigger yet, before we remove the run from the list
-      diagLog(`junitWatcher: run ${run.name} ending, checking for existence of ${notUpdatedAfterGrace.length} junit ` +
+      xRayLog(`junitWatcher: run ${run.name} ending, checking for existence of ${notUpdatedAfterGrace.length} junit ` +
         `files for outstanding test updates, and updating test results when a file is found`);
       const start = performance.now();
 
@@ -163,14 +163,14 @@ export class JunitWatcher {
       await Promise.all(updates);
 
       const waited = performance.now() - start;
-      diagLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited}ms`);
+      xRayLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited}ms`);
 
     }
     finally {
       // all updates done, remove the run from the list
       // (the run will end after this method returns, and you cannot update tests on a run that has ended)
       this._currentRuns = this._currentRuns.filter(x => x.run !== run);
-      diagLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
+      xRayLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
     }
   }
 
@@ -221,7 +221,7 @@ export class JunitWatcher {
         const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${DETECT_FILE}`);
         await vscode.workspace.fs.writeFile(fileUri, Buffer.from("<detect_me/>"));
         fileUris.push(fileUri);
-        diagLog("junitWatcher: writing " + fileUri.fsPath);
+        xRayLog("junitWatcher: writing " + fileUri.fsPath);
         await new Promise(r => setTimeout(r, poll));
       }
 
@@ -230,7 +230,7 @@ export class JunitWatcher {
 
       const msg = `junitWatcher: waiting for path ${folderUri.fsPath} to be watched - timed out. ` +
         `some or all test results may not be updated until the run has ended.`;
-      diagLog(msg, undefined, DiagLogType.warn);
+      xRayLog(msg, undefined, LogType.warn);
 
       if (services.config.exampleProject) {
         debugger; // eslint-disable-line no-debugger
@@ -261,7 +261,7 @@ export class JunitWatcher {
       const parentFolderId = uriId(vscode.Uri.file(uri.path.substring(0, uri.path.lastIndexOf('/'))));
       if (this._foldersWaitingForWatcher.has(parentFolderId)) {
         this._foldersWaitingForWatcher.delete(parentFolderId);
-        diagLog(`junitWatcher: _updateResult() watcher successfully detected file ${uri.fsPath}`);
+        xRayLog(`junitWatcher: _updateResult() watcher successfully detected file ${uri.fsPath}`);
       }
       return;
     }
@@ -289,7 +289,7 @@ export class JunitWatcher {
       const projSettings = matches[0].projSettings;
       await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
       for (const match of matches) {
-        diagLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
+        xRayLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;
       }
 

@@ -11,7 +11,7 @@ import {
   getStepsDir,
   getActualWorkspaceSetting
 } from '../common/helpers';
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
 import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
 import { services } from '../services';
@@ -51,26 +51,27 @@ export class InstanceSettings {
   public readonly runProfiles: RunProfilesSetting | undefined;
   public readonly xRay: boolean;
 
-  constructor(winConfig: vscode.WorkspaceConfiguration) {
+  constructor(wsConfig: vscode.WorkspaceConfiguration) {
+    xRayLog("constructing InstanceSettings");
 
-    // note: for all settings, get() should never return undefined (unless packages.json is wrong),
-    // as get() will always return a default value for any packages.json setting.
+    // note: for all settings, wsConfig.get() should never return undefined (unless packages.json is wrong),
+    // as winConfig.get() will always return a default value for any packages.json setting.
     // (if we want the actual settings.json setting (not default) then use getActualWorkspaceSetting.)
 
-    const runMultiRootProjectsInParallelCfg: boolean | undefined = winConfig.get("runMultiRootProjectsInParallel");
+    const runMultiRootProjectsInParallelCfg: boolean | undefined = wsConfig.get("runMultiRootProjectsInParallel");
     if (runMultiRootProjectsInParallelCfg === undefined)
-      throw "runMultiRootProjectsInParallel is undefined";
+      throw new Error("runMultiRootProjectsInParallel is undefined");
     this.runMultiRootProjectsInParallel = runMultiRootProjectsInParallelCfg;
 
-    const xRayCfg: boolean | undefined = winConfig.get("xRay");
+    const xRayCfg: boolean | undefined = wsConfig.get("xRay");
     if (xRayCfg === undefined)
-      throw "xRay is undefined";
+      throw new Error("xRay is undefined");
     this.xRay = xRayCfg;
 
     try {
-      const runProfilesCfg: RunProfilesSetting | undefined = winConfig.get("runProfiles");
+      const runProfilesCfg: RunProfilesSetting | undefined = wsConfig.get("runProfiles");
       if (runProfilesCfg === undefined)
-        throw "runProfiles is undefined";
+        throw new Error("runProfiles is undefined");
       this.runProfiles = runProfilesCfg;
     }
     catch {
@@ -100,30 +101,31 @@ export class ProjectSettings {
 
 
   constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
+    xRayLog("constructing ProjectSettings");
 
     this.uri = projUri;
     this.id = uriId(projUri);
     const wsFolder = getWorkspaceFolder(projUri);
     this.name = wsFolder.name;
 
-    // note: for all settings, get() should never return undefined (unless packages.json is wrong),
+    // note: for all settings, projConfig.get() should never return undefined (unless packages.json is wrong),
     // as get() will always return a default value for any packages.json setting.
     // (if we want the actual settings.json setting (not default) then use getActualWorkspaceSetting.)    
 
     const justMyCodeCfg: boolean | undefined = projConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
-      throw "justMyCode is undefined";
+      throw new Error("justMyCode is undefined");
     this.justMyCode = justMyCodeCfg;
 
     const runParallelCfg: boolean | undefined = projConfig.get("runParallel");
     if (runParallelCfg === undefined)
-      throw "runParallel is undefined";
+      throw new Error("runParallel is undefined");
     this.runParallel = runParallelCfg;
 
     try {
       const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
       if (envCfg === undefined)
-        throw "behave-vsc.env is undefined";
+        throw new Error("behave-vsc.env is undefined");
       this.env = envCfg;
     }
     catch {
@@ -136,7 +138,7 @@ export class ProjectSettings {
       if (envActual === undefined) {
         const envCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
         if (envCfg === undefined)
-          throw "behave-vsc.envVarOverrides is undefined";
+          throw new Error("behave-vsc.envVarOverrides is undefined");
         this.env = envCfg;
       }
     }
@@ -146,7 +148,7 @@ export class ProjectSettings {
 
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
-      throw "importedSteps is undefined";
+      throw new Error("importedSteps is undefined");
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
 
 
@@ -173,23 +175,22 @@ export class ProjectSettings {
   private _logSettings(winSettings: InstanceSettings) {
 
     // build sorted output dict of window settings
-    const nonUserSettableWinSettings: string[] = [];
     const windowSettingsDic: { [name: string]: string; } = {};
-    const winEntries = Object.entries(winSettings).sort()
+    const winEntries = Object.entries(winSettings).sort(([a], [b]) => a.localeCompare(b));
     winEntries.forEach(([key, value]) => {
-      if (!key.startsWith("_") && !nonUserSettableWinSettings.includes(key)) {
+      if (!key.startsWith("_")) {
         windowSettingsDic[key] = value;
       }
     });
 
     // build sorted output dict of resource settings
     const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
-    let projEntries = Object.entries(this).sort();
+    let projEntries = Object.entries(this);
     projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
-    projEntries = projEntries.sort();
+    projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
     const resourceSettingsDic: { [name: string]: object; } = {};
     const userEntries: { [name: string]: object; } = {};
-    projEntries.map(([key, value]) => userEntries[key] = value);
+    projEntries.forEach(([key, value]) => userEntries[key] = value);
     resourceSettingsDic["user:"] = userEntries;
     resourceSettingsDic["auto:"] = {
       "featureFolders": this.relativeFeatureFolders,
@@ -370,7 +371,7 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
   if (longestCommonPaths.length === 0)
     longestCommonPaths.push("features");
 
-  diagLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
+  xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
 
   return longestCommonPaths;
 }

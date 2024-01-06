@@ -10,7 +10,7 @@ import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithProjUri } from './_tests/integration/_helpers/testWorkspaceConfig';
-import { diagLog } from './common/logger';
+import { xRayLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
   try {
     const start = performance.now();
-    diagLog("activate called, node pid:" + process.pid);
+    xRayLog("activate called, node pid:" + process.pid);
 
 
     services.logger.syncChannelsToWorkspaceFolders();
@@ -176,7 +176,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
       // for integration test runAllTestsAndAssertTheResults, 
       // only reload config on request (i.e. when testCfg supplied)
-      if (config.integrationTestRun && !testCfg)
+      if (config.isIntegrationTestRun && !testCfg)
         return;
 
       try {
@@ -186,7 +186,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         // settings.json (via inspect not get), so we don't include the uri in the affectsConfiguration() call
         // (separately, just note that the settings change could be a global window setting 
         // from *.code-workspace file, rather than from settings.json)
-        const affected = event && event.affectsConfiguration("behave-vsc");
+        const affected = event?.affectsConfiguration("behave-vsc");
         if (!affected && !forceFullRefresh && !testCfg)
           return;
 
@@ -239,7 +239,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       await configurationChangedHandler(event);
     }));
 
-    diagLog(`PERF: activate took  ${performance.now() - start} ms`);
+    xRayLog(`PERF: activate took  ${performance.now() - start} ms`);
 
     if (context.extensionMode !== vscode.ExtensionMode.Test)
       return;
@@ -258,7 +258,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
   catch (e: unknown) {
     // entry point function (handler) - show error    
     if (config && services.logger) {
-      services.logger.showError(e, undefined);
+      services.logger.showError(e);
     }
     else {
       // no logger yet, use vscode.window.showErrorMessage directly

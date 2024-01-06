@@ -53,7 +53,7 @@ export class Logger {
 
 
   logInfoAllProjects = (text: string, run?: vscode.TestRun) => {
-    diagLog(text);
+    xRayLog(text);
 
     for (const projPath in this.channels) {
       this.channels[projPath].appendLine(text);
@@ -65,7 +65,7 @@ export class Logger {
 
 
   logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text);
+    xRayLog(text);
 
     this.channels[projUri.path].appendLine(text);
     if (run)
@@ -74,7 +74,7 @@ export class Logger {
 
   // log info without a line feed (used for logging behave output)
   logInfoNoLF = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text);
+    xRayLog(text);
 
     this.channels[projUri.path].append(text);
     if (run)
@@ -83,7 +83,7 @@ export class Logger {
 
   // used by settings.ts 
   logSettingsWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-    diagLog(text, projUri, DiagLogType.warn);
+    xRayLog(text, projUri, LogType.warn);
 
     this.channels[projUri.path].appendLine(text);
     this.channels[projUri.path].show(true);
@@ -94,30 +94,29 @@ export class Logger {
 
 
   showWarn = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-    this._show(text, projUri, run, DiagLogType.warn);
+    this._show(text, projUri, run, LogType.warn);
   }
 
 
   showError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
-
     let text: string;
 
     if (error instanceof Error) {
       text = error.message;
-      if (error.stack && services.config && services.config.instanceSettings && services.config.instanceSettings.xRay)
+      if (error.stack && inDiagnosticMode())
         text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
     }
     else {
       text = `${error}`;
     }
 
-    this._show(text, projUri, run, DiagLogType.error);
+    this._show(text, projUri, run, LogType.error);
   }
 
 
-  private _show = (text: string, projUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: DiagLogType) => {
+  private _show = (text: string, projUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: LogType) => {
 
-    diagLog(text, projUri, logType);
+    xRayLog(text, projUri, logType);
 
     if (projUri) {
       this.channels[projUri.path].appendLine(text);
@@ -135,7 +134,7 @@ export class Logger {
 
     let winText = text;
     if (projUri) {
-      // note - don't use config.workspaceSettings here (possible inifinite loop)
+      // note - don't use config.projectSettings here (can be an infinite loop as projectSettings is a get() which can itself log)
       const wskpFolder = vscode.workspace.getWorkspaceFolder(projUri);
       if (wskpFolder) {
         const projName = wskpFolder?.name;
@@ -147,30 +146,29 @@ export class Logger {
       winText = text.substring(0, 512) + "...";
 
     switch (logType) {
-      case DiagLogType.info:
+      case LogType.info:
         vscode.window.showInformationMessage(winText);
         break;
-      case DiagLogType.warn:
+      case LogType.warn:
         vscode.window.showWarningMessage(winText, "OK");
         break;
-      case DiagLogType.error:
+      case LogType.error:
         vscode.window.showErrorMessage(winText, "OK");
         break;
     }
 
-    //vscode.debug.activeDebugConsole.appendLine(text);
+    // if(inDiagnosticMode())
+    //   vscode.debug.activeDebugConsole.appendLine(text);
     if (run)
       run.appendOutput(text.replace("\n", "\r\n") + "\r\n");
   }
 }
 
-export enum DiagLogType {
-  "info", "warn", "error"
-}
+export const xRayLog = (message: string, projUri?: vscode.Uri, logType?: LogType) => {
 
-export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLogType) => {
-  if (services && services.config && !services.config.instanceSettings.xRay &&
-    !services.config.integrationTestRun && !services.config.exampleProject)
+  // logs to console if in diagnostic mode
+
+  if (!inDiagnosticMode())
     return;
 
   if (projUri)
@@ -179,10 +177,10 @@ export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLog
   message = `[Behave VSC] ${message}`;
 
   switch (logType) {
-    case DiagLogType.error:
+    case LogType.error:
       console.error(message);
       break;
-    case DiagLogType.warn:
+    case LogType.warn:
       console.warn(message);
       break;
     default:
@@ -190,3 +188,23 @@ export const diagLog = (message: string, projUri?: vscode.Uri, logType?: DiagLog
       break;
   }
 }
+
+export enum LogType {
+  "info", "warn", "error"
+}
+
+function inDiagnosticMode() {
+  // diagnostic logs enabled if:
+  // - services/config is not yet loaded, or
+  // - xRay is enabled by user, or 
+  // - we're debugging an example project, or  
+  // - we're running integration tests
+  if (!services?.config?.instanceSettingsLoaded
+    || services.config.instanceSettings.xRay
+    || services.config.exampleProject
+    || services.config.isIntegrationTestRun) {
+    return true;
+  }
+  return false;
+}
+

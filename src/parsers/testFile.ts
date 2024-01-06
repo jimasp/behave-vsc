@@ -3,7 +3,7 @@ import { parseFeatureContent } from './featureParser';
 import { uriId, isFeatureFile } from '../common/helpers';
 import { services } from "../services";
 import { ProjectSettings } from "../config/settings";
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 
 let generationCounter = 0;
 export type BehaveTestData = TestFile | Scenario;
@@ -64,7 +64,7 @@ export class TestFile {
       scenarioItem.range = range;
       parent.item.label = featureName;
       parent.children.push(scenarioItem);
-      diagLog(`onScenarioLine: created child test item scenario ${scenarioItem.id} from ${featureUri.path}`);
+      xRayLog(`onScenarioLine: created child test item scenario ${scenarioItem.id} from ${featureUri.path}`);
     }
 
     const onFeatureLine = (range: vscode.Range) => {

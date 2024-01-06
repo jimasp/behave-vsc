@@ -12,7 +12,7 @@ import {
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 import {
   clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile,
   deleteStepsAndStepMappingsForFeatureFile
@@ -51,7 +51,7 @@ export class FileParser {
 
     // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
     // clear everything up-front so that we rebuild the top level nodes
-    diagLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
+    xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
     deleteTestTreeNodes(null, testData, ctrl);
 
     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
@@ -94,7 +94,7 @@ export class FileParser {
       for (const key of Object.keys(this._cancelTokenSources)) {
         if (key !== parseId && key.startsWith(projPath + "#")) {
           const cancelledLogId = key.replace(projPath + "#", projName + "#");
-          diagLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
+          xRayLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
           this._cancelTokenSources[key].cancel();
           while (this._cancelTokenSources[key]) {
             await new Promise(t => setTimeout(t, 20));
@@ -106,14 +106,14 @@ export class FileParser {
     try {
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
       const callName = `parseFiles[${logId}] (${intiator})`;
-      diagLog(`\n===== ${callName}: started =====`);
+      xRayLog(`\n===== ${callName}: started =====`);
 
       // IMPORTANT: this function is not generally awaited, and therefore re-entrant, so 
       // cancel any existing parseFiles call for this project
       await cancelOtherParsesForThisProject();
 
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
+        xRayLog(`${callName}: cancellation complete`);
         return;
       }
 
@@ -124,20 +124,20 @@ export class FileParser {
         callName, firstRun);
       const featTime = performance.now() - featsStart;
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
+        xRayLog(`${callName}: cancellation complete`);
         return;
       }
-      diagLog(`${callName}: features loaded`);
+      xRayLog(`${callName}: features loaded`);
 
       this._finishedFeaturesParseForProject[projPath] = true;
       const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
         !this._finishedFeaturesParseForProject[uri.path]);
       if (projectsStillParsingFeatures.length === 0) {
         this._finishedFeaturesParseForAllProjects = true;
-        diagLog(`${callName}: features loaded for all projects`);
+        xRayLog(`${callName}: features loaded for all projects`);
       }
       else {
-        diagLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
+        xRayLog(`${callName}: waiting on feature parse for ${projectsStillParsingFeatures.map(w => w.path)}`)
       }
 
       // STEPS FILES PARSE
@@ -146,29 +146,29 @@ export class FileParser {
       const stepFileCount = await this._parseStepsFiles(projSettings, this._cancelTokenSources[parseId].token, callName);
       const stepsTime = performance.now() - stepsStart;
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
+        xRayLog(`${callName}: cancellation complete`);
         return;
       }
 
       this._finishedStepsParseForProject[projPath] = true;
-      diagLog(`${callName}: steps loaded`);
+      xRayLog(`${callName}: steps loaded`);
 
       const updateMappingsStart = performance.now();
       const mappingsCount = rebuildStepMappings(projSettings.uri);
       const buildMappingsTime = performance.now() - updateMappingsStart;
-      diagLog(`${callName}: stepmappings built`);
+      xRayLog(`${callName}: stepmappings built`);
 
       const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
       if (projectsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllProjects = true;
-        diagLog(`${callName}: steps loaded for all projects`);
+        xRayLog(`${callName}: steps loaded for all projects`);
       }
       else {
-        diagLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
+        xRayLog(`${callName}: waiting on steps parse for ${projectsStillParsingSteps.map(w => w.path)}`)
       }
 
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
-        diagLog(`${callName}: cancellation complete`);
+        xRayLog(`${callName}: cancellation complete`);
         return;
       }
 
@@ -180,9 +180,9 @@ export class FileParser {
       }
 
       this._finishedParseForProject[projPath] = true;
-      diagLog(`${callName}: complete`);
+      xRayLog(`${callName}: complete`);
 
-      if (!services.config.integrationTestRun)
+      if (!services.config.isIntegrationTestRun)
         return;
 
       return {
@@ -237,14 +237,14 @@ export class FileParser {
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedFeaturesParseForAllProjects) {
-        diagLog(`featureParseComplete (${caller}) - is good to go (all features parsed, steps parsing may continue in background)`);
+        xRayLog(`featureParseComplete (${caller}) - is good to go (all features parsed, steps parsing may continue in background)`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        diagLog(`featureParseComplete  (${caller}) waiting - ${timeout} left until timeout`);
+        xRayLog(`featureParseComplete  (${caller}) waiting - ${timeout} left until timeout`);
         if (timeout < interval) {
-          diagLog(`featureParseComplete (${caller})  - timed out`);
+          xRayLog(`featureParseComplete (${caller})  - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -266,14 +266,14 @@ export class FileParser {
 
     const check = (resolve: (value: boolean) => void) => {
       if (this._finishedStepsParseForAllProjects && !this._reparsingFile) {
-        diagLog(`stepsParseComplete (${caller}) - is good to go (all steps parsed)`);
+        xRayLog(`stepsParseComplete (${caller}) - is good to go (all steps parsed)`);
         resolve(true);
       }
       else {
         timeout -= interval;
-        diagLog(`stepsParseComplete (${caller}) waiting - ${timeout} left until timeout`);
+        xRayLog(`stepsParseComplete (${caller}) waiting - ${timeout} left until timeout`);
         if (timeout < interval) {
-          diagLog(`stepsParseComplete (${caller}) - timed out`);
+          xRayLog(`stepsParseComplete (${caller}) - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
@@ -330,7 +330,7 @@ export class FileParser {
 
     const projUri = projSettings.uri;
 
-    diagLog(`_parseFeatureFiles (${caller}): removing existing test nodes/items for project: ${projSettings.name}`);
+    xRayLog(`_parseFeatureFiles (${caller}): removing existing test nodes/items for project: ${projSettings.name}`);
     deleteTestTreeNodes(projSettings.id, testData, ctrl);
     deleteFeatureFilesStepsForProject(projUri);
     clearStepMappings(projUri);
@@ -357,7 +357,7 @@ export class FileParser {
 
       if (cancelToken.isCancellationRequested) {
         // either findFiles or loop will have exited early, log it either way
-        diagLog(`_parseFeatureFiles (${caller}): cancelling, _parseFeatureFiles stopped`);
+        xRayLog(`_parseFeatureFiles (${caller}): cancelling, _parseFeatureFiles stopped`);
       }
     }
 
@@ -370,7 +370,7 @@ export class FileParser {
 
     const projUri = projSettings.uri;
 
-    diagLog("removing existing steps for project: " + projSettings.name);
+    xRayLog("removing existing steps for project: " + projSettings.name);
     deleteStepFileStepsForProject(projUri);
 
     const processed: string[] = [];
@@ -400,7 +400,7 @@ export class FileParser {
 
       if (cancelToken.isCancellationRequested) {
         // either findFiles or loop will have exited early, log it either way
-        diagLog(`${caller}: cancelling, _parseStepFiles stopped`);
+        xRayLog(`${caller}: cancelling, _parseStepFiles stopped`);
       }
     }
 
@@ -420,11 +420,11 @@ export class FileParser {
     const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(projSettings, content, testData,
       controller, uri, caller, firstRun);
     if (item) {
-      diagLog(`${caller}: parsing ${uri.path}`);
+      xRayLog(`${caller}: parsing ${uri.path}`);
       await item.testFile.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, controller, item.testItem, caller);
     }
     else {
-      diagLog(`${caller}: no scenarios found in ${uri.path}`);
+      xRayLog(`${caller}: no scenarios found in ${uri.path}`);
     }
   }
 
@@ -451,7 +451,7 @@ export class FileParser {
     }
 
     if (existingItem) {
-      diagLog(`${caller}: found existing top-level node for file ${uri.path}`);
+      xRayLog(`${caller}: found existing top-level node for file ${uri.path}`);
       existingItem.label = featureName;
       existingItem.error = undefined;
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
@@ -546,14 +546,14 @@ export class FileParser {
     if (projGrandParent)
       projGrandParent.children.add(firstFolder ? firstFolder : testItem);
 
-    diagLog(`${caller}: created test item for ${uri.path}`);
+    xRayLog(`${caller}: created test item for ${uri.path}`);
     return { testItem: testItem, testFile: testFile };
   }
 
 
   private _logTimesToConsole = (callName: string, testCounts: TestCounts, featParseTime: number, stepsParseTime: number,
     mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
-    diagLog(
+    xRayLog(
       `--- PERF:` +
       `\n${callName} completed.` +
       `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
@@ -573,7 +573,7 @@ export class FileParser {
 
 
   parseIsActiveForProject(projUri: vscode.Uri) {
-    if (!services.config.integrationTestRun)
+    if (!services.config.isIntegrationTestRun)
       throw new Error("parseIsActiveForProject() is only for integration test support");
     return !this._finishedParseForProject[projUri.path];
   }

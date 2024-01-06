@@ -9,7 +9,7 @@ import {
   getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
 } from '../common/helpers';
 import { QueueItem } from '../extension';
-import { diagLog, DiagLogType } from '../common/logger';
+import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
 
@@ -37,7 +37,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()) => {
 
-    diagLog(`testRunHandler: invoked`);
+    xRayLog(`testRunHandler: invoked`);
 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), 
@@ -46,9 +46,9 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     const ready = await services.parser.featureParseComplete(1000, "testRunHandler");
     if (!ready) {
       const msg = "Cannot run tests while feature files are being parsed, please try again.";
-      diagLog(msg, undefined, DiagLogType.warn);
+      xRayLog(msg, undefined, LogType.warn);
       vscode.window.showWarningMessage(msg, "OK");
-      if (services.config.integrationTestRun)
+      if (services.config.isIntegrationTestRun)
         throw msg;
       return;
     }
@@ -58,14 +58,14 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
     const run = ctrl.createTestRun(request, rndNumeric(), false);
 
-    diagLog(`testRunHandler: starting run ${run.name}`);
+    xRayLog(`testRunHandler: starting run ${run.name}`);
 
     try {
       const queue: QueueItem[] = [];
       const tests = request.include ?? convertToTestItemArray(ctrl.items);
-      diagLog(`testRunHandler: tests length = ${tests.length}`);
+      xRayLog(`testRunHandler: tests length = ${tests.length}`);
       await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
-      diagLog(`testRunHandler: queue length = ${queue.length}`);
+      xRayLog(`testRunHandler: queue length = ${queue.length}`);
       await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
     }
@@ -77,7 +77,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       run.end();
     }
 
-    diagLog(`testRunHandler: completed run ${run.name}`);
+    xRayLog(`testRunHandler: completed run ${run.name}`);
   };
 
 }
@@ -116,7 +116,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
   testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
 
-  diagLog(`runTestQueue: started for run ${run.name}`);
+  xRayLog(`runTestQueue: started for run ${run.name}`);
 
   if (queue.length === 0)
     throw "empty queue - nothing to do";
@@ -165,7 +165,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   await Promise.all(projRunPromises);
   await junitWatcher.stopWatchingRun(run);
 
-  diagLog(`runTestQueue: completed for run ${run.name}`);
+  xRayLog(`runTestQueue: completed for run ${run.name}`);
 }
 
 
@@ -174,7 +174,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
 
   let wr: ProjRun | undefined = undefined;
 
-  diagLog(`runWorkspaceQueue: started for run ${run.name}`, projSettings.uri);
+  xRayLog(`runWorkspaceQueue: started for run ${run.name}`, projSettings.uri);
 
   try {
 
@@ -206,7 +206,7 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
     services.logger.showError(e, projSettings.uri, run);
   }
 
-  diagLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
+  xRayLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
 }
 
 
@@ -228,14 +228,14 @@ async function doRunType(wr: ProjRun) {
 
 
 async function runAllFeatures(wr: ProjRun) {
-  diagLog(`runAllFeatures`, wr.projSettings.uri);
+  xRayLog(`runAllFeatures`, wr.projSettings.uri);
   await runOrDebugAllFeaturesInOneInstance(wr);
 }
 
 
 async function runFeaturesTogether(wr: ProjRun) {
 
-  diagLog(`runFeaturesTogether`, wr.projSettings.uri);
+  xRayLog(`runFeaturesTogether`, wr.projSettings.uri);
 
   const runTogetherFeatures: vscode.TestItem[] = [];
   const alreadyProcessedFeatureIds: string[] = [];
@@ -280,7 +280,7 @@ async function runFeaturesParallel(wr: ProjRun) {
   if (wr.debug)
     throw new Error("runParallel should not be called with debug=true");
 
-  diagLog(`runFeaturesParallel`, wr.projSettings.uri);
+  xRayLog(`runFeaturesParallel`, wr.projSettings.uri);
 
   const featuresRun: string[] = [];
   const asyncRunPromises: Promise<void>[] = [];

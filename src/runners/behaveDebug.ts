@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { services } from "../services";
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
 
 
@@ -10,7 +10,7 @@ export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyC
   const runCancelHandler = wr.run.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
 
   try {
-    diagLog(friendlyCmd, wr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
+    xRayLog(friendlyCmd, wr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
 
     // --outfile = remove stdout noise from debug console
     args.push("--no-summary", "--outfile",
@@ -33,7 +33,7 @@ export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyC
     const projFolder = vscode.workspace.getWorkspaceFolder(wr.projSettings.uri);
 
     if (!await vscode.debug.startDebugging(projFolder, debugLaunchConfig)) {
-      diagLog("unable to start debug session, was debug stop button clicked?", wr.projSettings.uri);
+      xRayLog("unable to start debug session, was debug stop button clicked?", wr.projSettings.uri);
       return;
     }
 

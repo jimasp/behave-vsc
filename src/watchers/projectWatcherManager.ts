@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common/helpers';
 import { services } from "../services";
-import { diagLog, DiagLogType } from '../common/logger';
+import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
 
@@ -117,7 +117,7 @@ export class ProjectWatcherManager {
       for (const configFile of BEHAVE_CONFIG_FILES) {
         const configPath = `${projUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
-          diagLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);
+          xRayLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);
           services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
           return false; // just handled it
@@ -150,7 +150,7 @@ export class ProjectWatcherManager {
     const reparseTheFile = async (uri: vscode.Uri) => {
       if (uri.scheme !== "file")
         return;
-      diagLog(`reparsing file: ${uri.fsPath}`, projUri, DiagLogType.info);
+      xRayLog(`reparsing file: ${uri.fsPath}`, projUri, LogType.info);
       services.parser.reparseFile(uri, testData, ctrl, "watcher event > reparseTheFile");
     }
 

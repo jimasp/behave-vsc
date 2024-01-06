@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { uriId, isStepsFile, sepr, basename, afterFirstSepr, getLines } from '../common/helpers';
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 
 export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
@@ -134,7 +134,7 @@ export async function parseStepsFileContent(projUri: vscode.Uri, content: string
       const range = new vscode.Range(new vscode.Position(startLineNo, 0), new vscode.Position(lineNo, step[0].length));
       const stepFsRk = createStepFileStepAndReKey(projUri, stepFileUri, range, step);
       if (stepFileSteps.get(stepFsRk.reKey))
-        diagLog("replacing duplicate step file step reKey: " + stepFsRk.reKey);
+        xRayLog("replacing duplicate step file step reKey: " + stepFsRk.reKey);
       stepFileSteps.set(stepFsRk.reKey, stepFsRk.stepFileStep); // map.set() = no duplicate keys allowed (per workspace)
       fileSteps++;
       setFuncLineKeys.push(stepFsRk.reKey);
@@ -142,7 +142,7 @@ export async function parseStepsFileContent(projUri: vscode.Uri, content: string
 
   }
 
-  diagLog(`${caller}: parsed ${fileSteps} steps from ${stepFileUri.path}`);
+  xRayLog(`${caller}: parsed ${fileSteps} steps from ${stepFileUri.path}`);
 }
 
 

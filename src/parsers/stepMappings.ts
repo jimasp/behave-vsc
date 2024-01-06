@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common/helpers';
-import { diagLog, DiagLogType } from '../common/logger';
+import { xRayLog, LogType } from '../common/logger';
 import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
@@ -70,7 +70,7 @@ export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.
   const ready = await services.parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
   if (!ready) {
     const msg = "Cannot navigate steps while step files are being parsed, please try again.";
-    diagLog(msg, undefined, DiagLogType.warn);
+    xRayLog(msg, undefined, LogType.warn);
     services.logger.showWarn(msg, getProjectUriForFile(uri));
   }
 
@@ -96,7 +96,7 @@ export function rebuildStepMappings(projUri: vscode.Uri): number {
   retriggerSemanticHighlighting();
   refreshStepReferencesView();
 
-  diagLog(`rebuilding step mappings for ${projUri.path} took ${performance.now() - start} ms`);
+  xRayLog(`rebuilding step mappings for ${projUri.path} took ${performance.now() - start} ms`);
 
   return processed;
 }

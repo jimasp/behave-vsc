@@ -1,7 +1,7 @@
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import { services } from "../services";
 import { cleanBehaveText } from '../common/helpers';
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
 
 
@@ -15,7 +15,7 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
   try {
     const local_args = [...args];
     local_args.unshift("-m", "behave");
-    diagLog(`${wr.pythonExec} ${local_args.join(" ")}`, projUri);
+    xRayLog(`${wr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...wr.env };
     const options: SpawnOptions = { cwd: projUri.fsPath, env: env };
     cp = spawn(wr.pythonExec, local_args, options);

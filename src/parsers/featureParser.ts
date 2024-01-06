@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ProjectSettings } from "../config/settings";
 import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common/helpers';
-import { diagLog } from '../common/logger';
+import { xRayLog } from '../common/logger';
 import { services } from '../services';
 
 
@@ -135,7 +135,7 @@ export const parseFeatureContent = (projSettings: ProjectSettings, uri: vscode.U
 
   }
 
-  diagLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, projSettings.uri);
+  xRayLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, projSettings.uri);
 };
 
 

@@ -463,7 +463,7 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	console.log(extension);
 
 	assertInstances(api);
-	services.config.integrationTestRun = true;
+	services.config.isIntegrationTestRun = true;
 
 	await vscode.commands.executeCommand("testing.clearTestResults");
 	await vscode.commands.executeCommand("workbench.view.testing.focus");

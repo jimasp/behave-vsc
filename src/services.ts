@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Configuration } from './config/configuration';
 import { FileParser } from './parsers/fileParser';
-import { Logger, diagLog } from './common/logger';
+import { Logger, xRayLog } from './common/logger';
 
 
 interface Global {
@@ -28,11 +28,12 @@ class Singletons {
 declare const global: Global;
 if (!global.bvscSingletons) {
     try {
-        diagLog("bvscDiServices - initialising...");
+        xRayLog("bvscDiServices - initialising...");
         global.bvscSingletons = new Singletons();
-        diagLog("bvscDiServices - ready");
+        xRayLog("bvscDiServices - ready");
     }
     catch (e: unknown) {
+        // maybe no logger yet, use vscode.window.showErrorMessage directly        
         const text = (e instanceof Error ? (e.stack ? e.stack : e.message) : e as string);
         vscode.window.showErrorMessage(text);
     }
