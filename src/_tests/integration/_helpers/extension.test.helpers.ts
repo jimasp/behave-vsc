@@ -27,7 +27,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 		if (
 			expectedResult.test_id !== actualResult.test_id ||
-			expectedResult.test_uri !== actualResult.test_uri,
+			expectedResult.test_uri !== actualResult.test_uri ||
 			expectedResult.test_parent !== actualResult.test_parent ||
 			expectedResult.test_children !== actualResult.test_children ||
 			expectedResult.test_description !== actualResult.test_description ||
@@ -41,9 +41,9 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 
 			if (expectedResult.test_id === actualResult.test_id) {
 				debugger; // eslint-disable-line no-debugger 
-				throw `test ids matched but properties were different:\n` +
-				`expectedResult:${JSON.stringify(expectedResult)}\n` +
-				`actualResult:${JSON.stringify(actualResult)}\n`;
+				throw new Error(`test ids matched but properties were different:\n` +
+					`expectedResult:${JSON.stringify(expectedResult)}\n` +
+					`actualResult:${JSON.stringify(actualResult)}\n`);
 			}
 
 			return false;
@@ -54,16 +54,16 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		if (expectedResult.scenario_result !== actualResult.scenario_result) {
 			debugger; // eslint-disable-line no-debugger	
 			if (actualResult.scenario_result) {
-				throw `test ids matched but result did not match expected result\n` +
-				`expectedResult:${JSON.stringify(expectedResult)}\n` +
-				`actualResult:${JSON.stringify(actualResult)}\n` +
-				`testConfig:${JSON.stringify(testConfig)}\n` +
-				`note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
-				`then first check if the behave command line output matches the IDE behave command output.`;
+				throw new Error(`test ids matched but result did not match expected result\n` +
+					`expectedResult:${JSON.stringify(expectedResult)}\n` +
+					`actualResult:${JSON.stringify(actualResult)}\n` +
+					`testConfig:${JSON.stringify(testConfig)}\n` +
+					`note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
+					`then first check if the behave command line output matches the IDE behave command output.`);
 			}
-			throw `result is undefined, was the test run cancelled?\n` +
-			`actualResult:${JSON.stringify(expectedResult)}\n` +
-			`testConfig:${JSON.stringify(testConfig)}\n`;
+			throw new Error(`result is undefined, was the test run cancelled?\n` +
+				`actualResult:${JSON.stringify(expectedResult)}\n` +
+				`testConfig:${JSON.stringify(testConfig)}\n`);
 		}
 
 		return true;
@@ -76,7 +76,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		// UHOH (did you add a new scenario that hasn't been added to expected results yet? 
 		// IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
 		debugger; // eslint-disable-line no-debugger
-		throw `match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`;
+		throw new Error(`match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`);
 	}
 
 	return match;

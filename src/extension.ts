@@ -7,7 +7,7 @@ import {
 } from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
-import { findStepReferencesHandler, nextStepReferenceHandler as nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
+import { findStepReferencesHandler, nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { testRunHandler } from './runners/testRunHandler';
 import { TestWorkspaceConfigWithProjUri } from './_tests/integration/_helpers/testWorkspaceConfig';
 import { xRayLog } from './common/logger';

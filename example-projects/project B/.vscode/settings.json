@@ -15,10 +15,6 @@
     "python.testing.pytestEnabled": false,
     "behave-vsc.runParallel": true,
     "behave-vsc.xRay": true,
-    "behave-vsc.importedSteps": {
-        "features": ".*/steps/.*",
-        "features/grouped2": ".*/g2_steps/.*"
-    },
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ]

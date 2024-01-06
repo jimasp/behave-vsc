@@ -5,7 +5,7 @@ export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
     tests: { nodeCount: 81, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 9,
+    featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 6,
     stepFileStepsExceptCommentedOut: 47,
     featureFileStepsExceptCommentedOut: 128, stepMappings: 127  // (1 diff = "When we have a missing step")
   };
@@ -456,7 +456,7 @@ export const getExpectedResults = (): TestResult[] => {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/features/feature_with_hook_error.feature/anoter scenario in with a hook-error feature that will be skipped',
+      test_id: '.../project B/features/feature_with_hook_error.feature/another scenario in with a hook-error feature that will be skipped',
       test_label: 'another scenario in with a hook-error feature that will be skipped',
       test_parent: '.../project B/features/feature_with_hook_error.feature',
       test_uri: '.../project B/features/feature_with_hook_error.feature'

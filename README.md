@@ -36,7 +36,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace
-- A compatible project directory structure
+- Compatible project directory structure(s)
 - [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
 - [behave](https://behave.readthedocs.io)
 - [python](https://www.python.org/)
@@ -99,12 +99,12 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-- If your features folder is not called `features`, or is not in your project root, or you have multiple features folders, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features `paths`:
+- If your features folder is not called `features`, or is not in your project root, or you have multiple features folders in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features `paths`:
 
   - Example A, features folder is a subfolder called `my_folder/my_features`:
 
     ```ini
-    # behave.ini
+    # behave.ini (or .behaverc, setup.cfg, tox.ini)
     [behave]
     paths=my_folder/my_features
     ```
@@ -112,7 +112,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Example B, for Example 3 above (multiple features folders in a project root):
 
     ```ini
-    # behave.ini
+    # behave.ini (or .behaverc, setup.cfg, tox.ini)
     [behave]
     paths=db_features
           web_features
@@ -144,7 +144,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       "behave-vsc.importedSteps": {
           // project-relative path : regex (not glob)
           "my_steps_lib" : ".*",
-          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"          
+          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"
       },
       "behave-vsc.justMyCode": false
     }
@@ -316,7 +316,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   
 ### Otherwise
 
-- Does your project meet the [workspace requirements](#workspace-requirements) and have a [compatible project directory structure](#compatible-project-directory-structures)?
+- Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
 
 - Make sure the `paths` setting in your behave configuration file is correct.
 
