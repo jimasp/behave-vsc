@@ -84,7 +84,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-  - Example 3 - multiple top-level features folders:
+  - Example 3 - multiple features folders in a project root:
 
     ```text
     ├── behave.ini
@@ -99,9 +99,17 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web.py
     ```
 
-- If your features folder is not called "features", or is not in your project root, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features paths:
+- If your features folder is not called `features`, or is not in your project root, or you have multiple features folders, then you can add a behave config file (e.g. `behave.ini`) to your project folder to specify the features `paths`:
 
-  - For Example 3 above:
+  - Example A, features folder is a subfolder called `my_folder/my_features`:
+
+    ```ini
+    # behave.ini
+    [behave]
+    paths=my_folder/my_features
+    ```
+
+  - Example B, for Example 3 above (multiple features folders in a project root):
 
     ```ini
     # behave.ini
