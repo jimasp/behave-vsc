@@ -1,5 +1,5 @@
 import { getExpectedResultsForTag1RunProfile } from "./expectedResults";
-import { TestWorkspaceRunners, noBehaveIni } from "../_helpers/testWorkspaceRunners";
+import { TestProjectRunner, noBehaveIni } from "../_helpers/testProjectRunner";
 import { wsConfig, expectations, runOptions, } from "./defaults";
 
 
@@ -7,12 +7,12 @@ import { wsConfig, expectations, runOptions, } from "./defaults";
 // sessions (which is not supported) when running the multi-root tests 
 
 suite(`run profiles suite test debug run`, () => {
-  const testWorkspaceRunners = new TestWorkspaceRunners("run profiles");
+  const testProjectRunner = new TestProjectRunner("run profiles");
 
   test("debugAll - tag1 profile", async () => {
     runOptions.selectedRunProfile = "tag1 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-    await testWorkspaceRunners.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
+    await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   })
 
 

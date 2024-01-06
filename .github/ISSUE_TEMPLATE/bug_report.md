@@ -28,7 +28,10 @@ If you are using a Mac, then are you able to check if the same problem occurs in
 
 **Directory structure (optional, but often relevant):**
 Include your project directory structure if it is relevant (e.g. use the `tree` command).
-Is it a multi-root workspace (i.e. you have a `foobar.code-workspace` file) or just a simple workspace?
+Is it a multi-root workspace (i.e. you have a `foo.code-workspace` file) or just a single-root workspace?
+
+**Behave config paths (optional, but often relevant):**
+If you have a behave config file (e.g. `behave.ini`), then what is the `paths` setting in the config file?
 
 **Screenshots and GIFS (optional):**
 If applicable, add any other .jpg/.png screenshots or animated gifs to your post (using markdown) to help explain your problem.

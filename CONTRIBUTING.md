@@ -15,7 +15,7 @@
 
 ## Terminology
 
-- In this document, and in most of the code, "project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+- See [terminology](./README.md#terminology) in the README.
 
 ---
 

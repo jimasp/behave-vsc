@@ -216,8 +216,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
         // code.workspace or settings.json configuration has now changed, so we need to reparse files
 
-        // (in the case of a testConfig insertion we just reparse the supplied workspace to avoid issues with parallel 
-        // workspace integration test runs)
+        // (in the case of a testConfig insertion we just reparse the supplied project to avoid issues 
+        // with parallel integration test suite runs)
         if (testCfg) {
           await services.parser.parseFilesForProject(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
           return;

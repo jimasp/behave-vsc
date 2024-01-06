@@ -139,7 +139,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   // WAIT for the junit watcher to be ready
   await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
 
-  // run each workspace queue  
+  // run each project queue  
   for (const projSettings of allProjectsSettings) {
 
     if (run.token.isCancellationRequested)
@@ -152,13 +152,13 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     if (!debug)
       services.logger.clear(projSettings.uri);
 
-    // run workspaces sequentially
+    // run projects sequentially
     if (!winSettings.runMultiRootProjectsInParallel || debug) {
       await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
       continue;
     }
 
-    // run workspaces in parallel
+    // run projects in parallel
     projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
   }
 
@@ -181,7 +181,8 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
     const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, projSettings, ctrl, testData);
     const projIncludedFeatures = getIncludedFeaturesForProj(projSettings.uri, request);
     const pythonExec = await services.config.getPythonExecutable(projSettings.uri, projSettings.name);
-    const sortedQueue = projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
+    const sortedQueue = projQueue;
+    sortedQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 
     // note that runProfile.env will (and should) override 

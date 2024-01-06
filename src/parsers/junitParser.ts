@@ -171,7 +171,7 @@ function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario):
   // BEHAVE SOURCE CODE FUNCTION "make_feature_filename()".
   // IF THAT FUNCTION CHANGES IN BEHAVE, THEN IT IS LIKELY THIS WILL ALSO HAVE TO CHANGE.    
   let fileName = null;
-  const relFeatureFilePath = scenario.featureFileWorkspaceRelativePath;
+  const relFeatureFilePath = scenario.featureFileProjectRelativePath;
   for (const relConfigPath of projSettings.relativeConfigPaths) {
     if (relFeatureFilePath.startsWith(relConfigPath)) {
       fileName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
@@ -180,7 +180,7 @@ function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario):
   }
 
   if (!fileName)
-    fileName = path.relative(projSettings.relativeBaseDirPath, scenario.featureFileWorkspaceRelativePath);
+    fileName = path.relative(projSettings.relativeBaseDirPath, scenario.featureFileProjectRelativePath);
 
   fileName = fileName.split('.').slice(0, -1).join('.');
   fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');

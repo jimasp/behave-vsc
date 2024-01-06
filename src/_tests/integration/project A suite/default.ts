@@ -1,6 +1,6 @@
 import { EnvSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { Expectations } from "../_helpers/testWorkspaceRunners";
+import { Expectations } from "../_helpers/testProjectRunner";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
 const env: EnvSetting = {

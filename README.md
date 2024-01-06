@@ -27,9 +27,12 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Terminology
 
-- "Project" is shorthand for "a root workspace folder that contains feature files". A multi-root workspace can contain multiple projects. Each project has its own `.vscode/settings.json` file.
+- "workspace": the root context of the development environment in the IDE. There is only one workspace per vscode instance.
+- "workspace folder" : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder.
+- "multi-root workspace": a workspace that contains multiple workspace folders.
+- "project": shorthand (within this document) for "a workspace folder that contains feature files".
 
-## Workspace requirements
+## Workspace/vscode requirements
 
 - No conflicting behave/gherkin/cucumber extension is enabled
 - Extension activation requires at least one `*.feature` file somewhere in the workspace

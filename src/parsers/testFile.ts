@@ -84,7 +84,7 @@ export class Scenario {
   public result: string | undefined;
   constructor(
     public readonly featureFileName: string,
-    public readonly featureFileWorkspaceRelativePath: string,
+    public readonly featureFileProjectRelativePath: string,
     public readonly featureName: string,
     public scenarioName: string,
     public generation: number,

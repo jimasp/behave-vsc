@@ -1,4 +1,4 @@
-import { Expectations } from "../_helpers/testWorkspaceRunners"
+import { Expectations } from "../_helpers/testProjectRunner"
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 

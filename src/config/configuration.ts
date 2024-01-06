@@ -1,7 +1,7 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
-import { ProjectSettings as ResourceSettings, InstanceSettings as WindowSettings } from './settings';
+import { ProjectSettings, InstanceSettings } from './settings';
 
 
 export class Configuration {
@@ -9,8 +9,8 @@ export class Configuration {
   instanceSettingsLoaded = false; // used by diagLog to check if instanceSettings is available (i.e. without calling the getter)
   readonly exampleProject: boolean = false;
   readonly extensionTempFilesUri;
-  private _windowSettings: WindowSettings | undefined = undefined;
-  private _resourceSettings: { [projUriPath: string]: ResourceSettings } = {};
+  private _windowSettings: InstanceSettings | undefined = undefined;
+  private _resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
 
   constructor() {
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
@@ -21,30 +21,30 @@ export class Configuration {
   // called by onDidChangeConfiguration
   reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
     if (testConfig) {
-      this._windowSettings = new WindowSettings(testConfig);
-      this._resourceSettings[projUri.path] = new ResourceSettings(projUri, testConfig, this._windowSettings);
+      this._windowSettings = new InstanceSettings(testConfig);
+      this._resourceSettings[projUri.path] = new ProjectSettings(projUri, testConfig, this._windowSettings);
     }
     else {
-      this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this._resourceSettings[projUri.path] = new ResourceSettings(projUri,
+      this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
+      this._resourceSettings[projUri.path] = new ProjectSettings(projUri,
         vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings);
     }
   }
 
-  get instanceSettings(): WindowSettings {
+  get instanceSettings(): InstanceSettings {
     if (this._windowSettings)
       return this._windowSettings;
-    this._windowSettings = new WindowSettings(vscode.workspace.getConfiguration("behave-vsc"));
+    this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
     this.instanceSettingsLoaded = true;
     return this._windowSettings;
   }
 
-  get projectSettings(): { [projUriPath: string]: ResourceSettings } {
+  get projectSettings(): { [projUriPath: string]: ProjectSettings } {
     const winSettings = this.instanceSettings;
     getUrisOfWkspFoldersWithFeatures().forEach(projUri => {
       if (!this._resourceSettings[projUri.path]) {
         this._resourceSettings[projUri.path] =
-          new ResourceSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
+          new ProjectSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
       }
     });
     return this._resourceSettings;

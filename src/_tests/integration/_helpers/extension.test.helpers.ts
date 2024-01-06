@@ -16,7 +16,7 @@ import {
 } from '../../../common/helpers';
 import { featureFileStepRe } from '../../../parsers/featureParser';
 import { funcRe } from '../../../parsers/stepsParser';
-import { Expectations, RunOptions } from './testWorkspaceRunners';
+import { Expectations, RunOptions } from './testProjectRunner';
 import { services } from '../../../services';
 
 
@@ -395,7 +395,7 @@ async function waitForWatcherParse(projUri: vscode.Uri, projName: string, waitUn
 //global.lock = "";
 let lockVal = "";
 
-// used to mitigate parallel workspace initialisation for multiroot parallel workspace testing
+// used to mitigate parallel project initialisation for multiroot parallel project testing
 // (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)
 async function setLock(consoleName: string, acquireOrRelease: string) {
 
@@ -403,7 +403,7 @@ async function setLock(consoleName: string, acquireOrRelease: string) {
 		return;
 
 	if (!["acquire", "release"].includes(acquireOrRelease))
-		throw "invalid value for acquire or release";
+		throw new Error("invalid value for acquire or release");
 
 	if (acquireOrRelease === "release") {
 		console.log(`${consoleName}: setLock releasing lock`);
@@ -427,13 +427,11 @@ async function setLock(consoleName: string, acquireOrRelease: string) {
 	const waited = performance.now() - start;
 
 	if (lockVal) {
-		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for all workspaces to initialise`);
+		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for all projects to initialise`);
 	}
-	else {
-		if (acquireOrRelease === "acquire") {
-			lockVal = consoleName;
-			console.log(`${consoleName}: setLock acquired lock after ${waited}`);
-		}
+	else if (acquireOrRelease === "acquire") {
+		lockVal = consoleName;
+		console.log(`${consoleName}: setLock acquired lock after ${waited}`);
 	}
 
 }
@@ -473,7 +471,7 @@ async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 
 // In the real world, a user can kick off one project and then another and then another, 
 // (i.e. staggered) - they do not have to wait for the first to complete,
-// so, when workspace-multiroot suite/index.ts is run (in order to test staggered workspace runs) this
+// so, when multiroot suite/index.ts is run (in order to test staggered project runs) this
 // function will run in parallel with itself (but as per the promises in that file, only one at a time for a given project, 
 // so for example projects A/B/Simple can run in parallel, but not e.g. A/A)
 export async function runAllTestsAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
@@ -595,7 +593,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 				test_label: result.test.label,
 				scenario_isOutline: result.scenario.isOutline,
 				scenario_getLabel: result.scenario.getLabel(),
-				scenario_featureFileRelativePath: result.scenario.featureFileWorkspaceRelativePath,
+				scenario_featureFileRelativePath: result.scenario.featureFileProjectRelativePath,
 				scenario_featureName: result.scenario.featureName,
 				scenario_scenarioName: result.scenario.scenarioName,
 				scenario_result: standardiseResult(result.scenario.result)

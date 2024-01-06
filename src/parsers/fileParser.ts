@@ -567,7 +567,7 @@ export class FileParser {
       `\n   (e) another test extension is also refreshing.` +
       `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
       `\n(Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
-      `\n==================`
+      `\n---`
     );
   }
 

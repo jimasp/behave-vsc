@@ -1,19 +1,19 @@
-import { TestWorkspaceRunners, noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/testWorkspaceRunners";
+import { TestProjectRunner, noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/testProjectRunner";
 import { behaveIni, expectations } from "./defaults";
 
 
 suite(`simple suite`, function () {
 
-	const testWorkspaceRunners = new TestWorkspaceRunners("simple");
+	const testProjectRunner = new TestProjectRunner("simple");
 
 	test("runAll", async () =>
-		await testWorkspaceRunners.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
-		await testWorkspaceRunners.runAll(noConfig, behaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
 
 	test("runAll - parallel", async () =>
-		await testWorkspaceRunners.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
 
 });
 

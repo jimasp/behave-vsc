@@ -135,7 +135,7 @@ export async function parseStepsFileContent(projUri: vscode.Uri, content: string
       const stepFsRk = createStepFileStepAndReKey(projUri, stepFileUri, range, step);
       if (stepFileSteps.get(stepFsRk.reKey))
         xRayLog("replacing duplicate step file step reKey: " + stepFsRk.reKey);
-      stepFileSteps.set(stepFsRk.reKey, stepFsRk.stepFileStep); // map.set() = no duplicate keys allowed (per workspace)
+      stepFileSteps.set(stepFsRk.reKey, stepFsRk.stepFileStep); // map.set() = no duplicate keys allowed
       fileSteps++;
       setFuncLineKeys.push(stepFsRk.reKey);
     }

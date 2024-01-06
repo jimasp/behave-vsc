@@ -1,16 +1,16 @@
-import { TestWorkspaceRunners, noBehaveIni, noRunOptions } from "../_helpers/testWorkspaceRunners";
+import { TestProjectRunner, noBehaveIni, noRunOptions } from "../_helpers/testProjectRunner";
 import { wsConfig, expectations, behaveIni } from "./defaults";
 
 
 suite(`imported steps suite`, () => {
-	const testWorkspaceRunners = new TestWorkspaceRunners("imported steps");
+	const testProjectRunner = new TestProjectRunner("imported steps");
 
 	test("runAll", async () =>
-		await testWorkspaceRunners.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
 
 
 	test("runAll - with behave.ini", async () =>
-		await testWorkspaceRunners.runAll(wsConfig, behaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(wsConfig, behaveIni, noRunOptions, expectations));
 
 });
 

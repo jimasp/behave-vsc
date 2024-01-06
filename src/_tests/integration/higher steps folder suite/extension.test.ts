@@ -1,15 +1,15 @@
-import { TestWorkspaceRunners, noConfig, noRunOptions, noBehaveIni } from "../_helpers/testWorkspaceRunners";
+import { TestProjectRunner, noConfig, noRunOptions, noBehaveIni } from "../_helpers/testProjectRunner";
 import { behaveIni, expectations } from "./defaults";
 
 
 suite(`higher steps folder suite`, () => {
-	const testWorkspaceRunners = new TestWorkspaceRunners("higher steps folder");
+	const testProjectRunner = new TestProjectRunner("higher steps folder");
 
 	test("runAll", async () =>
-		await testWorkspaceRunners.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
-		await testWorkspaceRunners.runAll(noConfig, behaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
 
 });
 

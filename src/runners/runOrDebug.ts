@@ -89,10 +89,10 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parall
     const pipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(wr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    const featureFileWorkspaceRelativePath = selectedScenarioQueueItems[0].scenario.featureFileWorkspaceRelativePath;
+    const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
 
     const friendlyArgs = [
-      "-i", `"${featureFileWorkspaceRelativePath}$"`,
+      "-i", `"${featureFileProjectRelativePath}$"`,
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
@@ -143,7 +143,7 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
 
 
   // get the feature paths and remove duplicates
-  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.scenario.featureFileWorkspaceRelativePath))];
+  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.scenario.featureFileProjectRelativePath))];
 
   // remove any feature path already covered by a parent folder selected by the user
   const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));

@@ -1,4 +1,4 @@
-import { TestWorkspaceRunners, noRunOptions } from "../_helpers/testWorkspaceRunners";
+import { TestProjectRunner, noRunOptions } from "../_helpers/testProjectRunner";
 import { behaveIni, expectationsWithSettingsJson, wsConfig } from "./default";
 
 
@@ -6,10 +6,10 @@ import { behaveIni, expectationsWithSettingsJson, wsConfig } from "./default";
 // sessions (which is not supported) when running the multi-root tests (i.e. runMultiRootWorkspacesInParallel=true)
 
 suite(`higher steps folder suite test debug run`, () => {
-  const testWorkspaceRunners = new TestWorkspaceRunners("project A");
+  const testProjectRunner = new TestProjectRunner("project A");
 
   test("debugAll", async () =>
-    await testWorkspaceRunners.debugAll(wsConfig, behaveIni, noRunOptions, expectationsWithSettingsJson)
+    await testProjectRunner.debugAll(wsConfig, behaveIni, noRunOptions, expectationsWithSettingsJson)
   )
 
 

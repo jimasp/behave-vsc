@@ -37,7 +37,7 @@ export const parallelConfig = new TestWorkspaceConfig({
 
 
 
-export class TestWorkspaceRunners {
+export class TestProjectRunner {
   constructor(readonly projName: string) { }
 
   runAll = async (wsConfig: TestWorkspaceConfig, behaveIniContent: string, runOptions: RunOptions, expectations: Expectations) => {
