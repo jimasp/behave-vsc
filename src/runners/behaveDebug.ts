@@ -22,7 +22,7 @@ export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyC
       name: `behave-vsc-debug`,
       console: "internalConsole",
       type: "python",
-      cwd: wr.projSettings.uri.fsPath,
+      cwd: wr.projSettings.workingDirUri.fsPath,
       request: 'launch',
       module: "behave",
       args: args,

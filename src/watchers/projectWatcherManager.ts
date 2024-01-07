@@ -115,7 +115,7 @@ export class ProjectWatcherManager {
         return false;
 
       for (const configFile of BEHAVE_CONFIG_FILES) {
-        const configPath = `${projUri.path}/${configFile}`;
+        const configPath = `${projSettings.workingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
           xRayLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);
           services.config.reloadSettings(projUri);
@@ -125,7 +125,7 @@ export class ProjectWatcherManager {
       }
 
       // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
-      const relFolderPaths = projSettings.relativeFeatureFolders.concat(projSettings.relativeStepsFolders);
+      const relFolderPaths = projSettings.projRelativeFeatureFolders.concat(projSettings.projRelativeStepsFolders);
       if (!relFolderPaths.some(relPath => uri.path.startsWith(`${projUri.path}/${relPath}`)))
         return false;
 

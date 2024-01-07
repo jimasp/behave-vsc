@@ -82,13 +82,13 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
       break;
     case "failed":
       if (!item.test.uri || !item.test.range)
-        throw "invalid test item";
+        throw new Error("invalid test item");
       message = new vscode.TestMessage(result.failedText ?? "failed");
       message.location = new vscode.Location(item.test.uri, item.test.range);
       run.failed(item.test, message, result.duration);
       break;
     default:
-      throw `Unhandled test result status: ${result.status}`;
+      throw new Error(`Unhandled test result status: ${result.status}`);
   }
 
   item.scenario.result = result.status;
@@ -172,7 +172,7 @@ function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario):
   // IF THAT FUNCTION CHANGES IN BEHAVE, THEN IT IS LIKELY THIS WILL ALSO HAVE TO CHANGE.    
   let fileName = null;
   const relFeatureFilePath = scenario.featureFileProjectRelativePath;
-  for (const relConfigPath of projSettings.relativeConfigPaths) {
+  for (const relConfigPath of projSettings.projRelativeConfigPaths) {
     if (relFeatureFilePath.startsWith(relConfigPath)) {
       fileName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
       break;
@@ -180,7 +180,7 @@ function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario):
   }
 
   if (!fileName)
-    fileName = path.relative(projSettings.relativeBaseDirPath, scenario.featureFileProjectRelativePath);
+    fileName = path.relative(projSettings.projRelativeBaseDirPath, scenario.featureFileProjectRelativePath);
 
   fileName = fileName.split('.').slice(0, -1).join('.');
   fileName = fileName.replace(/\\/g, '/').replace(/\//g, '.');
@@ -199,7 +199,7 @@ function getJunitFileUri(projSettings: ProjectSettings, queueItem: QueueItem, pr
   if (junitFileUri.fsPath.length <= WIN_MAX_PATH)
     return junitFileUri;
 
-  throw `windows max path exceeded while trying to build junit file path: ${junitFileUri.fsPath}`;
+  throw new Error(`windows max path exceeded while trying to build junit file path: ${junitFileUri.fsPath}`);
 }
 
 
@@ -278,8 +278,8 @@ export async function parseJunitFileAndUpdateTestResults(projSettings: ProjectSe
 
 
     if (queueItemResults.length === 0) {
-      throw `could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
-      `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`;
+      throw new Error(`could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
+        `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`);
     }
 
     let queueItemResult = queueItemResults[0];
@@ -315,7 +315,7 @@ export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSet
 
   if (services.config.exampleProject) {
     debugger; // eslint-disable-line no-debugger
-    throw `JUnit file ${junitFileUri.fsPath} could not be read.`;
+    throw new Error(`JUnit file ${junitFileUri.fsPath} could not be read.`);
   }
 
   services.logger.show(projSettings.uri);

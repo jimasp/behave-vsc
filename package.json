@@ -54,6 +54,11 @@
 					"default": true,
 					"deprecationMessage": "This legacy setting is IGNORED. Please use \"behave-vsc.runMultiRootProjectsInParallel\"."
 				},
+				"behave-vsc.relativeWorkingDir": {
+					"scope": "resource",
+					"type": "string",
+					"markdownDescription": "Behave working directory, if it is not the same as the project root."
+				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
 					"type": "boolean",

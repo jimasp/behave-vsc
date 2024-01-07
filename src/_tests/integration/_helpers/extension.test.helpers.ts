@@ -100,13 +100,13 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 	const projSettings = config.projectSettings[projUri.path];
 	assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
 		`${projName} project: env`);
-	assert.deepStrictEqual(projSettings.relativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
+	assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
 		`${projName} project: relativeFeatureFolders`);
-	assert.deepStrictEqual(projSettings.relativeStepsFolders, expectations.expectedProjectRelativeStepsFolders,
+	assert.deepStrictEqual(projSettings.projRelativeStepsFolders, expectations.expectedProjectRelativeStepsFolders,
 		`${projName} project: relativeStepsFolders`);
-	assert.strictEqual(projSettings.relativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
+	assert.strictEqual(projSettings.projRelativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
 		`${projName} project: relativeBaseDirPath`);
-	assert.deepStrictEqual(projSettings.relativeConfigPaths, expectations.expectedProjectRelativeConfigPaths,
+	assert.deepStrictEqual(projSettings.projRelativeConfigPaths, expectations.expectedProjectRelativeConfigPaths,
 		`${projName} project: relativeConfigPaths`);
 	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
 		`${projName} project: justMyCode`);
@@ -151,7 +151,7 @@ function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<File
 async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 
 	const stepLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.relativeFeatureFolders}/**/*.feature`);
+	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders}/**/*.feature`);
 	const featureFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const featFileUri of featureFileUris) {
@@ -168,7 +168,7 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
 
 	const funcLines = new Map<FileStep, string>();
-	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.relativeFeatureFolders}/steps/*.py`);
+	const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders}/steps/*.py`);
 	const stepFileUris = await vscode.workspace.findFiles(pattern, null);
 
 	for (const stepFileUri of stepFileUris) {

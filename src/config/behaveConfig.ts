@@ -5,7 +5,7 @@ import { BEHAVE_CONFIG_FILES } from "../common/helpers";
 import { services } from '../services';
 
 
-export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string[] {
+export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri: vscode.Uri): string[] {
   let paths: string[] | null = null;
 
   // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
@@ -16,7 +16,7 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string
   let matchedConfigFile;
   let lastExistingConfigFile;
   for (const configFile of BEHAVE_CONFIG_FILES) {
-    const configFilePath = path.join(projUri.fsPath, configFile);
+    const configFilePath = path.join(workUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
       lastExistingConfigFile = configFile;
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
@@ -43,7 +43,7 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri): string
   const relPaths: string[] = [];
   for (const path of paths) {
     // behave config paths setting may be relative or absolute, so standardise to relative
-    const relPath = vscode.workspace.asRelativePath(path, false);
+    const relPath = vscode.workspace.asRelativePath(`${workUri.path}/${path}`, false);
     if (!fs.existsSync(vscode.Uri.joinPath(projUri, relPath).fsPath))
       services.logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
     else

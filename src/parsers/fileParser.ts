@@ -336,7 +336,7 @@ export class FileParser {
     clearStepMappings(projUri);
 
     let processed = 0;
-    for (const relFeaturesFolder of projSettings.relativeFeatureFolders) {
+    for (const relFeaturesFolder of projSettings.projRelativeFeatureFolders) {
       const featuresFolderUri = vscode.Uri.joinPath(projUri, relFeaturesFolder);
       if (!fs.existsSync(featuresFolderUri.fsPath)) {
         // e.g. user has deleted/renamed folder
@@ -374,7 +374,7 @@ export class FileParser {
     deleteStepFileStepsForProject(projUri);
 
     const processed: string[] = [];
-    for (const relStepsSearchPath of projSettings.relativeStepsFolders) {
+    for (const relStepsSearchPath of projSettings.projRelativeStepsFolders) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsSearchPath);
       if (!fs.existsSync(stepsSearchUri.fsPath))
@@ -487,10 +487,10 @@ export class FileParser {
     let current: vscode.TestItem | undefined;
 
     let sfp = "";
-    if (projSettings.relativeFeatureFolders.length > 1) {
+    if (projSettings.projRelativeFeatureFolders.length > 1) {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
       // test any changes here with the test UI folder tree using example project "sibling steps folder 2"
-      let shortest = getShortestCommonPathsExcludingLastPart(projSettings.relativeFeatureFolders);
+      let shortest = getShortestCommonPathsExcludingLastPart(projSettings.projRelativeFeatureFolders);
       shortest = shortest.sort((a, b) => a.length - b.length);
       for (const folder of shortest) {
         if (sfp.startsWith(folder + "/")) {

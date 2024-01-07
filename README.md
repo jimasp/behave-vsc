@@ -84,7 +84,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
         └── web_steps.py
     ```
 
-- See [advanced project configuration](#advanced-project-configuration) for more information on how to configure non-standard project structures.
+- See [advanced project configuration](#advanced-project-configuration) for information on how to configure non-standard project structures.
 
 ---
 
@@ -312,12 +312,23 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Advanced project configuration
 
-- If your features folder is non-standard, i.e.:
-  - it is not in your project root, or
-  - it is in the project root, but is not called `features` *and* does not have a sibling `steps` folder, or
-  - you have multiple features folders in your project root,
+- If your behave working directory is not the same as your project directory, then you can set the `relativeWorkingDir` to specify a project-relative path to the behave working directory.
 
-  then you can use the `paths` setting in your behave configuration file to specify a project-relative path to the features folder(s):
+  - Example:
+
+    ```json
+      // settings.json
+      {
+        "behave-vsc.relativeWorkingDir": "my_behave_working_folder", // project-relative path
+      }
+    ```
+
+- If your features folder is non-standard, i.e.:
+  - it is not in your behave working directory root, or
+  - it is in the behave working directory root, but is not called `features` *and* does not have a sibling `steps` folder, or
+  - you have multiple features folders in the root of your behave-working-directory,
+
+  then you can use the `paths` setting in your behave configuration file to specify a behave-working-directory-relative path to the features folder(s):
 
   - Example A, features folder is a subfolder called `my_folder/my_features`:
 
@@ -327,7 +338,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
       paths=my_folder/my_features
       ```
 
-  - Example B, multiple features folders in a project root:
+  - Example B, multiple features folders in root of working directory:
 
       ```ini
       # behave.ini (or .behaverc, setup.cfg, tox.ini)
@@ -336,7 +347,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             web_features
       ```
 
-- If you have any issues with relative imports due to the behave working directory then you can set a `PYTHONPATH` environment variable for behave execution using the `env` setting. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
+- If you have any issues with relative imports then you can set a `PYTHONPATH` environment variable for behave execution using the `env` setting. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
 
   - Example:
 

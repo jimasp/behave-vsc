@@ -17,12 +17,12 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
     local_args.unshift("-m", "behave");
     xRayLog(`${wr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...wr.env };
-    const options: SpawnOptions = { cwd: projUri.fsPath, env: env };
+    const options: SpawnOptions = { cwd: wr.projSettings.workingDirUri.fsPath, env: env };
     cp = spawn(wr.pythonExec, local_args, options);
 
     if (!cp.pid) {
-      throw `unable to launch python or behave, command: ${wr.pythonExec} ${local_args.join(" ")}\n` +
-      `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.env)}`;
+      throw new Error(`unable to launch python or behave, command: ${wr.pythonExec} ${local_args.join(" ")}\n` +
+        `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.env)}`);
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order

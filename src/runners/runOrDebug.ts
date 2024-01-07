@@ -27,7 +27,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: ProjRun): Promise<v
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
   const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-  const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
+  const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
   if (wr.debug) {
@@ -56,7 +56,7 @@ export async function runOrDebugFeatures(wr: ProjRun, parallelMode: boolean, sce
     const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
     const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-    const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (wr.debug) {
@@ -90,15 +90,16 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parall
     const friendlyEnvVars = getFriendlyEnvVars(wr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
+    const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(wr, featureFileProjectRelativePath);
 
     const friendlyArgs = [
-      "-i", `"${featureFileProjectRelativePath}$"`,
+      "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
     const args = addTagsAndGetArgs(wr, friendlyArgs);
 
-    const friendlyCmd = `${ps1}cd "${wr.projSettings.uri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (wr.debug) {
@@ -124,7 +125,7 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
   // features/path1/|features/path2/|features/path3/|features/path4/my.feature$|features/path5/path6/my.feature$
 
 
-  // reduce the folders to the top-level where possible
+  // if not parallelMode, then reduce the folders to the top-level where possible
   const folderPaths: string[] = [];
   if (!parallelMode) {
 
@@ -134,7 +135,7 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
     folderPaths.push(...selectedFolderIds.map(id => vscode.workspace.asRelativePath(vscode.Uri.parse(id), false) + "/"));
 
     // keep only the top level folder paths (i.e. if we have a/b/c and a/b, remove a/b/c)
-    folderPaths.sort();
+    folderPaths.sort((a, b) => a.localeCompare(b));
     for (let i = folderPaths.length - 1; i > 0; i--) {
       if (folderPaths[i].startsWith(folderPaths[i - 1]))
         folderPaths.splice(i, 1);
@@ -147,6 +148,10 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
 
   // remove any feature path already covered by a parent folder selected by the user
   const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
+
+  // finally, make paths relative to the working directory
+  const workRelfeaturePathsNotCoveredByFolderPaths = featurePathsNotCoveredByFolderPaths.map(x =>
+    projDirRelativePathToWorkDirRelativePath(wr, x));
 
   // NOTE!! be careful changing the `x + "$"` to another regex!
   // you will need to retest it with nested folders/features, top level folders,
@@ -163,7 +168,7 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
 
   // BE VERY CAREFUL CHANGING THE PATTERN REGEX - SEE ABOVE NOTES AND TEST THOROUGHLY
   return folderPaths.map(x => x)
-    .concat(...featurePathsNotCoveredByFolderPaths.map(x => x + "$"))
+    .concat(...workRelfeaturePathsNotCoveredByFolderPaths.map(x => x + "$"))
     .join('|')
     .replaceAll("\\", "/");
 }
@@ -223,3 +228,9 @@ function addTagsAndGetArgs(wr: ProjRun, friendlyArgs: string[]) {
   return args;
 }
 
+
+function projDirRelativePathToWorkDirRelativePath(wr: ProjRun, featureFileProjectRelativePath: string) {
+  return wr.projSettings.projRelativeWorkingDirPath
+    ? featureFileProjectRelativePath.replace(wr.projSettings.projRelativeWorkingDirPath + "/", "")
+    : featureFileProjectRelativePath;
+}

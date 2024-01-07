@@ -167,16 +167,16 @@ feature file formatting is provided by:
 
 ### Exception handling
 
-- Behave execution errors are not extension exceptions and should be handled, (e.g. update the test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate). The following notes are regarding exceptions raised from extension code itself:
+- The following notes are regarding exceptions raised from extension code *itself*. Behave execution errors are not extension exceptions and should always be handled, (e.g. update the test state to failed with a failure message that refers the user to look at the Behave VSC output window or the debug console as appropriate).
 - Any thrown errors are going to reach the user, so they should be things that either:
   - (a) the user can act upon to fix themselves, or
-  - (b) actual "exceptions", i.e. a bug or "stuff that is never supposed to happen" and should be raised as an issue on github.
-- The most common error handling stack is: `throw "an error message"` -> `throw new projError` -> `services.logger.showError`.
-- Take a look at `class projError`.
+  - (b) actual "exceptions", i.e. "stuff that is never supposed to happen" (a bug) and should be raised as an issue on github.
+- The most common error handling stack is: `throw new Error("an error message")` -> `throw new projError` -> `services.logger.showError`. (Take a look at `class projError`.)
+- `showError` will show the error in a dialog box to alert the user.
 - Entry point (event handlers/hooks) i.e. top-level functions, and background tasks (i.e. unawaited async functions/promises) should *always* contain a `try/catch` with a `config.showError`. Examples are:
   - any unawaited async function
   - `activate`,`deactivate`, any function called `...Handler` or `onDid...` or just `on...` (e.g. `onCancellationRequested`)
-- Elsewhere `showError` should be avoided. Instead you want to use either `throw "my message"` or `throw new projError(...)`.
+- Elsewhere `showError` should be avoided. Instead you want to use either `throw new Error("my message")` or `throw new projError(...)`.
 - `projError` should be used if:
   - (a) there is no `catch` above that creates a `new projError` itself, AND
   - (b) you have a workspace context (i.e. `wr`, `projSettings` or `projUri` is available to the function).
@@ -184,14 +184,13 @@ feature file formatting is provided by:
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).  
 - These are general guidelines. If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, *only gets shown once*, creates an error dialog box to alert the user and has the full expected stack if `xRay` is enabled. i.e. *think about the user experience*.
 - Note that stack traces should only appear if `behave-vsc.xRay` is enabled.
-- `showError` will show the error in a dialog box to alert the user.
 - Generally speaking, Info level events appear in the output window. Warnings and Errors appear in the output window and as a notification window. All of them will appear in console if `xRay` is enabled. See [Logging](#logging) for more information.
 
 ### Logging
 
 - In the case of errors, should not call the logger. You should `throw` for errors (see [Exception handling](#exception-handling)), and `showWarn` for warnings. This will automatically log the error/warning and open a notification window to alert the user.
 - Log info to the Behave VSC project context output window and any active debug window: `services.logger.logInfo("msg", projUri)`. Preferred over `logInfoAllProjects()` wherever possible.
-- Log info to all Behave VSC output windows (regardless of project): `services.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a workspace context does not make sense.*
+- Log info to all Behave VSC output windows (regardless of project): `services.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a project context does not make sense.*
 - Log info to the vscode test run output at the same time: specify the run parameter: `services.logger.logInfo("msg", projUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg\r\n")`.
 - Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.

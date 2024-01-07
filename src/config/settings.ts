@@ -92,21 +92,23 @@ export class ProjectSettings {
   public readonly importedSteps: ImportedSteps = [];
   // calculated
   public readonly id: string;
-  public readonly uri: vscode.Uri;
   public readonly name: string;
-  public readonly relativeBaseDirPath: string = "";
-  public readonly relativeConfigPaths: string[] = [];
-  public readonly relativeFeatureFolders: string[] = [];
-  public readonly relativeStepsFolders: string[] = [];
+  public readonly uri: vscode.Uri;
+  public readonly workingDirUri: vscode.Uri;
+  public readonly projRelativeWorkingDirPath: string = "";
+  public readonly projRelativeBaseDirPath: string = "";
+  public readonly projRelativeConfigPaths: string[] = [];
+  public readonly projRelativeFeatureFolders: string[] = [];
+  public readonly projRelativeStepsFolders: string[] = [];
 
 
   constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
     xRayLog("constructing ProjectSettings");
 
-    this.uri = projUri;
     this.id = uriId(projUri);
-    const wsFolder = getWorkspaceFolder(projUri);
-    this.name = wsFolder.name;
+    this.name = getWorkspaceFolder(projUri).name;
+    this.uri = projUri;
+    this.workingDirUri = projUri; // default
 
     // note: for all settings, projConfig.get() should never return undefined (unless packages.json is wrong),
     // as get() will always return a default value for any packages.json setting.
@@ -146,24 +148,37 @@ export class ProjectSettings {
       vscode.window.showWarningMessage('Invalid "behave-vsc.envVarOverrides" setting was ignored.', "OK");
     }
 
+    const relWorkingDirCfg: string | undefined = projConfig.get("relativeWorkingDir");
+    if (relWorkingDirCfg === undefined)
+      throw new Error("relativeWorkingDir is undefined");
+    const workingDirUri = vscode.Uri.joinPath(projUri, relWorkingDirCfg);
+    if (!fs.existsSync(workingDirUri.fsPath)) {
+      vscode.window.showWarningMessage(`Invalid "behave-vsc.relativeWorkingDir" setting: "${relWorkingDirCfg}" ` +
+        "does not exist and will be ignored.", "OK");
+    }
+    else {
+      this.workingDirUri = workingDirUri;
+      this.projRelativeWorkingDirPath = relWorkingDirCfg;
+    }
+
+
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
       throw new Error("importedSteps is undefined");
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
 
 
-
-    const projRelPaths = getProjectRelativePaths(projUri, this.name, this.importedSteps);
+    const projRelPaths = getProjectRelativePaths(projUri, this.workingDirUri, this.importedSteps, this.name);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
       return;
     }
 
-    this.relativeBaseDirPath = projRelPaths.relativeBaseDirPath;
-    this.relativeConfigPaths = projRelPaths.relativeConfigPaths;
-    this.relativeFeatureFolders = projRelPaths.relativeFeatureFolders;
-    this.relativeStepsFolders = projRelPaths.relativeStepsFolders;
+    this.projRelativeBaseDirPath = projRelPaths.relativeBaseDirPath;
+    this.projRelativeConfigPaths = projRelPaths.relativeConfigPaths;
+    this.projRelativeFeatureFolders = projRelPaths.relativeFeatureFolders;
+    this.projRelativeStepsFolders = projRelPaths.relativeStepsFolders;
 
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
@@ -193,8 +208,8 @@ export class ProjectSettings {
     projEntries.forEach(([key, value]) => userEntries[key] = value);
     resourceSettingsDic["user:"] = userEntries;
     resourceSettingsDic["auto:"] = {
-      "featureFolders": this.relativeFeatureFolders,
-      "stepsFolders": this.relativeStepsFolders
+      "featureFolders": this.projRelativeFeatureFolders,
+      "stepsFolders": this.projRelativeStepsFolders
     }
 
     // output settings, and any warnings or errors for settings
@@ -244,8 +259,8 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 
-function getProjectRelativePaths(projUri: vscode.Uri, projName: string, importedSteps: ImportedSteps) {
-  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri);
+function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string) {
+  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
@@ -290,6 +305,7 @@ function getProjectRelativePaths(projUri: vscode.Uri, projName: string, imported
 
 
 function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeBehaveConfigPaths: string[]): string | null {
+
   // NOTE: THIS FUNCTION MUST HAVE LOOSELY SIMILAR LOGIC TO THE 
   // BEHAVE SOURCE CODE FUNCTION "setup_paths()".
   // IF THAT FUNCTION LOGIC CHANGES IN BEHAVE, THEN IT IS LIKELY THIS FUNCTION WILL ALSO HAVE TO CHANGE.  
@@ -324,7 +340,9 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
   if (new_base_dir === project_parent_dir) {
     if (relativeBehaveConfigPaths.length === 0) {
       services.logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-        'Please specify a "paths" setting in your behave configuration file for this project.', projUri);
+        'Please either: (a) specify a "paths" setting in your behave configuration file for this project, and/or ' +
+        '(b) if your behave working directory is not the same as your project root then specify a "behave-vsc.relWorkingDir"' +
+        'in settings.json', projUri);
     }
     else {
       services.logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
