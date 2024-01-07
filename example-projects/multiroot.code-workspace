@@ -13,6 +13,10 @@
 			"name": "project B"
 		},
 		{
+			"path": "./working dir",
+			"name": "working dir"
+		},
+		{
 			"path": "./run profiles",
 			"name": "run profiles"
 		},

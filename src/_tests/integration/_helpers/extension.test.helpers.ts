@@ -108,6 +108,8 @@ function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string
 		`${projName} project: relativeBaseDirPath`);
 	assert.deepStrictEqual(projSettings.projRelativeConfigPaths, expectations.expectedProjectRelativeConfigPaths,
 		`${projName} project: relativeConfigPaths`);
+	assert.strictEqual(projSettings.projRelativeWorkingDirPath, expectations.expectedProjectRelativeWorkingDirPath,
+		`${projName} project: relativeWorkingDirPath`);
 	assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
 		`${projName} project: justMyCode`);
 	assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"),
@@ -331,16 +333,16 @@ function getTestProjectUri(projName: string) {
 	return projUri;
 }
 
-function getBehaveIniPaths(projUri: vscode.Uri) {
-	const behaveIniPath = path.join(projUri.fsPath, 'behave.ini');
-	const behaveIniTmpPath = path.join(projUri.fsPath, 'behave.ini.tmp');
+function getBehaveIniPaths(workDirUri: vscode.Uri) {
+	const behaveIniPath = path.join(workDirUri.fsPath, 'behave.ini');
+	const behaveIniTmpPath = path.join(workDirUri.fsPath, 'behave.ini.tmp');
 	return { behaveIniPath, behaveIniTmpPath };
 }
 
-async function replaceBehaveIni(api: IntegrationTestAPI, projName: string, projUri: vscode.Uri, content: string) {
+async function replaceBehaveIni(projName: string, projUri: vscode.Uri, workDirUri: vscode.Uri, content: string) {
 	// behave behaviour is dictated by a file on disk, 
 	// i.e. we cannot mock out behave.ini or we would go out of sync with behave
-	const paths = getBehaveIniPaths(projUri);
+	const paths = getBehaveIniPaths(workDirUri);
 	if (fs.existsSync(paths.behaveIniPath))
 		fs.renameSync(paths.behaveIniPath, paths.behaveIniTmpPath);
 	fs.writeFileSync(paths.behaveIniPath, Buffer.from(content));
@@ -348,8 +350,8 @@ async function replaceBehaveIni(api: IntegrationTestAPI, projName: string, projU
 }
 
 
-async function restoreBehaveIni(projName: string, projUri: vscode.Uri) {
-	const paths = getBehaveIniPaths(projUri);
+async function restoreBehaveIni(projName: string, projUri: vscode.Uri, workDirUri: vscode.Uri) {
+	const paths = getBehaveIniPaths(workDirUri);
 	if (fs.existsSync(paths.behaveIniTmpPath))
 		fs.renameSync(paths.behaveIniTmpPath, paths.behaveIniPath);
 	else
@@ -478,6 +480,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 	behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
 	const projUri = getTestProjectUri(projName);
+	const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
 	const projId = uriId(projUri);
 	const api = await checkExtensionIsReady();
 	const consoleName = `runAllAndAssert for ${projName}`;
@@ -497,7 +500,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 		// because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
 		// would then reload settings.json from disk and replace the test config we are about to load
 		if (behaveIniContent) {
-			await replaceBehaveIni(api, projName, projUri, behaveIniContent);
+			await replaceBehaveIni(projName, projUri, workDirUri, behaveIniContent);
 			console.log(`${consoleName}: replaceBehaveIni completed`);
 		}
 
@@ -612,7 +615,7 @@ export async function runAllTestsAndAssertTheResults(projName: string, isDebugRu
 	}
 	finally {
 		if (behaveIniContent)
-			await restoreBehaveIni(projName, projUri);
+			await restoreBehaveIni(projName, projUri, workDirUri);
 	}
 }
 

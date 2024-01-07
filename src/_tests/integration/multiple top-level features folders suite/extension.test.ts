@@ -2,7 +2,7 @@ import { TestProjectRunner, noBehaveIni, noConfig, noRunOptions, parallelConfig 
 import { behaveIni, expectationsWithoutBehaveIniPaths, expectationsWithBehaveIniPaths } from "./defaults";
 
 
-suite(`multiple feature folders suite`, () => {
+suite(`multiple top-level features folders suite`, () => {
 
 	const testProjectRunner = new TestProjectRunner("multiple top-level features folders");
 

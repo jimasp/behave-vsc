@@ -18,6 +18,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private runMultiRootProjectsInParallel?: boolean;
 	private importedSteps?: ImportedStepsSetting;
 	private runProfiles?: RunProfilesSetting;
+	private relativeWorkingDir?: string;
 	private xRay?: boolean;
 
 	// all USER-SETTABLE settings in settings.json or *.code-workspace
@@ -29,6 +30,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runParallel = undefined,
 		importedSteps = undefined,
 		runProfiles = undefined,
+		relativeWorkingDir = undefined,
 		xRay = true // default true for tests
 	}: {
 		envVarOverrides?: { [name: string]: string },
@@ -38,6 +40,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		runParallel?: boolean,
 		importedSteps?: ImportedStepsSetting,
 		runProfiles?: RunProfilesSetting,
+		relativeWorkingDir?: string,
 		xRay?: boolean
 	} = {}) {
 		this.envVarOverrides = envVarOverrides;
@@ -47,6 +50,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		this.runMultiRootProjectsInParallel = runMultiRootProjectsInParallel;
 		this.importedSteps = importedSteps;
 		this.runProfiles = runProfiles;
+		this.relativeWorkingDir = relativeWorkingDir;
 		this.xRay = xRay;
 	}
 
@@ -73,10 +77,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			case "importedSteps":
 				return <T><unknown>(this.importedSteps === undefined ? [] : this.importedSteps);
-			case "xRay":
-				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			case "runProfiles":
 				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
+			case "relativeWorkingDir":
+				return <T><unknown>(this.relativeWorkingDir === undefined ? "" : this.relativeWorkingDir);
+			case "xRay":
+				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);
@@ -115,6 +121,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "runProfiles":
 				response = <T><unknown>this.runProfiles;
 				break;
+			case "relativeWorkingDir":
+				response = <T><unknown>this.relativeWorkingDir;
+				break;
 			case "xRay":
 				response = <T><unknown>this.xRay;
 				break;
@@ -145,10 +154,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.get("runMultiRootProjectsInParallel"));
 			case "runParallel":
 				return <T><unknown>(this.get("runParallel"));
-			case "runProfiles":
-				return <T><unknown>(this.get("runProfiles"));
 			case "importedSteps":
 				return <T><unknown>(this.get("importedSteps") === undefined ? [] : convertimportedStepsToExpectedArray(this.get("importedSteps")));
+			case "runProfiles":
+				return <T><unknown>(this.get("runProfiles"));
+			case "relativeWorkingDir":
+				return <T><unknown>(this.get("relativeWorkingDir"));
 			case "xRay":
 				return <T><unknown>(this.get("xRay"));
 			default:

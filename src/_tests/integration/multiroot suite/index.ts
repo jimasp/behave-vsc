@@ -13,6 +13,7 @@ export async function run(): Promise<void[]> {
 	const isSuite = runner("../**/imported steps suite/**.test.js");
 	const sf1Suite = runner("../**/sibling steps folder 1 suite/**.test.js");
 	const sf2Suite = runner("../**/sibling steps folder 2 suite/**.test.js");
+	const wdSuite = runner("../**/working dir suite/**.test.js", ["../**/working dir suite/**.testdebug.test.js"]);
 
-	return Promise.all([aSuite, bSuite, sSuite, rpSuite, isSuite, mtlfSuite, sf1Suite, sf2Suite]);
+	return Promise.all([aSuite, bSuite, sSuite, rpSuite, isSuite, mtlfSuite, sf1Suite, sf2Suite, wdSuite]);
 }

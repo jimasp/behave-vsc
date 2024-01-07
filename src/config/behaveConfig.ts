@@ -5,7 +5,7 @@ import { BEHAVE_CONFIG_FILES } from "../common/helpers";
 import { services } from '../services';
 
 
-export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri: vscode.Uri): string[] {
+export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri: vscode.Uri, projRelativeWorkingDirPath: string): string[] {
   let paths: string[] | null = null;
 
   // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
@@ -41,13 +41,14 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri
   }
 
   const relPaths: string[] = [];
-  for (const path of paths) {
+  for (const biniPath of paths) {
     // behave config paths setting may be relative or absolute, so standardise to relative
-    const relPath = vscode.workspace.asRelativePath(`${workUri.path}/${path}`, false);
-    if (!fs.existsSync(vscode.Uri.joinPath(projUri, relPath).fsPath))
-      services.logger.showWarn(`Ignoring invalid path "${path}" in config file ${matchedConfigFile}.`, projUri);
+    const workRelPath = biniPath.replace(workUri.fsPath, "");
+    const projRelPath = path.join(projRelativeWorkingDirPath, workRelPath);
+    if (!fs.existsSync(vscode.Uri.joinPath(projUri, projRelPath).fsPath))
+      services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
     else
-      relPaths.push(relPath);
+      relPaths.push(projRelPath);
   }
 
   const outPaths = relPaths.map(p => `"${p}"`).join(", ");

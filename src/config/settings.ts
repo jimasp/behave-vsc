@@ -168,7 +168,7 @@ export class ProjectSettings {
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
 
 
-    const projRelPaths = getProjectRelativePaths(projUri, this.workingDirUri, this.importedSteps, this.name);
+    const projRelPaths = getProjectRelativePaths(projUri, this.workingDirUri, this.importedSteps, this.name, this.projRelativeWorkingDirPath);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
@@ -259,8 +259,10 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 
-function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string) {
-  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri);
+function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
+  projRelativeWorkingDirPath: string) {
+
+  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   

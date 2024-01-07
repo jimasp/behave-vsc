@@ -11,6 +11,7 @@ export type RunOptions = {
 }
 
 export type Expectations = {
+  expectedProjectRelativeWorkingDirPath?: string;
   expectedProjectRelativeBaseDirPath: string;
   expectedProjectRelativeConfigPaths: string[];
   expectedProjectRelativeFeatureFolders: string[];
