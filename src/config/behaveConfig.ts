@@ -42,13 +42,18 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri
 
   const relPaths: string[] = [];
   for (const biniPath of paths) {
-    // behave config paths setting may be relative or absolute, so standardise to relative
-    const workRelPath = biniPath.replace(workUri.fsPath, "");
-    const projRelPath = path.join(projRelativeWorkingDirPath, workRelPath);
-    if (!fs.existsSync(vscode.Uri.joinPath(projUri, projRelPath).fsPath))
+    // behave config paths setting may be either:
+    // a) working-directory-relative paths,
+    // b) an absolute paths that includes the working directory path,
+    // c) a combination of both 
+    // we need to convert them all to convert them to project-relative paths, then check they exist
+    const workingRelPath = biniPath.replace(workUri.fsPath, "");
+    const projectRelPath = path.join(projRelativeWorkingDirPath, workingRelPath);
+
+    if (!fs.existsSync(vscode.Uri.joinPath(projUri, projectRelPath).fsPath))
       services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
     else
-      relPaths.push(projRelPath);
+      relPaths.push(projectRelPath);
   }
 
   const outPaths = relPaths.map(p => `"${p}"`).join(", ");

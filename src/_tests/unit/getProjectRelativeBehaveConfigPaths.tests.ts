@@ -14,10 +14,12 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
   let logger: any;
   let projUri: vscode.Uri;
   let workDirUri: vscode.Uri;
+  let workDirRelPath: string;
 
   setup(() => {
     projUri = vscode.Uri.file(rndNumeric());
     workDirUri = vscode.Uri.file(projUri.fsPath + "/" + rndNumeric());
+    workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "");
     sandbox = sinon.createSandbox();
     logger = { logInfo: sandbox.stub() };
     services.logger = logger;
@@ -27,50 +29,50 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     sandbox.restore();
   });
 
-  // test("should return empty array when no behave config file found", () => {
-  //   sandbox.stub(fs, 'existsSync').returns(false);
-  //   const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-  //   assert.deepStrictEqual(result, []);
-  //   assert(logger.logInfo.calledOnceWithExactly('No Behave config file found, using default paths.', projUri));
-  // });
+  test("should return empty array when no behave config file found", () => {
+    sandbox.stub(fs, 'existsSync').returns(false);
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, []);
+    assert(logger.logInfo.calledOnceWithExactly('No Behave config file found, using default paths.', projUri));
+  });
 
-  // test("should return default paths when space in [ behave]", () => {
-  //   // (ignored due to space in "[behave ]")
-  //   // [behave ]
-  //   // paths  =features  
-  //   const fileContent = '[behave ]\n paths  =features\n';
-  //   sandbox.stub(fs, 'existsSync').returns(true);
-  //   sandbox.stub(fs, 'readFileSync').returns(fileContent);
-  //   const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-  //   assert.deepStrictEqual(result, []);
-  //   assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', projUri));
-  // });
+  test("should return default paths when space in [ behave]", () => {
+    // (ignored due to space in "[behave ]")
+    // [behave ]
+    // paths  =features  
+    const fileContent = '[behave ]\n paths  =features\n';
+    sandbox.stub(fs, 'existsSync').returns(true);
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, []);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', projUri));
+  });
 
 
-  // test("should return empty array when paths is empty", () => {
-  //   // [behave]
-  //   // paths =
-  //   const fileContent = '[behave]\n  paths = \n';
-  //   const filePath = path.join(workDirUri.fsPath, "tox.ini");
-  //   sandbox.stub(fs, 'existsSync').withArgs(filePath).returns(true);
-  //   sandbox.stub(fs, 'readFileSync').returns(fileContent);
-  //   const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-  //   assert.deepStrictEqual(result, []);
-  //   assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" did not set paths, using default paths.', projUri));
-  // });
+  test("should return empty array when paths is empty", () => {
+    // [behave]
+    // paths =
+    const fileContent = '[behave]\n  paths = \n';
+    const filePath = path.join(workDirUri.fsPath, "tox.ini");
+    sandbox.stub(fs, 'existsSync').withArgs(filePath).returns(true);
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, []);
+    assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" did not set paths, using default paths.', projUri));
+  });
 
-  // test("should return working dir features when paths is ./features", () => {
-  //   // [behave]
-  //   // paths = ./features  
-  //   const fileContent = '[behave]\n  paths = ./features\n';
-  //   sandbox.stub(fs, 'existsSync').returns(true);
-  //   sandbox.stub(fs, 'readFileSync').returns(fileContent);
-  //   const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-  //   const resPaths = [path.join(workDirUri.fsPath, "features")];
-  //   const resPathsText = `"${resPaths.join('", "')}"`;
-  //   assert.deepStrictEqual(result, resPaths);
-  //   assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets relative paths: ${resPathsText}`, projUri));
-  // });
+  test("should return working dir features when paths is ./features", () => {
+    // [behave]
+    // paths = ./features  
+    const fileContent = '[behave]\n  paths = ./features\n';
+    sandbox.stub(fs, 'existsSync').returns(true);
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    const resPaths = [path.join(workDirRelPath, "features")];
+    const resPathsText = `"${resPaths.join('", "')}"`;
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets relative paths: ${resPathsText}`, projUri));
+  });
 
 
   test("should return relative feature path when behave.ini contains a full path", () => {
@@ -81,8 +83,7 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const fileContent = '[behave]\n  paths = /home/me/project/working/features\n';
     sandbox.stub(fs, 'existsSync').returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
-    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, "working");
     assert.deepStrictEqual(result, ["working/features"]);
     assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets relative paths: "working/features"`, projUri));
   });
@@ -97,12 +98,14 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const filePath = path.join(workDirUri.fsPath, "setup.cfg");
     sandbox.stub(fs, 'existsSync')
       .withArgs(filePath).returns(true)
-      .withArgs(path.join(projUri.fsPath, "features")).returns(true)
-      .withArgs(path.join(projUri.fsPath, "features2")).returns(true);
+      .withArgs(path.join(workDirUri.fsPath, "features")).returns(true)
+      .withArgs(path.join(workDirUri.fsPath, "features2")).returns(true);
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-    assert.deepStrictEqual(result, ["features", "features2"]);
-    assert(logger.logInfo.calledOnceWithExactly('Behave config file "setup.cfg" sets relative paths: "features", "features2"', projUri));
+    const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    const resPaths = [path.join(workDirRelPath, "features"), path.join(workDirRelPath, "features2")];
+    const resPathsText = `"${resPaths.join('", "')}"`;
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "setup.cfg" sets relative paths: ${resPathsText}`, projUri));
   });
 
 
@@ -114,19 +117,20 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
     const toxIni = path.join(workDirUri.fsPath, "tox.ini");
     const pyprojectToml = path.join(workDirUri.fsPath, "pyproject.toml");
 
+    const resPaths = [path.join(workDirRelPath, "features")];
+    const resPathsText = `"${resPaths.join('", "')}"`;
+
     // behave.ini
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
     sandbox.stub(fs, 'existsSync').returns(true);
-    let result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-    assert.deepStrictEqual(result, ["features"]);
-    assert(logger.logInfo.calledOnceWithExactly('Behave config file "behave.ini" sets relative paths: "features"', projUri));
+    let result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets relative paths: ${resPathsText}`, projUri));
     sandbox.restore();
     logger.logInfo.resetHistory();
 
     // .behaverc
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
     sandbox.stub(fs, 'existsSync')
       .withArgs(path.join(workDirUri.fsPath, "features")).returns(true)
       .withArgs(behaveIni).returns(false)
@@ -134,16 +138,15 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(true)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(workDirUri, workDirUri);
-    assert.deepStrictEqual(result, ["features"]);
-    assert(logger.logInfo.calledOnceWithExactly('Behave config file ".behaverc" sets relative paths: "features"', projUri));
+    result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file ".behaverc" sets relative paths: ${resPathsText}`, projUri));
     sandbox.restore();
     logger.logInfo.resetHistory();
 
 
     // setup.cfg
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
     sandbox.stub(fs, 'existsSync')
       .withArgs(path.join(workDirUri.fsPath, "features")).returns(true)
       .withArgs(behaveIni).returns(false)
@@ -151,15 +154,14 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(true)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-    assert.deepStrictEqual(result, ["features"]);
-    assert(logger.logInfo.calledOnceWithExactly('Behave config file "setup.cfg" sets relative paths: "features"', projUri));
+    result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "setup.cfg" sets relative paths: ${resPathsText}`, projUri));
     sandbox.restore();
     logger.logInfo.resetHistory();
 
     // tox.ini
     sandbox.stub(fs, 'readFileSync').returns(fileContent);
-    sandbox.stub(vscode.workspace, 'asRelativePath').returns("features");
     sandbox.stub(fs, 'existsSync')
       .withArgs(path.join(workDirUri.fsPath, "features")).returns(true)
       .withArgs(behaveIni).returns(false)
@@ -167,9 +169,9 @@ suite("getProjectRelativeBehaveConfigPaths", () => {
       .withArgs(setupCfg).returns(false)
       .withArgs(toxIni).returns(true)
       .withArgs(pyprojectToml).returns(true);
-    result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri);
-    assert.deepStrictEqual(result, ["features"]);
-    assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" sets relative paths: "features"', projUri));
+    result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    assert.deepStrictEqual(result, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "tox.ini" sets relative paths: ${resPathsText}`, projUri));
     sandbox.restore();
     logger.logInfo.resetHistory();
 
