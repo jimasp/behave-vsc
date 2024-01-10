@@ -49,6 +49,7 @@ export const runOptions: RunOptions = {
 }
 
 export const expectations: Expectations = {
+  expectedProjectRelativeWorkingDirPath: "",
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
   expectedProjectRelativeFeatureFolders: ["features"],

@@ -19,6 +19,7 @@ export const wsConfigParallel = new TestWorkspaceConfig({
 });
 
 export const expectationsWithSettingsJson: Expectations = {
+  expectedProjectRelativeWorkingDirPath: "",
   expectedProjectRelativeBaseDirPath: "behave tests/some tests",
   expectedProjectRelativeConfigPaths: ["behave tests/some tests"],
   expectedProjectRelativeFeatureFolders: ["behave tests/some tests"],

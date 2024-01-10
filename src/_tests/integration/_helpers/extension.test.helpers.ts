@@ -76,7 +76,7 @@ function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], ac
 		// UHOH (did you add a new scenario that hasn't been added to expected results yet? 
 		// IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
 		debugger; // eslint-disable-line no-debugger
-		throw new Error(`match.length was:${match.length} when attempting to match test id ${actualResult.test_id} to expected result`);
+		throw new Error(`match.length was:${match.length} when attempting to match test id "${actualResult.test_id}" to expected result`);
 	}
 
 	return match;

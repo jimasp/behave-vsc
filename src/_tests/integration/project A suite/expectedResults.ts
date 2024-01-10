@@ -456,7 +456,7 @@ export function getExpectedResults(): TestResult[] {
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group2_features/envvars.feature/run an successful envvars test',
+      test_id: '.../project A/behave tests/some tests/group2_features/envvars.feature/run a successful envvars test',
       test_label: 'run a successful envvars test',
       test_parent: '.../project A/behave tests/some tests/group2_features/envvars.feature',
       test_uri: '.../project A/behave tests/some tests/group2_features/envvars.feature'

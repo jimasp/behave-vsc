@@ -12,6 +12,7 @@ export const wsConfig = new TestWorkspaceConfig({
 
 
 export const expectations: Expectations = {
+  expectedProjectRelativeWorkingDirPath: "",
   expectedProjectRelativeBaseDirPath: "features",
   expectedProjectRelativeConfigPaths: ["features"],
   expectedProjectRelativeFeatureFolders: ["features"],

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES, isStepsFile } from '../common/helpers';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE, isStepsFile } from '../common/helpers';
 import { services } from "../services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
@@ -114,7 +114,7 @@ export class ProjectWatcherManager {
       if (uri.path.endsWith(".tmp")) // vscode file history file
         return false;
 
-      for (const configFile of BEHAVE_CONFIG_FILES) {
+      for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
         const configPath = `${projSettings.workingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
           xRayLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);

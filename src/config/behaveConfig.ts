@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { BEHAVE_CONFIG_FILES } from "../common/helpers";
+import { BEHAVE_CONFIG_FILES_PRECEDENCE } from "../common/helpers";
 import { services } from '../services';
 
 
-export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri: vscode.Uri, projRelativeWorkingDirPath: string): string[] {
+export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri,
+  projRelativeWorkDirPath: string): string[] {
+
   let paths: string[] | null = null;
 
   // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
@@ -15,8 +17,8 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri
   // i.e. we can just break on the first file in the order that has a "paths" setting.
   let matchedConfigFile;
   let lastExistingConfigFile;
-  for (const configFile of BEHAVE_CONFIG_FILES) {
-    const configFilePath = path.join(workUri.fsPath, configFile);
+  for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
+    const configFilePath = path.join(workDirUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
       lastExistingConfigFile = configFile;
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
@@ -47,8 +49,8 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri
     // b) an absolute paths that includes the working directory path,
     // c) a combination of both 
     // we need to convert them all to convert them to project-relative paths, then check they exist
-    const workingRelPath = biniPath.replace(workUri.fsPath, "");
-    const projectRelPath = path.join(projRelativeWorkingDirPath, workingRelPath);
+    const workingRelPath = biniPath.replace(workDirUri.fsPath + "/", "");
+    const projectRelPath = path.join(projRelativeWorkDirPath, workingRelPath);
 
     if (!fs.existsSync(vscode.Uri.joinPath(projUri, projectRelPath).fsPath))
       services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
@@ -57,7 +59,7 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workUri
   }
 
   const outPaths = relPaths.map(p => `"${p}"`).join(", ");
-  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets relative paths: ${outPaths}`, projUri);
+  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ${outPaths}`, projUri);
   return relPaths;
 }
 
