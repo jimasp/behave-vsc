@@ -1,0 +1,18 @@
+#!/bin/sh
+# pre-commit
+
+if git diff --name-only --cached | grep 'behave.ini' > /dev/null; then
+  echo "You are trying to commit changes that include at least one behave.ini file."
+  echo "behave.ini files are modified by integration tests and may not be restored to their original state if a test was stopped or failed."
+  echo "Please confirm you wish to commit the changes to behave.ini file(s): (y/n)"
+  read -r REPLY </dev/tty
+  echo
+  case "$REPLY" in 
+    [yY]) 
+      exit 0
+      ;;
+    *)
+      exit 1
+      ;;
+  esac
+fi

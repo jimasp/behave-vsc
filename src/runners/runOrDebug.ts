@@ -155,7 +155,8 @@ function getPipedFeaturePathsPattern(wr: ProjRun, parallelMode: boolean, filtere
 
   // NOTE!! be careful changing the `x + "$"` to another regex!
   // you will need to retest it with nested folders/features, top level folders,
-  // individual features and individual/multiple selected scenarios across both example project A and project B
+  // individual features and individual/multiple selected scenarios across both 
+  // example project A and project B (B = runParallel so always runs features separately)
 
   // as an example of what can go wrong, currently, this would work fine:
   // cd "example-projects/project A"
@@ -204,6 +205,9 @@ function getFriendlyEnvVars(wr: ProjRun) {
       typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replaceAll('"', '""')}"`}\n` :
       typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replaceAll('"', '\\"')}" `;
   }
+
+  if (envVarString !== "" && os.platform() !== "win32")
+    envVarString = "env " + envVarString;
 
   return envVarString;
 }

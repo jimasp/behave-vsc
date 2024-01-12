@@ -13,10 +13,6 @@
 - This code is under the MIT licence (i.e. you are free to fork it and do your own thing as long as the [LICENSE](LICENSE.txt) is included), but please do contribute bug fix PRs to the [original repo](https://github.com/jimasp/behave-vsc).
 - Bug fixes are great. New features will be considered, but see [Development guidelines](#development-guidelines).
 
-## Terminology
-
-- See [terminology](./README.md#terminology) in the README.
-
 ---
 
 ### Development environment setup for extension development
@@ -44,26 +40,22 @@
 6. Change to the cloned directory, and install required node packages:
     - `cd <mysourcedir>/behave-vsc`
     - `npm install`
-7. Install required extensions for developing the extension:  
+7. Install the pre-commit hooks (linux/mac only):
+    - `chmod +x hooks.sh`
+    - `./hooks.sh`
+8. Install required extensions for developing the extension:  
     - `code --install-extension ms-python.python` (if not already installed)
     - `code --install-extension dbaeumer.vscode-eslint`
     - `code --install-extension amodio.tsl-problem-matcher`
-8. Install behave 1.2.6 globally (for simplicity, no venv is used in the example projects):
+9. Install behave 1.2.6 globally (for simplicity, no venv is used in the example projects):
     - `pip install behave==1.2.6`
     - Change to the root directory: `cd /` (or `cd \` on Windows)
     - Ensure that this global command works from the root directory: `"python" -m behave --version` (include the quotes)
-9. Change back to the cloned directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
+10. Change back to the cloned directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
     - `cd <mysourcedir>/behave-vsc`
     - `npm run test`
-10. If any of the tests fail, then double-check the steps above. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests) further down.
-11. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
-
----
-
-### Terminology
-
-- The "source" environment refers to the instance of vscode that contains the Behave VSC source code.
-- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the source environment.
+11. If any of the tests fail, then double-check the steps above. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests) further down.
+12. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 
 ---
 
@@ -118,23 +110,12 @@ If you want to add a test, they should go somewhere in `src/test`.
 
 ---
 
-## Development guidelines
+## Generating the extension installer manually (.vsix file)
 
-- Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `diagLog` to log timings where needed.)
-- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and readme updates.
-- The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
-- No reliance on other extensions except `ms-python.python`.
-- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
-- Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions.
-- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
-- Always consider multi-root workspaces, i.e. there can be different project settings per project folder, window (instance) settings can be changed in a `*.code-workspace` file, output channels are per project folder (to stop parallel test runs being merged and to make info and warnings contextual), project folders may be added/removed by the user at run time requiring reload of the test tree, etc.
-- Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
-- Always consider cross-platform, i.e. consider that windows max path is 259 characters, windows max command line length is 8191 characters, consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. Use `getUriMatchString()` or `urisMatch()` to compare uris (do not use `uri.path` or `uri.fsPath` for equality checks). Use `uri.path` internally, and `uri.fsPath` for file operations. Use `relativePattern` for file searches. Do not use `path.join` (outside of integration tests), use `vscode.Uri.joinPath` instead. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) Line-endings use `\n`.
-- Encoding (use `utf8`).
-- While the extension is not internationalised, `Date()` should be avoided, except for `Date().toISOString()` for user output. The `performance` library is used for timings.
-- Look out for race conditions. You can have e.g. 3 projects running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
-- Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names have unique ids, so you can be sure they are unique to the vscode instance as well as the project.
-- Also see [General development notes](#general-development-notes) below.
+If you have a customised fork and you just want to distribute it to your team, you will want to create your own `.vsix` file:
+
+1. `npm install -g @vscode/vsce` (installs latest version of packaging tool)
+2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the integration tests - if you've already run them, then you can just close vscode windows as they appear)
 
 ---
 
@@ -226,12 +207,33 @@ feature file formatting is provided by:
 
 ---
 
-## Generating the extension installer manually (.vsix file)
+## Development guidelines
 
-If you have a customised fork and you want to distribute it to your team, you will want to create your own `.vsix` file:
+---
 
-1. `npm install -g @vscode/vsce` (installs latest version of packaging tool)
-2. `vsce package -o ../mypackagefolder/my-behave-vsc.vsix`  (this will also run the integration tests - if you've already run them, then you can just close vscode windows as they appear)
+### Terminology
+
+- The "source" environment refers to the instance of vscode that contains the Behave VSC source code.
+- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the source environment.
+- Also see [terminology](./README.md#terminology) in the README, i.e. the difference between "workspace" and "project".
+
+### Guidelines
+
+- Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `diagLog` to log timings where needed.)
+- YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and readme updates.
+- The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
+- No reliance on other extensions except `ms-python.python`.
+- KISS - "It just works" - simple, minimal code to get the job done that is easily understood by others. It doesn't have to be pretty, but it does have to work.
+- Don't reinvent the wheel - leverage `vscode` methods (especially for paths) wherever possible, and if necessary standard node functions.
+- Regardless of the above point, don't add extra npm packages. We want to keep the extension lightweight, and avoid versioning/security/licensing/audit problems. (Feel free to use packages that already exist in the `node_modules` folder if required.)
+- Always consider multi-root workspaces, i.e. there can be different project settings per project folder, window (instance) settings can be changed in a `*.code-workspace` file, output channels are per project folder (to stop parallel test runs being merged and to make info and warnings contextual), project folders may be added/removed by the user at run time requiring reload of the test tree, etc.
+- Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
+- Always consider cross-platform, i.e. consider that windows max path is 259 characters, windows max command line length is 8191 characters, consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. Use `getUriMatchString()` or `urisMatch()` to compare uris (do not use `uri.path` or `uri.fsPath` for equality checks). Use `uri.path` internally, and `uri.fsPath` for file operations. Use `relativePattern` for file searches. Do not use `path.join` (outside of integration tests), use `vscode.Uri.joinPath` instead. Also consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) Line-endings use `\n`.
+- Encoding (use `utf8`).
+- While the extension is not internationalised, `Date()` should be avoided, except for `Date().toISOString()` for user output. The `performance` library is used for timings.
+- Look out for race conditions. You can have e.g. 3 projects running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
+- Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names have unique ids, so you can be sure they are unique to the vscode instance as well as the project.
+- Also see [General development notes](#general-development-notes) below.
 
 ---
 
