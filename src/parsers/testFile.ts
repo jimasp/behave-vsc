@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { uriId, isFeatureFile } from '../common/helpers';
-import { services } from "../services";
 import { ProjectSettings } from "../config/settings";
 import { xRayLog } from '../common/logger';
 
@@ -34,24 +33,27 @@ export class TestFile {
 
     const ascend = (depth: number) => {
       while (ancestors.length > depth) {
+
         const finished = ancestors.pop();
         if (finished === undefined)
           throw new Error("finished is undefined");
-        try {
-          finished.item.children.replace(finished.children);
-        }
-        catch (e: unknown) {
-          let err = (e as Error).toString();
-          if (err.includes("duplicate test item")) {
-            const n = err.lastIndexOf('/');
-            const scen = err.substring(n);
-            err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
-            // don't throw here, show it and carry on
-            services.logger.showWarn(err, projSettings.uri);
+
+        const duplicateIds = new Set<string>();
+        const dupes: string[] = [];
+        for (let i = finished.children.length - 1; i >= 0; i--) {
+          const child = finished.children[i];
+          if (duplicateIds.has(child.id)) {
+            if (!dupes.includes(child.label))
+              dupes.push(child.label);
+            finished.children.splice(i, 1);
           }
-          else
-            throw e;
+          duplicateIds.add(child.id);
         }
+
+        if (dupes.length > 0)
+          finished.item.error = `Duplicate${dupes.length > 1 ? "s" : ""}: ${dupes.join(", ")}`;
+
+        finished.item.children.replace(finished.children);
       }
     };
 
