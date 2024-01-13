@@ -25,7 +25,7 @@ export async function runOrDebugAllFeaturesInOneInstance(wr: ProjRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
   const friendlyArgs = [...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-  const args = addTagsAndGetArgs(wr, friendlyArgs);
+  const args = addTagsAndGetArgs(wr, friendlyArgs, false);
 
   const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -54,7 +54,7 @@ export async function runOrDebugFeatures(wr: ProjRun, parallelMode: boolean, sce
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
     const friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`];
-    const args = addTagsAndGetArgs(wr, friendlyArgs);
+    const args = addTagsAndGetArgs(wr, friendlyArgs, false);
 
     const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -97,7 +97,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parall
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
-    const args = addTagsAndGetArgs(wr, friendlyArgs);
+    const args = addTagsAndGetArgs(wr, friendlyArgs, true);
 
     const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -223,8 +223,14 @@ function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
 }
 
 
-function addTagsAndGetArgs(wr: ProjRun, friendlyArgs: string[]) {
-  const args = friendlyArgs.map(x => x.replaceAll('"', ""));
+function addTagsAndGetArgs(wr: ProjRun, friendlyArgs: string[], scenariosOnly: boolean) {
+  let args: string[] = [];
+
+  if (scenariosOnly)
+    args = friendlyArgs.map(x => x.replace(/^"(.*)"$/, '$1'));
+  else
+    args = friendlyArgs.map(x => x.replaceAll('"', ""));
+
   if (wr.tagExpression) {
     friendlyArgs.unshift(`--tags="${wr.tagExpression}"`);
     args.unshift(`--tags=${wr.tagExpression}`);
