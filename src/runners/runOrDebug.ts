@@ -92,12 +92,18 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parall
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
     const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(wr, featureFileProjectRelativePath);
 
-    const friendlyArgs = [
+    const initArgs = [
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
-    const args = addTagsAndGetArgs(wr, friendlyArgs, true);
+    const args = addTagsAndGetArgs(wr, initArgs, true);
+
+    const friendlyArgs = [...initArgs];
+    // replace any chars that os command line will try to expand inside quotes
+    const friendlyPipedScenarioNames = pipedScenarioNames
+      .replace(/[`!$=]/g, '\\$&');
+    friendlyArgs.splice(3, 1, `"${friendlyPipedScenarioNames}"`);
 
     const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
