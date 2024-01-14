@@ -4,10 +4,10 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 81, testCount: testCount },
+    tests: { nodeCount: 89, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 6,
     stepFileStepsExceptCommentedOut: 47,
-    featureFileStepsExceptCommentedOut: 128, stepMappings: 127  // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 152, stepMappings: 151  // (1 diff = "When we have a missing step")
   };
 }
 
@@ -127,19 +127,148 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'features/contains_regexchars.feature',
-      scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
-      scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = \'',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
+      scenario_scenarioName: 'run a successful rx scenario = \'',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../project B/features/contains_regexchars.feature',
-      test_uri: '.../project B/features/contains_regexchars.feature'
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \'',
+      test_label: 'run a successful rx scenario = \'',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx = "',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx = "',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx = "',
+      test_label: 'run a successful rx = "',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = #',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = #',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = #',
+      test_label: 'run a successful rx scenario = #',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = $',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = $',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $',
+      test_label: 'run a successful rx scenario = $',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = $$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = $$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $$',
+      test_label: 'run a successful rx scenario = $$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = [\\=',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = [\\=',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\=',
+      test_label: 'run a successful rx scenario = [\\=',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = [\\]$\\!$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = [\\]$\\!$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\]$\\!$',
+      test_label: 'run a successful rx scenario = [\\]$\\!$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      test_label: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      test_label: 'run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
     }),
 
     new TestResult({

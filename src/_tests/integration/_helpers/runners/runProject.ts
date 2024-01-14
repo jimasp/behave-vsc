@@ -29,14 +29,14 @@ import {
 // Because this function is re-entrant, locks are used to ensure that parsing is only happening 
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
-export async function runAllProjectAndAssertTheResults(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
+export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
   behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
-  const consoleName = `runAll ${projName}`;
+  const consoleName = `runProject ${projName}`;
 
   try {
     // ARRANGE
@@ -74,30 +74,18 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
 
     // parse to get check counts (checked later, but we want to do this inside the lock)
     const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
-      "runAllTestsAndAssertTheResults", false);
+      "runAllProjectAndAssertTheResults", false);
     assert(actualCounts, "actualCounts was undefined");
 
     const allProjItems = getTestItems(projId, api.ctrl.items);
     console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
-    assert(allProjItems.length > 0, "allProjItems.length was 0");
-    const matchingItems = allProjItems.filter(item => api.testData.get(item) !== undefined);
-    assert(matchingItems.length > 0, "matchingItems.length was 0");
     const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;
 
     // sanity check included tests length matches expected length
     const includedTests = getScenarioTests(api.testData, allProjItems);
-    assert(includedTests.length > 0, "includedTests.length was 0");
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-    if (includedTests.length !== expectedResults.length)
-      debugger; // eslint-disable-line no-debugger
-    console.log(`${consoleName}: test includes = ${includedTests.length}, tests expected = ${expectedResults.length}`);
-    // included tests (scenarios) and expected tests lengths should be equal, but 
-    // we allow greater than because there is a more helpful assert later (assertTestResultMatchesExpectedResult) if new
-    // tests have recently been added	
-    assert(includedTests.length >= expectedResults.length, consoleName + ", (see counts above)");
-    console.log(`${consoleName}: initialised`);
 
-    // check all steps can be matched
+    // NON-RUN ASSERTS
     await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, api);
     await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, api);
 
@@ -133,8 +121,7 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
     console.log(`${consoleName}: runHandler completed`);
 
     // ASSERT
-    assertAllResults(includedTests, results, expectedResults, testExtConfig, projUri, projName, expectations,
-      hasMultiRootWkspNode, actualCounts);
+    assertAllResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
 
   }
   finally {

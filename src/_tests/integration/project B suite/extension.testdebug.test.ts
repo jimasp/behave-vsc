@@ -11,9 +11,7 @@ suite(`project B suite test debug run`, () => {
   const testProjectRunner = new TestProjectRunner("project B");
 
   test("debugAll", async () =>
-    await testProjectRunner.debugAll(wsConfig, noBehaveIni, noRunOptions, expectations)
-  )
-
+    await testProjectRunner.debugAll(wsConfig, noBehaveIni, noRunOptions, expectations));
 
 });
 

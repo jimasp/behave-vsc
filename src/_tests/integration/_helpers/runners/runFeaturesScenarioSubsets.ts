@@ -10,14 +10,15 @@ import { assertFeatureSubsetResult } from "./assertions";
 
 
 // SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON A SUBSET OF SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
-// this tests piped scenario names and regex pattern matching for a subset of scenarios in each feature
-export async function runAllProjectFeaturesScenarioSubsetsAndAssertTheResults(projName: string, isDebugRun: boolean,
+// (if there is only one scenario in a feature, it will be skipped - which is tested by runFeatures.ts anyway)
+// importantly, subsets will test piped scenario names and regex pattern matching 
+export async function runFeaturesScenarioSubsets(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
-  const consoleName = `runFeatures ${projName}`;
+  const consoleName = `runFeaturesScenariosSubset ${projName}`;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
@@ -53,6 +54,7 @@ export async function runAllProjectFeaturesScenarioSubsetsAndAssertTheResults(pr
 
     // ASSERT RESULT
     assertFeatureSubsetResult(featureTest, results, expectedResults, testExtConfig);
+    requestItems.length = 0;
   }
 }
 

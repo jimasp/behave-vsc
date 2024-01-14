@@ -11,34 +11,23 @@ suite(`simple suite - separate`, function () {
 
   const testProjectRunner = new TestProjectRunner("simple");
 
-  test("runScenarios", async () =>
-    await testProjectRunner.runScenarios(noConfig, noRunOptions, expectations));
-
-  test("runScenarios - parallel", async () =>
-    await testProjectRunner.runScenarios(parallelConfig, noRunOptions, expectations));
-
-  test("debugScenarios", async () =>
-    await testProjectRunner.debugScenarios(noConfig, noRunOptions, expectations));
-
-
   test("runFeatures", async () =>
-    await testProjectRunner.runFeatures(noConfig, noRunOptions, expectations));
+    await testProjectRunner.runEachFeature(noConfig, noRunOptions, expectations));
 
   test("runFeatures - parallel", async () =>
-    await testProjectRunner.runFeatures(parallelConfig, noRunOptions, expectations));
+    await testProjectRunner.runEachFeature(parallelConfig, noRunOptions, expectations));
 
   test("debugFeatures", async () =>
-    await testProjectRunner.debugFeatures(noConfig, noRunOptions, expectations));
+    await testProjectRunner.debugEachFeature(noConfig, noRunOptions, expectations));
 
+  test("runFeaturesScenariosSubSets", async () =>
+    await testProjectRunner.runScenariosSubSetsForEachFeature(noConfig, noRunOptions, expectations));
 
-  test("runFeaturesScenariosSubSet", async () =>
-    await testProjectRunner.runFeaturesScenariosSubSet(noConfig, noRunOptions, expectations));
+  test("runFeaturesScenariosSubSets - parallel", async () =>
+    await testProjectRunner.runScenariosSubSetsForEachFeature(parallelConfig, noRunOptions, expectations));
 
-  test("runFeaturesScenariosSubSet - parallel", async () =>
-    await testProjectRunner.runFeaturesScenariosSubSet(noConfig, noRunOptions, expectations));
-
-  test("runFeaturesScenariosSubSet", async () =>
-    await testProjectRunner.debugFeaturesScenariosSubSet(noConfig, noRunOptions, expectations));
+  test("runFeaturesScenariosSubSets", async () =>
+    await testProjectRunner.runScenariosSubSetsForEachFeature(noConfig, noRunOptions, expectations));
 
 });
 

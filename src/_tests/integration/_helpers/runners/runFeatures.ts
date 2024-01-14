@@ -10,7 +10,7 @@ import { assertFeatureResult } from "./assertions";
 
 
 // SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON EACH FEATURE IN THE TEST EXPLORER
-export async function runAllProjectFeaturesIndividuallyAndAssertTheResults(projName: string, isDebugRun: boolean,
+export async function runFeaturesIndividually(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
   const projUri = getTestProjectUri(projName);

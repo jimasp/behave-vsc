@@ -60,7 +60,7 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
 }
 
 
-export function assertAllResults(includedTests: vscode.TestItem[], results: QueueItem[] | undefined, expectedResults: TestResult[],
+export function assertAllResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
   testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
   hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
 
@@ -90,7 +90,7 @@ export function assertFeatureResult(featureTestItem: vscode.TestItem, results: Q
   });
 
   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert(results.length === featureTestItem.children.size, "results.length === featureTestItem.children.size");
+  assert(results.length === featureTestItem.children.size, `results.length === featureTestItem.children.size ${featureTestItem.id}`);
 }
 
 
@@ -105,14 +105,21 @@ export function assertFeatureSubsetResult(featureTestItem: vscode.TestItem, resu
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
 
+  try {
+    assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
+  }
+  catch {
+    debugger; // eslint-disable-line no-debugger
+  }
+
   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert(results.length === featureTestItem.children.size - 1, "results.length === featureTestItem.children.size - 1");
+  assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
 }
 
 
 export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-  assert(results.length === 1, "results.length === 1");
+  assert(results.length === 1, `results.length !== 1, ${results[0].test.id}}`);
 
   const result = results[0];
   const scenResult = ScenarioResult(result);
@@ -141,9 +148,9 @@ export function assertTestResultMatchesExpectedResult(expectedResults: TestResul
 
       if (expectedResult.test_id === actualResult.test_id) {
         debugger; // eslint-disable-line no-debugger 
-        throw new Error(`test ids matched but properties were different:\n` +
-          `expectedResult:${JSON.stringify(expectedResult)}\n` +
-          `actualResult:${JSON.stringify(actualResult)}\n`);
+        throw new Error(`test ids matched but properties were different: \n` +
+          `expectedResult:${JSON.stringify(expectedResult)} \n` +
+          `actualResult:${JSON.stringify(actualResult)} \n`);
       }
 
       return false;
@@ -155,15 +162,15 @@ export function assertTestResultMatchesExpectedResult(expectedResults: TestResul
       debugger; // eslint-disable-line no-debugger	
       if (actualResult.scenario_result) {
         throw new Error(`test ids matched but result did not match expected result\n` +
-          `expectedResult:${JSON.stringify(expectedResult)}\n` +
-          `actualResult:${JSON.stringify(actualResult)}\n` +
-          `testConfig:${JSON.stringify(testConfig)}\n` +
+          `expectedResult:${JSON.stringify(expectedResult)} \n` +
+          `actualResult:${JSON.stringify(actualResult)} \n` +
+          `testConfig:${JSON.stringify(testConfig)} \n` +
           `note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
           `then first check if the behave command line output matches the IDE behave command output.`);
       }
-      throw new Error(`result is undefined, was the test run cancelled?\n` +
-        `actualResult:${JSON.stringify(expectedResult)}\n` +
-        `testConfig:${JSON.stringify(testConfig)}\n`);
+      throw new Error(`result is undefined, was the test run cancelled ?\n` +
+        `actualResult:${JSON.stringify(expectedResult)} \n` +
+        `testConfig:${JSON.stringify(testConfig)} \n`);
     }
 
     return true;
@@ -276,7 +283,7 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
 
 function ScenarioResult(result: QueueItem) {
   return new TestResult({
-    test_id: standardisePath(result.test.id),
+    test_id: standardisePath(result.test.id, true),
     test_uri: standardisePath(result.test.uri?.toString()),
     test_parent: standardisePath(result.test.parent?.id),
     test_children: getChildrenIds(result.test.children),
@@ -293,10 +300,24 @@ function ScenarioResult(result: QueueItem) {
 }
 
 
-function standardisePath(path: string | undefined): string | undefined {
+function standardisePath(path: string | undefined, isId = false): string | undefined {
   if (!path)
     return path;
-  path = decodeURI(path);
+  try {
+    if (isId) {
+      // special chars in scenario names would break decodeURI, and may include "/", so we'll split on .feature
+      const split = path.split(".feature");
+      const folderPath = split[0] + ".feature";
+      path = decodeURI(folderPath) + split[1];
+    }
+    else {
+      path = decodeURI(path);
+    }
+  }
+  catch (e: unknown) {
+    debugger; // eslint-disable-line no-debugger
+    throw e;
+  }
   const find = "/example-projects/";
   return path === undefined ? undefined : "..." + path.substring(path.indexOf(find) + find.length - 1);
 }
@@ -358,7 +379,7 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
 
   const funcLines = new Map<FileStep, string>();
-  const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders}/steps/*.py`);
+  const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders} /steps/ *.py`);
   const stepFileUris = await vscode.workspace.findFiles(pattern, null);
 
   for (const stepFileUri of stepFileUris) {
