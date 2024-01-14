@@ -59,12 +59,12 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
     `${projName} project: importedSteps`);
 }
 
+
 export function assertAllResults(includedTests: vscode.TestItem[], results: QueueItem[] | undefined, expectedResults: TestResult[],
   testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
   hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
 
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-  assert(results.length !== includedTests.length, "results.length !== includedTests.length");
 
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
@@ -72,9 +72,9 @@ export function assertAllResults(includedTests: vscode.TestItem[], results: Queu
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
 
-  // (keep these below results.forEach, as individual match asserts are more useful to get first)
+  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+  assert.equal(results.length, expectedResults.length, "results.length !== expectedResults.length");
   assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
-  assert.equal(results.length, expectedResults.length, "results.length ==- expectedResults.length");
 }
 
 
@@ -82,27 +82,33 @@ export function assertFeatureResult(featureTestItem: vscode.TestItem, results: Q
   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-  assert(results.length === featureTestItem.children.size, "results.length === featureTestItem.children.size");
 
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
+
+  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+  assert(results.length === featureTestItem.children.size, "results.length === featureTestItem.children.size");
 }
+
 
 export function assertFeatureSubsetResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-  assert(results.length === featureTestItem.children.size - 1, "results.length === featureTestItem.children.size - 1");
 
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
+
+  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+  assert(results.length === featureTestItem.children.size - 1, "results.length === featureTestItem.children.size - 1");
 }
+
 
 export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");

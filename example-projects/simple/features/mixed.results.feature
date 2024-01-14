@@ -1,4 +1,4 @@
-Feature: Simple
+Feature: Mixed results
 
    Scenario: run a successful test
       Given we have behave installed

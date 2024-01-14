@@ -10,8 +10,8 @@ import { expectations } from "./defaults";
 suite(`simple suite test debug run`, () => {
   const testProjectRunner = new TestProjectRunner("simple");
 
-  // test("debugAll", async () =>
-  //   await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
+  test("debugAll", async () =>
+    await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 });
 
