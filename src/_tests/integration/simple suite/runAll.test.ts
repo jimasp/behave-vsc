@@ -15,9 +15,6 @@ suite(`simple suite`, function () {
 	// test("runAll - parallel", async () =>
 	// 	await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
 
-	// test("runScenarios", async () =>
-	// 	await testProjectRunner.runAllScenariosInidividually(noConfig, noBehaveIni, noRunOptions, expectations));
-
 });
 
 

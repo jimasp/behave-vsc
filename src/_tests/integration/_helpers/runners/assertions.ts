@@ -99,55 +99,33 @@ export function assertAllResults(results: QueueItem[], expectedResults: TestResu
   projName: string, expectations: Expectations, hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
 
   results.forEach(result => {
-
-    const scenResult = new TestResult({
-      test_id: standardisePath(result.test.id),
-      test_uri: standardisePath(result.test.uri?.toString()),
-      test_parent: standardisePath(result.test.parent?.id),
-      test_children: getChildrenIds(result.test.children),
-      test_description: result.test.description,
-      test_error: result.test.error?.toString(),
-      test_label: result.test.label,
-      scenario_isOutline: result.scenario.isOutline,
-      scenario_getLabel: result.scenario.getLabel(),
-      scenario_featureFileRelativePath: result.scenario.featureFileProjectRelativePath,
-      scenario_featureName: result.scenario.featureName,
-      scenario_scenarioName: result.scenario.scenarioName,
-      scenario_result: standardiseResult(result.scenario.result)
-    });
-
-
+    const scenResult = ScenarioResult(result);
     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
 
   // (keep these below results.forEach, as individual match asserts are more useful to get first)
   assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
-  assert.equal(results.length, expectedResults.length, "results.length === expectedResults.length");
+  assert.equal(results.length, expectedResults.length, "results.length ==- expectedResults.length");
+}
+
+
+export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[],
+  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+
+  assert(results.length === featureTestItem.children.size, "results.length === featureTestItem.children.size");
+  results.forEach(result => {
+    const scenResult = ScenarioResult(result);
+    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+  });
 }
 
 
 export function assertScenarioResult(results: QueueItem[], expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-
   assert(results.length === 1, "results.length === 1");
   const result = results[0];
-
-  const scenResult = new TestResult({
-    test_id: standardisePath(result.test.id),
-    test_uri: standardisePath(result.test.uri?.toString()),
-    test_parent: standardisePath(result.test.parent?.id),
-    test_children: getChildrenIds(result.test.children),
-    test_description: result.test.description,
-    test_error: result.test.error?.toString(),
-    test_label: result.test.label,
-    scenario_isOutline: result.scenario.isOutline,
-    scenario_getLabel: result.scenario.getLabel(),
-    scenario_featureFileRelativePath: result.scenario.featureFileProjectRelativePath,
-    scenario_featureName: result.scenario.featureName,
-    scenario_scenarioName: result.scenario.scenarioName,
-    scenario_result: standardiseResult(result.scenario.result)
-  });
-
+  const scenResult = ScenarioResult(result);
   assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
   assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
 }
@@ -302,6 +280,26 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
     // UHOH - did we add a test or comment something out? do a git diff?
     debugger; // eslint-disable-line no-debugger
   }
+}
+
+
+
+function ScenarioResult(result: QueueItem) {
+  return new TestResult({
+    test_id: standardisePath(result.test.id),
+    test_uri: standardisePath(result.test.uri?.toString()),
+    test_parent: standardisePath(result.test.parent?.id),
+    test_children: getChildrenIds(result.test.children),
+    test_description: result.test.description,
+    test_error: result.test.error?.toString(),
+    test_label: result.test.label,
+    scenario_isOutline: result.scenario.isOutline,
+    scenario_getLabel: result.scenario.getLabel(),
+    scenario_featureFileRelativePath: result.scenario.featureFileProjectRelativePath,
+    scenario_featureName: result.scenario.featureName,
+    scenario_scenarioName: result.scenario.scenarioName,
+    scenario_result: standardiseResult(result.scenario.result)
+  });
 }
 
 

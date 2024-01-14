@@ -5,6 +5,7 @@ import { Configuration } from '../../../../config/configuration';
 import { TestResult } from './assertions';
 import { ProjParseCounts } from "../../../../parsers/fileParser";
 import { runAllProjectScenariosIndividuallyAndAssertTheResults } from './runAllProjectScenarios';
+import { runAllProjectFeaturesIndividuallyAndAssertTheResults } from './runAllProjectFeatures';
 
 
 export type RunOptions = {
@@ -47,15 +48,30 @@ export class TestProjectRunner {
     await runAllProjectAndAssertTheResults(this.projName, false, wsConfig, behaveIniContent, runOptions, expectations);
   }
 
-  runScenarios = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
-    console.log(`runAllScenariosInidividually ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runAllProjectScenariosIndividuallyAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
-  }
-
   debugAll = async (wsConfig: TestWorkspaceConfig, behaveConfig: string, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
     await runAllProjectAndAssertTheResults(this.projName, true, wsConfig, behaveConfig, runOptions, expectations);
+  }
+
+  runFeatures = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`runFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectFeaturesIndividuallyAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
+  }
+
+  debugFeatures = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`debugFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectFeaturesIndividuallyAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
+  }
+
+  runScenarios = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`runScenarios ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectScenariosIndividuallyAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
+  }
+
+  debugScenarios = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`debugScenarios ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectScenariosIndividuallyAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
   }
 
 }

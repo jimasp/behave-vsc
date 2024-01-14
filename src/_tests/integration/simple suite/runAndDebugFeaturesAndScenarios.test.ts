@@ -10,8 +10,17 @@ suite(`simple suite - separate`, function () {
 
   const testProjectRunner = new TestProjectRunner("simple");
 
-  test("runScenarios", async () =>
-    await testProjectRunner.runScenarios(noConfig, noRunOptions, expectations));
+  // test("runScenarios", async () =>
+  //   await testProjectRunner.runScenarios(noConfig, noRunOptions, expectations));
+
+  // test("debugScenarios", async () =>
+  //   await testProjectRunner.debugScenarios(noConfig, noRunOptions, expectations));
+
+  // test("runFeatures", async () =>
+  //   await testProjectRunner.runFeatures(noConfig, noRunOptions, expectations));
+
+  test("debugFeatures", async () =>
+    await testProjectRunner.debugFeatures(noConfig, noRunOptions, expectations));
 
 });
 

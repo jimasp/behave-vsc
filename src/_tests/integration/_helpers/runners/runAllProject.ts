@@ -20,13 +20,17 @@ import {
 } from "./assertions";
 
 
-// SIMULATES A USER CLICKING THE RUN ALL BUTTON IN THE TEST EXPLORER
-//
+// SIMULATES A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
+// (this function is also re-entrant from multiroot suite - which simulates a user quickly clicking the test explorer 
+// run button on each project node in the workspace when runMultiRootProjectsInParallel=true)
 // In the real world, a user can kick off one project and then another and then another, 
-// (i.e. staggered) - they do not have to wait for the first to complete.
-// So, when the file multiroot suite/index.ts is run (which will test staggered/parallel project runs) this
+// (i.e. staggered) - they do not have to wait for the first to complete. 
+// (More likely they will just click run all, but testing staggered will be enough to cover both anyway.)
+//
+// When the file multiroot suite/index.ts is run (which will test staggered/parallel project runs) this
 // function will run in parallel with ITSELF (but as per the promises in that file, only one at a time for 
 // a given project: so for example projects A/B/Simple can run in parallel, but not e.g. A/A).
+//
 // Because this function is re-entrant, locks are used to ensure that parsing is only happening 
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
