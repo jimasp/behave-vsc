@@ -6,7 +6,7 @@ import { getTestItems, uriId } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, getTestProjectUri } from "./helpers";
 import { Expectations, RunOptions } from "../common";
-import { assertFeatureResult, assertFeatureSubsetResult } from "./assertions";
+import { assertFeatureSubsetResult } from "./assertions";
 
 
 // SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON A SUBSET OF SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
