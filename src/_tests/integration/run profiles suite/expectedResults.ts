@@ -1,5 +1,5 @@
 import { ProjParseCounts } from "../../../parsers/fileParser";
-import { TestResult } from "../_helpers/expectedResults.helpers";
+import { TestResult } from "../_helpers/runners/assertions";
 
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResultsForTag1RunProfile().length;

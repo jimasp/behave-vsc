@@ -1,5 +1,5 @@
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig"
-import { Expectations, RunOptions } from "../_helpers/testProjectRunner"
+import { Expectations, RunOptions } from "../_helpers/runners/projectRunner"
 import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./expectedResults"
 
 

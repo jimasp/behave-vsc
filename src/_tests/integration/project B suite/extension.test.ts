@@ -1,4 +1,4 @@
-import { TestProjectRunner, noBehaveIni, noRunOptions } from "../_helpers/testProjectRunner";
+import { TestProjectRunner, noBehaveIni, noRunOptions } from "../_helpers/runners/projectRunner";
 import { behaveIni, expectations, wsConfig, wsConfigParallel } from "./defaults";
 
 

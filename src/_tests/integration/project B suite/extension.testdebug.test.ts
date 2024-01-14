@@ -1,9 +1,10 @@
-import { TestProjectRunner, noBehaveIni, noRunOptions } from "../_helpers/testProjectRunner";
+import { TestProjectRunner, noBehaveIni, noRunOptions } from "../_helpers/runners/projectRunner";
 import { wsConfig, expectations } from "./defaults";
 
 
-// this is a separate file because we don't want to run parallel debug 
-// sessions (which is not supported) when running the multi-root tests (i.e. runMultiRootWorkspacesInParallel=true)
+// this file is separate because we don't want to run parallel debug 
+// sessions when running the multi-root suite/index.ts tests 
+// (runMultiRootProjectsInParallel=true is not applicable to debug)
 
 suite(`project B suite test debug run`, () => {
   const testProjectRunner = new TestProjectRunner("project B");

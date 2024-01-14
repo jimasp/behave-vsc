@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { runAllTestsAndAssertTheResults } from './extension.test.helpers';
-import { TestWorkspaceConfig } from './testWorkspaceConfig';
-import { Configuration } from '../../../config/configuration';
-import { TestResult } from './expectedResults.helpers';
-import { ProjParseCounts } from "../../../parsers/fileParser";
+import { runAllProjectAndAssertTheResults } from './runAllProject';
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
+import { Configuration } from '../../../../config/configuration';
+import { TestResult } from './assertions';
+import { ProjParseCounts } from "../../../../parsers/fileParser";
+import { runAllProjectScenariosIndividuallyAndAssertTheResults } from './runAllProjectScenarios';
 
 
 export type RunOptions = {
@@ -43,13 +44,18 @@ export class TestProjectRunner {
 
   runAll = async (wsConfig: TestWorkspaceConfig, behaveIniContent: string, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`runAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runAllTestsAndAssertTheResults(this.projName, false, wsConfig, behaveIniContent, runOptions, expectations);
+    await runAllProjectAndAssertTheResults(this.projName, false, wsConfig, behaveIniContent, runOptions, expectations);
+  }
+
+  runScenarios = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`runAllScenariosInidividually ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectScenariosIndividuallyAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
   }
 
   debugAll = async (wsConfig: TestWorkspaceConfig, behaveConfig: string, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugAll ${this.projName}: ${JSON.stringify(wsConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
-    await runAllTestsAndAssertTheResults(this.projName, true, wsConfig, behaveConfig, runOptions, expectations);
+    await runAllProjectAndAssertTheResults(this.projName, true, wsConfig, behaveConfig, runOptions, expectations);
   }
 
 }

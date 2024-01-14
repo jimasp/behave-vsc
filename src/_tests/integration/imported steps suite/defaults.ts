@@ -1,5 +1,5 @@
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { Expectations } from "../_helpers/testProjectRunner";
+import { Expectations } from "../_helpers/runners/projectRunner";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 

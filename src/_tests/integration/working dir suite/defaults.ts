@@ -1,5 +1,5 @@
 import path = require("path");
-import { Expectations } from "../_helpers/testProjectRunner"
+import { Expectations } from "../_helpers/runners/projectRunner"
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
