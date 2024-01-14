@@ -84,6 +84,9 @@ export async function waitForWatcherParse(projUri: vscode.Uri, projName: string,
 //global.lock = "";
 let lockVal = "";
 
+export const ACQUIRE = "acquire";
+export const RELEASE = "release";
+
 // used to mitigate parallel project initialisation for multiroot parallel project testing
 // (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)
 export async function setLock(consoleName: string, acquireOrRelease: string) {
@@ -91,16 +94,16 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	if (!(global as any).multiRootTest)
 		return;
 
-	if (!["acquire", "release"].includes(acquireOrRelease))
+	if (![ACQUIRE, RELEASE].includes(acquireOrRelease))
 		throw new Error("invalid value for acquire or release");
 
-	if (acquireOrRelease === "release") {
+	if (acquireOrRelease === RELEASE) {
 		console.log(`${consoleName}: setLock releasing lock`);
 		lockVal = "";
 		return;
 	}
 
-	if (!lockVal && acquireOrRelease === "acquire") {
+	if (!lockVal && acquireOrRelease === ACQUIRE) {
 		lockVal = consoleName;
 		console.log(`${consoleName}: setLock acquiring lock`);
 		return;
@@ -118,7 +121,7 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	if (lockVal) {
 		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for all projects to initialise`);
 	}
-	else if (acquireOrRelease === "acquire") {
+	else if (acquireOrRelease === ACQUIRE) {
 		lockVal = consoleName;
 		console.log(`${consoleName}: setLock acquired lock after ${waited}`);
 	}

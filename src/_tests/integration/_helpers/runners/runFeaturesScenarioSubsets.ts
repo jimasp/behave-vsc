@@ -2,18 +2,16 @@
 import * as vscode from 'vscode';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
-import {
-  getTestItems,
-  getScenarioTests, uriId,
-} from '../../../../common/helpers';
-import { Expectations, RunOptions } from './projectRunner';
+import { getTestItems, uriId } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, getTestProjectUri } from "./helpers";
-import { assertFeatureResult } from "./assertions";
+import { Expectations, RunOptions } from "../common";
+import { assertFeatureResult, assertFeatureSubsetResult } from "./assertions";
 
 
-// SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON EACH FEATURE IN THE TEST EXPLORER
-export async function runAllProjectFeaturesIndividuallyAndAssertTheResults(projName: string, isDebugRun: boolean,
+// SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON A SUBSET OF SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
+// this tests piped scenario names and regex pattern matching for a subset of scenarios in each feature
+export async function runAllProjectFeaturesScenarioSubsetsAndAssertTheResults(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
@@ -36,17 +34,25 @@ export async function runAllProjectFeaturesIndividuallyAndAssertTheResults(projN
 
 
   console.log(`${consoleName}: calling runHandler to run each scenario...`);
+  const requestItems: vscode.TestItem[] = [];
   for (const featureTest of featureTests) {
-    const request = new vscode.TestRunRequest([featureTest]);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+    // we're only interested in features with more than 1 scenario in this function
+    if (featureTest.children.size < 2)
+      continue;
 
-    if (!results || results.length !== featureTest.children.size) {
-      debugger; // eslint-disable-line no-debugger
-      throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
+    let i = 0;
+    for (const scenarioTest of featureTest.children) {
+      // skip the first one, so that we get a piped list of scenario names (vs running whole feature)
+      if (i++ === 0)
+        continue;
+      requestItems.push(scenarioTest[1]);
     }
 
+    const request = new vscode.TestRunRequest(requestItems);
+    const results = await api.runHandler(isDebugRun, request, runProfile);
+
     // ASSERT RESULT
-    assertFeatureResult(featureTest, results, expectedResults, testExtConfig);
+    assertFeatureSubsetResult(featureTest, results, expectedResults, testExtConfig);
   }
 }
 

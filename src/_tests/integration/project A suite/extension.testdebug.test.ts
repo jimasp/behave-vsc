@@ -1,4 +1,5 @@
-import { TestProjectRunner, noRunOptions } from "../_helpers/runners/projectRunner";
+import { TestProjectRunner } from "../_helpers/runners/projectRunner";
+import { noRunOptions } from "../_helpers/common"
 import { behaveIni, expectationsWithSettingsJson, wsConfig } from "./default";
 
 

@@ -3,15 +3,10 @@ import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
-import {
-  getTestItems,
-  getScenarioTests, uriId,
-} from '../../../../common/helpers';
-import { Expectations, RunOptions } from './projectRunner';
+import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
+import { Expectations, RunOptions } from '../common';
 import { services } from '../../../../services';
-import {
-  checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni,
-} from "./helpers";
+import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
   assertAllFeatureFileStepsHaveAStepFileStepMatch,
@@ -44,15 +39,18 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
   const consoleName = `runAll ${projName}`;
 
   try {
+    // ARRANGE
 
-    // SET LOCK:
+
+    // ==================== START LOCK SECTION ====================
+
     // we can't run runHandler while parsing is active, so we lock here until two things have happened for the given project:
     // 1. all (re)parses have completed, and 
     // 2. the runHandler has been started.
     // once that has happened, we will release the lock for the next project.
     // NOTE: any config change causes a reparse, so behave.ini and test config changes must also be inside 
     // this lock (as well as parseFilesForProject and runHandler)
-    await setLock(consoleName, "acquire");
+    await setLock(consoleName, ACQUIRE);
 
     // we do this BEFORE we call configurationChangedHandler() to load our test config,
     // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
@@ -73,7 +71,6 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.config, expectations);
-
 
     // parse to get check counts (checked later, but we want to do this inside the lock)
     const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
@@ -115,11 +112,13 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
     // do NOT await (see comment above)
     const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
 
-    // RELEASE LOCK: 
+    // release lock: 
     // give run handler a chance to call the featureParseComplete() check, then 
     // release the lock so (different) projects can run in parallel
     await (new Promise(t => setTimeout(t, 50)));
-    await setLock(consoleName, "release");
+    await setLock(consoleName, RELEASE);
+
+    // ==================== END LOCK SECTION ====================  
 
 
 
@@ -129,19 +128,13 @@ export async function runAllProjectAndAssertTheResults(projName: string, isDebug
       await vscode.commands.executeCommand("workbench.view.testing.focus");
     }
 
-
-    // WAIT FOR TESTRUNHANDLER TO COMPLETE, I.E. GET RESULTS
+    // ACT
     const results = await resultsPromise;
     console.log(`${consoleName}: runHandler completed`);
 
-
-    if (!results || results.length === 0) {
-      debugger; // eslint-disable-line no-debugger
-      throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
-    }
-
-    // ASSERT RESULTS    
-    assertAllResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
+    // ASSERT
+    assertAllResults(includedTests, results, expectedResults, testExtConfig, projUri, projName, expectations,
+      hasMultiRootWkspNode, actualCounts);
 
   }
   finally {

@@ -6,7 +6,7 @@ import {
   getTestItems,
   getScenarioTests, uriId,
 } from '../../../../common/helpers';
-import { Expectations, RunOptions } from './projectRunner';
+import { Expectations, RunOptions } from '../common';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, getTestProjectUri } from "./helpers";
 import { assertScenarioResult } from "./assertions";
@@ -16,6 +16,7 @@ import { assertScenarioResult } from "./assertions";
 export async function runAllProjectScenariosIndividuallyAndAssertTheResults(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
+  // ARRANGE
   const projUri = getTestProjectUri(projName);
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
@@ -33,14 +34,11 @@ export async function runAllProjectScenariosIndividuallyAndAssertTheResults(proj
   console.log(`${consoleName}: calling runHandler to run each scenario...`);
   for (const test of includedTests) {
     const request = new vscode.TestRunRequest([test]);
+
+    // ACT    
     const results = await api.runHandler(isDebugRun, request, runProfile);
 
-    if (!results || results.length !== 1) {
-      debugger; // eslint-disable-line no-debugger
-      throw new Error(`${consoleName}: runHandler returned an empty queue, check for previous errors in the debug console`);
-    }
-
-    // // ASSERT RESULTS    
+    // ASSERT
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
     assertScenarioResult(results, expectedResults, testExtConfig);
   }

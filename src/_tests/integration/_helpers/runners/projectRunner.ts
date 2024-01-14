@@ -1,42 +1,10 @@
-import * as vscode from 'vscode';
-import { runAllProjectAndAssertTheResults } from './runAllProject';
+import { runAllProjectAndAssertTheResults } from './runProject';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { Configuration } from '../../../../config/configuration';
-import { TestResult } from './assertions';
-import { ProjParseCounts } from "../../../../parsers/fileParser";
-import { runAllProjectScenariosIndividuallyAndAssertTheResults } from './runAllProjectScenarios';
-import { runAllProjectFeaturesIndividuallyAndAssertTheResults } from './runAllProjectFeatures';
+import { runAllProjectScenariosIndividuallyAndAssertTheResults } from './runScenarios';
+import { runAllProjectFeaturesIndividuallyAndAssertTheResults } from './runFeatures';
+import { runAllProjectFeaturesScenarioSubsetsAndAssertTheResults } from './runFeaturesScenarioSubsets';
+import { Expectations, RunOptions } from '../common';
 
-
-export type RunOptions = {
-  selectedRunProfile?: string
-}
-
-export type Expectations = {
-  expectedProjectRelativeWorkingDirPath?: string;
-  expectedProjectRelativeBaseDirPath: string;
-  expectedProjectRelativeConfigPaths: string[];
-  expectedProjectRelativeFeatureFolders: string[];
-  expectedProjectRelativeStepsFolders: string[];
-  getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts;
-  getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[];
-}
-
-export const noBehaveIni = "";
-
-export const noRunOptions: RunOptions = {
-  selectedRunProfile: undefined
-}
-
-// equivalent to no config file, except xRay = true for debug purposes
-export const noConfig = new TestWorkspaceConfig({
-  xRay: true
-});
-
-export const parallelConfig = new TestWorkspaceConfig({
-  runParallel: true,
-  xRay: true
-});
 
 
 
@@ -74,6 +42,15 @@ export class TestProjectRunner {
     await runAllProjectScenariosIndividuallyAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
   }
 
+  runFeaturesScenariosSubSet = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`runFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectFeaturesScenarioSubsetsAndAssertTheResults(this.projName, false, wsConfig, runOptions, expectations);
+  }
+
+  debugFeaturesScenariosSubSet = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+    console.log(`debugFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runAllProjectFeaturesScenarioSubsetsAndAssertTheResults(this.projName, true, wsConfig, runOptions, expectations);
+  }
 }
 
 

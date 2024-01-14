@@ -34,9 +34,11 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 						c();
 					}
 				});
-			} catch (err) {
+			}
+			catch (err) {
 				console.error(err);
 				e(err);
+				debugger; // eslint-disable-line no-debugger
 			}
 		});
 	});

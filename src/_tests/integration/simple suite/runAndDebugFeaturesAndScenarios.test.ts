@@ -1,4 +1,5 @@
-import { TestProjectRunner, noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/runners/projectRunner";
+import { TestProjectRunner } from "../_helpers/runners/projectRunner";
+import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common"
 import { behaveIni, expectations } from "./defaults";
 
 // this file is separate because we don't want to run parallel debug 
@@ -19,8 +20,17 @@ suite(`simple suite - separate`, function () {
   // test("runFeatures", async () =>
   //   await testProjectRunner.runFeatures(noConfig, noRunOptions, expectations));
 
-  test("debugFeatures", async () =>
-    await testProjectRunner.debugFeatures(noConfig, noRunOptions, expectations));
+  // test("debugFeatures", async () =>
+  //   await testProjectRunner.debugFeatures(noConfig, noRunOptions, expectations));
+
+  // test("debugFeatures", async () =>
+  //   await testProjectRunner.debugFeatures(noConfig, noRunOptions, expectations));
+
+  test("runFeaturesScenariosSubSet", async () =>
+    await testProjectRunner.runFeaturesScenariosSubSet(noConfig, noRunOptions, expectations));
+
+  test("runFeaturesScenariosSubSet", async () =>
+    await testProjectRunner.debugFeaturesScenariosSubSet(noConfig, noRunOptions, expectations));
 
 });
 

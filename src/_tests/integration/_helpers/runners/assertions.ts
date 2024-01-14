@@ -4,48 +4,13 @@ import { Configuration } from "../../../../config/configuration";
 import { IntegrationTestAPI, QueueItem } from "../../../../extension";
 import { ProjParseCounts } from "../../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "../testWorkspaceConfig";
-import { Expectations } from "./projectRunner";
+import { Expectations, TestResult } from "../common";
 import { services } from "../../../../services";
 import { ProjectSettings } from "../../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
 import { featureFileStepRe } from "../../../../parsers/featureParser";
 import { funcRe } from "../../../../parsers/stepsParser";
 
-interface ITestResult {
-  test_id: string | undefined;
-  test_uri: string | undefined;
-  test_parent: string | undefined;
-  test_children: string | undefined;
-  test_description: string | undefined;
-  test_error: string | undefined;
-  test_label: string;
-  scenario_isOutline: boolean;
-  scenario_getLabel: string;
-  scenario_featureName: string;
-  scenario_featureFileRelativePath: string | undefined;
-  scenario_scenarioName: string;
-  scenario_result: string | undefined;
-}
-
-
-export class TestResult implements ITestResult {
-  test_id: string | undefined;
-  test_uri: string | undefined;
-  test_parent: string | undefined;
-  test_children: string | undefined;
-  test_description: string | undefined;
-  test_error: string | undefined;
-  test_label!: string;
-  scenario_isOutline!: boolean;
-  scenario_getLabel!: string;
-  scenario_featureName!: string;
-  scenario_featureFileRelativePath!: string;
-  scenario_scenarioName!: string;
-  scenario_result: string | undefined;
-  constructor(testResult: ITestResult) {
-    Object.assign(this, testResult);
-  }
-}
 
 
 export function assertInstances(instances: IntegrationTestAPI) {
@@ -94,9 +59,12 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
     `${projName} project: importedSteps`);
 }
 
+export function assertAllResults(includedTests: vscode.TestItem[], results: QueueItem[] | undefined, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
+  hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
 
-export function assertAllResults(results: QueueItem[], expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri,
-  projName: string, expectations: Expectations, hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+  assert(results.length !== includedTests.length, "results.length !== includedTests.length");
 
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
@@ -110,10 +78,12 @@ export function assertAllResults(results: QueueItem[], expectedResults: TestResu
 }
 
 
-export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[],
+export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
   assert(results.length === featureTestItem.children.size, "results.length === featureTestItem.children.size");
+
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
@@ -121,9 +91,23 @@ export function assertFeatureResult(featureTestItem: vscode.TestItem, results: Q
   });
 }
 
+export function assertFeatureSubsetResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
+  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
-export function assertScenarioResult(results: QueueItem[], expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+  assert(results.length === featureTestItem.children.size - 1, "results.length === featureTestItem.children.size - 1");
+
+  results.forEach(result => {
+    const scenResult = ScenarioResult(result);
+    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+  });
+}
+
+export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
   assert(results.length === 1, "results.length === 1");
+
   const result = results[0];
   const scenResult = ScenarioResult(result);
   assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
