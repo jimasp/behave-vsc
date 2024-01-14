@@ -11,23 +11,14 @@ suite(`project B suite - separate`, function () {
 
   const testProjectRunner = new TestProjectRunner("project B");
 
-  // test("runFeatures", async () =>
-  //   await testProjectRunner.runEachFeature(wsConfig, noRunOptions, expectations));
-
-  // test("runFeatures - parallel", async () =>
-  //   await testProjectRunner.runEachFeature(wsConfigParallel, noRunOptions, expectations));
-
-  // test("debugFeatures", async () =>
-  //   await testProjectRunner.debugEachFeature(wsConfig, noRunOptions, expectations));
-
   test("runFeaturesScenariosSubSets", async () =>
-    await testProjectRunner.runScenariosSubSetsForEachFeature(wsConfig, noRunOptions, expectations));
+    await testProjectRunner.runScenariosSubSetForEachFeature(wsConfig, noRunOptions, expectations));
 
   test("runFeaturesScenariosSubSets - parallel", async () =>
-    await testProjectRunner.runScenariosSubSetsForEachFeature(wsConfigParallel, noRunOptions, expectations));
+    await testProjectRunner.runScenariosSubSetForEachFeature(wsConfigParallel, noRunOptions, expectations));
 
   test("runFeaturesScenariosSubSets", async () =>
-    await testProjectRunner.runScenariosSubSetsForEachFeature(wsConfig, noRunOptions, expectations));
+    await testProjectRunner.runScenariosSubSetForEachFeature(wsConfig, noRunOptions, expectations));
 
 });
 

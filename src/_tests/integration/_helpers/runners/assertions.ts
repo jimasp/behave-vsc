@@ -105,13 +105,6 @@ export function assertFeatureSubsetResult(featureTestItem: vscode.TestItem, resu
     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
   });
 
-  try {
-    assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
-  }
-  catch {
-    debugger; // eslint-disable-line no-debugger
-  }
-
   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
   assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
 }

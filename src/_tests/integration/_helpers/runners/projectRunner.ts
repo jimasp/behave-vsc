@@ -31,12 +31,12 @@ export class TestProjectRunner {
     await runFeaturesIndividually(this.projName, true, wsConfig, runOptions, expectations);
   }
 
-  runScenariosSubSetsForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  runScenariosSubSetForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`runFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
     await runFeaturesScenarioSubsets(this.projName, false, wsConfig, runOptions, expectations);
   }
 
-  debugScenariosSubSetsForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  debugScenariosSubSetForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
     await runFeaturesScenarioSubsets(this.projName, true, wsConfig, runOptions, expectations);
   }
