@@ -3,8 +3,8 @@ import { noBehaveIni, noConfig, noRunOptions } from "../_helpers/common";
 import { expectations } from "./defaults";
 
 
-// this file is separate because we don't want to run parallel debug 
-// sessions (which is not supported) when running the multi-root tests 
+// debug tests are in this separate file so we can ignore this file path in the multi-root suite/index.ts runner() constructor 
+// (runMultiRootProjectsInParallel=true is not applicable to debug)
 
 suite(`higher steps folder suite test debug run`, () => {
   const testProjectRunner = new TestProjectRunner("higher steps folder");
