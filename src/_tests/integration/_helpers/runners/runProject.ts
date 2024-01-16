@@ -11,8 +11,10 @@ import {
   assertWorkspaceSettingsAsExpected,
   assertAllFeatureFileStepsHaveAStepFileStepMatch,
   assertAllStepFileStepsHaveAtLeastOneFeatureReference,
-  assertAllResults
+  assertAllResults,
+  assertFriendlyCmds
 } from "./assertions";
+
 
 
 // SIMULATES A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
@@ -97,8 +99,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     let runProfile = undefined;
     if (runOptions.selectedRunProfile)
       runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-    // do NOT await (see comment above)
+
+
+    // ACT
+    // kick off the run, do NOT await (see comment above)
     const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
+
 
     // release lock: 
     // give run handler a chance to call the featureParseComplete() check, then 
@@ -116,21 +122,16 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
       await vscode.commands.executeCommand("workbench.view.testing.focus");
     }
 
-    // ACT
     const results = await resultsPromise;
     console.log(`${consoleName}: runHandler completed`);
 
     // ASSERT
     assertAllResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
-
+    assertFriendlyCmds(projUri, isDebugRun, expectedResults, testExtConfig);
   }
   finally {
     if (behaveIniContent)
       await restoreBehaveIni(projName, projUri, workDirUri);
   }
 }
-
-
-
-
 

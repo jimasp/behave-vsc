@@ -15,6 +15,8 @@ import { assertFeatureSubsetResult } from "./assertions";
 export async function runFeaturesScenarioSubsets(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
+  // ARRANGE
+
   const projUri = getTestProjectUri(projName);
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
@@ -49,10 +51,12 @@ export async function runFeaturesScenarioSubsets(projName: string, isDebugRun: b
       requestItems.push(scenarioTest[1]);
     }
 
+
+    // ACT
     const request = new vscode.TestRunRequest(requestItems);
     const results = await api.runHandler(isDebugRun, request, runProfile);
 
-    // ASSERT RESULT
+    // ASSERT
     assertFeatureSubsetResult(featureTest, results, expectedResults, testExtConfig);
     requestItems.length = 0;
   }

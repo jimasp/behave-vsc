@@ -10,6 +10,7 @@ import { ProjectSettings } from "../../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
 import { featureFileStepRe } from "../../../../parsers/featureParser";
 import { funcRe } from "../../../../parsers/stepsParser";
+import { logStore } from "../../../runner";
 
 
 
@@ -238,6 +239,44 @@ export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projU
 }
 
 
+export function assertLogExists(projUri: vscode.Uri, match: RegExp) {
+  const projLogs = logStore.filter(x => x[0] === projUri.path).map(x => x[1]);
+  const log = projLogs.find(x => {
+    // if (x.includes("single.scenario.feature$"))
+    //   debugger; // eslint-disable-line no-debugger
+    return match.test(x);
+  });
+  if (!log) {
+    // throw here rather than assert so we can examine projLogs if we are debugging integration tests
+    debugger; // eslint-disable-line no-debugger
+    throw new Error(`logStore did not contain expected log for project ${projUri.path}, ` +
+      `match string:"${match}", projLogs.length was: ${projLogs.length}`);
+  }
+}
+
+
+export function assertFriendlyCmds(projUri: vscode.Uri, isDebugRun: boolean, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig) {
+
+  // friendlyCmds are not logged for debug runs
+  if (isDebugRun)
+    return;
+
+  if (!testExtConfig.runParallel) {
+    assertLogExists(projUri,
+      new RegExp(`cd.*/example-projects/.*".*python.?" -m behave --show-skipped --junit --junit-directory ".*"`, "gms"));
+    return;
+  }
+
+  // note parallel doesn't  log the same way
+  expectedResults.forEach(expectedResult => {
+    const expectedCmd = new RegExp(
+      `cd.*/example-projects/.*".*python.?" -m behave -i ` +
+      `"${expectedResult.scenario_featureFileRelativePath}\\$" --show-skipped --junit --junit-directory ".*"`, "gms");
+    assertLogExists(projUri, expectedCmd);
+  });
+}
+
 
 
 function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Configuration,
@@ -271,7 +310,6 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
     debugger; // eslint-disable-line no-debugger
   }
 }
-
 
 
 function ScenarioResult(result: QueueItem) {
@@ -385,7 +423,6 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 
   return [...funcLines];
 }
-
 
 
 type FileStep = {

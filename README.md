@@ -11,6 +11,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Select to run/debug all tests, a nested folder, or just a single feature or scenario.
   - Select to run tests with tags and/or environment variables via run profiles.
   - See failed test run result inside the feature file. (Full behave output is available in the Behave VSC output window.)
+  - Set behave's working directory (via `relativeWorkingDir` setting).
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
@@ -28,9 +29,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ## Terminology
 
 - "workspace": the root context of the development environment in the IDE. There is only one workspace per vscode instance.
-- "workspace folder" : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder.
+- "workspace folder" : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
 - "multi-root workspace": a workspace that contains multiple workspace folders.
-- "project": shorthand (within this document) for "a workspace folder that contains feature files".
+- "project": within this readme, this is shorthand for "a workspace folder that contains feature files".
 
 ## Workspace/vscode requirements
 
@@ -102,7 +103,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ### How test runs work
 
-- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. The behave command working directory is your root project directory.
+- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. By default, the behave command working directory is your root project directory.
 
 - For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
 
