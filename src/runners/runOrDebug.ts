@@ -92,18 +92,12 @@ export async function runOrDebugFeatureWithSelectedScenarios(wr: ProjRun, parall
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
     const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(wr, featureFileProjectRelativePath);
 
-    const initArgs = [
+    const friendlyArgs = [
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${wr.junitRunDirUri.fsPath}"`,
     ];
-    const args = addTagsAndGetArgs(wr, initArgs, true);
-
-    const friendlyArgs = [...initArgs];
-    // replace any chars that os command line will try to expand inside quotes
-    const friendlyPipedScenarioNames = pipedScenarioNames
-      .replace(/[`!$=]/g, '\\$&');
-    friendlyArgs.splice(3, 1, `"${friendlyPipedScenarioNames}"`);
+    const args = addTagsAndGetArgs(wr, friendlyArgs, true);
 
     const friendlyCmd = `${ps1}cd "${wr.projSettings.workingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${wr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
@@ -192,14 +186,20 @@ function getPipedScenarioNames(selectedScenarios: QueueItem[]) {
 
 
 function getScenarioRunName(scenName: string, isOutline: boolean) {
+  // double-escape backslashes
+  let scenarioName = scenName.replace(/\\/g, '\\\\\\\\');
+  // double-escape $ to stop expansion inside quotes
+  scenarioName = scenarioName.replace(/\$/g, '\\\\$');
   // escape double quotes and regex special characters
-  let scenarioName = scenName.replace(/[".*+?^${}()|[\]\\]/g, '\\$&');
+  scenarioName = scenarioName.replace(/["`!.*+?^{}()|[\]]/g, '\\$&');
 
   // scenario outline with a <param> in its name
   if (isOutline && scenarioName.includes("<"))
     scenarioName = scenarioName.replace(/<.*>/g, ".*");
 
-  return "^" + scenarioName + (isOutline ? " -- @" : "$");
+  // complete the regex
+  scenarioName = "^" + scenarioName + (isOutline ? " -- @" : "\\$");
+  return scenarioName;
 }
 
 
