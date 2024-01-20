@@ -4,12 +4,13 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 89, testCount: testCount },
+    tests: { nodeCount: 95, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 17, stepFilesExceptEmptyOrCommentedOut: 6,
     stepFileStepsExceptCommentedOut: 47,
-    featureFileStepsExceptCommentedOut: 152, stepMappings: 151  // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 170, stepMappings: 169  // (1 diff = "When we have a missing step")
   };
 }
+
 
 export const getExpectedResults = (): TestResult[] => {
 
@@ -129,6 +130,118 @@ export const getExpectedResults = (): TestResult[] => {
     new TestResult({
       scenario_featureFileRelativePath: 'features/special_characters.feature',
       scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = "',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = "',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = "',
+      test_label: 'run a successful rx scenario = "',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = \\$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = \\$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \\$',
+      test_label: 'run a successful rx scenario = \\$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = \\\\$\\$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = \\\\$\\$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \\\\$\\$',
+      test_label: 'run a successful rx scenario = \\\\$\\$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = !',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = !',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = !',
+      test_label: 'run a successful rx scenario = !',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = \\\\$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = \\\\$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \\\\$',
+      test_label: 'run a successful rx scenario = \\\\$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = \\',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = \\',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \\',
+      test_label: 'run a successful rx scenario = \\',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = `',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = `',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = `',
+      test_label: 'run a successful rx scenario = `',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
       scenario_getLabel: 'run a successful rx scenario = \'',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -139,23 +252,39 @@ export const getExpectedResults = (): TestResult[] => {
       test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = \'',
       test_label: 'run a successful rx scenario = \'',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
       scenario_featureFileRelativePath: 'features/special_characters.feature',
       scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
-      scenario_getLabel: 'run a successful rx = "',
+      scenario_getLabel: 'run a successful rx scenario = $',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful rx = "',
+      scenario_scenarioName: 'run a successful rx scenario = $',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/features/special_characters.feature/run a successful rx = "',
-      test_label: 'run a successful rx = "',
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $',
+      test_label: 'run a successful rx scenario = $',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/special_characters.feature',
+      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
+      scenario_getLabel: 'run a successful rx scenario = $$',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful rx scenario = $$',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $$',
+      test_label: 'run a successful rx scenario = $$',
+      test_parent: '.../project B/features/special_characters.feature',
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
@@ -177,39 +306,6 @@ export const getExpectedResults = (): TestResult[] => {
     new TestResult({
       scenario_featureFileRelativePath: 'features/special_characters.feature',
       scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
-      scenario_getLabel: 'run a successful rx scenario = $',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful rx scenario = $',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $',
-      test_label: 'run a successful rx scenario = $',
-      test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
-    }),
-
-    new TestResult({
-      scenario_featureFileRelativePath: 'features/special_characters.feature',
-      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
-      scenario_getLabel: 'run a successful rx scenario = $$',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful rx scenario = $$',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = $$',
-      test_label: 'run a successful rx scenario = $$',
-      test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
-    }),
-
-
-    new TestResult({
-      scenario_featureFileRelativePath: 'features/special_characters.feature',
-      scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
       scenario_getLabel: 'run a successful rx scenario = [\\=',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -220,7 +316,7 @@ export const getExpectedResults = (): TestResult[] => {
       test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\=',
       test_label: 'run a successful rx scenario = [\\=',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
@@ -236,23 +332,23 @@ export const getExpectedResults = (): TestResult[] => {
       test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\]$\\!$',
       test_label: 'run a successful rx scenario = [\\]$\\!$',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
       scenario_featureFileRelativePath: 'features/special_characters.feature',
       scenario_featureName: 'Containing special chars like [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
-      scenario_getLabel: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      scenario_getLabel: 'run a successful rx scenario = /[.*+?^${}()|[\\]$',
       scenario_isOutline: false,
       scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      scenario_scenarioName: 'run a successful rx scenario = /[.*+?^${}()|[\\]$',
       test_children: undefined,
       test_description: undefined,
       test_error: undefined,
-      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
-      test_label: 'run a successful rx scenario = /[.*+?^${}()|[\\]\\$',
+      test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = /[.*+?^${}()|[\\]$',
+      test_label: 'run a successful rx scenario = /[.*+?^${}()|[\\]$',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
@@ -268,7 +364,7 @@ export const getExpectedResults = (): TestResult[] => {
       test_id: '.../project B/features/special_characters.feature/run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
       test_label: 'run a successful rx scenario = [\\="\'!@#$%^&*()_-+`~,./<>?{}|]',
       test_parent: '.../project B/features/special_characters.feature',
-      test_uri: '.../project B/features/special_characters.feature'
+      test_uri: '.../project B/features/special_characters.feature',
     }),
 
     new TestResult({
@@ -496,7 +592,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error',
       scenario_isOutline: false,
@@ -528,7 +624,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip a before hook-error',
       scenario_isOutline: false,
@@ -544,7 +640,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create a before hook-error again',
       scenario_isOutline: false,
@@ -560,7 +656,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error',
       scenario_isOutline: false,
@@ -592,7 +688,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'skip an after hook-error',
       scenario_isOutline: false,
@@ -608,7 +704,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: '...features/feature_with_hook_error.feature',
+      scenario_featureFileRelativePath: 'features/feature_with_hook_error.feature',
       scenario_featureName: 'With a hook-error',
       scenario_getLabel: 'create an after hook-error again',
       scenario_isOutline: false,
