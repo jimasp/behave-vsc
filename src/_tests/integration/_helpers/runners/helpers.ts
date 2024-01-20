@@ -10,6 +10,13 @@ import {
 } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { assertInstances } from './assertions';
+import { logStore } from '../../../runner';
+import { Configuration } from '../../../../config/configuration';
+import { RunOptions } from '../common';
+import { RunProfilesSetting } from '../../../../config/settings';
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
+import { getFriendlyEnvVars } from '../../../../runners/helpers';
+import { ProjRun } from '../../../../runners/testRunHandler';
 
 
 
@@ -160,3 +167,32 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	return api;
 }
 
+
+export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+	let tagsString = "";
+	if (runOptions.selectedRunProfile) {
+		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
+		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
+		if (selectedRunProfile.tagExpression)
+			tagsString = `--tags="${selectedRunProfile.tagExpression}" `;
+	}
+	return tagsString;
+}
+
+export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+
+	const env: object = testExtConfig.get("env");
+
+	let rpEnv: object | undefined = {};
+	if (runOptions.selectedRunProfile) {
+		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
+		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
+		rpEnv = selectedRunProfile.env;
+	}
+
+	const allenv = { ...env, ...rpEnv };
+	const pr = { env: allenv } as ProjRun;
+	const envVarsString = getFriendlyEnvVars(pr);
+
+	return envVarsString;
+}

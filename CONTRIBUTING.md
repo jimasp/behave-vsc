@@ -160,7 +160,7 @@ feature file formatting is provided by:
 - Elsewhere `showError` should be avoided. Instead you want to use either `throw new Error("my message")` or `throw new projError(...)`.
 - `projError` should be used if:
   - (a) there is no `catch` above that creates a `new projError` itself, AND
-  - (b) you have a workspace context (i.e. `wr`, `projSettings` or `projUri` is available to the function).
+  - (b) you have a workspace context (i.e. `pr`, `projSettings` or `projUri` is available to the function).
   Either throw will then then get caught further up the stack, acted on if required and/or logged by the top-level function.
 - *Unless you are in a top-level function, i.e. an entry point function, handler or unawaited async function, then errors should be thrown (i.e. do not call showError except in these cases)*. This is so that (a) all parent catches know about the error and can act on it, for example to cancel a test run if required, and (b) the error only gets shown once (at the top of the stack).  
 - These are general guidelines. If you are adding a `throw` (or `showError`), then ALWAYS test that error handling works as expected by deliberately throwing the error, i.e. check it gets gets logged correctly, *only gets shown once*, creates an error dialog box to alert the user and has the full expected stack if `xRay` is enabled. i.e. *think about the user experience*.

@@ -13,6 +13,6 @@ suite(`higher steps folder suite test debug run`, () => {
     await testProjectRunner.debugAll(wsConfig, behaveIni, noRunOptions, expectations));
 
   test("debugFeaturesScenariosSubSets", async () =>
-    await testProjectRunner.debugScenariosSubSetForEachFeature(wsConfig, noRunOptions, expectations));
+    await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, noRunOptions, expectations));
 });
 

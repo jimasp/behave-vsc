@@ -61,65 +61,34 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
 }
 
 
-export function assertAllResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
-  hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
 
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+// export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
+//   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
-  results.forEach(result => {
-    const scenResult = ScenarioResult(result);
-    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-  });
+//   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
 
-  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert.equal(results.length, expectedResults.length, "results.length !== expectedResults.length");
-  assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
-}
+//   results.forEach(result => {
+//     const scenResult = ScenarioResult(result);
+//     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+//     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+//   });
 
-
-export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
-  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-
-  results.forEach(result => {
-    const scenResult = ScenarioResult(result);
-    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-  });
-
-  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert(results.length === featureTestItem.children.size, `results.length === featureTestItem.children.size ${featureTestItem.id}`);
-}
+//   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+//   assert(results.length === featureTestItem.children.size, `results.length === featureTestItem.children.size ${featureTestItem.id}`);
+// }
 
 
-export function assertFeatureSubsetResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
-  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-
-  results.forEach(result => {
-    const scenResult = ScenarioResult(result);
-    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-  });
-
-  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
-}
 
 
-export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-  assert(results.length === 1, `results.length !== 1, ${results[0].test.id}}`);
+// export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+//   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+//   assert(results.length === 1, `results.length !== 1, ${results[0].test.id}}`);
 
-  const result = results[0];
-  const scenResult = ScenarioResult(result);
-  assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-  assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-}
+//   const result = results[0];
+//   const scenResult = ScenarioResult(result);
+//   assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+//   assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+// }
 
 
 export function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
@@ -134,6 +103,7 @@ export function assertTestResultMatchesExpectedResult(expectedResults: TestResul
       expectedResult.test_description !== actualResult.test_description ||
       expectedResult.test_error !== actualResult.test_error ||
       expectedResult.test_label !== actualResult.test_label ||
+      expectedResult.scenario_featureFileRelativePath !== actualResult.scenario_featureFileRelativePath ||
       expectedResult.scenario_isOutline !== actualResult.scenario_isOutline ||
       expectedResult.scenario_getLabel !== actualResult.scenario_getLabel ||
       expectedResult.scenario_featureName !== actualResult.scenario_featureName ||
@@ -173,17 +143,18 @@ export function assertTestResultMatchesExpectedResult(expectedResults: TestResul
 
 
   if (match.length !== 1) {
-    console.log(actualResult);
-    // UHOH (did you add a new scenario that hasn't been added to expected results yet? 
-    // IF a new scenario has been added: see debug console and copy/paste into xxx suite/expectedResults.ts)
+
+    logUnexpectedResult(actualResult);
+
+    // UHOH - did you add/modify a feature/scenario, that is not in an expectedResults? 
+    // IF (and only IF) a new feature/scenario has been 
+    // ADDED then SEE THE "new TestResult" in the DEBUG CONSOLE and "copy all"/paste into xxx suite/expectedResults.ts)
     debugger; // eslint-disable-line no-debugger
     throw new Error(`match.length was:${match.length} when attempting to match test id "${actualResult.test_id}" to expected result`);
   }
 
   return match;
 }
-
-
 
 
 export async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: IntegrationTestAPI) {
@@ -239,47 +210,87 @@ export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projU
 }
 
 
-export function assertLogExists(projUri: vscode.Uri, match: RegExp) {
-  const projLogs = logStore.filter(x => x[0] === projUri.path).map(x => x[1]);
-  const log = projLogs.find(x => {
-    // if (x.includes("single.scenario.feature$"))
-    //   debugger; // eslint-disable-line no-debugger
-    return match.test(x);
+export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) {
+  let closestMatch = { log: '', include: '', highestIndex: 0, mismatchIndex: 0 };
+  const projLogs = logStore.get().filter(x => x[0] === projUri.path).map(x => x[1]);
+
+  // for simplicity, we use an ordered includes array here rather than a regex, 
+  // this is so we can do a a direct string comparison (vs getting caught up in regex escaping issues)  
+  const matchingLogs = projLogs.filter(x => {
+    let lastIndex = -1;
+    let includesIndex = 0;
+    for (const include of orderedIncludes) {
+      const currentIndex = x.indexOf(include, lastIndex + 1);
+      if (currentIndex === -1) {
+        if (includesIndex > closestMatch.highestIndex)
+          closestMatch = { log: x, include: include, highestIndex: includesIndex, mismatchIndex: 0 };
+        if (includesIndex === closestMatch.highestIndex) {
+          const mismatchIndex = findMismatchIndex(x, closestMatch.log);
+          if (mismatchIndex > closestMatch.mismatchIndex)
+            closestMatch = { log: x, include: include, highestIndex: includesIndex, mismatchIndex };
+        }
+        return false;
+      }
+      lastIndex = currentIndex;
+      includesIndex++;
+    }
+
+    return true;
   });
-  if (!log) {
+
+  if (matchingLogs.length > 1)
+    throw new Error("more than one matching log");
+
+  if (matchingLogs.length === 0) {
     // throw here rather than assert so we can examine projLogs if we are debugging integration tests
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`logStore did not contain expected log for project ${projUri.path}, ` +
-      `match string:"${match}", projLogs.length was: ${projLogs.length}`);
+    console.log(closestMatch.log);
+    console.log(`closestMatch.log.includes("${closestMatch.include}")`);
+    throw new Error(`logStore did not contain expected log for project: "${projUri.path}"\n` +
+      `closest matched log was: "${closestMatch.log}"\n` +
+      `which failed on include string: "${orderedIncludes[closestMatch.highestIndex]}"\n` +
+      `include strings list was:"${orderedIncludes}"`);
   }
 }
 
-
-export function assertFriendlyCmds(projUri: vscode.Uri, isDebugRun: boolean, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig) {
-
-  // friendlyCmds are not logged for debug runs
-  if (isDebugRun)
-    return;
-
-  if (!testExtConfig.runParallel) {
-    assertLogExists(projUri,
-      new RegExp(`cd.*/example-projects/.*".*python.?" -m behave --show-skipped --junit --junit-directory ".*"`, "gms"));
-    return;
+function findMismatchIndex(str1: string, str2: string): number {
+  const minLength = Math.min(str1.length, str2.length);
+  for (let i = 0; i < minLength; i++) {
+    if (str1[i] !== str2[i]) {
+      return i;
+    }
   }
-
-  // note parallel doesn't  log the same way
-  expectedResults.forEach(expectedResult => {
-    const expectedCmd = new RegExp(
-      `cd.*/example-projects/.*".*python.?" -m behave -i ` +
-      `"${expectedResult.scenario_featureFileRelativePath}\\$" --show-skipped --junit --junit-directory ".*"`, "gms");
-    assertLogExists(projUri, expectedCmd);
-  });
+  if (str1.length !== str2.length) {
+    return minLength;
+  }
+  return -1;  // The strings are identical
 }
 
 
+// export function assertFriendlyCmdsForRunAll(projUri: vscode.Uri, requestItems: vscode.TestItem[], isDebugRun: boolean,
+//   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
 
-function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Configuration,
+//   // friendlyCmds are not logged for debug runs
+//   if (isDebugRun)
+//     return;
+
+//   if (!testExtConfig.runParallel) {
+//     assertLogExists(projUri,
+//       new RegExp(`cd.*/example-projects/.*".*python.?" -m behave --show-skipped --junit --junit-directory ".*"`, "gms"));
+//     return;
+//   }
+
+//   expectedResults.forEach(expectedResult => {
+//     const expectedCmd = new RegExp(
+//       `cd.*/example-projects/.*".*python.?" -m behave -i ` +
+//       `"${expectedResult.scenario_featureFileRelativePath}\\$" --show-skipped --junit --junit-directory ".*"`, "gms");
+//     assertLogExists(projUri, expectedCmd);
+//   });
+// }
+
+
+
+export function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Configuration,
   getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
   actualCounts: ProjParseCounts, hasMultiRootWkspNode: boolean) {
 
@@ -312,7 +323,7 @@ function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Con
 }
 
 
-function ScenarioResult(result: QueueItem) {
+export function ScenarioResult(result: QueueItem) {
   return new TestResult({
     test_id: standardisePath(result.test.id, true),
     test_uri: standardisePath(result.test.uri?.toString()),
@@ -331,7 +342,7 @@ function ScenarioResult(result: QueueItem) {
 }
 
 
-function standardisePath(path: string | undefined, isId = false): string | undefined {
+export function standardisePath(path: string | undefined, isId = false): string | undefined {
   if (!path)
     return path;
   try {
@@ -351,6 +362,34 @@ function standardisePath(path: string | undefined, isId = false): string | undef
   }
   const find = "/example-projects/";
   return path === undefined ? undefined : "..." + path.substring(path.indexOf(find) + find.length - 1);
+}
+
+
+
+export function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
+  const lines = getLines(content.trim());
+  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+    const line = lines[lineNo].trim();
+    const stExec = featureFileStepRe.exec(line);
+    if (stExec)
+      featureSteps.set({ uri, lineNo }, line);
+  }
+
+  return featureSteps;
+}
+
+
+export function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<FileStep, string>) {
+  const lines = getLines(content.trim());
+  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+    const line = lines[lineNo].trim();
+    const prevLine = lineNo === 0 ? "" : lines[lineNo - 1].trim();
+    if (funcRe.test(line) && prevLine !== "" && prevLine !== "@classmethod") {
+      steps.set({ uri, lineNo }, line);
+    }
+  }
+
+  return steps;
 }
 
 
@@ -389,7 +428,6 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 }
 
 
-
 async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 
   const stepLines = new Map<FileStep, string>();
@@ -425,32 +463,24 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 }
 
 
+function logUnexpectedResult(actualResult: TestResult) {
+  console.clear();
+  console.log("new TestResult({");
+  const sortedProperties = Object.keys(actualResult).sort();
+  for (const property of sortedProperties) {
+    if (Object.prototype.hasOwnProperty.call(actualResult, property)) {
+      const val = actualResult[property as keyof TestResult];
+      const value = typeof val === 'string'
+        ? `'${(actualResult[property as keyof TestResult] as string).replace(/['\\]/g, "\\$&")}'`
+        : val;
+      console.log(`\t${property}: ${value},`);
+    }
+  }
+  console.log("}),");
+}
+
+
 type FileStep = {
   uri: vscode.Uri,
   lineNo: number,
-}
-
-export function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
-  const lines = getLines(content.trim());
-  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
-    const line = lines[lineNo].trim();
-    const stExec = featureFileStepRe.exec(line);
-    if (stExec)
-      featureSteps.set({ uri, lineNo }, line);
-  }
-
-  return featureSteps;
-}
-
-export function addStepsFromStepsFile(uri: vscode.Uri, content: string, steps: Map<FileStep, string>) {
-  const lines = getLines(content.trim());
-  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
-    const line = lines[lineNo].trim();
-    const prevLine = lineNo === 0 ? "" : lines[lineNo - 1].trim();
-    if (funcRe.test(line) && prevLine !== "" && prevLine !== "@classmethod") {
-      steps.set({ uri, lineNo }, line);
-    }
-  }
-
-  return steps;
 }

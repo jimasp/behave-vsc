@@ -1,6 +1,6 @@
 import { runProject } from './runProject';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { runFeaturesScenarioSubsets } from './runFeaturesScenarioSubsets';
+import { runPipedScenariosOnly } from './runPipedScenarios';
 import { Expectations, RunOptions } from '../common';
 
 
@@ -20,14 +20,14 @@ export class TestProjectRunner {
     await runProject(this.projName, true, wsConfig, behaveConfig, runOptions, expectations);
   }
 
-  runScenariosSubSetForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  runSubsetOfScenariosForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`runFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runFeaturesScenarioSubsets(this.projName, false, wsConfig, runOptions, expectations);
+    await runPipedScenariosOnly(this.projName, false, wsConfig, runOptions, expectations);
   }
 
-  debugScenariosSubSetForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
+  debugSubsetOfScenariosForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations) => {
     console.log(`debugFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runFeaturesScenarioSubsets(this.projName, true, wsConfig, runOptions, expectations);
+    await runPipedScenariosOnly(this.projName, true, wsConfig, runOptions, expectations);
   }
 }
 

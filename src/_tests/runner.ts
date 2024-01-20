@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import inspector = require('inspector');
 import { services } from '../services';
 
-export const logStore: [string, string][] = [];
 
 export async function runner(globStr: string, ignore?: string[]): Promise<void> {
 
@@ -19,14 +18,6 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 	});
 
 	const testsRoot = __dirname;
-
-	// note - this won't intercept logs in activate() when the extension host is initially fired up
-	// because when the extension host instance loads the extension, it calls activate() before we get here
-	const logInfo = services.logger.logInfo;
-	services.logger.logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-		logStore.push([projUri.path, text]);
-		logInfo.call(services.logger, text, projUri, run);
-	};
 
 	return new Promise((c, e) => {
 
@@ -54,3 +45,26 @@ export async function runner(globStr: string, ignore?: string[]): Promise<void> 
 		});
 	});
 }
+
+
+class LogStore {
+	#logStore: [string, string][] = [];
+
+	clearProjLogs(projUri: vscode.Uri) {
+		this.#logStore = this.#logStore.filter(x => x[0] !== projUri.path);
+	}
+
+	get() {
+		return this.#logStore;
+	}
+}
+
+export const logStore = new LogStore();
+
+// note - this won't store logs in activate() when the extension host is initially fired up
+// because when the extension host instance loads the extension, it calls activate() before we get here
+const logInfo = services.logger.logInfo;
+services.logger.logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+	logStore.get().push([projUri.path, text]);
+	logInfo.call(services.logger, text, projUri, run);
+};

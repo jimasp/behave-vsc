@@ -172,7 +172,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
 
-  let wr: ProjRun | undefined = undefined;
+  let pr: ProjRun | undefined = undefined;
 
   xRayLog(`runWorkspaceQueue: started for run ${run.name}`, projSettings.uri);
 
@@ -186,23 +186,23 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
     const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
 
     // note that runProfile.env will (and should) override 
-    // any wr.projSettings.env global setting with the same key
+    // any pr.projSettings.env global setting with the same key
     const allenv = { ...projSettings.env, ...runProfile.env };
 
-    wr = new ProjRun(
+    pr = new ProjRun(
       projSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       runProfile.tagExpression ?? "", allenv
     )
 
     const start = performance.now();
-    logProjRunStarted(wr);
-    await doRunType(wr);
-    logProjRunComplete(wr, start);
+    logProjRunStarted(pr);
+    await doRunType(pr);
+    logProjRunComplete(pr, start);
 
   }
   catch (e: unknown) {
-    wr?.run.end();
+    pr?.run.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
     services.logger.showError(e, projSettings.uri, run);
   }
@@ -211,44 +211,44 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
 }
 
 
-async function doRunType(wr: ProjRun) {
+async function doRunType(pr: ProjRun) {
 
-  if (wr.projSettings.runParallel && !wr.debug) {
-    await runFeaturesParallel(wr);
+  if (pr.projSettings.runParallel && !pr.debug) {
+    await runFeaturesParallel(pr);
     return;
   }
 
-  if (wr.allTestsForThisProjIncluded) {
-    wr.sortedQueue.forEach(projQueueItem => wr.run.started(projQueueItem.test));
-    await runAllFeatures(wr);
+  if (pr.allTestsForThisProjIncluded) {
+    pr.sortedQueue.forEach(projQueueItem => pr.run.started(projQueueItem.test));
+    await runAllFeatures(pr);
     return;
   }
 
-  await runFeaturesTogether(wr);
+  await runFeaturesTogether(pr);
 }
 
 
-async function runAllFeatures(wr: ProjRun) {
-  xRayLog(`runAllFeatures`, wr.projSettings.uri);
-  await runOrDebugAllFeaturesInOneInstance(wr);
+async function runAllFeatures(pr: ProjRun) {
+  xRayLog(`runAllFeatures`, pr.projSettings.uri);
+  await runOrDebugAllFeaturesInOneInstance(pr);
 }
 
 
-async function runFeaturesTogether(wr: ProjRun) {
+async function runFeaturesTogether(pr: ProjRun) {
 
-  xRayLog(`runFeaturesTogether`, wr.projSettings.uri);
+  xRayLog(`runFeaturesTogether`, pr.projSettings.uri);
 
   const runTogetherFeatures: vscode.TestItem[] = [];
   const alreadyProcessedFeatureIds: string[] = [];
 
-  for (const projQueueItem of wr.sortedQueue) {
+  for (const projQueueItem of pr.sortedQueue) {
 
-    if (wr.run.token.isCancellationRequested)
+    if (pr.run.token.isCancellationRequested)
       break;
 
-    const runEntireFeature = wr.allTestsForThisProjIncluded
+    const runEntireFeature = pr.allTestsForThisProjIncluded
       ? projQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, projQueueItem);
+      : parentFeatureOrAllSiblingsIncluded(pr, projQueueItem);
 
     if (runEntireFeature) {
       if (runTogetherFeatures.includes(runEntireFeature))
@@ -261,49 +261,49 @@ async function runFeaturesTogether(wr: ProjRun) {
     if (!featureId)
       continue;
 
-    const selectedScenarios = wr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
-    selectedScenarios.forEach(qi => wr.run.started(qi.test));
-    await runOrDebugFeatureWithSelectedScenarios(wr, false, selectedScenarios);
+    const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
+    selectedScenarios.forEach(qi => pr.run.started(qi.test));
+    await runOrDebugFeatureWithSelectedScenarios(pr, false, selectedScenarios);
   }
 
   if (runTogetherFeatures.length > 0) {
     const allChildScenarios: QueueItem[] = [];
-    runTogetherFeatures.forEach(feature => allChildScenarios.push(...getChildScenariosForFeature(wr, feature)));
-    allChildScenarios.forEach(x => wr.run.started(x.test));
+    runTogetherFeatures.forEach(feature => allChildScenarios.push(...getChildScenariosForFeature(pr, feature)));
+    allChildScenarios.forEach(x => pr.run.started(x.test));
 
-    await runOrDebugFeatures(wr, false, allChildScenarios);
+    await runOrDebugFeatures(pr, false, allChildScenarios);
   }
 }
 
 
-async function runFeaturesParallel(wr: ProjRun) {
+async function runFeaturesParallel(pr: ProjRun) {
 
-  if (wr.debug)
+  if (pr.debug)
     throw new Error("runParallel should not be called with debug=true");
 
-  xRayLog(`runFeaturesParallel`, wr.projSettings.uri);
+  xRayLog(`runFeaturesParallel`, pr.projSettings.uri);
 
   const featuresRun: string[] = [];
   const asyncRunPromises: Promise<void>[] = [];
   const alreadyProcessedFeatureIds: string[] = [];
 
-  for (const projQueueItem of wr.sortedQueue) {
+  for (const projQueueItem of pr.sortedQueue) {
 
-    if (wr.run.token.isCancellationRequested)
+    if (pr.run.token.isCancellationRequested)
       break;
 
-    const runEntireFeature = wr.allTestsForThisProjIncluded
+    const runEntireFeature = pr.allTestsForThisProjIncluded
       ? projQueueItem.test.parent
-      : parentFeatureOrAllSiblingsIncluded(wr, projQueueItem);
+      : parentFeatureOrAllSiblingsIncluded(pr, projQueueItem);
 
     if (runEntireFeature) {
       if (featuresRun.includes(runEntireFeature.id))
         continue;
       featuresRun.push(runEntireFeature.id);
 
-      const childScenarios: QueueItem[] = getChildScenariosForParentFeature(wr, projQueueItem);
-      childScenarios.forEach(x => wr.run.started(x.test));
-      const promise = runOrDebugFeatures(wr, true, childScenarios);
+      const childScenarios: QueueItem[] = getChildScenariosForParentFeature(pr, projQueueItem);
+      childScenarios.forEach(x => pr.run.started(x.test));
+      const promise = runOrDebugFeatures(pr, true, childScenarios);
       asyncRunPromises.push(promise);
       continue;
     }
@@ -312,9 +312,9 @@ async function runFeaturesParallel(wr: ProjRun) {
     if (!featureId)
       continue;
 
-    const selectedScenarios = wr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
-    selectedScenarios.forEach(qi => wr.run.started(qi.test));
-    const promise = runOrDebugFeatureWithSelectedScenarios(wr, false, selectedScenarios);
+    const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
+    selectedScenarios.forEach(qi => pr.run.started(qi.test));
+    const promise = runOrDebugFeatureWithSelectedScenarios(pr, false, selectedScenarios);
     asyncRunPromises.push(promise);
   }
 
@@ -356,26 +356,26 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 }
 
 
-function logProjRunStarted(wr: ProjRun) {
-  if (!wr.debug) {
-    services.logger.logInfo(`--- ${wr.projSettings.name} tests started for run ${wr.run.name} @${new Date().toISOString()} ---\n`,
-      wr.projSettings.uri, wr.run);
+function logProjRunStarted(pr: ProjRun) {
+  if (!pr.debug) {
+    services.logger.logInfo(`--- ${pr.projSettings.name} tests started for run ${pr.run.name} @${new Date().toISOString()} ---\n`,
+      pr.projSettings.uri, pr.run);
   }
 }
 
 
-function logProjRunComplete(wr: ProjRun, start: number) {
+function logProjRunComplete(pr: ProjRun, start: number) {
   const end = performance.now();
-  if (!wr.debug) {
-    services.logger.logInfo(`\n--- ${wr.projSettings.name} tests completed for run ${wr.run.name} ` +
+  if (!pr.debug) {
+    services.logger.logInfo(`\n--- ${pr.projSettings.name} tests completed for run ${pr.run.name} ` +
       `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
-      wr.projSettings.uri, wr.run);
+      pr.projSettings.uri, pr.run);
   }
-  wr.run.appendOutput('\r\n');
-  wr.run.appendOutput('-----------------------------------------------------------\r\n');
-  wr.run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
-  wr.run.appendOutput('-----------------------------------------------------------\r\n');
-  wr.run.appendOutput('\r\n');
+  pr.run.appendOutput('\r\n');
+  pr.run.appendOutput('-----------------------------------------------------------\r\n');
+  pr.run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
+  pr.run.appendOutput('-----------------------------------------------------------\r\n');
+  pr.run.appendOutput('\r\n');
 }
 
 
@@ -401,18 +401,18 @@ function getIncludedFeaturesForProj(projUri: vscode.Uri, req: vscode.TestRunRequ
 }
 
 
-function getChildScenariosForParentFeature(wr: ProjRun, scenarioQueueItem: QueueItem) {
+function getChildScenariosForParentFeature(pr: ProjRun, scenarioQueueItem: QueueItem) {
   const parentFeature = scenarioQueueItem.test.parent;
   if (!parentFeature)
     throw `parent feature not found for scenario ${scenarioQueueItem.scenario.scenarioName}}`;
-  return getChildScenariosForFeature(wr, parentFeature);
+  return getChildScenariosForFeature(pr, parentFeature);
 }
 
 
-function getChildScenariosForFeature(wr: ProjRun, feature: vscode.TestItem) {
+function getChildScenariosForFeature(pr: ProjRun, feature: vscode.TestItem) {
   const childScenarios: QueueItem[] = [];
   feature.children.forEach(c => {
-    const child = wr.sortedQueue.find(x => x.test.id === c.id);
+    const child = pr.sortedQueue.find(x => x.test.id === c.id);
     if (child)
       childScenarios.push(child);
   });
@@ -420,18 +420,18 @@ function getChildScenariosForFeature(wr: ProjRun, feature: vscode.TestItem) {
 }
 
 
-function parentFeatureOrAllSiblingsIncluded(wr: ProjRun, projQueueItem: QueueItem): vscode.TestItem | undefined {
+function parentFeatureOrAllSiblingsIncluded(pr: ProjRun, projQueueItem: QueueItem): vscode.TestItem | undefined {
   const parent = projQueueItem.test.parent;
   if (!parent)
     throw `parent not found for scenario ${projQueueItem.scenario.scenarioName}`;
 
-  const includedParent = wr.includedFeatures?.find(x => x.id === parent.id);
+  const includedParent = pr.includedFeatures?.find(x => x.id === parent.id);
   if (includedParent)
     return includedParent;
 
   let allSiblingsIncluded = true;
   parent.children.forEach(child => {
-    const includedChild = wr.sortedQueue?.find(x => x.test.id === child.id);
+    const includedChild = pr.sortedQueue?.find(x => x.test.id === child.id);
     if (!includedChild)
       allSiblingsIncluded = false;
   });

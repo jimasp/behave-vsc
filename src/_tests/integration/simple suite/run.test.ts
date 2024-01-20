@@ -17,10 +17,10 @@ suite(`simple suite`, function () {
 		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runScenariosSubSetForEachFeature", async () =>
-		await testProjectRunner.runScenariosSubSetForEachFeature(noConfig, noRunOptions, expectations));
+		await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
 
 	test("runScenariosSubSetForEachFeature - parallel", async () =>
-		await testProjectRunner.runScenariosSubSetForEachFeature(parallelConfig, noRunOptions, expectations));
+		await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noRunOptions, expectations));
 
 });
 

@@ -51,7 +51,7 @@ suite(`run profiles suite`, () => {
 	test("runScenariosSubSetForEachFeature - tag1or2 vars profile", async () => {
 		runOptions.selectedRunProfile = undefined;
 		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
-		await testProjectRunner.runScenariosSubSetForEachFeature(wsConfig, runOptions, expectations);
+		await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, runOptions, expectations);
 	});
 
 });

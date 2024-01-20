@@ -1,4 +1,4 @@
-import { ChildProcess, spawn, SpawnOptions } from 'child_process';
+import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
 import { services } from "../services";
 import { cleanBehaveText } from '../common/helpers';
 import { xRayLog } from '../common/logger';
@@ -6,23 +6,24 @@ import { ProjRun } from './testRunHandler';
 
 
 
-export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args: string[], friendlyCmd: string): Promise<void> {
+export async function runBehaveInstance(pr: ProjRun, parallelMode: boolean, args: string[], friendlyCmd: string): Promise<void> {
 
   let cp: ChildProcess;
-  const cancellationHandler = wr.run.token.onCancellationRequested(() => cp?.kill());
-  const projUri = wr.projSettings.uri;
+  const cancellationHandler = pr.run.token.onCancellationRequested(() => cp?.kill());
+  const projUri = pr.projSettings.uri;
 
   try {
     const local_args = [...args];
     local_args.unshift("-m", "behave");
-    xRayLog(`${wr.pythonExec} ${local_args.join(" ")}`, projUri);
-    const env = { ...process.env, ...wr.env };
-    const options: SpawnOptions = { cwd: wr.projSettings.workingDirUri.fsPath, env: env };
-    cp = spawn(wr.pythonExec, local_args, options);
+    xRayLog(`${pr.pythonExec} ${local_args.join(" ")}`, projUri);
+    const env = { ...process.env, ...pr.env };
+    const options: SpawnOptions = { cwd: pr.projSettings.workingDirUri.fsPath, env: env };
+    cp = spawn(pr.pythonExec, local_args, options);
+    //cp = exec(`${friendlyCmd}`);
 
     if (!cp.pid) {
-      throw new Error(`unable to launch python or behave, command: ${wr.pythonExec} ${local_args.join(" ")}\n` +
-        `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(wr.env)}`);
+      throw new Error(`unable to launch python or behave, command: ${pr.pythonExec} ${local_args.join(" ")}\n` +
+        `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(pr.env)}`);
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order
@@ -51,8 +52,8 @@ export async function runBehaveInstance(wr: ProjRun, parallelMode: boolean, args
       services.logger.logInfo("---", projUri);
     }
 
-    if (wr.run.token.isCancellationRequested)
-      services.logger.logInfo(`\n-- TEST RUN ${wr.run.name} CANCELLED --`, projUri, wr.run);
+    if (pr.run.token.isCancellationRequested)
+      services.logger.logInfo(`\n-- TEST RUN ${pr.run.name} CANCELLED --`, projUri, pr.run);
 
   }
   finally {

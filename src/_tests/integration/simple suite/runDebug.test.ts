@@ -13,7 +13,7 @@ suite(`simple suite test debug run`, () => {
     await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
   test("debugScenariosSubSetForEachFeature", async () =>
-    await testProjectRunner.debugScenariosSubSetForEachFeature(noConfig, noRunOptions, expectations));
+    await testProjectRunner.debugSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
 
 });
 

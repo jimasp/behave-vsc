@@ -4,24 +4,35 @@ import * as assert from 'assert';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
-import { Expectations, RunOptions } from '../common';
+import { Expectations, RunOptions, TestResult } from '../common';
 import { services } from '../../../../services';
-import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE } from "./helpers";
+import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
   assertAllFeatureFileStepsHaveAStepFileStepMatch,
   assertAllStepFileStepsHaveAtLeastOneFeatureReference,
-  assertAllResults,
-  assertFriendlyCmds
+  assertLogExists,
+  ScenarioResult,
+  assertTestResultMatchesExpectedResult,
+  assertExpectedCounts
 } from "./assertions";
+import { QueueItem } from '../../../../extension';
+import { ProjParseCounts } from '../../../../parsers/fileParser';
+import { logStore } from '../../../runner';
 
 
 
 // SIMULATES A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
-// (this function is also re-entrant from multiroot suite - which simulates a user quickly clicking the test explorer 
-// run button on each project node in the workspace when runMultiRootProjectsInParallel=true)
-// In the real world, a user can kick off one project and then another and then another, 
-// (i.e. staggered) - they do not have to wait for the first to complete. 
+// NOTE THAT:
+// 1. if runParallel=true, then this function will run every feature in its own behave 
+// instance in parallel, otherwise it will run all features in one behave instance.
+// 2. if runMultiRootProjectsInParallel=true (i.e called from from "multiroot suite") then 
+// this function becomes re-entrant to run projects in parallel.
+//
+// When runMultiRootProjectsInParallel=true and this function is called from multiroot 
+// suite, this simulates a user quickly clicking the test explorer run button on each 
+// project node in the workspace. This is because a user can kick off one project and 
+// then another and then another, (i.e. staggered) - they do not have to wait for the first to complete. 
 // (More likely they will just click run all, but testing staggered will be enough to cover both anyway.)
 //
 // When the file multiroot suite/index.ts is run (which will test staggered/parallel project runs) this
@@ -35,13 +46,16 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
+  logStore.clearProjLogs(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
-  const projId = uriId(projUri);
-  const api = await checkExtensionIsReady();
-  const consoleName = `runProject ${projName}`;
 
   try {
+
     // ARRANGE
+
+    const projId = uriId(projUri);
+    const api = await checkExtensionIsReady();
+    const consoleName = `runProject ${projName}`;
 
 
     // ==================== START LOCK SECTION ====================
@@ -126,8 +140,8 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: runHandler completed`);
 
     // ASSERT
-    assertAllResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
-    assertFriendlyCmds(projUri, isDebugRun, expectedResults, testExtConfig);
+    assertRunProjectResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
+    assertRunProjectFriendlyCmds(projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
   }
   finally {
     if (behaveIniContent)
@@ -135,3 +149,64 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   }
 }
 
+
+export function assertRunProjectResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
+  hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
+
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+
+  results.forEach(result => {
+    const scenResult = ScenarioResult(result);
+    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+  });
+
+  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+  assert.equal(results.length, expectedResults.length, "results.length !== expectedResults.length");
+  assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
+}
+
+
+function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isDebugRun: boolean, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+
+  // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
+  if (isDebugRun)
+    return;
+
+  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
+  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+
+  if (!testExtConfig.runParallel) {
+
+    const expectCmdIncludes = [
+      `cd `,
+      `example-projects`,
+      `${projName}"\n`,
+      `${envVarsString}`,
+      `python`,
+      ` -m behave ${tagsString}--show-skipped --junit --junit-directory "`,
+      `${projName}"`
+    ];
+
+    assertLogExists(projUri, expectCmdIncludes);
+    return;
+  }
+
+  // if we got here, then runParallel is set:
+  // runParallel runs each feature separately in its own behave instance
+  expectedResults.forEach(expectedResult => {
+    const expectCmdIncludes = [
+      `cd `,
+      `example-projects`,
+      `${projName}"\n`,
+      `${envVarsString}`,
+      `python`,
+      ` -m behave ${tagsString}-i "${expectedResult.scenario_featureFileRelativePath}$" --show-skipped --junit --junit-directory "`,
+      `${projName}"`
+    ];
+    assertLogExists(projUri, expectCmdIncludes);
+  });
+
+}

@@ -5,35 +5,35 @@ import { ProjRun } from './testRunHandler';
 
 
 
-export async function debugBehaveInstance(wr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
+export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
 
-  const runCancelHandler = wr.run.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
+  const runCancelHandler = pr.run.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
 
   try {
-    xRayLog(friendlyCmd, wr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
+    xRayLog(friendlyCmd, pr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
 
     // --outfile = remove stdout noise from debug console
     args.push("--no-summary", "--outfile",
-      vscode.Uri.joinPath(services.config.extensionTempFilesUri, `${(wr.run.name ?? "")}-${wr.projSettings.name}-debug.log`).fsPath);
+      vscode.Uri.joinPath(services.config.extensionTempFilesUri, `${(pr.run.name ?? "")}-${pr.projSettings.name}-debug.log`).fsPath);
 
-    const env = { ...process.env, ...wr.env };
+    const env = { ...process.env, ...pr.env };
 
     const debugLaunchConfig = {
       name: `behave-vsc-debug`,
       console: "internalConsole",
       type: "python",
-      cwd: wr.projSettings.workingDirUri.fsPath,
+      cwd: pr.projSettings.workingDirUri.fsPath,
       request: 'launch',
       module: "behave",
       args: args,
       env: env,
-      justMyCode: wr.projSettings.justMyCode
+      justMyCode: pr.projSettings.justMyCode
     };
 
-    const projFolder = vscode.workspace.getWorkspaceFolder(wr.projSettings.uri);
+    const projFolder = vscode.workspace.getWorkspaceFolder(pr.projSettings.uri);
 
     if (!await vscode.debug.startDebugging(projFolder, debugLaunchConfig)) {
-      xRayLog("unable to start debug session, was debug stop button clicked?", wr.projSettings.uri);
+      xRayLog("unable to start debug session, was debug stop button clicked?", pr.projSettings.uri);
       return;
     }
 
