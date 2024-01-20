@@ -43,7 +43,7 @@ import { logStore } from '../../../runner';
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
 export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
-  behaveIniContent: string, runOptions: RunOptions, expectations: Expectations): Promise<void> {
+  behaveIniContent: string, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
   logStore.clearProjLogs(projUri);
@@ -56,6 +56,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     const projId = uriId(projUri);
     const api = await checkExtensionIsReady();
     const consoleName = `runProject ${projName}`;
+
+    // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
+    // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
+    // (cp.spawn is always used outside of integration tests)
+    if (execFriendlyCmd)
+      services.config.integrationTestRunType = "cpExec";
 
 
     // ==================== START LOCK SECTION ====================
@@ -116,6 +122,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
 
     // ACT
+
     // kick off the run, do NOT await (see comment above)
     const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
 
@@ -140,6 +147,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: runHandler completed`);
 
     // ASSERT
+
     assertRunProjectResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
     assertRunProjectFriendlyCmds(projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
   }

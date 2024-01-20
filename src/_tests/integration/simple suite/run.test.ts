@@ -19,6 +19,7 @@ suite(`simple suite`, function () {
 	test("runScenariosSubSetForEachFeature", async () =>
 		await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
 
+	// not much point in a parallel subset test, but we'll keep it in the simple suite, just in case things change
 	test("runScenariosSubSetForEachFeature - parallel", async () =>
 		await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noRunOptions, expectations));
 

@@ -19,7 +19,7 @@ import path = require('path');
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
 // this allows us to test the piped scenarios and regex pattern matching 
 export async function runPipedScenariosOnly(projName: string, isDebugRun: boolean,
-  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations): Promise<void> {
+  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // ARRANGE
 
@@ -28,6 +28,9 @@ export async function runPipedScenariosOnly(projName: string, isDebugRun: boolea
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
   const consoleName = `runFeaturesScenariosSubset ${projName}`;
+
+  if (execFriendlyCmd)
+    services.config.integrationTestRunType = "cpExec";
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));

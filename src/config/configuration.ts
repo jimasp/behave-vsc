@@ -6,6 +6,7 @@ import { ProjectSettings, InstanceSettings } from './settings';
 
 export class Configuration {
   isIntegrationTestRun = false;
+  integrationTestRunType = "";
   instanceSettingsLoaded = false; // used by diagLog to check if instanceSettings is available (i.e. without calling the getter)
   readonly exampleProject: boolean = false;
   readonly extensionTempFilesUri;

@@ -18,8 +18,15 @@ export async function runBehaveInstance(pr: ProjRun, parallelMode: boolean, args
     xRayLog(`${pr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.workingDirUri.fsPath, env: env };
-    cp = spawn(pr.pythonExec, local_args, options);
-    //cp = exec(`${friendlyCmd}`);
+
+    // on integration test runs ONLY, we sometimes want to use exec instead of spawn, so that we can test the friendlyCmd
+    if (services.config.isIntegrationTestRun && services.config.integrationTestRunType === "cpExec") {
+      xRayLog("### RUNNING IN EXEC MODE ###")
+      cp = exec(`${friendlyCmd}`);
+    }
+    else {
+      cp = spawn(pr.pythonExec, local_args, options);
+    }
 
     if (!cp.pid) {
       throw new Error(`unable to launch python or behave, command: ${pr.pythonExec} ${local_args.join(" ")}\n` +
