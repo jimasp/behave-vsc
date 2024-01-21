@@ -1,6 +1,6 @@
 import { runProject } from './runProject';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { runPipedScenariosOnly } from './runPipedScenarios';
+import { runPipedScenarios } from './runPipedScenarios';
 import { Expectations, RunOptions } from '../common';
 
 
@@ -25,13 +25,13 @@ export class TestProjectRunner {
   runSubsetOfScenariosForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`runFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runPipedScenariosOnly(this.projName, false, wsConfig, runOptions, expectations, execFriendlyCmd);
+    await runPipedScenarios(this.projName, false, wsConfig, runOptions, expectations, execFriendlyCmd);
   }
 
   debugSubsetOfScenariosForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`debugFeatures ${this.projName}: ${JSON.stringify(wsConfig)}`);
-    await runPipedScenariosOnly(this.projName, true, wsConfig, runOptions, expectations, execFriendlyCmd);
+    await runPipedScenarios(this.projName, true, wsConfig, runOptions, expectations, execFriendlyCmd);
   }
 }
 

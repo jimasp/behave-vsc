@@ -3,29 +3,27 @@ import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers
 import { behaveIni, expectations } from "./defaults";
 
 
-suite(`simple suite`, function () {
+suite(`simple suite: nonMulti`, () => {
+  const testProjectRunner = new TestProjectRunner("simple");
 
-	const testProjectRunner = new TestProjectRunner("simple");
+  test("debugAll", async () =>
+    await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
-	test("runAll", async () =>
-		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
+  test("debugScenariosSubSetForEachFeature", async () =>
+    await testProjectRunner.debugSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
 
-	test("runAll - with behave.ini", async () =>
-		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
+  test("runAll - execFriendlyCmd", async () =>
+    await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
-	test("runAll - parallel", async () =>
-		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
+  test("runAll - execFriendlyCmd with behave.ini", async () =>
+    await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations, true));
 
-	test("runScenariosSubSetForEachFeature", async () =>
-		await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
+  test("runScenariosSubSetForEachFeature - execFriendlyCmd", async () =>
+    await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations, true));
 
-	// not much point in a parallel subset test, but we'll keep it in the simple suite, just in case things change
-	test("runScenariosSubSetForEachFeature - parallel", async () =>
-		await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noRunOptions, expectations));
+  test("runScenariosSubSetForEachFeature - execFriendlyCmd - runParallel", async () =>
+    await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noRunOptions, expectations, true));
 
 });
-
-
-
 
 

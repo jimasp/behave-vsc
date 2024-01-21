@@ -18,7 +18,7 @@ import path = require('path');
 // SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
 // this allows us to test the piped scenarios and regex pattern matching 
-export async function runPipedScenariosOnly(projName: string, isDebugRun: boolean,
+export async function runPipedScenarios(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // ARRANGE
@@ -48,6 +48,7 @@ export async function runPipedScenariosOnly(projName: string, isDebugRun: boolea
 
   console.log(`${consoleName}: calling runHandler to run each scenario...`);
   const requestItems: vscode.TestItem[] = [];
+  const featureTestsInRequest: vscode.TestItem[] = [];
   for (const featureTest of featureTests) {
     // we're only interested in features with more than 1 scenario in this function
     if (featureTest.children.size < 2)
@@ -61,25 +62,28 @@ export async function runPipedScenariosOnly(projName: string, isDebugRun: boolea
       if (i++ === 0)
         continue;
       requestItems.push(scenarioTest[1]);
+      featureTestsInRequest.push(featureTest);
     }
-
-
-    // ACT
-    const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
-
-    // ASSERT
-    assertRunPipedScenariosResults(featureTest, results, expectedResults, testExtConfig);
-    assertRunPipedScenariosFriendlyCmds(projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
-
-    // clear requestItems for next loop iteration
-    requestItems.length = 0;
   }
+
+
+  // ACT
+
+  const request = new vscode.TestRunRequest(requestItems);
+  const results = await api.runHandler(isDebugRun, request, runProfile);
+
+  // ASSERT  
+
+  for (const featureTest of featureTestsInRequest) {
+    assertRunPipedScenariosResults(featureTest, results, expectedResults, testExtConfig, requestItems);
+    assertRunPipedScenariosFriendlyCmds(projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
+  }
+
 }
 
 
 export function assertRunPipedScenariosResults(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
-  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, requestItems: vscode.TestItem[]) {
 
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
 
@@ -90,7 +94,7 @@ export function assertRunPipedScenariosResults(featureTestItem: vscode.TestItem,
   });
 
   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert(results.length === featureTestItem.children.size - 1, `results.length === featureTestItem.children.size - 1, ${featureTestItem.id}`);
+  assert(results.length === requestItems.length, `results.length !== requestItems.length`);
 }
 
 

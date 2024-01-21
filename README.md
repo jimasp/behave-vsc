@@ -12,6 +12,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Select to run tests with tags and/or environment variables via run profiles.
   - See failed test run result inside the feature file. (Full behave output is available in the Behave VSC output window.)
   - Set behave's working directory (via `relativeWorkingDir` setting).
+  - See the behave command in the output so you can run it yourself manually.  
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
