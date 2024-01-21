@@ -13,7 +13,7 @@ import { assertInstances } from './assertions';
 import { logStore } from '../../../runner';
 import { Configuration } from '../../../../config/configuration';
 import { RunOptions } from '../common';
-import { RunProfilesSetting } from '../../../../config/settings';
+import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getFriendlyEnvVars } from '../../../../runners/helpers';
 import { ProjRun } from '../../../../runners/testRunHandler';
@@ -195,4 +195,12 @@ export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, run
 	const envVarsString = getFriendlyEnvVars(pr);
 
 	return envVarsString;
+}
+
+
+export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, requestInclude?: vscode.TestItem[]): ProjRun {
+	const runParallel = testExtConfig.get("runParallel") as boolean;
+	const projSettings = { runParallel: runParallel } as ProjectSettings;
+	const request = { include: requestInclude } as vscode.TestRunRequest;
+	return { projSettings: projSettings, request: request } as ProjRun;
 }

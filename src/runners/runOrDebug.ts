@@ -4,8 +4,8 @@ import { QueueItem } from '../extension';
 import { projError } from '../common/helpers';
 import { ProjRun } from './testRunHandler';
 import {
-  addTags, getFriendlyEnvVars, getPSCmdModifyIfWindows, getPipedFeaturePathsPattern,
-  getPipedScenarioNames, projDirRelativePathToWorkDirRelativePath
+  addTags, getFriendlyEnvVars, getPSCmdModifyIfWindows, getFeaturePathsRegEx,
+  getPipedScenarioNamesRegex, projDirRelativePathToWorkDirRelativePath
 } from './helpers';
 
 
@@ -38,24 +38,24 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
     return;
   }
 
-  await runBehaveInstance(pr, false, args, friendlyCmd);
+  await runBehaveInstance(pr, args, friendlyCmd);
 }
 
 
-export async function runOrDebugFeatures(pr: ProjRun, parallelMode: boolean, scenarioQueueItems: QueueItem[]): Promise<void> {
+export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueItem[]): Promise<void> {
 
   // runs selected features in a single instance of behave
   // (if we are in parallelMode, then up the stack this will be called without await)
 
   try {
 
-    if (parallelMode && pr.debug)
+    if (pr.projSettings.runParallel && pr.debug)
       throw new Error("running async debug is not supported");
 
-    const pipedPathPatterns = getPipedFeaturePathsPattern(pr, parallelMode, scenarioQueueItems);
+    const featurePathsPattern = getFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    let friendlyArgs = ["-i", `"${pipedPathPatterns}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
+    let friendlyArgs = ["-i", `"${featurePathsPattern}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
     const args = addTags(pr, friendlyArgs, false, false);
     friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
@@ -67,7 +67,7 @@ export async function runOrDebugFeatures(pr: ProjRun, parallelMode: boolean, sce
       return;
     }
 
-    await runBehaveInstance(pr, parallelMode, args, friendlyCmd);
+    await runBehaveInstance(pr, args, friendlyCmd);
   }
   catch (e: unknown) {
     pr.run.end();
@@ -78,19 +78,18 @@ export async function runOrDebugFeatures(pr: ProjRun, parallelMode: boolean, sce
 }
 
 
-export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, parallelMode: boolean,
-  selectedScenarioQueueItems: QueueItem[]): Promise<void> {
+export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, selectedScenarioQueueItems: QueueItem[]): Promise<void> {
 
   // runs selected scenarios in a single instance of behave
   // (if we are in parallelMode, then up the stack this will be called without await)
 
   try {
 
-    if (parallelMode && pr.debug)
+    if (pr.projSettings.runParallel && pr.debug)
       throw new Error("running parallel debug is not supported");
 
-    const friendlyPipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems, true);
-    const pipedScenarioNames = getPipedScenarioNames(selectedScenarioQueueItems, false);
+    const friendlyPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, true);
+    const pipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, false);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
@@ -118,7 +117,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, parall
       return;
     }
 
-    await runBehaveInstance(pr, parallelMode, args, friendlyCmd);
+    await runBehaveInstance(pr, args, friendlyCmd);
   }
   catch (e: unknown) {
     pr.run.end();

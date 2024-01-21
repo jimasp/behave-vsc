@@ -6,19 +6,18 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWork
 import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
 import { Expectations, RunOptions, TestResult } from '../common';
 import { services } from '../../../../services';
-import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString } from "./helpers";
+import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
   assertAllFeatureFileStepsHaveAStepFileStepMatch,
   assertAllStepFileStepsHaveAtLeastOneFeatureReference,
   assertLogExists,
-  ScenarioResult,
-  assertTestResultMatchesExpectedResult,
-  assertExpectedCounts
+  assertExpectedCounts,
+  assertExpectedResults
 } from "./assertions";
-import { QueueItem } from '../../../../extension';
-import { ProjParseCounts } from '../../../../parsers/fileParser';
 import { logStore } from '../../../runner';
+import { getFeaturePathsRegEx } from '../../../../runners/helpers';
+import { QueueItem } from '../../../../extension';
 
 
 
@@ -57,6 +56,10 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     const api = await checkExtensionIsReady();
     const consoleName = `runProject ${projName}`;
 
+    let runProfile = undefined;
+    if (runOptions.selectedRunProfile)
+      runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+
     // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
     // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
     // (cp.spawn is always used outside of integration tests)
@@ -94,6 +97,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.config, expectations);
 
+
+    // ACT 1
+
     // parse to get check counts (checked later, but we want to do this inside the lock)
     const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
       "runAllProjectAndAssertTheResults", false);
@@ -107,21 +113,19 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     const includedTests = getScenarioTests(api.testData, allProjItems);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
-    // NON-RUN ASSERTS
+    // ASSERT 1 (pre-run asserts)
     await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, api);
     await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, api);
+    assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
 
     // run behave tests - we kick the runHandler off inside the lock to ensure that featureParseComplete() check
     // will complete inside the runHandler, i.e. so no other parsing gets kicked off until the parse is complete.
     // we do NOT want to await the runHandler as we want to release the lock for parallel run execution for multi-root
-    console.log(`${consoleName}: calling runHandler to run tests...`);
+    console.log(`${consoleName}: calling runHandler to run project tests...`);
     const request = new vscode.TestRunRequest(includedTests);
-    let runProfile = undefined;
-    if (runOptions.selectedRunProfile)
-      runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
 
-    // ACT
+    // ACT 2
 
     // kick off the run, do NOT await (see comment above)
     const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
@@ -146,33 +150,16 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     const results = await resultsPromise;
     console.log(`${consoleName}: runHandler completed`);
 
-    // ASSERT
 
-    assertRunProjectResults(results, expectedResults, testExtConfig, projUri, projName, expectations, hasMultiRootWkspNode, actualCounts);
+    // ASSERT 2 (post-run asserts)
+
+    assertExpectedResults(results, expectedResults, testExtConfig);
     assertRunProjectFriendlyCmds(projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
   }
   finally {
     if (behaveIniContent)
       await restoreBehaveIni(projName, projUri, workDirUri);
   }
-}
-
-
-export function assertRunProjectResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, projUri: vscode.Uri, projName: string, expectations: Expectations,
-  hasMultiRootWkspNode: boolean, actualCounts: ProjParseCounts) {
-
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-
-  results.forEach(result => {
-    const scenResult = ScenarioResult(result);
-    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-  });
-
-  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  assert.equal(results.length, expectedResults.length, "results.length !== expectedResults.length");
-  assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
 }
 
 
@@ -205,16 +192,24 @@ function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isD
   // if we got here, then runParallel is set:
   // runParallel runs each feature separately in its own behave instance
   expectedResults.forEach(expectedResult => {
-    const expectCmdIncludes = [
+
+    const qi = {
+      test: undefined,
+      scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
+    } as unknown as QueueItem;
+    const pr = createFakeProjRun(testExtConfig);
+    const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
+
+    const expectCmdOrderedIncludes = [
       `cd `,
       `example-projects`,
       `${projName}"\n`,
       `${envVarsString}`,
       `python`,
-      ` -m behave ${tagsString}-i "${expectedResult.scenario_featureFileRelativePath}$" --show-skipped --junit --junit-directory "`,
+      ` -m behave ${tagsString}-i "${featurePathRx}" --show-skipped --junit --junit-directory "`,
       `${projName}"`
     ];
-    assertLogExists(projUri, expectCmdIncludes);
+    assertLogExists(projUri, expectCmdOrderedIncludes);
   });
 
 }

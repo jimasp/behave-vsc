@@ -6,7 +6,7 @@ import { ProjRun } from './testRunHandler';
 
 
 
-export async function runBehaveInstance(pr: ProjRun, parallelMode: boolean, args: string[], friendlyCmd: string): Promise<void> {
+export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
 
   let cp: ChildProcess;
   const cancellationHandler = pr.run.token.onCancellationRequested(() => cp?.kill());
@@ -39,7 +39,7 @@ export async function runBehaveInstance(pr: ProjRun, parallelMode: boolean, args
       if (!str)
         return;
       str = cleanBehaveText(str);
-      if (parallelMode)
+      if (pr.projSettings.runParallel)
         asyncBuff.push(str);
       else
         services.logger.logInfoNoLF(str, projUri);
@@ -48,7 +48,7 @@ export async function runBehaveInstance(pr: ProjRun, parallelMode: boolean, args
     cp.stderr?.on('data', chunk => log(chunk.toString()));
     cp.stdout?.on('data', chunk => log(chunk.toString()));
 
-    if (!parallelMode)
+    if (!pr.projSettings.runParallel)
       services.logger.logInfo(`\n${friendlyCmd}\n`, projUri);
 
     await new Promise((resolve) => cp.on('close', () => resolve("")));

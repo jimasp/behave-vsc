@@ -61,36 +61,6 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
 }
 
 
-
-// export function assertFeatureResult(featureTestItem: vscode.TestItem, results: QueueItem[] | undefined,
-//   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-
-//   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-
-//   results.forEach(result => {
-//     const scenResult = ScenarioResult(result);
-//     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-//     assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-//   });
-
-//   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-//   assert(results.length === featureTestItem.children.size, `results.length === featureTestItem.children.size ${featureTestItem.id}`);
-// }
-
-
-
-
-// export function assertScenarioResult(results: QueueItem[] | undefined, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
-//   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
-//   assert(results.length === 1, `results.length !== 1, ${results[0].test.id}}`);
-
-//   const result = results[0];
-//   const scenResult = ScenarioResult(result);
-//   assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-//   assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
-// }
-
-
 export function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
 
   const match = expectedResults.filter((expectedResult: TestResult) => {
@@ -211,7 +181,7 @@ export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projU
 
 
 export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) {
-  let closestMatch = { log: '', include: '', highestIndex: 0, mismatchIndex: 0 };
+  let closestMatch = { log: '', failedOnInclude: '', highestIndex: 0, mismatchIndex: 0 };
   const projLogs = logStore.get().filter(x => x[0] === projUri.path).map(x => x[1]);
 
   // for simplicity, we use an ordered includes array here rather than a regex, 
@@ -223,11 +193,11 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) 
       const currentIndex = x.indexOf(include, lastIndex + 1);
       if (currentIndex === -1) {
         if (includesIndex > closestMatch.highestIndex)
-          closestMatch = { log: x, include: include, highestIndex: includesIndex, mismatchIndex: 0 };
+          closestMatch = { log: x, failedOnInclude: include, highestIndex: includesIndex, mismatchIndex: 0 };
         if (includesIndex === closestMatch.highestIndex) {
           const mismatchIndex = findMismatchIndex(x, closestMatch.log);
           if (mismatchIndex > closestMatch.mismatchIndex)
-            closestMatch = { log: x, include: include, highestIndex: includesIndex, mismatchIndex };
+            closestMatch = { log: x, failedOnInclude: include, highestIndex: includesIndex, mismatchIndex };
         }
         return false;
       }
@@ -244,11 +214,9 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) 
   if (matchingLogs.length === 0) {
     // throw here rather than assert so we can examine projLogs if we are debugging integration tests
     debugger; // eslint-disable-line no-debugger
-    console.log(closestMatch.log);
-    console.log(`closestMatch.log.includes("${closestMatch.include}")`);
     throw new Error(`logStore did not contain expected log for project: "${projUri.path}"\n` +
       `closest matched log was: "${closestMatch.log}"\n` +
-      `which failed on include string: "${orderedIncludes[closestMatch.highestIndex]}"\n` +
+      `which failed on include string: "${closestMatch.failedOnInclude}"\n` +
       `include strings list was:"${orderedIncludes}"`);
   }
 }
@@ -267,27 +235,22 @@ function findMismatchIndex(str1: string, str2: string): number {
 }
 
 
-// export function assertFriendlyCmdsForRunAll(projUri: vscode.Uri, requestItems: vscode.TestItem[], isDebugRun: boolean,
-//   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig) {
+export function assertExpectedResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, expectedTestRunSize?: number) {
 
-//   // friendlyCmds are not logged for debug runs
-//   if (isDebugRun)
-//     return;
+  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
 
-//   if (!testExtConfig.runParallel) {
-//     assertLogExists(projUri,
-//       new RegExp(`cd.*/example-projects/.*".*python.?" -m behave --show-skipped --junit --junit-directory ".*"`, "gms"));
-//     return;
-//   }
+  results.forEach(result => {
+    const scenResult = ScenarioResult(result);
+    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+  });
 
-//   expectedResults.forEach(expectedResult => {
-//     const expectedCmd = new RegExp(
-//       `cd.*/example-projects/.*".*python.?" -m behave -i ` +
-//       `"${expectedResult.scenario_featureFileRelativePath}\\$" --show-skipped --junit --junit-directory ".*"`, "gms");
-//     assertLogExists(projUri, expectedCmd);
-//   });
-// }
-
+  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+  if (!expectedTestRunSize)
+    expectedTestRunSize = expectedResults.length;
+  assert.equal(results.length, expectedTestRunSize, "results.length !== resultsLengthExpected");
+}
 
 
 export function assertExpectedCounts(projUri: vscode.Uri, projName: string, config: Configuration,

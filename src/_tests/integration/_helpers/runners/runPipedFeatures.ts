@@ -9,7 +9,7 @@ import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../../extension';
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../../runners/helpers';
+import { getFeaturePathsRegEx } from '../../../../runners/helpers';
 import { Scenario } from '../../../../parsers/testFile';
 import path = require('path');
 
@@ -17,8 +17,12 @@ import path = require('path');
 // SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
 // this allows us to test the piped scenarios and regex pattern matching 
-export async function runPipedScenarios(projName: string, isDebugRun: boolean,
+export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
+
+  // sanity check
+  if (testExtConfig.runParallel)
+    throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them individually");
 
   // ARRANGE
 
@@ -40,47 +44,39 @@ export async function runPipedScenarios(projName: string, isDebugRun: boolean,
   const allProjItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
-  const featureTests = allProjItems.filter((item) => {
-    return item.id.endsWith(".feature");
-  });
+  // skip one feature so we don't run the whole project
+  const skipFeature = allProjItems.find(item => item.id.endsWith(".feature"));
+  if (!skipFeature)
+    throw new Error("firstFeature not found");
 
-  console.log(`${consoleName}: calling runHandler to run piped scenarios...`);
+  const skippedFeatureId = skipFeature.id;
+  const skippedFeatureRelPath = standardisePath(skipFeature.id, true);
+  if (!skippedFeatureRelPath)
+    throw new Error("skippedFeatureRelPath was undefined");
+
   const requestItems: vscode.TestItem[] = [];
-  const featureTestsInRequest: vscode.TestItem[] = [];
-  for (const featureTest of featureTests) {
-    // we're only interested in features with more than 1 scenario in this function
-    if (featureTest.children.size < 2)
-      continue;
-
-    let i = 0;
-    const scenarios = [...featureTest.children].sort((a, b) => a[0].localeCompare(b[0]));
-    for (const scenarioTest of scenarios) {
-      // skip the first scenario, so that we get a piped list of scenario 
-      // names (a feature with a single scenario would just run the whole feature)
-      if (i++ === 0)
-        continue;
-      requestItems.push(scenarioTest[1]);
-      featureTestsInRequest.push(featureTest);
-    }
+  for (const item of allProjItems) {
+    if (item.id.endsWith(".feature") && item.id !== skippedFeatureId)
+      requestItems.push(item);
   }
 
 
   // ACT
 
+  console.log(`${consoleName}: calling runHandler to run piped features...`);
   const request = new vscode.TestRunRequest(requestItems);
   const results = await api.runHandler(isDebugRun, request, runProfile);
 
   // ASSERT  
 
-  assertExpectedResults(results, expectedResults, testExtConfig, requestItems.length);
-  for (const featureTest of featureTestsInRequest) {
-    assertRunPipedScenariosFriendlyCmds(projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
-  }
+  const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
+  assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunSize);
+  assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath, requestItems, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
 
 }
 
 
-function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: string, featureTest: vscode.TestItem,
+function assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath: string, requestItems: vscode.TestItem[], projUri: vscode.Uri, projName: string,
   isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
@@ -90,30 +86,19 @@ function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: stri
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
 
-  // while it's tempting to just reuse requestItems from the caller here, 
-  // we must use expectedResults to validate (belt and braces)
-  const stdPath = standardisePath(featureTest.id);
-  const expSiblings = expectedResults.filter(er2 => er2.test_parent === stdPath)
-    .sort((a, b) => a.scenario_scenarioName.localeCompare(b.scenario_scenarioName));
-  const expSiblingExceptFirst = expSiblings.slice(1);
+  const filteredExpectedResults = expectedResults.filter(x => !skippedFeatureRelPath.endsWith(x.scenario_featureFileRelativePath));
+
   const queueItems: QueueItem[] = [];
-  for (const expResult of expSiblingExceptFirst) {
-    queueItems.push({
-      test: featureTest,
-      scenario: new Scenario(
-        path.basename(expResult.scenario_featureFileRelativePath),
-        expResult.scenario_featureFileRelativePath,
-        expResult.scenario_featureName,
-        expResult.scenario_scenarioName,
-        0,
-        expResult.scenario_isOutline
-      )
-    });
+  for (const expResult of filteredExpectedResults) {
+    const qi = {
+      test: undefined,
+      scenario: { featureFileProjectRelativePath: expResult.scenario_featureFileRelativePath }
+    } as unknown as QueueItem;
+    queueItems.push(qi);
   }
 
-  const pr = createFakeProjRun(testExtConfig);
-  const featurePathRx = getFeaturePathsRegEx(pr, queueItems);
-  const pipedScenariosRx = getPipedScenarioNamesRegex(queueItems, true);
+  const pr = createFakeProjRun(testExtConfig, requestItems);
+  const pipedFeaturePathsRx = getFeaturePathsRegEx(pr, queueItems);
 
   const expectCmdOrderedIncludes = [
     `cd `,
@@ -121,8 +106,8 @@ function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: stri
     `${projName}"\n`,
     `${envVarsString}`,
     `python`,
-    ` -m behave ${tagsString}-i "${featurePathRx}" `,
-    `-n "${pipedScenariosRx}" --show-skipped --junit --junit-directory "`,
+    ` -m behave ${tagsString}-i "${pipedFeaturePathsRx}" `,
+    ` --show-skipped --junit --junit-directory "`,
     `${projName}"`
   ];
   assertLogExists(projUri, expectCmdOrderedIncludes);

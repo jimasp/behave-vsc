@@ -263,7 +263,7 @@ async function runFeaturesTogether(pr: ProjRun) {
 
     const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
     selectedScenarios.forEach(qi => pr.run.started(qi.test));
-    await runOrDebugFeatureWithSelectedScenarios(pr, false, selectedScenarios);
+    await runOrDebugFeatureWithSelectedScenarios(pr, selectedScenarios);
   }
 
   if (runTogetherFeatures.length > 0) {
@@ -271,7 +271,7 @@ async function runFeaturesTogether(pr: ProjRun) {
     runTogetherFeatures.forEach(feature => allChildScenarios.push(...getChildScenariosForFeature(pr, feature)));
     allChildScenarios.forEach(x => pr.run.started(x.test));
 
-    await runOrDebugFeatures(pr, false, allChildScenarios);
+    await runOrDebugFeatures(pr, allChildScenarios);
   }
 }
 
@@ -303,7 +303,7 @@ async function runFeaturesParallel(pr: ProjRun) {
 
       const childScenarios: QueueItem[] = getChildScenariosForParentFeature(pr, projQueueItem);
       childScenarios.forEach(x => pr.run.started(x.test));
-      const promise = runOrDebugFeatures(pr, true, childScenarios);
+      const promise = runOrDebugFeatures(pr, childScenarios);
       asyncRunPromises.push(promise);
       continue;
     }
@@ -314,7 +314,7 @@ async function runFeaturesParallel(pr: ProjRun) {
 
     const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
     selectedScenarios.forEach(qi => pr.run.started(qi.test));
-    const promise = runOrDebugFeatureWithSelectedScenarios(pr, false, selectedScenarios);
+    const promise = runOrDebugFeatureWithSelectedScenarios(pr, selectedScenarios);
     asyncRunPromises.push(promise);
   }
 
