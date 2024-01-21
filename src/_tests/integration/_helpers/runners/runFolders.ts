@@ -65,6 +65,7 @@ function getFolderItems(items: vscode.TestItemCollection, projId: string) {
   }
 
   const folderItems: folderItem[] = [];
+
   items.forEach((item) => {
     if (item.id.startsWith(projId) && !item.id.endsWith(".feature")) {
       const descendents: vscode.TestItem[] = [];
@@ -76,7 +77,12 @@ function getFolderItems(items: vscode.TestItemCollection, projId: string) {
         });
       }
       folderItems.push({ item, descendents });
+      if (item.children) {
+        const childFolderItems = getFolderItems(item.children, projId);
+        folderItems.push(...childFolderItems);
+      }
     }
+
   });
   return folderItems;
 }
