@@ -5,7 +5,7 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWork
 import { uriId } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions, TestResult } from "../common";
+import { Expectations, RunOptions } from "../common";
 import { assertExpectedResults, assertLogExists } from "./assertions";
 import { logStore } from '../../../runner';
 import { projDirRelativePathToWorkDirRelativePath } from '../../../../runners/helpers';
@@ -52,7 +52,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     const scenarioDescendents = folder.descendents.filter(x => !x.id.endsWith(".feature"));
     const expectedTestRunSize = scenarioDescendents.length;
     assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunSize);
-    assertRunPipedFeaturesFriendlyCmd(folder.item, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
+    assertRunPipedFeaturesFriendlyCmd(folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
   }
 }
 
@@ -89,7 +89,7 @@ function getFolderItems(items: vscode.TestItemCollection, projId: string) {
 
 
 function assertRunPipedFeaturesFriendlyCmd(folder: vscode.TestItem, projUri: vscode.Uri, projName: string,
-  isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+  isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
   if (isDebugRun)
