@@ -489,7 +489,7 @@ export class FileParser {
     let sfp = "";
     if (projSettings.projRelativeFeatureFolders.length > 1) {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
-      // test any changes here with the test UI folder tree using example project "sibling steps folder 2"
+      // test any changes here with the test explorer UI folder tree using example project "sibling steps folder 2"
       let shortest = getShortestCommonPathsExcludingLastPart(projSettings.projRelativeFeatureFolders);
       shortest = shortest.sort((a, b) => a.length - b.length);
       for (const folder of shortest) {

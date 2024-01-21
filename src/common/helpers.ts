@@ -274,7 +274,7 @@ export const getTestItems = (projId: string | null, testItems: vscode.TestItemCo
 
   // get all test items if projUri is null, or
   // just the ones in the current project if projUri is supplied 
-  testItems.forEach((item: vscode.TestItem) => {
+  testItems.forEach(item => {
     if (projId === null || item.id.startsWith(projId)) {
       items.push(item);
       if (item.children)

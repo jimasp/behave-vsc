@@ -21,7 +21,10 @@ import { QueueItem } from '../../../../extension';
 
 
 
-// SIMULATES A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
+// SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
+// PURPOSE: tests that behave runs all tests when runAll is clicked and a simple behave command is issued,
+// also provides additional assertions about stepnavigation objects, project settings, etc.
+//
 // NOTE THAT:
 // 1. if runParallel=true, then this function will run every feature in its own behave 
 // instance in parallel, otherwise it will run all features in one behave instance.
@@ -105,12 +108,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
       "runAllProjectAndAssertTheResults", false);
     assert(actualCounts, "actualCounts was undefined");
 
-    const allProjItems = getTestItems(projId, api.ctrl.items);
-    console.log(`${consoleName}: workspace nodes:${allProjItems.length}`);
-    const hasMultiRootWkspNode = allProjItems.find(item => item.id === uriId(projUri)) !== undefined;
+    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    console.log(`${consoleName}: workspace nodes:${allProjTestItems.length}`);
+    const hasMultiRootWkspNode = allProjTestItems.find(item => item.id === uriId(projUri)) !== undefined;
 
     // sanity check included tests length matches expected length
-    const includedTests = getScenarioTests(api.testData, allProjItems);
+    const includedTests = getScenarioTests(api.testData, allProjTestItems);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
     // ASSERT 1 (pre-run asserts)
@@ -172,13 +175,15 @@ function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isD
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
 
   if (!testExtConfig.runParallel) {
 
     const expectCmdIncludes = [
       `cd `,
       `example-projects`,
-      `${projName}"\n`,
+      `${projName}`,
+      `${workingFolder}`,
       `${envVarsString}`,
       `python`,
       ` -m behave ${tagsString}--show-skipped --junit --junit-directory "`,
@@ -203,7 +208,8 @@ function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isD
     const expectCmdOrderedIncludes = [
       `cd `,
       `example-projects`,
-      `${projName}"\n`,
+      `${projName}`,
+      `${workingFolder}`,
       `${envVarsString}`,
       `python`,
       ` -m behave ${tagsString}-i "${featurePathRx}" --show-skipped --junit --junit-directory "`,

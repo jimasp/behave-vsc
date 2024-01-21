@@ -10,13 +10,12 @@ import { assertExpectedResults, assertLogExists, standardisePath } from "./asser
 import { QueueItem } from '../../../../extension';
 import { logStore } from '../../../runner';
 import { getFeaturePathsRegEx } from '../../../../runners/helpers';
-import { Scenario } from '../../../../parsers/testFile';
-import path = require('path');
 
 
-// SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
+
+// SIMULATES: A USER CLICKING THE RUN/DEBUG BUTTON AFTER SELECTING MULTIPLE FEATURES IN THE TEST EXPLORER
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
-// this allows us to test the piped scenarios and regex pattern matching 
+// PURPOSE: to test that the piped features regex pattern works with behave
 export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
@@ -41,11 +40,11 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-  const allProjItems = getTestItems(projId, api.ctrl.items);
+  const allProjTestItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
   // skip one feature so we don't run the whole project
-  const skipFeature = allProjItems.find(item => item.id.endsWith(".feature"));
+  const skipFeature = allProjTestItems.find(item => item.id.endsWith(".feature"));
   if (!skipFeature)
     throw new Error("firstFeature not found");
 
@@ -55,7 +54,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
     throw new Error("skippedFeatureRelPath was undefined");
 
   const requestItems: vscode.TestItem[] = [];
-  for (const item of allProjItems) {
+  for (const item of allProjTestItems) {
     if (item.id.endsWith(".feature") && item.id !== skippedFeatureId)
       requestItems.push(item);
   }
@@ -85,6 +84,7 @@ function assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath: string, reques
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
 
   const filteredExpectedResults = expectedResults.filter(x => !skippedFeatureRelPath.endsWith(x.scenario_featureFileRelativePath));
 
@@ -103,7 +103,8 @@ function assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath: string, reques
   const expectCmdOrderedIncludes = [
     `cd `,
     `example-projects`,
-    `${projName}"\n`,
+    `${projName}"`,
+    `${workingFolder}`,
     `${envVarsString}`,
     `python`,
     ` -m behave ${tagsString}-i "${pipedFeaturePathsRx}" `,

@@ -3,10 +3,10 @@ import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { runPipedScenarios } from './runPipedScenarios';
 import { Expectations, RunOptions } from '../common';
 import { runPipedFeatures } from './runPipedFeatures';
+import { runFolders } from './runFolders';
 
 
-
-
+// just a convenience class to make the index.ts files a little cleaner
 export class TestProjectRunner {
   constructor(readonly projName: string) { }
 
@@ -27,6 +27,12 @@ export class TestProjectRunner {
     execFriendlyCmd = false) => {
     console.log(`runFeatureSet ${this.projName}: ${JSON.stringify(wsConfig)}`);
     await runPipedFeatures(this.projName, false, wsConfig, runOptions, expectations, execFriendlyCmd);
+  }
+
+  runEachFolder = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
+    execFriendlyCmd = false) => {
+    console.log(`runEachFolder ${this.projName}: ${JSON.stringify(wsConfig)}`);
+    await runFolders(this.projName, false, wsConfig, runOptions, expectations, execFriendlyCmd);
   }
 
   runSubsetOfScenariosForEachFeature = async (wsConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,

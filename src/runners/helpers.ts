@@ -141,8 +141,8 @@ export function addTags(pr: ProjRun, args: string[], scenariosOnly: boolean, fri
 }
 
 
-export function projDirRelativePathToWorkDirRelativePath(pr: ProjRun, featureFileProjectRelativePath: string) {
+export function projDirRelativePathToWorkDirRelativePath(pr: ProjRun, projectRelativePath: string) {
   return pr.projSettings.projRelativeWorkingDirPath
-    ? featureFileProjectRelativePath.replace(pr.projSettings.projRelativeWorkingDirPath + "/", "")
-    : featureFileProjectRelativePath;
+    ? projectRelativePath.replace(pr.projSettings.projRelativeWorkingDirPath + "/", "")
+    : projectRelativePath;
 }

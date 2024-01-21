@@ -14,9 +14,9 @@ import { Scenario } from '../../../../parsers/testFile';
 import path = require('path');
 
 
-// SIMULATES A USER CLICKING THE RUN/DEBUG BUTTON ON SCENARIOS IN EACH FEATURE IN THE TEST EXPLORER
+// SIMULATES: A USER CLICKING THE RUN/DEBUG BUTTON AFTER SELECTING A SUBSET OF SCENARIOS IN EVERY FEATURE IN THE TEST EXPLORER
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
-// this allows us to test the piped scenarios and regex pattern matching 
+// PURPOSE: to test the piped scenarios regex pattern works with behave
 export async function runPipedScenarios(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
@@ -37,10 +37,10 @@ export async function runPipedScenarios(projName: string, isDebugRun: boolean,
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-  const allProjItems = getTestItems(projId, api.ctrl.items);
+  const allProjTestItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
-  const featureTests = allProjItems.filter((item) => {
+  const featureTests = allProjTestItems.filter((item) => {
     return item.id.endsWith(".feature");
   });
 
@@ -89,6 +89,7 @@ function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: stri
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
 
   // while it's tempting to just reuse requestItems from the caller here, 
   // we must use expectedResults to validate (belt and braces)
@@ -118,7 +119,8 @@ function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: stri
   const expectCmdOrderedIncludes = [
     `cd `,
     `example-projects`,
-    `${projName}"\n`,
+    `${projName}"`,
+    `${workingFolder}`,
     `${envVarsString}`,
     `python`,
     ` -m behave ${tagsString}-i "${featurePathRx}" `,
