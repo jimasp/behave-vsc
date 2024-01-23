@@ -13,15 +13,16 @@ import { getFeaturePathsRegEx } from '../../../../runners/helpers';
 
 
 
-// SIMULATES: A USER CLICKING THE RUN/DEBUG BUTTON AFTER SELECTING MULTIPLE FEATURES IN THE TEST EXPLORER
-// i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
-// PURPOSE: to test that the piped features regex pattern works with behave
+// SIMULATES: A USER CLICKING SELECTING A SUBSET OF FEATURES IN THE TEST EXPLORER THEN CLICKING THE RUN/DEBUG BUTTON.
+// PURPOSE: to test that the piped features regex pattern works with behave.
 export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // sanity check
-  if (testExtConfig.runParallel)
-    throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them individually");
+  if (testExtConfig.runParallel) {
+    throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them " +
+      "individually, and running features individually is already tested by runProject.ts");
+  }
 
   // ARRANGE
 
@@ -70,17 +71,17 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
 
   const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
   assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunSize);
-  assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath, requestItems, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
+  assertRunPipedFeaturesFriendlyCmd(request, skippedFeatureRelPath, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
 
 }
 
 
-function assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath: string, requestItems: vscode.TestItem[], projUri: vscode.Uri, projName: string,
-  isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertRunPipedFeaturesFriendlyCmd(request: vscode.TestRunRequest, skippedFeatureRelPath: string,
+  projUri: vscode.Uri, projName: string, isDebugRun: boolean, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
   if (isDebugRun)
-    return;
+    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
@@ -97,7 +98,7 @@ function assertRunPipedFeaturesFriendlyCmd(skippedFeatureRelPath: string, reques
     queueItems.push(qi);
   }
 
-  const pr = createFakeProjRun(testExtConfig, requestItems);
+  const pr = createFakeProjRun(testExtConfig, request);
   const pipedFeaturePathsRx = getFeaturePathsRegEx(pr, queueItems);
 
   const expectCmdOrderedIncludes = [

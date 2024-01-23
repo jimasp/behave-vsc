@@ -14,10 +14,13 @@ import { Scenario } from '../../../../parsers/testFile';
 import path = require('path');
 
 
-// SIMULATES: A USER CLICKING THE RUN/DEBUG BUTTON AFTER SELECTING A SUBSET OF SCENARIOS IN EVERY FEATURE IN THE TEST EXPLORER
+
+// SIMULATES: A USER SELECTING A SUBSET OF SCENARIOS IN EVERY FEATURE IN THE TEST EXPLORER THEN CLICKING THE RUN/DEBUG BUTTON.
 // i.e. for any feature that contains multiple scenarios, we run every scenario except the first one,
 // PURPOSE: to test the piped scenarios regex pattern works with behave
-export async function runPipedScenarios(projName: string, isDebugRun: boolean,
+// NOTE: this should act much the same whether runParallel is set or not, because either way, each feature will be 
+// run individually if only a subset of scenarios are selected due to the way the behave commands are constructed.
+export async function runScenarios(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // ARRANGE
@@ -74,18 +77,18 @@ export async function runPipedScenarios(projName: string, isDebugRun: boolean,
 
   assertExpectedResults(results, expectedResults, testExtConfig, requestItems.length);
   for (const featureTest of featureTestsInRequest) {
-    assertRunPipedScenariosFriendlyCmds(projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
+    assertRunPipedScenariosFriendlyCmds(request, projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
   }
 
 }
 
 
-function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: string, featureTest: vscode.TestItem,
-  isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertRunPipedScenariosFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri,
+  projName: string, featureTest: vscode.TestItem, isDebugRun: boolean, expectedResults: TestResult[],
+  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
   if (isDebugRun)
-    return;
+    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
@@ -112,7 +115,7 @@ function assertRunPipedScenariosFriendlyCmds(projUri: vscode.Uri, projName: stri
     });
   }
 
-  const pr = createFakeProjRun(testExtConfig);
+  const pr = createFakeProjRun(testExtConfig, request);
   const featurePathRx = getFeaturePathsRegEx(pr, queueItems);
   const pipedScenariosRx = getPipedScenarioNamesRegex(queueItems, true);
 

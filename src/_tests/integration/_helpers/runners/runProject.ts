@@ -21,9 +21,9 @@ import { QueueItem } from '../../../../extension';
 
 
 
-// SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER 
-// PURPOSE: tests that behave runs all tests when runAll is clicked and a simple behave command is issued,
-// also provides additional assertions about stepnavigation objects, project settings, etc.
+// SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER.
+// PURPOSE: tests that behave runs all tests when run/debug all is clicked.
+// Also provides additional assertions about stepnavigation objects, project settings, etc.
 //
 // NOTE THAT:
 // 1. if runParallel=true, then this function will run every feature in its own behave 
@@ -157,7 +157,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ASSERT 2 (post-run asserts)
 
     assertExpectedResults(results, expectedResults, testExtConfig);
-    assertRunProjectFriendlyCmds(projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
+    assertRunProjectFriendlyCmds(request, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
   }
   finally {
     if (behaveIniContent)
@@ -166,12 +166,11 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 }
 
 
-function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isDebugRun: boolean, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertRunProjectFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
+  isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
   if (isDebugRun)
-    return;
+    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
@@ -202,7 +201,7 @@ function assertRunProjectFriendlyCmds(projUri: vscode.Uri, projName: string, isD
       test: undefined,
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
-    const pr = createFakeProjRun(testExtConfig);
+    const pr = createFakeProjRun(testExtConfig, request);
     const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
 
     const expectCmdOrderedIncludes = [

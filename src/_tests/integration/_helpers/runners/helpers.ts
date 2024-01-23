@@ -198,16 +198,12 @@ export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, run
 }
 
 
-export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, requestInclude?: vscode.TestItem[]): ProjRun {
+export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, request: vscode.TestRunRequest): ProjRun {
 
 	const projSettings = {
-		runParallel: testExtConfig.get("runParallel") as boolean,
-		projRelativeWorkingDirPath: testExtConfig.get("relativeWorkingDir") as string,
+		runParallel: testExtConfig.get("runParallel"),
+		projRelativeWorkingDirPath: testExtConfig.get("relativeWorkingDir"),
 	} as ProjectSettings;
-
-	const request = {
-		include: requestInclude
-	} as vscode.TestRunRequest;
 
 	return {
 		projSettings: projSettings,

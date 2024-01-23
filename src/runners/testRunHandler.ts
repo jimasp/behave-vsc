@@ -35,7 +35,8 @@ export class ProjRun {
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher,
   removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
-  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()) => {
+  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()):
+    Promise<QueueItem[] | undefined> => {
 
     xRayLog(`testRunHandler: invoked`);
 
@@ -71,7 +72,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     }
     catch (e: unknown) {
       // entry point (handler) - show error
-      services.logger.showError(e, undefined);
+      services.logger.showError(e);
     }
     finally {
       run.end();
@@ -88,9 +89,9 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
   for (const test of tests) {
 
-    if (request.exclude?.includes(test)) {
+    // find = don't add tests in nested folder nodes more than once
+    if (request.exclude?.includes(test) || queue.find(x => x.test.id === test.id))
       continue;
-    }
 
     const data = testData.get(test);
 
@@ -119,7 +120,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
   if (queue.length === 0)
-    throw "empty queue - nothing to do";
+    throw new Error("empty queue - nothing to do");
 
   const projRunPromises: Promise<void>[] = [];
   const winSettings = services.config.instanceSettings;
@@ -394,7 +395,7 @@ function getIncludedFeaturesForProj(projUri: vscode.Uri, req: vscode.TestRunRequ
   }
 
   if (!req)
-    throw "req or child must be supplied";
+    throw new Error("req or child must be supplied");
 
   req.include?.forEach(inc => items.push(...getIncludedFeaturesForProj(projUri, undefined, inc)));
   return items;
@@ -404,7 +405,7 @@ function getIncludedFeaturesForProj(projUri: vscode.Uri, req: vscode.TestRunRequ
 function getChildScenariosForParentFeature(pr: ProjRun, scenarioQueueItem: QueueItem) {
   const parentFeature = scenarioQueueItem.test.parent;
   if (!parentFeature)
-    throw `parent feature not found for scenario ${scenarioQueueItem.scenario.scenarioName}}`;
+    throw new Error(`parent feature not found for scenario ${scenarioQueueItem.scenario.scenarioName}}`);
   return getChildScenariosForFeature(pr, parentFeature);
 }
 
@@ -423,7 +424,7 @@ function getChildScenariosForFeature(pr: ProjRun, feature: vscode.TestItem) {
 function parentFeatureOrAllSiblingsIncluded(pr: ProjRun, projQueueItem: QueueItem): vscode.TestItem | undefined {
   const parent = projQueueItem.test.parent;
   if (!parent)
-    throw `parent not found for scenario ${projQueueItem.scenario.scenarioName}`;
+    throw new Error(`parent not found for scenario ${projQueueItem.scenario.scenarioName}`);
 
   const includedParent = pr.includedFeatures?.find(x => x.id === parent.id);
   if (includedParent)

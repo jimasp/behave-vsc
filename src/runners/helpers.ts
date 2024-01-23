@@ -51,7 +51,7 @@ export function getFeaturePathsRegEx(pr: ProjRun, filteredChildItems: QueueItem[
   const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
 
   // sort the feature paths for consistency (testability)
-  const orderedPaths = featurePathsNotCoveredByFolderPaths.sort((a, b) => a.localeCompare(b));
+  const orderedPaths = [...featurePathsNotCoveredByFolderPaths].sort((a, b) => a.localeCompare(b));
 
   return folderPaths.map(x => x)
     .concat(...orderedPaths.map(getRegEx))

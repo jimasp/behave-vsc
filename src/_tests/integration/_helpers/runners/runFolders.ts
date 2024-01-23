@@ -5,15 +5,16 @@ import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWork
 import { uriId } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions } from "../common";
-import { assertExpectedResults, assertLogExists } from "./assertions";
+import { Expectations, RunOptions, TestResult } from "../common";
+import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../../runner';
-import { projDirRelativePathToWorkDirRelativePath } from '../../../../runners/helpers';
+import { getFeaturePathsRegEx, projDirRelativePathToWorkDirRelativePath } from '../../../../runners/helpers';
+import { QueueItem } from '../../../../extension';
 
 
 
-// SIMULATES: A USER CLICKING THE RUN/DEBUG BUTTON ON EACH FOLDER LEVEL IN THE TEST EXPLORER
-// PURPOSE: test that the correct (i.e. child or nested folder child) features are run for each folder
+// SIMULATES: A USER SELECTING EVERY FOLDER FOUND IN THE TEST EXPLORER, INCLUDING NESTED FOLDERS, THEN CLICKING THE RUN/DEBUG BUTTON.
+// PURPOSE: test that the correct (i.e. child or nested folder child) features are run for each folder.
 export async function runFolders(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
@@ -34,26 +35,106 @@ export async function runFolders(projName: string, isDebugRun: boolean,
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-  //const allProjItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-
   const folderItems = getFolderItems(api.ctrl.items, projId);
 
-  for (const folder of folderItems) {
+  // ACT
 
-    // ACT
+  console.log(`${consoleName}: calling runHandler to run folders...`);
+  const requestItems = folderItems.map(x => x.item);
+  const request = new vscode.TestRunRequest(requestItems);
+  const results = await api.runHandler(isDebugRun, request, runProfile);
 
-    console.log(`${consoleName}: calling runHandler to run piped features...`);
-    const request = new vscode.TestRunRequest([folder.item]);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+  // ASSERT
 
-    // // ASSERT  
 
-    const scenarioDescendents = folder.descendents.filter(x => !x.id.endsWith(".feature"));
-    const expectedTestRunSize = scenarioDescendents.length;
-    assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunSize);
-    assertRunPipedFeaturesFriendlyCmd(folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
+  if (testExtConfig.runParallel) {
+    for (const folder of folderItems) {
+      const scenarioDescendentsForThisFolder = folder.descendents.filter(x => x.id.includes(".feature/"));
+      const expectedTestRunCount = scenarioDescendentsForThisFolder.length;
+      assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
+      assertRunFoldersParallelFriendlyCmd(request, folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
+    }
   }
+  else {
+    const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
+    const expectedTestRunCount = scenarios.length;
+    assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
+    assertRunFoldersTogetherFriendlyCmd(request, scenarios, expectedResults, projUri, projName, isDebugRun, testExtConfig, runOptions);
+  }
+
+}
+
+
+function assertRunFoldersParallelFriendlyCmd(request: vscode.TestRunRequest, folder: vscode.TestItem, projUri: vscode.Uri,
+  projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+
+  if (isDebugRun)
+    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
+
+  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
+  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const pr = createFakeProjRun(testExtConfig, request);
+
+  const relFolderPath = folder.id.replace(uriId(projUri) + "/", "") + "/";
+  if (!relFolderPath)
+    throw new Error(`relFolderPath is undefined for ${folder.id}`);
+  const workDirRelFolderPath = projDirRelativePathToWorkDirRelativePath(pr, relFolderPath);
+
+  const expectCmdOrderedIncludes = [
+    `cd `,
+    `example-projects`,
+    `${projName}"`,
+    `${workingFolder}`,
+    `${envVarsString}`,
+    `python`,
+    ` -m behave ${tagsString}-i "${workDirRelFolderPath}" `,
+    ` --show-skipped --junit --junit-directory "`,
+    `${projName}"`
+  ];
+  assertLogExists(projUri, expectCmdOrderedIncludes);
+
+}
+
+
+function assertRunFoldersTogetherFriendlyCmd(request: vscode.TestRunRequest, scenarios: vscode.TestItem[], expectedResults: TestResult[],
+  projUri: vscode.Uri, projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+
+  if (isDebugRun)
+    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
+
+  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
+  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const pr = createFakeProjRun(testExtConfig, request);
+
+  const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id, true) === exp.test_id));
+
+  const queueItems: QueueItem[] = [];
+  for (const expResult of filteredExpectedResults) {
+    const qi = {
+      test: undefined,
+      scenario: { featureFileProjectRelativePath: expResult.scenario_featureFileRelativePath }
+    } as unknown as QueueItem;
+    queueItems.push(qi);
+  }
+
+  const pipedWorkDirRelFolderPaths = getFeaturePathsRegEx(pr, queueItems);
+
+  const expectCmdOrderedIncludes = [
+    `cd `,
+    `example-projects`,
+    `${projName}"`,
+    `${workingFolder}`,
+    `${envVarsString}`,
+    `python`,
+    ` -m behave ${tagsString}-i "${pipedWorkDirRelFolderPaths}" `,
+    ` --show-skipped --junit --junit-directory "`,
+    `${projName}"`
+  ];
+  assertLogExists(projUri, expectCmdOrderedIncludes);
+
 }
 
 
@@ -85,37 +166,4 @@ function getFolderItems(items: vscode.TestItemCollection, projId: string) {
 
   });
   return folderItems;
-}
-
-
-function assertRunPipedFeaturesFriendlyCmd(folder: vscode.TestItem, projUri: vscode.Uri, projName: string,
-  isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
-
-  // friendlyCmds are not logged for debug runs (and we don't want to assert friendlyCmds twice over anyway)
-  if (isDebugRun)
-    return;
-
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
-  const pr = createFakeProjRun(testExtConfig);
-
-  const relFolderPath = folder.id.replace(uriId(projUri) + "/", "") + "/";
-  if (!relFolderPath)
-    throw new Error(`folder.uri.path is undefined for ${folder.id}`);
-  const workDirRelFolderPath = projDirRelativePathToWorkDirRelativePath(pr, relFolderPath);
-
-  const expectCmdOrderedIncludes = [
-    `cd `,
-    `example-projects`,
-    `${projName}"`,
-    `${workingFolder}`,
-    `${envVarsString}`,
-    `python`,
-    ` -m behave ${tagsString}-i "${workDirRelFolderPath}" `,
-    ` --show-skipped --junit --junit-directory "`,
-    `${projName}"`
-  ];
-  assertLogExists(projUri, expectCmdOrderedIncludes);
-
 }
