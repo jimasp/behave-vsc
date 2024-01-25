@@ -78,7 +78,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/outline_mixed_no_skip.feature',
+      scenario_featureFileRelativePath: 'my_features/some tests/outline_mixed_no_skip.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success paramless',
       scenario_isOutline: true,

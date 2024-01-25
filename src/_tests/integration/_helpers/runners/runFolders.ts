@@ -54,7 +54,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
       const expectedTestRunCount = scenarioDescendentsForThisFolder.length;
       assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
       if (!isDebugRun)
-        assertExpectedFriendlyCmdsForParallel(request, folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
+        assertExpectedFriendlyCmdsForParallel(request, folder.item, projUri, projName, testExtConfig, runOptions);
     }
   }
   else {
@@ -62,7 +62,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     const expectedTestRunCount = scenarios.length;
     assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
     if (!isDebugRun)
-      assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, isDebugRun, testExtConfig, runOptions);
+      assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, testExtConfig, runOptions);
   }
 
 }

@@ -19,4 +19,3 @@ export async function run(): Promise<void[]> {
 
 	return Promise.all([aSuite, bSuite, sSuite, rpSuite, isSuite, mtlfSuite, sf1Suite, sf2Suite, wdSuite]);
 }
-)

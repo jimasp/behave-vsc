@@ -61,69 +61,64 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
 }
 
 
-export function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult, testConfig: TestWorkspaceConfig): TestResult[] {
+export function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult,
+  testConfig: TestWorkspaceConfig): TestResult[] {
 
   const match = expectedResults.filter((expectedResult: TestResult) => {
-
-    if (
-      expectedResult.test_id !== actualResult.test_id ||
-      expectedResult.test_uri !== actualResult.test_uri ||
-      expectedResult.test_parent !== actualResult.test_parent ||
-      expectedResult.test_children !== actualResult.test_children ||
-      expectedResult.test_description !== actualResult.test_description ||
-      expectedResult.test_error !== actualResult.test_error ||
-      expectedResult.test_label !== actualResult.test_label ||
-      expectedResult.scenario_featureFileRelativePath !== actualResult.scenario_featureFileRelativePath ||
-      expectedResult.scenario_isOutline !== actualResult.scenario_isOutline ||
-      expectedResult.scenario_getLabel !== actualResult.scenario_getLabel ||
-      expectedResult.scenario_featureName !== actualResult.scenario_featureName ||
-      expectedResult.scenario_scenarioName !== actualResult.scenario_scenarioName
-    ) {
-
-      if (expectedResult.test_id === actualResult.test_id) {
-        debugger; // eslint-disable-line no-debugger 
-        throw new Error(`test ids matched but properties were different: \n` +
-          `expectedResult:${JSON.stringify(expectedResult)} \n` +
-          `actualResult:${JSON.stringify(actualResult)} \n`);
-      }
-
-      return false;
+    if (expectedResult.test_id === actualResult.test_id) {
+      checkPropertiesMatchOrThrow(expectedResult, actualResult, testConfig);
+      return true;
     }
-
-    // now match shortened expected result string:
-
-    if (expectedResult.scenario_result !== actualResult.scenario_result) {
-      debugger; // eslint-disable-line no-debugger	
-      if (actualResult.scenario_result) {
-        throw new Error(`test ids matched but result did not match expected result\n` +
-          `expectedResult:${JSON.stringify(expectedResult)} \n` +
-          `actualResult:${JSON.stringify(actualResult)} \n` +
-          `testConfig:${JSON.stringify(testConfig)} \n` +
-          `note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
-          `then first check if the behave command line output matches the IDE behave command output.`);
-      }
-      throw new Error(`result is undefined, was the test run cancelled ?\n` +
-        `actualResult:${JSON.stringify(expectedResult)} \n` +
-        `testConfig:${JSON.stringify(testConfig)} \n`);
-    }
-
-    return true;
-
+    return false;
   }); // end filter
 
 
   if (match.length !== 1) {
-
-    logUnexpectedResult(actualResult);
-
-    // UHOH - did you add/modify a feature/scenario, that is not in an expectedResults? 
-    // IF (and only IF) a new feature/scenario has been 
-    // ADDED then SEE THE "new TestResult" in the DEBUG CONSOLE and "copy all"/paste into xxx suite/expectedResults.ts)
+    console.log(formatResult(actualResult, true));
+    // UHOH - did you add/modify a feature/scenario, that is not in an expectedResults? IF (and ONLY IF) you did add a 
+    // new feature/scenario, then SEE THE "new TestResult" in the DEBUG CONSOLE and "copy all"/paste into xxx suite/expectedResults.ts)
     debugger; // eslint-disable-line no-debugger
     throw new Error(`match.length was:${match.length} when attempting to match test id "${actualResult.test_id}" to expected result`);
   }
 
   return match;
+}
+
+
+function checkPropertiesMatchOrThrow(expectedResult: TestResult, actualResult: TestResult, testConfig: TestWorkspaceConfig): boolean {
+  const differentProperties = [];
+  for (const key in expectedResult) {
+    if (Object.prototype.hasOwnProperty.call(expectedResult, key)) {
+      const value = expectedResult[key as keyof TestResult];
+      if (value !== actualResult[key as keyof TestResult])
+        differentProperties.push(key);
+    }
+  }
+
+  if (differentProperties.length === 0)
+    return true;
+
+  debugger; // eslint-disable-line no-debugger
+
+  if (differentProperties.length === 1 && expectedResult.scenario_result !== actualResult.scenario_result) {
+    if (!actualResult.scenario_result) {
+      throw new Error(`scenario_result is undefined, was the test run cancelled?\n` +
+        `actualResult: ${formatResult(actualResult)}` +
+        `testConfig: ${JSON.stringify(testConfig)}`);
+    }
+    throw new Error(`test ids matched but actual scenario_result did not match expected scenario_result\n` +
+      `expectedResult: ${formatResult(expectedResult)}` +
+      `actualResult: ${formatResult(actualResult)}` +
+      `testConfig: ${JSON.stringify(testConfig)}` +
+      `note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
+      `then first check if the behave command line output matches the IDE behave command output.`);
+  }
+
+  throw new Error(`test ids matched but properties were different from expected: \n` +
+    `differing properties: ${differentProperties.join(", ")}\n` +
+    `expectedResult: ${formatResult(expectedResult)}` +
+    `actualResult: ${formatResult(actualResult)}` +
+    `testConfig: ${JSON.stringify(testConfig)}`);
 }
 
 
@@ -426,20 +421,24 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 }
 
 
-function logUnexpectedResult(actualResult: TestResult) {
-  console.clear();
-  console.log("new TestResult({");
+function formatResult(actualResult: TestResult, addNew = false) {
+
+  let log = addNew ? "new TestResult({\n" : "TestResult({\n";
   const sortedProperties = Object.keys(actualResult).sort();
+
   for (const property of sortedProperties) {
     if (Object.prototype.hasOwnProperty.call(actualResult, property)) {
       const val = actualResult[property as keyof TestResult];
       const value = typeof val === 'string'
         ? `'${(actualResult[property as keyof TestResult] as string).replace(/['\\]/g, "\\$&")}'`
         : val;
-      console.log(`\t${property}: ${value},`);
+      log += `\t${property}: ${value},\n`;
     }
   }
-  console.log("}),");
+
+  log += ("}),\n");
+
+  return log;
 }
 
 

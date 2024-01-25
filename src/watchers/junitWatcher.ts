@@ -55,8 +55,8 @@ export class JunitWatcher {
     watcher?.dispose();
     if (services.config.isIntegrationTestRun) {
       xRayLog("Integration test run complete.\n");
-      xRayLog('NOTE: if next line says "canceled" (sic) AND you did not stop the run, then check for previous errors in the log.');
-      xRayLog('If the next line says "Channel has been closed" then try disabling other extensions to see if they are causing it.')
+      xRayLog('NOTE: if next line says "canceled" (sic) or "Channel has been closed" AND you did not stop the run, then check for ' +
+        'any previous errors that stopped the run early.')
     }
   }
 
@@ -132,8 +132,8 @@ export class JunitWatcher {
       if (services.config.exampleProject && notUpdatedAfterGrace.length === stoppedRun.queue.length &&
         fs.existsSync(notUpdatedAfterGrace[0].junitFileUri.fsPath)) {
         debugger; // eslint-disable-line no-debugger          
-        throw `No test results were updated by _updateResult for ${run.name}. If you did not hit run stop or debug stop, ` +
-        `then either there was a previous error (see log), or the file system watcher is not raising events.`;
+        throw `No test results were updated by _updateResult for ${run.name}.If you did not hit run stop or debug stop, ` +
+        `then either there was a previous error(see log), or the file system watcher is not raising events.`;
       }
 
       if (notUpdatedAfterGrace.length === 0)
@@ -164,7 +164,7 @@ export class JunitWatcher {
       await Promise.all(updates);
 
       const waited = performance.now() - start;
-      xRayLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited}ms`);
+      xRayLog(`junitWatcher: run ${run.name} ending, updating tests results took ${waited} ms`);
 
     }
     finally {
@@ -219,7 +219,7 @@ export class JunitWatcher {
         detected = !this._foldersWaitingForWatcher.has(uriId(folderUri));
         if (detected)
           break;
-        const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${DETECT_FILE}`);
+        const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${DETECT_FILE} `);
         await vscode.workspace.fs.writeFile(fileUri, Buffer.from("<detect_me/>"));
         fileUris.push(fileUri);
         xRayLog("junitWatcher: writing " + fileUri.fsPath);
@@ -262,7 +262,7 @@ export class JunitWatcher {
       const parentFolderId = uriId(vscode.Uri.file(uri.path.substring(0, uri.path.lastIndexOf('/'))));
       if (this._foldersWaitingForWatcher.has(parentFolderId)) {
         this._foldersWaitingForWatcher.delete(parentFolderId);
-        xRayLog(`junitWatcher: _updateResult() watcher successfully detected file ${uri.fsPath}`);
+        xRayLog(`junitWatcher: _updateResult() watcher successfully detected file ${uri.fsPath} `);
       }
       return;
     }
@@ -296,7 +296,7 @@ export class JunitWatcher {
 
     }
     catch (e: unknown) {
-      const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
+      const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name} `);
       matchedRun?.run.end();
       // entry point function (handler) - show error
       services.logger.showError(err);
