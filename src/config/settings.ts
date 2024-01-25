@@ -100,6 +100,8 @@ export class ProjectSettings {
   public readonly projRelativeConfigPaths: string[] = [];
   public readonly projRelativeFeatureFolders: string[] = [];
   public readonly projRelativeStepsFolders: string[] = [];
+  // integration test only
+  public readonly integrationTestRunUseCpExec = false;
 
 
   constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {

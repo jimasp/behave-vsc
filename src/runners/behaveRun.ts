@@ -19,9 +19,10 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.workingDirUri.fsPath, env: env };
 
-    // on integration test runs ONLY, we sometimes want to use exec instead of spawn, so that we can test the friendlyCmd
-    if (services.config.isIntegrationTestRun && services.config.integrationTestRunType === "cpExec") {
-      xRayLog("### RUNNING IN EXEC MODE ###")
+    // on integration test runs ONLY, we sometimes use cp.exec 
+    // instead of cp.spawn, so that we can test the generated friendlyCmd executes correctly
+    if (services.config.isIntegrationTestRun && services.config.integrationTestRunUseCpExec[pr.projSettings.id]) {
+      xRayLog("--- integration test running in exec mode ---")
       cp = exec(`${friendlyCmd}`);
     }
     else {

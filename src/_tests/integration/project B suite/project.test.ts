@@ -2,7 +2,7 @@ import { TestProjectRunner } from "../_helpers/runners/projectRunner";
 import { noBehaveIni, noRunOptions } from "../_helpers/common";
 import { wsConfig, expectations, wsConfigParallel, behaveIni } from "./defaults";
 
-suite(`project B suite: run`, () => {
+suite(`project B suite`, () => {
   const testProjectRunner = new TestProjectRunner("project B");
 
   test("debugAll", async () =>
@@ -43,7 +43,7 @@ suite(`project B suite: run`, () => {
   test("runEachFolder (execFriendlyCmd)", async () =>
     await testProjectRunner.runEachFolder(wsConfig, noRunOptions, expectations, true));
 
-  // same tests run in multi but with execFriendlyCmd=true:
+  // same tests run in multi.test.ts but with execFriendlyCmd=true:
 
   test("runAl (execFriendlyCmd)", async () =>
     await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations, true));

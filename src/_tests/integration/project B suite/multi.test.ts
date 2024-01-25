@@ -7,7 +7,7 @@ import { behaveIni, expectations, wsConfig, wsConfigParallel } from "./defaults"
 //
 // (These tests will ALSO be run via ./index.ts)
 
-suite(`project B suite: runMulti`, () => {
+suite(`multi project B suite`, () => {
 	const testProjectRunner = new TestProjectRunner("project B");
 
 	test("runAll", async () =>

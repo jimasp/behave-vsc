@@ -31,7 +31,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
   if (execFriendlyCmd)
-    services.config.integrationTestRunType = "cpExec";
+    services.config.integrationTestRunUseCpExec[projId] = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
@@ -53,24 +53,23 @@ export async function runFolders(projName: string, isDebugRun: boolean,
       const scenarioDescendentsForThisFolder = folder.descendents.filter(x => x.id.includes(".feature/"));
       const expectedTestRunCount = scenarioDescendentsForThisFolder.length;
       assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
-      assertRunFoldersParallelFriendlyCmd(request, folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
+      if (!isDebugRun)
+        assertExpectedFriendlyCmdsForParallel(request, folder.item, projUri, projName, isDebugRun, testExtConfig, runOptions);
     }
   }
   else {
     const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
     const expectedTestRunCount = scenarios.length;
     assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
-    assertRunFoldersTogetherFriendlyCmd(request, scenarios, expectedResults, projUri, projName, isDebugRun, testExtConfig, runOptions);
+    if (!isDebugRun)
+      assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, isDebugRun, testExtConfig, runOptions);
   }
 
 }
 
 
-function assertRunFoldersParallelFriendlyCmd(request: vscode.TestRunRequest, folder: vscode.TestItem, projUri: vscode.Uri,
-  projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
-
-  if (isDebugRun)
-    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
+function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folder: vscode.TestItem, projUri: vscode.Uri,
+  projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
@@ -98,11 +97,8 @@ function assertRunFoldersParallelFriendlyCmd(request: vscode.TestRunRequest, fol
 }
 
 
-function assertRunFoldersTogetherFriendlyCmd(request: vscode.TestRunRequest, scenarios: vscode.TestItem[], expectedResults: TestResult[],
-  projUri: vscode.Uri, projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
-
-  if (isDebugRun)
-    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
+function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios: vscode.TestItem[], expectedResults: TestResult[],
+  projUri: vscode.Uri, projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);

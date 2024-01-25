@@ -36,7 +36,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean,
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
   if (execFriendlyCmd)
-    services.config.integrationTestRunType = "cpExec";
+    services.config.integrationTestRunUseCpExec[projId] = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
@@ -76,19 +76,17 @@ export async function runScenarios(projName: string, isDebugRun: boolean,
   // ASSERT  
 
   assertExpectedResults(results, expectedResults, testExtConfig, requestItems.length);
-  for (const featureTest of featureTestsInRequest) {
-    assertRunPipedScenariosFriendlyCmds(request, projUri, projName, featureTest, isDebugRun, expectedResults, testExtConfig, runOptions);
+  if (!isDebugRun) {
+    for (const featureTest of featureTestsInRequest) {
+      assertExpectedFriendlyCmd(request, projUri, projName, featureTest, expectedResults, testExtConfig, runOptions);
+    }
   }
-
 }
 
 
-function assertRunPipedScenariosFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri,
-  projName: string, featureTest: vscode.TestItem, isDebugRun: boolean, expectedResults: TestResult[],
+function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vscode.Uri,
+  projName: string, featureTest: vscode.TestItem, expectedResults: TestResult[],
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
-
-  if (isDebugRun)
-    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);

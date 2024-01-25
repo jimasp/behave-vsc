@@ -63,12 +63,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     if (runOptions.selectedRunProfile)
       runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
-    // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
-    // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
-    // (cp.spawn is always used outside of integration tests)
-    if (execFriendlyCmd)
-      services.config.integrationTestRunType = "cpExec";
-
 
     // ==================== START LOCK SECTION ====================
 
@@ -79,6 +73,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // NOTE: any config change causes a reparse, so behave.ini and test config changes must also be inside 
     // this lock (as well as parseFilesForProject and runHandler)
     await setLock(consoleName, ACQUIRE);
+
+    // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
+    // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
+    // (outside of integration tests, cp.spawn is always used)
+    if (execFriendlyCmd)
+      services.config.integrationTestRunUseCpExec[projId] = true;
 
     // we do this BEFORE we call configurationChangedHandler() to load our test config,
     // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
@@ -157,7 +157,8 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ASSERT 2 (post-run asserts)
 
     assertExpectedResults(results, expectedResults, testExtConfig);
-    assertRunProjectFriendlyCmds(request, projUri, projName, isDebugRun, expectedResults, testExtConfig, runOptions);
+    if (!isDebugRun)
+      assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
   finally {
     if (behaveIniContent)
@@ -166,11 +167,8 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 }
 
 
-function assertRunProjectFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
-  isDebugRun: boolean, expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
-
-  if (isDebugRun)
-    throw new Error("friendlyCmds are not logged for debug runs (and even if they were, they would be the same for run + debug");
+function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
+  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
