@@ -10,14 +10,14 @@ import { behaveIni, expectations, wsConfig, wsConfigParallel } from "./defaults"
 suite(`multi project B suite`, () => {
 	const testProjectRunner = new TestProjectRunner("project B");
 
-	// test("runAll", async () =>
-	// 	await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
+	test("runAll", async () =>
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
 
-	// test("runAll - with behave.ini", async () =>
-	// 	await testProjectRunner.runAll(wsConfig, behaveIni, noRunOptions, expectations));
+	test("runAll - with behave.ini", async () =>
+		await testProjectRunner.runAll(wsConfig, behaveIni, noRunOptions, expectations));
 
-	// test("runAll - parallel", async () =>
-	// 	await testProjectRunner.runAll(wsConfigParallel, noBehaveIni, noRunOptions, expectations));
+	test("runAll - parallel", async () =>
+		await testProjectRunner.runAll(wsConfigParallel, noBehaveIni, noRunOptions, expectations));
 
 });
 
