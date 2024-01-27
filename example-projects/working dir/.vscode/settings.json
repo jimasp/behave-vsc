@@ -1,6 +1,15 @@
 {
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./unit tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,    
     "behave-vsc.xRay": true,
-    "behave-vsc.relativeWorkingDir": "working folder",
+    "behave-vsc.relativeWorkingDir": "working folder", 
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ]

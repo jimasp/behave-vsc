@@ -6,7 +6,7 @@ import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  getLongestCommonPaths,
+  //getLongestCommonPaths,
   findFilesSync,
   getStepsDir,
   getActualWorkspaceSetting
@@ -15,6 +15,7 @@ import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
 import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
 import { services } from '../services';
+import { projDirRelativePathToWorkDirRelativePath } from '../runners/helpers';
 
 
 export type EnvSetting = { [key: string]: string };
@@ -177,10 +178,10 @@ export class ProjectSettings {
       return;
     }
 
-    this.projRelativeBaseDirPath = projRelPaths.relativeBaseDirPath;
-    this.projRelativeConfigPaths = projRelPaths.relativeConfigPaths;
-    this.projRelativeFeatureFolders = projRelPaths.relativeFeatureFolders;
-    this.projRelativeStepsFolders = projRelPaths.relativeStepsFolders;
+    this.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
+    this.projRelativeConfigPaths = projRelPaths.projRelConfigPaths;
+    this.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
+    this.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
 
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
@@ -264,68 +265,64 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
   projRelativeWorkingDirPath: string) {
 
-  const relativeConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
+  const projRelConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
   // and it is also used to determine the steps folder (below)
-  const relativeBaseDirPath = getRelativeBaseDirPath(projUri, projName, relativeConfigPaths);
-  if (relativeBaseDirPath === null) {
+  const projRelBaseDirPath = getRelativeBaseDirPath(projUri, projName, projRelativeWorkingDirPath, projRelConfigPaths);
+  if (projRelBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
   }
 
-  const relativeStepsFolders: string[] = [];
-  relativeStepsFolders.push(
+  const projRelStepsFolders: string[] = [];
+  projRelStepsFolders.push(
     ...getStepLibraryStepPaths(projUri, importedSteps));
 
   // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
   // stepReferences if multiple matches are found across step folders. i.e. THE LAST ONE WINS, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
-  const baseDirUri = vscode.Uri.joinPath(projUri, relativeBaseDirPath);
+  const baseDirUri = vscode.Uri.joinPath(projUri, projRelBaseDirPath);
   const stepsFolder = getStepsDir(baseDirUri.fsPath);
   if (stepsFolder) {
-    if (relativeStepsFolders.includes(stepsFolder))
+    if (projRelStepsFolders.includes(stepsFolder))
       services.logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, projUri);
     else
-      relativeStepsFolders.push(stepsFolder);
+      projRelStepsFolders.push(stepsFolder);
   }
 
-  // determine relativeFeatureFolders BEFORE we add relativeBaseDirPath to relativeConfigPaths
-  const relativeFeatureFolders = getProjectRelativeFeatureFolders(projUri, relativeConfigPaths);
-
-  if (relativeConfigPaths.length === 0)
-    relativeConfigPaths.push(relativeBaseDirPath);
+  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, workUri, projRelativeWorkingDirPath, projRelConfigPaths);
 
   return {
-    relativeConfigPaths,
-    relativeBaseDirPath,
-    relativeFeatureFolders,
-    relativeStepsFolders
+    // for consistency, these are all project-relative
+    projRelConfigPaths,
+    projRelBaseDirPath,
+    projRelFeatureFolders,
+    projRelStepsFolders
   }
 
 }
 
 
-function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeBehaveConfigPaths: string[]): string | null {
+function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelativeWorkingDirPath: string,
+  relativeBehaveConfigPaths: string[]): string | null {
+
+  // this function will determine the baseDir
+  // where the baseDir = the directory that contains the "steps" folder / environment.py file
 
   // NOTE: THIS FUNCTION MUST HAVE LOOSELY SIMILAR LOGIC TO THE 
   // BEHAVE SOURCE CODE FUNCTION "setup_paths()".
   // IF THAT FUNCTION LOGIC CHANGES IN BEHAVE, THEN IT IS LIKELY THIS FUNCTION WILL ALSO HAVE TO CHANGE.  
   // THIS IS BECAUSE THE BASE DIR IS USED TO CALCULATE (PREDICT) THE JUNIT FILENAME THAT BEHAVE WILL USE.
-  let configRelBaseDir;
 
-  // this function will determine the baseDir
-  // where baseDir = the directory that contains the "steps" folder / environment.py file
-
-  if (relativeBehaveConfigPaths.length > 0)
-    configRelBaseDir = relativeBehaveConfigPaths[0];
-  else
-    configRelBaseDir = "features";
+  const relativeBaseDir = relativeBehaveConfigPaths.length > 0
+    ? relativeBehaveConfigPaths[0]
+    : projRelativeWorkingDirPath + "/features";
 
   const project_parent_dir = path.dirname(projUri.fsPath);
-  let new_base_dir = path.join(projUri.fsPath, configRelBaseDir);
+  let new_base_dir = path.join(projUri.fsPath, relativeBaseDir);
   const steps_dir = "steps";
   const environment_file = "environment.py";
 
@@ -350,7 +347,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
     }
     else {
       services.logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-        `Using behave configuration path "${configRelBaseDir}"`, projUri);
+        `Using behave configuration path "${relativeBaseDir}"`, projUri);
     }
     return null;
   }
@@ -359,18 +356,22 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, relativeB
 }
 
 
-function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
+function getProjectRelativeFeatureFolders(projUri: vscode.Uri, workUri: vscode.Uri,
+  projRelativeWorkingDirPath: string, relativeConfigPaths: string[]): string[] {
 
   // if paths specifically set, and not set to root path, skip gathering feature paths
   if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes("."))
     return relativeConfigPaths;
 
   const start = performance.now();
-  const featureFolders = findFilesSync(projUri, undefined, ".feature").map(f => path.dirname(f.fsPath));
-  const relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
+  const featureFiles = findFilesSync(projUri, undefined, ".feature");
+  const featureFolders = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
+  let relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
+  // ignore any .feature files in the root of the project/working folder
+  relFeatureFolders = relFeatureFolders.filter(f => f !== "" && f !== projRelativeWorkingDirPath);
 
   /* 
-  we want the longest common .feature paths, such that this structure:
+  we want the shortest common paths at one level below the working folder, for example:
     my_project
     └── tests
         ├── pytest
@@ -386,16 +387,24 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
     "tests/features"
     "tests/features2"
   */
-  let longestCommonPaths = getLongestCommonPaths(relFeatureFolders);
-  longestCommonPaths = longestCommonPaths.filter(p => p !== "");
+  const relfeaturePaths: string[] = [];
+  for (const relFeatureFolder of relFeatureFolders) {
+    const relFeatureFolderParent = path.dirname(relFeatureFolder);
+    if (relFeatureFolderParent === "." || relFeatureFolderParent === projRelativeWorkingDirPath) {
+      relfeaturePaths.push(relFeatureFolder);
+    }
+  }
+
+  // let longestCommonPaths = getLongestCommonPaths(relFeatureFolders, projRelativeWorkingDirPath);
+  // longestCommonPaths = longestCommonPaths.filter(p => p !== "");
 
   // default to watching for features path
-  if (longestCommonPaths.length === 0)
-    longestCommonPaths.push("features");
+  if (relfeaturePaths.length === 0)
+    relfeaturePaths.push("features");
 
   xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
 
-  return longestCommonPaths;
+  return relfeaturePaths;
 }
 
 

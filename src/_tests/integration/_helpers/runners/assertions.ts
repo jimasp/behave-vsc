@@ -4,7 +4,7 @@ import { Configuration } from "../../../../config/configuration";
 import { IntegrationTestAPI, QueueItem } from "../../../../extension";
 import { ProjParseCounts } from "../../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "../testWorkspaceConfig";
-import { Expectations, TestResult } from "../common";
+import { Expectations, TestBehaveIni, TestResult } from "../common";
 import { services } from "../../../../services";
 import { ProjectSettings } from "../../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
@@ -25,7 +25,7 @@ export function assertInstances(instances: IntegrationTestAPI) {
 }
 
 
-export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string,
+export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, behaveIni: TestBehaveIni,
   testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {
 
   // multiroot will read window settings from multiroot.code-workspace file, not config
@@ -48,7 +48,7 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
     `${projName} project: relativeStepsFolders`);
   assert.strictEqual(projSettings.projRelativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
     `${projName} project: relativeBaseDirPath`);
-  assert.deepStrictEqual(projSettings.projRelativeConfigPaths, expectations.expectedProjectRelativeConfigPaths,
+  assert.deepStrictEqual(projSettings.projRelativeConfigPaths, behaveIni.expectedRelPaths,
     `${projName} project: relativeConfigPaths`);
   assert.strictEqual(projSettings.projRelativeWorkingDirPath, expectations.expectedProjectRelativeWorkingDirPath,
     `${projName} project: relativeWorkingDirPath`);
@@ -61,12 +61,12 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
 }
 
 
-export function assertTestResultMatchesExpectedResult(expectedResults: TestResult[], actualResult: TestResult,
+export function assertTestResultMatchesExpectedResult(projName: string, expectedResults: TestResult[], actualResult: TestResult,
   testConfig: TestWorkspaceConfig): TestResult[] {
 
   const match = expectedResults.filter((expectedResult: TestResult) => {
     if (expectedResult.test_id === actualResult.test_id) {
-      checkPropertiesMatchOrThrow(expectedResult, actualResult, testConfig);
+      checkPropertiesMatchOrThrow(projName, expectedResult, actualResult, testConfig);
       return true;
     }
     return false;
@@ -85,7 +85,9 @@ export function assertTestResultMatchesExpectedResult(expectedResults: TestResul
 }
 
 
-function checkPropertiesMatchOrThrow(expectedResult: TestResult, actualResult: TestResult, testConfig: TestWorkspaceConfig): boolean {
+function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResult, actualResult: TestResult,
+  testConfig: TestWorkspaceConfig): boolean {
+
   const differentProperties = [];
   for (const key in expectedResult) {
     if (Object.prototype.hasOwnProperty.call(expectedResult, key)) {
@@ -98,27 +100,30 @@ function checkPropertiesMatchOrThrow(expectedResult: TestResult, actualResult: T
   if (differentProperties.length === 0)
     return true;
 
-  debugger; // eslint-disable-line no-debugger
-
-  if (differentProperties.length === 1 && expectedResult.scenario_result !== actualResult.scenario_result) {
-    if (!actualResult.scenario_result) {
-      throw new Error(`scenario_result is undefined, was the test run cancelled?\n` +
-        `actualResult: ${formatResult(actualResult)}` +
-        `testConfig: ${JSON.stringify(testConfig)}`);
-    }
-    throw new Error(`test ids matched but actual scenario_result did not match expected scenario_result\n` +
-      `expectedResult: ${formatResult(expectedResult)}` +
-      `actualResult: ${formatResult(actualResult)}` +
-      `testConfig: ${JSON.stringify(testConfig)}` +
-      `note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
-      `then first check if the behave command line output matches the IDE behave command output.`);
-  }
-
-  throw new Error(`test ids matched but properties were different from expected: \n` +
+  console.error(`test ids matched but properties were different from expected:\n` +
+    `project: ${projName}\n` +
+    `testConfig: ${JSON.stringify(testConfig)}\n` +
     `differing properties: ${differentProperties.join(", ")}\n` +
     `expectedResult: ${formatResult(expectedResult)}` +
-    `actualResult: ${formatResult(actualResult)}` +
-    `testConfig: ${JSON.stringify(testConfig)}`);
+    `actualResult: ${formatResult(actualResult)}`);
+
+  let error = "";
+  if (differentProperties.length === 1 && expectedResult.scenario_result !== actualResult.scenario_result) {
+    if (!actualResult.scenario_result) {
+      error = `scenario_result is undefined, was the test run cancelled?`;
+    }
+    else {
+      error = `scenario_result did not match expected scenario_result\n` +
+        `note - if you only get this error while running "npm run test", but NOT when running integration test suites in the IDE, ` +
+        `then first check if the behave command line output matches the IDE behave command output.`;
+    }
+  }
+
+  if (!error)
+    error = `differing properties: ${differentProperties.join(", ")}`;
+
+  debugger; // eslint-disable-line no-debugger  
+  throw new Error(error);
 }
 
 
@@ -230,7 +235,7 @@ function findMismatchIndex(str1: string, str2: string): number {
 }
 
 
-export function assertExpectedResults(results: QueueItem[] | undefined, expectedResults: TestResult[],
+export function assertExpectedResults(projName: string, results: QueueItem[] | undefined, expectedResults: TestResult[],
   testExtConfig: TestWorkspaceConfig, expectedTestRunSize?: number) {
 
   assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
@@ -238,7 +243,7 @@ export function assertExpectedResults(results: QueueItem[] | undefined, expected
   results.forEach(result => {
     const scenResult = ScenarioResult(result);
     assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(expectedResults, scenResult, testExtConfig);
+    assertTestResultMatchesExpectedResult(projName, expectedResults, scenResult, testExtConfig);
   });
 
   // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)

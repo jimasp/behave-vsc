@@ -75,7 +75,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean,
 
   // ASSERT  
 
-  assertExpectedResults(results, expectedResults, testExtConfig, requestItems.length);
+  assertExpectedResults(projName, results, expectedResults, testExtConfig, requestItems.length);
   if (!isDebugRun) {
     for (const featureTest of featureTestsInRequest) {
       assertExpectedFriendlyCmd(request, projUri, projName, featureTest, expectedResults, testExtConfig, runOptions);

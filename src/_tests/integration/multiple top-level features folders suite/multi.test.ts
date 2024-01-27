@@ -1,6 +1,6 @@
 import { TestProjectRunner } from "../_helpers/runners/projectRunner";
 import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common";
-import { behaveIni, expectationsWithoutBehaveIniPaths, expectationsWithBehaveIniPaths } from "./defaults";
+import { behaveIni, expectations } from "./defaults";
 
 
 // THIS FILE CONTAINS TESTS THAT WE WANT TO RUN FROM ../multi-root suite/index.ts
@@ -15,13 +15,13 @@ suite(`multiple top-level features folders suite`, () => {
 	// NOTE THAT THERE ARE 2 EXPECTATION OBJECTS HERE which correlate to with/without behave.ini 
 
 	test("runAll", async () =>
-		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectationsWithoutBehaveIniPaths));
+		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
-		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectationsWithBehaveIniPaths));
+		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
 
 	test("runAll - parallel", async () => {
-		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectationsWithoutBehaveIniPaths)
+		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations)
 	})
 
 });

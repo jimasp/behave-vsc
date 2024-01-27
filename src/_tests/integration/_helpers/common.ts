@@ -10,14 +10,21 @@ export type RunOptions = {
 export type Expectations = {
   expectedProjectRelativeWorkingDirPath?: string;
   expectedProjectRelativeBaseDirPath: string;
-  expectedProjectRelativeConfigPaths: string[];
   expectedProjectRelativeFeatureFolders: string[];
   expectedProjectRelativeStepsFolders: string[];
   getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts;
   getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[];
 }
 
-export const noBehaveIni = "";
+export type TestBehaveIni = {
+  content: string;
+  expectedRelPaths: string[];
+}
+
+export const noBehaveIni: TestBehaveIni = {
+  content: "",
+  expectedRelPaths: []
+}
 
 export const noRunOptions: RunOptions = {
   selectedRunProfile: undefined

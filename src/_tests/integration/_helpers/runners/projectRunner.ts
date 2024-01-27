@@ -1,7 +1,7 @@
 import { runProject } from './runProject';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { runScenarios } from './runScenarios';
-import { Expectations, RunOptions } from '../common';
+import { TestBehaveIni, Expectations, RunOptions } from '../common';
 import { runPipedFeatures } from './runPipedFeatures';
 import { runFolders } from './runFolders';
 
@@ -10,17 +10,17 @@ import { runFolders } from './runFolders';
 export class TestProjectRunner {
   constructor(readonly projName: string) { }
 
-  runAll = async (twConfig: TestWorkspaceConfig, behaveIniContent: string, runOptions: RunOptions, expectations: Expectations,
+  runAll = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`runAll ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runProject(this.projName, false, twConfig, behaveIniContent, runOptions, expectations, execFriendlyCmd);
+    await runProject(this.projName, false, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  debugAll = async (twConfig: TestWorkspaceConfig, behaveConfig: string, runOptions: RunOptions, expectations: Expectations,
+  debugAll = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`debugAll ${this.projName}: ${JSON.stringify(twConfig)}`);
     // NOTE - if a debug run fails, try removing all breakpoints in both vscode instances     
-    await runProject(this.projName, true, twConfig, behaveConfig, runOptions, expectations, execFriendlyCmd);
+    await runProject(this.projName, true, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
   runFeatureSet = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
@@ -29,9 +29,9 @@ export class TestProjectRunner {
     await runPipedFeatures(this.projName, false, twConfig, runOptions, expectations, execFriendlyCmd);
   }
 
-  runEachFolder = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
+  runAllFolders = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
-    console.log(`runEachFolder ${this.projName}: ${JSON.stringify(twConfig)}`);
+    console.log(`runAllFolders ${this.projName}: ${JSON.stringify(twConfig)}`);
     await runFolders(this.projName, false, twConfig, runOptions, expectations, execFriendlyCmd);
   }
 

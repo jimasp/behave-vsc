@@ -1,7 +1,7 @@
 out
 dist
 node_modules
-.tmp
+*.tmp
 .mypy_cache
 __pycache__
 .vscode-test

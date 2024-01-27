@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { uriId } from '../../../../common/helpers';
@@ -47,52 +48,64 @@ export async function runFolders(projName: string, isDebugRun: boolean,
 
   // ASSERT
 
+  const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
+  const expectedTestRunCount = scenarios.length;
+  assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunCount);
+
+  if (isDebugRun)
+    return;
 
   if (testExtConfig.runParallel) {
+    // run parallel will always run features in parallel (not folders)
     for (const folder of folderItems) {
-      const scenarioDescendentsForThisFolder = folder.descendents.filter(x => x.id.includes(".feature/"));
-      const expectedTestRunCount = scenarioDescendentsForThisFolder.length;
-      assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
-      if (!isDebugRun)
-        assertExpectedFriendlyCmdsForParallel(request, folder.item, projUri, projName, testExtConfig, runOptions);
+      assertExpectedFriendlyCmdsForParallel(request, folder, expectedResults, projUri, projName, testExtConfig, runOptions);
     }
+    return;
   }
-  else {
-    const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
-    const expectedTestRunCount = scenarios.length;
-    assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunCount);
-    if (!isDebugRun)
-      assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, testExtConfig, runOptions);
-  }
+
+  assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, testExtConfig, runOptions);
 
 }
 
 
-function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folder: vscode.TestItem, projUri: vscode.Uri,
-  projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folderItem: FolderItem, expectedResults: TestResult[],
+  projUri: vscode.Uri, projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
   const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
   const pr = createFakeProjRun(testExtConfig, request);
 
-  const relFolderPath = folder.id.replace(uriId(projUri) + "/", "") + "/";
-  if (!relFolderPath)
-    throw new Error(`relFolderPath is undefined for ${folder.id}`);
-  const workDirRelFolderPath = projDirRelativePathToWorkDirRelativePath(pr, relFolderPath);
+  const featuresInFolder = folderItem.descendents.filter(x => x.id.endsWith(".feature"));
+  const expectedResultsFeaturesInFolder = expectedResults.filter(exp =>
+    featuresInFolder.find(f => {
+      const stdPath = standardisePath(f.id, true);
+      return stdPath && exp.test_id && exp.test_id.startsWith(stdPath + "/");
+    }));
 
-  const expectCmdOrderedIncludes = [
-    `cd `,
-    `example-projects`,
-    `${projName}"`,
-    `${workingFolder}`,
-    `${envVarsString}`,
-    `python`,
-    ` -m behave ${tagsString}-i "${workDirRelFolderPath}" `,
-    ` --show-skipped --junit --junit-directory "`,
-    `${projName}"`
-  ];
-  assertLogExists(projUri, expectCmdOrderedIncludes);
+
+  // runParallel runs each feature separately in its own behave instance
+  expectedResultsFeaturesInFolder.forEach(expectedResult => {
+
+    const qi = {
+      test: undefined,
+      scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
+    } as unknown as QueueItem;
+
+    const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
+
+    const expectCmdOrderedIncludes = [
+      `cd `,
+      `example-projects`,
+      `${projName}`,
+      `${workingFolder}`,
+      `${envVarsString}`,
+      `python`,
+      ` -m behave ${tagsString}-i "${featurePathRx}" --show-skipped --junit --junit-directory "`,
+      `${projName}"`
+    ];
+    assertLogExists(projUri, expectCmdOrderedIncludes);
+  });
 
 }
 
@@ -134,14 +147,14 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
 }
 
 
+type FolderItem = {
+  item: vscode.TestItem,
+  descendents: vscode.TestItem[];
+}
+
 function getFolderItems(items: vscode.TestItemCollection, projId: string) {
 
-  type folderItem = {
-    item: vscode.TestItem,
-    descendents: vscode.TestItem[];
-  }
-
-  const folderItems: folderItem[] = [];
+  const folderItems: FolderItem[] = [];
 
   items.forEach((item) => {
     if (item.id.startsWith(projId) && !item.id.endsWith(".feature")) {

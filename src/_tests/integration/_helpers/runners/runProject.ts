@@ -4,7 +4,7 @@ import * as assert from 'assert';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
-import { Expectations, RunOptions, TestResult } from '../common';
+import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../common';
 import { services } from '../../../../services';
 import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun } from "./helpers";
 import {
@@ -45,24 +45,33 @@ import { QueueItem } from '../../../../extension';
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
 export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
-  behaveIniContent: string, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
+  behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   const projUri = getTestProjectUri(projName);
   logStore.clearProjLogs(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
 
+
+  // ARRANGE
+
+  const projId = uriId(projUri);
+  const api = await checkExtensionIsReady();
+  const consoleName = `runProject ${projName}`;
+
+  let runProfile = undefined;
+  if (runOptions.selectedRunProfile)
+    runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+
+
+  // we do this BEFORE we call configurationChangedHandler() to load our test config,
+  // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
+  // would then reload settings.json from disk and replace the test config we are about to load
+  // if (behaveIniContent) {
+  const behaveIniReplaced = await replaceBehaveIni(projUri, workDirUri, behaveIni.content);
+  console.log(`${consoleName}: replaceBehaveIni completed`);
+  //}
+
   try {
-
-    // ARRANGE
-
-    const projId = uriId(projUri);
-    const api = await checkExtensionIsReady();
-    const consoleName = `runProject ${projName}`;
-
-    let runProfile = undefined;
-    if (runOptions.selectedRunProfile)
-      runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-
 
     // ==================== START LOCK SECTION ====================
 
@@ -80,13 +89,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     if (execFriendlyCmd)
       services.config.integrationTestRunUseCpExec[projId] = true;
 
-    // we do this BEFORE we call configurationChangedHandler() to load our test config,
-    // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
-    // would then reload settings.json from disk and replace the test config we are about to load
-    if (behaveIniContent) {
-      await replaceBehaveIni(projName, projUri, workDirUri, behaveIniContent);
-      console.log(`${consoleName}: replaceBehaveIni completed`);
-    }
 
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
     // and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
@@ -98,7 +100,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // 4. if behave ini is restored in the finally block (i.e. if 2 happened)
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-    assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.config, expectations);
+    assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
 
 
     // ACT 1
@@ -156,13 +158,13 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
     // ASSERT 2 (post-run asserts)
 
-    assertExpectedResults(results, expectedResults, testExtConfig);
+    assertExpectedResults(projName, results, expectedResults, testExtConfig);
     if (!isDebugRun)
       assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
   finally {
-    if (behaveIniContent)
-      await restoreBehaveIni(projName, projUri, workDirUri);
+    if (behaveIniReplaced)
+      await restoreBehaveIni(projUri, workDirUri);
   }
 }
 
@@ -191,15 +193,18 @@ function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vsc
     return;
   }
 
+
+  const pr = createFakeProjRun(testExtConfig, request);
+
   // if we got here, then runParallel is set:
-  // runParallel runs each feature separately in its own behave instance
+  // runParallel runs each feature separately in its own behave instance  
   expectedResults.forEach(expectedResult => {
 
     const qi = {
       test: undefined,
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
-    const pr = createFakeProjRun(testExtConfig, request);
+
     const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
 
     const expectCmdOrderedIncludes = [

@@ -1,5 +1,5 @@
 import path = require("path");
-import { Expectations } from "../_helpers/common";
+import { Expectations, TestBehaveIni } from "../_helpers/common";
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
@@ -15,18 +15,26 @@ export const wsParallelConfig = new TestWorkspaceConfig({
 export const expectations: Expectations = {
   expectedProjectRelativeWorkingDirPath: "working folder",
   expectedProjectRelativeBaseDirPath: "working folder/features",
-  expectedProjectRelativeConfigPaths: ["working folder/features"],
   expectedProjectRelativeFeatureFolders: ["working folder/features"],
   expectedProjectRelativeStepsFolders: ["working folder/features/steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
 }
 
-export const behaveIniWithRelPathsSetting = `[behave]\npaths=features`;
+const expectedPaths = ["working folder/features"];
 
+export const behaveIniWithRelPathsSetting: TestBehaveIni = {
+  content: `[behave]\npaths=features`,
+  expectedRelPaths: expectedPaths
+}
 
 const fullPath = path
   .resolve(__dirname, '..', '..', 'example-projects', 'working dir', 'working folder', 'features')
   .replace("/out/_tests/", "/");
 
-export const behaveIniFullPathsSetting = `[behave]\npaths=${fullPath}`;
+export const behaveIniFullPathsSetting: TestBehaveIni = {
+  content: `[behave]\npaths=${fullPath}`,
+  expectedRelPaths: expectedPaths
+}
+
+

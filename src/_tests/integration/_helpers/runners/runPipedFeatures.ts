@@ -70,7 +70,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   // ASSERT  
 
   const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
-  assertExpectedResults(results, expectedResults, testExtConfig, expectedTestRunSize);
+  assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunSize);
   if (!isDebugRun)
     assertExpectedFriendlyCmd(request, skippedFeatureRelPath, projUri, projName, expectedResults, testExtConfig, runOptions);
 
