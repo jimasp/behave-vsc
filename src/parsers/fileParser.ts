@@ -7,7 +7,6 @@ import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureName
 import {
   countTestItemsInCollection, getTestItems, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
   TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes,
-  getShortestCommonPathsExcludingLastPart,
   getProjectSettingsForFile
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
@@ -490,7 +489,7 @@ export class FileParser {
     if (projSettings.projRelativeFeatureFolders.length > 1) {
       sfp = uri.path.substring(projSettings.uri.path.length + 1);
       // test any changes here with the test explorer UI folder tree using example project "sibling steps folder 2"
-      let shortest = getShortestCommonPathsExcludingLastPart(projSettings.projRelativeFeatureFolders);
+      let shortest = this._getShortestCommonPathsExcludingLastPart(projSettings.projRelativeFeatureFolders);
       shortest = shortest.sort((a, b) => a.length - b.length);
       for (const folder of shortest) {
         if (sfp.startsWith(folder + "/")) {
@@ -572,10 +571,31 @@ export class FileParser {
   }
 
 
+  private _getShortestCommonPathsExcludingLastPart(paths: string[]): string[] {
+    const commonPaths: string[] = [];
+
+    // For each path, remove the last part and add it to the commonPaths array
+    for (const path of paths) {
+      const pathParts = path.split('/');
+      pathParts.pop(); // remove the last part
+      const commonPath = pathParts.join('/');
+      if (!commonPaths.includes(commonPath)) {
+        commonPaths.push(commonPath);
+      }
+    }
+
+    return commonPaths;
+  }
+
+
+
   parseIsActiveForProject(projUri: vscode.Uri) {
     if (!services.config.isIntegrationTestRun)
       throw new Error("parseIsActiveForProject() is only for integration test support");
     return !this._finishedParseForProject[projUri.path];
   }
 
+
+
 }
+

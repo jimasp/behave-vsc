@@ -6,16 +6,16 @@ import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  //getLongestCommonPaths,
   findFilesSync,
   getStepsDir,
-  getActualWorkspaceSetting
+  getActualWorkspaceSetting,
+  getShortestCommonPaths
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
 import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
 import { services } from '../services';
-import { projDirRelativePathToWorkDirRelativePath } from '../runners/helpers';
+
 
 
 export type EnvSetting = { [key: string]: string };
@@ -371,7 +371,7 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, workUri: vscode.U
   relFeatureFolders = relFeatureFolders.filter(f => f !== "" && f !== projRelativeWorkingDirPath);
 
   /* 
-  we want the shortest common paths at one level below the working folder, for example:
+  we want the shortest common relative paths, for example:
     my_project
     └── tests
         ├── pytest
@@ -387,24 +387,15 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, workUri: vscode.U
     "tests/features"
     "tests/features2"
   */
-  const relfeaturePaths: string[] = [];
-  for (const relFeatureFolder of relFeatureFolders) {
-    const relFeatureFolderParent = path.dirname(relFeatureFolder);
-    if (relFeatureFolderParent === "." || relFeatureFolderParent === projRelativeWorkingDirPath) {
-      relfeaturePaths.push(relFeatureFolder);
-    }
-  }
-
-  // let longestCommonPaths = getLongestCommonPaths(relFeatureFolders, projRelativeWorkingDirPath);
-  // longestCommonPaths = longestCommonPaths.filter(p => p !== "");
+  const relFeaturePaths = getShortestCommonPaths(relFeatureFolders);
 
   // default to watching for features path
-  if (relfeaturePaths.length === 0)
-    relfeaturePaths.push("features");
+  if (relFeaturePaths.length === 0)
+    relFeaturePaths.push("features");
 
   xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
 
-  return relfeaturePaths;
+  return relFeaturePaths;
 }
 
 

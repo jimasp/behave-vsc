@@ -368,42 +368,36 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 }
 
 
-// export function getLongestCommonPaths(projRelativeWorkingDirPath: string, paths: string[]): string[] {
-//   if (paths.length === 0)
-//     return [];
+export function getLongestCommonPaths(paths: string[], projRelativeWorkingDirPath: string): string[] {
+  if (paths.length === 0)
+    return [];
 
-//   const commonPaths: string[] = [paths[0]];
-//   let matched = false;
+  const commonPaths: string[] = [paths[0]];
+  let matched = false;
 
-//   for (const path of paths) {
-//     matched = false;
-//     for (const cfp of commonPaths) {
-//       if (path.startsWith(cfp + "/") || path === cfp)
-//         matched = true;
-//     }
-//     if (matched)
-//       continue;
-//     commonPaths.push(path);
-//   }
-
-//   return commonPaths;
-// }
-
-
-export function getShortestCommonPathsExcludingLastPart(paths: string[]): string[] {
-  const commonPaths: string[] = [];
-
-  // For each path, remove the last part and add it to the commonPaths array
   for (const path of paths) {
-    const pathParts = path.split('/');
-    pathParts.pop(); // remove the last part
-    const commonPath = pathParts.join('/');
-    if (!commonPaths.includes(commonPath)) {
-      commonPaths.push(commonPath);
+    matched = false;
+    for (const cfp of commonPaths) {
+      if (path.startsWith(cfp + "/") || path === cfp)
+        matched = true;
     }
+    if (matched)
+      continue;
+    commonPaths.push(path);
   }
 
   return commonPaths;
+}
+
+
+export function getShortestCommonPaths(paths: string[]): string[] {
+  const splitPaths = paths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
+  const shortPaths: string[][] = [];
+  for (const path of splitPaths) {
+    if (!shortPaths.some(sp => (path.join("/") + "/").startsWith(sp.join('/') + "/")))
+      shortPaths.push(path);
+  }
+  return shortPaths.map(result => result.join('/'));
 }
 
 

@@ -110,7 +110,7 @@ export const getExpectedResults = (): TestResult[] => {
     }),
 
     new TestResult({
-      scenario_featureFileRelativePath: 'behave tests/some tests/outline_mixed.feature',
+      scenario_featureFileRelativePath: 'subfolder/features/outline_mixed.feature',
       scenario_featureName: 'Mixed outline',
       scenario_getLabel: 'Blenders Success paramless',
       scenario_isOutline: true,
