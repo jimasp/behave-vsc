@@ -30,5 +30,5 @@ export const expectations: Expectations = {
 
 export const behaveIni: TestBehaveIni = {
   content: `[behave]\npaths=behave tests/some tests`,
-  expectedRelPaths: ["behave tests/some tests"]
+  expectedProjRelPaths: ["behave tests/some tests"]
 }

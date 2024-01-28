@@ -13,7 +13,7 @@ import {
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
-import { getProjectRelativeBehaveConfigPaths } from './behaveConfig';
+import { getBehaveConfigPaths } from './behaveConfig';
 import { services } from '../services';
 
 
@@ -96,9 +96,10 @@ export class ProjectSettings {
   public readonly name: string;
   public readonly uri: vscode.Uri;
   public readonly workingDirUri: vscode.Uri;
+  public readonly rawBehaveConfigPaths: string[] = [];
+  public readonly projRelativeBehaveConfigPaths: string[] = [];
   public readonly projRelativeWorkingDirPath: string = "";
   public readonly projRelativeBaseDirPath: string = "";
-  public readonly projRelativeConfigPaths: string[] = [];
   public readonly projRelativeFeatureFolders: string[] = [];
   public readonly projRelativeStepsFolders: string[] = [];
   // integration test only
@@ -171,15 +172,16 @@ export class ProjectSettings {
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
 
 
-    const projRelPaths = getProjectRelativePaths(projUri, this.workingDirUri, this.importedSteps, this.name, this.projRelativeWorkingDirPath);
+    const projRelPaths = getPaths(projUri, this.workingDirUri, this.importedSteps, this.name, this.projRelativeWorkingDirPath);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
       return;
     }
 
+    this.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
+    this.projRelativeBehaveConfigPaths = projRelPaths.projRelBehaveConfigPaths;
     this.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
-    this.projRelativeConfigPaths = projRelPaths.projRelConfigPaths;
     this.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
     this.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
 
@@ -262,15 +264,18 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 
-function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
+function getPaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
   projRelativeWorkingDirPath: string) {
 
-  const projRelConfigPaths = getProjectRelativeBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
+  const behaveConfigPaths = getBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
+  const projRelBehaveConfigPaths = behaveConfigPaths.projectRelativePaths;
+  const rawBehaveConfigPaths = behaveConfigPaths.originalPaths;
+
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
   // and it is also used to determine the steps folder (below)
-  const projRelBaseDirPath = getRelativeBaseDirPath(projUri, projName, projRelativeWorkingDirPath, projRelConfigPaths);
+  const projRelBaseDirPath = getRelativeBaseDirPath(projUri, projName, projRelativeWorkingDirPath, projRelBehaveConfigPaths);
   if (projRelBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
@@ -293,11 +298,12 @@ function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, impor
       projRelStepsFolders.push(stepsFolder);
   }
 
-  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelativeWorkingDirPath, projRelConfigPaths);
+  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelativeWorkingDirPath, projRelBehaveConfigPaths);
 
   return {
     // for consistency, these are all project-relative
-    projRelConfigPaths,
+    rawBehaveConfigPaths,
+    projRelBehaveConfigPaths,
     projRelBaseDirPath,
     projRelFeatureFolders,
     projRelStepsFolders
@@ -384,12 +390,15 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, projRelWorkingDir
   */
   const featureFiles = findFilesSync(projUri, undefined, ".feature");
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
-  let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
-  // ignore any .feature files in the root of the project/working folder, i.e. outside of a features folder
-  relFeatureFolders = relFeatureFolders.filter(f => f !== "" && f !== projRelWorkingDirPath);
-  const relFeaturePaths = getSmallestSetOfLongestCommonRelativePaths(relFeatureFolders);
+  const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 
-  // default to watching for features path
+  // if root ("") not included (i.e. no .feature file found in project root), then 
+  // optimise to longest common paths (for filewatchers)
+  const relFeaturePaths = relFeatureFolders.includes("")
+    ? [""]
+    : getSmallestSetOfLongestCommonRelativePaths(relFeatureFolders);
+
+  // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)
     relFeaturePaths.push("features");
 

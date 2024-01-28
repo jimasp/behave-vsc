@@ -370,7 +370,7 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 
 export function getSmallestSetOfLongestCommonRelativePaths(relativePaths: string[]): string[] {
   // gets the smallest set of longest paths that contain all paths
-  // (see unit tests for examples)
+  // (see unit tests for examples)  
   const splitPaths = relativePaths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
   const shortPaths: string[][] = [];
   for (const path of splitPaths) {

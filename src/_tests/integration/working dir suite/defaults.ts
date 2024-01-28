@@ -25,7 +25,7 @@ const expectedPaths = ["working folder/features"];
 
 export const behaveIniWithRelPathsSetting: TestBehaveIni = {
   content: `[behave]\npaths=features`,
-  expectedRelPaths: expectedPaths
+  expectedProjRelPaths: expectedPaths
 }
 
 const fullPath = path
@@ -34,7 +34,7 @@ const fullPath = path
 
 export const behaveIniFullPathsSetting: TestBehaveIni = {
   content: `[behave]\npaths=${fullPath}`,
-  expectedRelPaths: expectedPaths
+  expectedProjRelPaths: expectedPaths
 }
 
 

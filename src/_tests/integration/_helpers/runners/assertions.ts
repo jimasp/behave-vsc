@@ -48,7 +48,7 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
     `${projName} project: relativeStepsFolders`);
   assert.strictEqual(projSettings.projRelativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
     `${projName} project: relativeBaseDirPath`);
-  assert.deepStrictEqual(projSettings.projRelativeConfigPaths, behaveIni.expectedRelPaths,
+  assert.deepStrictEqual(projSettings.projRelativeBehaveConfigPaths, behaveIni.expectedProjRelPaths,
     `${projName} project: relativeConfigPaths`);
   assert.strictEqual(projSettings.projRelativeWorkingDirPath, expectations.expectedProjectRelativeWorkingDirPath,
     `${projName} project: relativeWorkingDirPath`);

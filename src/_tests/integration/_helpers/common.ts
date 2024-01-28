@@ -18,12 +18,12 @@ export type Expectations = {
 
 export type TestBehaveIni = {
   content: string;
-  expectedRelPaths: string[];
+  expectedProjRelPaths: string[];
 }
 
 export const noBehaveIni: TestBehaveIni = {
   content: "",
-  expectedRelPaths: []
+  expectedProjRelPaths: []
 }
 
 export const noRunOptions: RunOptions = {

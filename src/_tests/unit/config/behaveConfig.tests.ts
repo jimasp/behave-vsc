@@ -3,13 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
-import { getProjectRelativeBehaveConfigPaths } from '../../../config/behaveConfig';
+import { getBehaveConfigPaths } from '../../../config/behaveConfig';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE, rndNumeric } from '../../../common/helpers';
 import { services } from '../../../services';
 
 
 
-suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
+suite("getBehaveConfigPaths - basic paths checks", () => {
   let sandbox: sinon.SinonSandbox;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let logger: any;
@@ -29,6 +29,24 @@ suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
   const workDirUris = [projUri, vscode.Uri.file(projUri.fsPath + "/working")];
 
   for (const workDirUri of workDirUris) {
+
+    test(`should return project-relative feature path when behave.ini contains a "." and workingDirUri is "${workDirUri}`, () => {
+      // [behave]
+      // paths=/home/me/project/features
+      const projUri = vscode.Uri.file("/home/me/project");
+      const fileContent = `[behave]\npaths=.\n`;
+      sandbox.stub(fs, 'existsSync').returns(true);
+      sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
+      sandbox.stub(fs, 'readFileSync').returns(fileContent);
+      const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      const resPaths = [path.join(workDirRelPath, "features")];
+      const resPathsText = `"${resPaths.join('", "')}"`;
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
+    });
+
+
     test(`should return project-relative feature path when behave.ini contains a relative path and workingDirUri is "${workDirUri}`, () => {
       // [behave]
       // paths=/home/me/project/features
@@ -37,10 +55,10 @@ suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
       sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
       const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
-      const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
       const resPaths = [path.join(workDirRelPath, "features")];
       const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result, resPaths);
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
     });
 
@@ -52,10 +70,10 @@ suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
       sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
       const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
-      const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
       const resPaths = [path.join(workDirRelPath, "features")];
       const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result, resPaths);
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
     });
   }
@@ -63,7 +81,7 @@ suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
 });
 
 
-suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
+suite("getBehaveConfigPaths - more path checks", () => {
   let sandbox: sinon.SinonSandbox;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let logger: any;
@@ -113,8 +131,8 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
 
     test(`should return empty array when no behave config file found, params: ${p}`, () => {
       sandbox.stub(fs, 'existsSync').returns(false);
-      const result = getProjectRelativeBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
-      assert.deepStrictEqual(result, []);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      assert.deepStrictEqual(result.projectRelativePaths, []);
       assert(logger.logInfo.calledOnceWithExactly('No Behave config file found, using default paths.', p.projUri));
     });
 
@@ -125,8 +143,8 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
       const fileContent = '[behave ]\n paths  =features\n';
       sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const result = getProjectRelativeBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
-      assert.deepStrictEqual(result, []);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      assert.deepStrictEqual(result.projectRelativePaths, []);
       assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', p.projUri));
     });
 
@@ -138,8 +156,8 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
       const filePath = path.join(p.workDirUri.fsPath, "tox.ini");
       sandbox.stub(fs, 'existsSync').withArgs(filePath).returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const result = getProjectRelativeBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
-      assert.deepStrictEqual(result, []);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      assert.deepStrictEqual(result.projectRelativePaths, []);
       assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" did not set paths, using default paths.', p.projUri));
     });
 
@@ -149,10 +167,10 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
       const fileContent = '[behave]\n  paths = ./features\n';
       sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const result = getProjectRelativeBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
       const resPaths = [path.join(p.workDirRelPath, "features")];
       const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result, resPaths);
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, p.projUri));
     });
 
@@ -168,10 +186,10 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
         .withArgs(path.join(p.workDirUri.fsPath, "features")).returns(true)
         .withArgs(path.join(p.workDirUri.fsPath, "features2")).returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const result = getProjectRelativeBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
       const resPaths = [path.join(p.workDirRelPath, "features"), path.join(p.workDirRelPath, "features2")];
       const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result, resPaths);
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "setup.cfg" sets project-relative paths: ${resPathsText}`, p.projUri));
     });
 
@@ -179,7 +197,7 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
 
 
 
-  suite(`getProjectRelativeBehaveConfigPaths - file order-of-precedence checks`, () => {
+  suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
     let sandbox: sinon.SinonSandbox;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let logger: any;
@@ -218,8 +236,8 @@ suite("getProjectRelativeBehaveConfigPaths - more path checks", () => {
           fsExistsStub.withArgs(path.join(workDirUri.fsPath, file)).returns(true);
         }
 
-        const result = getProjectRelativeBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
-        assert.deepStrictEqual(result, resPaths);
+        const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+        assert.deepStrictEqual(result.projectRelativePaths, resPaths);
         assert(logger.logInfo.calledOnceWithExactly(`Behave config file "${filesPresent[0]}" sets project-relative paths: ${resPathsText}`, projUri));
 
       });

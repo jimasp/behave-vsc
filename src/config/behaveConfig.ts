@@ -5,8 +5,10 @@ import { BEHAVE_CONFIG_FILES_PRECEDENCE } from "../common/helpers";
 import { services } from '../services';
 
 
-export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri,
-  projRelativeWorkDirPath: string): string[] {
+
+
+export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri,
+  projRelativeWorkDirPath: string) {
 
   let paths: string[] | null = null;
 
@@ -34,12 +36,12 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workDir
 
   if (!lastExistingConfigFile) {
     services.logger.logInfo(`No Behave config file found, using default paths.`, projUri);
-    return [];
+    return { projectRelativePaths: [], originalPaths: [] };
   }
 
   if (!paths) {
     services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, projUri);
-    return [];
+    return { projectRelativePaths: [], originalPaths: [] };
   }
 
   const relPaths: string[] = [];
@@ -49,18 +51,31 @@ export function getProjectRelativeBehaveConfigPaths(projUri: vscode.Uri, workDir
     // b) absolute paths (that includes the working directory path),
     // c) a combination of both 
     // we need to convert them all to project-relative paths, then check they exist
-    const workingRelPath = biniPath.replace(workDirUri.fsPath + "/", "");
+
+    const rx = new RegExp(`^${workDirUri.fsPath}/?`);
+    const workingRelPath = biniPath.replace(rx, "");
     const projectRelPath = path.join(projRelativeWorkDirPath, workingRelPath);
 
-    if (!fs.existsSync(vscode.Uri.joinPath(projUri, projectRelPath).fsPath))
+    const fsPath = vscode.Uri.joinPath(projUri, projectRelPath).fsPath;
+    if (!fs.existsSync(fsPath)) {
       services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
-    else
+    }
+    else {
+      if (!fs.statSync(fsPath).isDirectory()) {
+        services.logger.showWarn(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
+        continue;
+      }
       relPaths.push(projectRelPath);
+    }
   }
 
   const outPaths = relPaths.map(p => `"${p}"`).join(", ");
   services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ${outPaths}`, projUri);
-  return relPaths;
+
+  return {
+    projectRelativePaths: relPaths,
+    originalPaths: paths
+  };
 }
 
 
