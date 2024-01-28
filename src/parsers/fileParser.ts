@@ -6,8 +6,9 @@ import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
   countTestItemsInCollection, getTestItems, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
-  TestCounts, findFiles, getContentFromFilesystem, getFeaturesFolderUriForFeatureFileUri, deleteTestTreeNodes,
-  getProjectSettingsForFile
+  TestCounts, findFiles, getContentFromFilesystem, deleteTestTreeNodes,
+  getProjectSettingsForFile,
+  getFeatureNodePath,
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
@@ -16,6 +17,7 @@ import {
   clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile,
   deleteStepsAndStepMappingsForFeatureFile
 } from './stepMappings';
+
 
 
 // for integration test assertions      
@@ -485,28 +487,12 @@ export class FileParser {
     let parent: vscode.TestItem | undefined = undefined;
     let current: vscode.TestItem | undefined;
 
-    let sfp = "";
-    if (projSettings.projRelativeFeatureFolders.length > 1) {
-      sfp = uri.path.substring(projSettings.uri.path.length + 1);
-      // test any changes here with the test explorer UI folder tree using example project "sibling steps folder 2"
-      let shortest = this._getShortestCommonPathsExcludingLastPart(projSettings.projRelativeFeatureFolders);
-      shortest = shortest.sort((a, b) => a.length - b.length);
-      for (const folder of shortest) {
-        if (sfp.startsWith(folder + "/")) {
-          sfp = sfp.substring(folder.length + 1);
-          break;
-        }
-      }
-    }
-    else {
-      const fullFeaturesPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;
-      if (fullFeaturesPath)
-        sfp = uri.path.substring(fullFeaturesPath.length + 1);
-    }
+    const nodePath = getFeatureNodePath(uri, projSettings);
 
-    if (sfp.includes("/")) {
+    // if not a "root" (of the features path) feature, create parent folder nodes
+    if (nodePath.includes("/")) {
 
-      const folders = sfp.split("/").slice(0, -1);
+      const folders = nodePath.split("/").slice(0, -1);
       for (let folderNo = 0; folderNo < folders.length; folderNo++) {
         const path = folders.slice(0, folderNo + 1).join("/");
         const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon
@@ -571,31 +557,12 @@ export class FileParser {
   }
 
 
-  private _getShortestCommonPathsExcludingLastPart(paths: string[]): string[] {
-    const commonPaths: string[] = [];
-
-    // For each path, remove the last part and add it to the commonPaths array
-    for (const path of paths) {
-      const pathParts = path.split('/');
-      pathParts.pop(); // remove the last part
-      const commonPath = pathParts.join('/');
-      if (!commonPaths.includes(commonPath)) {
-        commonPaths.push(commonPath);
-      }
-    }
-
-    return commonPaths;
-  }
-
-
-
   parseIsActiveForProject(projUri: vscode.Uri) {
     if (!services.config.isIntegrationTestRun)
       throw new Error("parseIsActiveForProject() is only for integration test support");
     return !this._finishedParseForProject[projUri.path];
   }
 
-
-
 }
+
 

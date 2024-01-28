@@ -1,31 +1,13 @@
-import * as cp from 'child_process';
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
-import { getProjectRelativeBehaveConfigPaths } from '../../config/behaveConfig';
-import { BEHAVE_CONFIG_FILES_PRECEDENCE, rndNumeric } from '../../common/helpers';
-import { services } from '../../services';
+import { getProjectRelativeBehaveConfigPaths } from '../../../config/behaveConfig';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE, rndNumeric } from '../../../common/helpers';
+import { services } from '../../../services';
 
 
-suite("temp", () => {
-  let result = "";
-  try {
-    result = cp.execSync('cd "/home/jim/source/behave-vsc-hotfix/example-projects/project B"\n"/home/jim/.asdf/shims/python3" -m behave -i "features/special_characters.feature$" -n "^run a successful rx scenario \\= \\\\$\\\\$\\$" --show-skipped --junit --junit-directory "/tmp/behave-vsc/junit/599762/project B"',
-      {
-        encoding: 'utf-8',
-        cwd: ".",
-        env: { ...process.env, ...{ BEHAVE_VSC_TEST_RUN: "1" } },
-      });
-    console.log(result);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  catch (e: any) {
-    if (!e.stdout.includes("Took"))
-      throw e;
-  }
-});
 
 suite("getProjectRelativeBehaveConfigPaths - basic paths checks", () => {
   let sandbox: sinon.SinonSandbox;

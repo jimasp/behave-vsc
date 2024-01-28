@@ -368,36 +368,40 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 }
 
 
-export function getLongestCommonPaths(paths: string[], projRelativeWorkingDirPath: string): string[] {
-  if (paths.length === 0)
-    return [];
-
-  const commonPaths: string[] = [paths[0]];
-  let matched = false;
-
-  for (const path of paths) {
-    matched = false;
-    for (const cfp of commonPaths) {
-      if (path.startsWith(cfp + "/") || path === cfp)
-        matched = true;
-    }
-    if (matched)
-      continue;
-    commonPaths.push(path);
-  }
-
-  return commonPaths;
-}
-
-
-export function getShortestCommonPaths(paths: string[]): string[] {
-  const splitPaths = paths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
+export function getSmallestSetOfLongestCommonRelativePaths(relativePaths: string[]): string[] {
+  // gets the smallest set of longest paths that contain all paths
+  // (see unit tests for examples)
+  const splitPaths = relativePaths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
   const shortPaths: string[][] = [];
   for (const path of splitPaths) {
     if (!shortPaths.some(sp => (path.join("/") + "/").startsWith(sp.join('/') + "/")))
       shortPaths.push(path);
   }
-  return shortPaths.map(result => result.join('/'));
+  return shortPaths.map(result => result.join('/')).sort((a, b) => a.localeCompare(b));
+}
+
+
+export function getFeatureNodePath(uri: vscode.Uri, projSettings: ProjectSettings) {
+  let stripPath: string | undefined = undefined;
+
+  let nodePath = uri.path.substring(projSettings.uri.path.length + 1);
+
+  const projRelativeFeatureFolders = projSettings.projRelativeFeatureFolders;
+
+  if (projRelativeFeatureFolders.length > 1) {
+    const topProjectNodes = [...new Set(projRelativeFeatureFolders.map(f => f.split("/")[0]))];
+    if (topProjectNodes.length === 1) {
+      stripPath = projSettings.uri.path + "/" + topProjectNodes[0];
+      console.log(stripPath);
+    }
+  }
+  else {
+    stripPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;
+  }
+
+  if (stripPath)
+    nodePath = uri.path.substring(stripPath.length + 1);
+  return nodePath;
 }
 
 

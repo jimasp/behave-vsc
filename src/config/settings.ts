@@ -9,7 +9,7 @@ import {
   findFilesSync,
   getStepsDir,
   getActualWorkspaceSetting,
-  getShortestCommonPaths
+  getSmallestSetOfLongestCommonRelativePaths
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -293,7 +293,7 @@ function getProjectRelativePaths(projUri: vscode.Uri, workUri: vscode.Uri, impor
       projRelStepsFolders.push(stepsFolder);
   }
 
-  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, workUri, projRelativeWorkingDirPath, projRelConfigPaths);
+  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelativeWorkingDirPath, projRelConfigPaths);
 
   return {
     // for consistency, these are all project-relative
@@ -356,22 +356,17 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelat
 }
 
 
-function getProjectRelativeFeatureFolders(projUri: vscode.Uri, workUri: vscode.Uri,
-  projRelativeWorkingDirPath: string, relativeConfigPaths: string[]): string[] {
+function getProjectRelativeFeatureFolders(projUri: vscode.Uri, projRelWorkingDirPath: string, relativeConfigPaths: string[]): string[] {
+  const start = performance.now();
 
-  // if paths specifically set, and not set to root path, skip gathering feature paths
+  // if paths specifically set in behave.ini, and not set to root path, skip gathering feature paths and use those
   if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes("."))
     return relativeConfigPaths;
 
-  const start = performance.now();
-  const featureFiles = findFilesSync(projUri, undefined, ".feature");
-  const featureFolders = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
-  let relFeatureFolders = featureFolders.map(folder => path.relative(projUri.fsPath, folder));
-  // ignore any .feature files in the root of the project/working folder
-  relFeatureFolders = relFeatureFolders.filter(f => f !== "" && f !== projRelativeWorkingDirPath);
-
   /* 
-  we want the shortest common relative paths, for example:
+  we want the smallest set of longest feature folder paths that contain all other feature folder paths,
+  e.g. this structure:
+
     my_project
     └── tests
         ├── pytest
@@ -387,7 +382,12 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, workUri: vscode.U
     "tests/features"
     "tests/features2"
   */
-  const relFeaturePaths = getShortestCommonPaths(relFeatureFolders);
+  const featureFiles = findFilesSync(projUri, undefined, ".feature");
+  const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
+  let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
+  // ignore any .feature files in the root of the project/working folder, i.e. outside of a features folder
+  relFeatureFolders = relFeatureFolders.filter(f => f !== "" && f !== projRelWorkingDirPath);
+  const relFeaturePaths = getSmallestSetOfLongestCommonRelativePaths(relFeatureFolders);
 
   // default to watching for features path
   if (relFeaturePaths.length === 0)
