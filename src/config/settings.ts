@@ -91,17 +91,17 @@ export class ProjectSettings {
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly importedSteps: ImportedSteps = [];
+  public readonly projRelativeWorkingDirPath: string = ""; // "relativeWorkingDir" in settings.json
   // calculated
-  public readonly id: string;
-  public readonly name: string;
-  public readonly uri: vscode.Uri;
-  public readonly workingDirUri: vscode.Uri;
-  public readonly rawBehaveConfigPaths: string[] = [];
-  public readonly projRelativeBehaveConfigPaths: string[] = [];
-  public readonly projRelativeWorkingDirPath: string = "";
-  public readonly projRelativeBaseDirPath: string = "";
-  public readonly projRelativeFeatureFolders: string[] = [];
-  public readonly projRelativeStepsFolders: string[] = [];
+  public readonly id: string; // project id (unique)
+  public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
+  public readonly uri: vscode.Uri; // project directory in uri form
+  public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
+  public readonly rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
+  public readonly projRelativeBehaveConfigPaths: string[] = []; // behave.ini config paths in project-relative form
+  public readonly projRelativeFeatureFolders: string[] = []; // all folders in the project where a .feature is found
+  public readonly projRelativeBaseDirPath: string = ""; // directory that contains "steps" folder/environment.py file
+  public readonly projRelativeStepsFolders: string[] = []; // the folder containing the steps files
   // integration test only
   public readonly integrationTestRunUseCpExec = false;
 
