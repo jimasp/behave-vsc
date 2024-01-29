@@ -353,7 +353,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelat
     }
     else {
       services.logger.showWarn(`Could not find "${steps_dir}" directory for project "${projName}". ` +
-        `Using behave configuration path "${relativeBaseDir}"`, projUri);
+        `Using the first behave configuration paths value "${new_base_dir}"`, projUri);
     }
     return null;
   }

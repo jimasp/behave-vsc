@@ -44,7 +44,7 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     return { projectRelativePaths: [], originalPaths: [] };
   }
 
-  const relPaths: string[] = [];
+  let relPaths: string[] = [];
   for (const biniPath of paths) {
     // the behave config "paths" setting may be either:
     // a) working-directory-relative paths,
@@ -62,7 +62,7 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     }
 
     // for consistency with behaviour elsewhere (including path.relative())
-    if (projectRelPath === ".")
+    if (projectRelPath === "." || projectRelPath === "./")
       projectRelPath = "";
 
     const fsPath = vscode.Uri.joinPath(projUri, projectRelPath).fsPath;
@@ -78,8 +78,11 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     }
   }
 
-  const outPaths = relPaths.map(p => `"${p}"`).join(", ");
-  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ${outPaths}`, projUri);
+  // remove duplicates and sort
+  relPaths = [...new Set(relPaths)].sort((a, b) => a.localeCompare(b));
+
+  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
+    `${relPaths.map(p => `"${p}"`).join(", ")}`, projUri);
 
   return {
     projectRelativePaths: relPaths,
