@@ -9,7 +9,7 @@ import {
   findFilesSync,
   getStepsDir,
   getActualWorkspaceSetting,
-  getSmallestSetOfLongestCommonRelativePaths
+  getWatcherOptimisedPaths
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -392,11 +392,8 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, projRelWorkingDir
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
   const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 
-  // if root ("") not included (i.e. no .feature file found in project root), then 
   // optimise to longest common paths (for filewatchers)
-  const relFeaturePaths = relFeatureFolders.includes("")
-    ? [""]
-    : getSmallestSetOfLongestCommonRelativePaths(relFeatureFolders);
+  const relFeaturePaths = getWatcherOptimisedPaths(relFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)

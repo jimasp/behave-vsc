@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { services } from '../../../services';
-import { getFeatureNodePath, getSmallestSetOfLongestCommonRelativePaths } from '../../../common/helpers';
+import { getFeatureNodePath, getWatcherOptimisedPaths } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
 
 suite("getLongestCommonPathsFromRelativePaths", () => {
@@ -22,8 +22,45 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
   });
 
 
-  test(`should return expected paths set 1`, () => {
+  test(`should return "" for ""`, () => {
+    const paths = [""];
+    const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
+    const result = getWatcherOptimisedPaths(randomOrderedPaths);
 
+    // smallest set of longest paths that contain all paths
+    const expected = [""];
+    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
+  });
+
+  test(`should return "" if "" is included as any path`, () => {
+    const paths = ["", "a", "b", "c"];
+    const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
+    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+
+    // smallest set of longest paths that contain all paths
+    const expected = [""];
+    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
+  });
+
+
+  test(`should return expected paths set 2`, () => {
+    const paths = [
+      'working folder',
+      'working folder/features',
+      'working folder/features/sub1',
+      'working folder/features/sub1/sub2'
+    ];
+
+    const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
+    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+
+    // smallest set of longest paths that contain all paths
+    const expected = ["working folder"];
+    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
+  });
+
+
+  test(`should return expected paths set 3`, () => {
     const paths = [
       "tests/features",
       "tests/features/db",
@@ -40,8 +77,7 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
     ];
 
     const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
-
-    const result = getSmallestSetOfLongestCommonRelativePaths(randomOrderedPaths);
+    const result = getWatcherOptimisedPaths(randomOrderedPaths);
 
     // smallest set of longest paths that contain all paths
     const expected = [
@@ -50,10 +86,9 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
       "tests/subdir/features",
       "tests/subdir/features2",
     ];
-
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
-
   });
+
 
 });
 
