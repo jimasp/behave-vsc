@@ -54,7 +54,16 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
 
     const rx = new RegExp(`^${workDirUri.fsPath}/?`);
     const workingRelPath = biniPath.replace(rx, "");
-    const projectRelPath = path.join(projRelativeWorkDirPath, workingRelPath);
+    let projectRelPath = path.join(projRelativeWorkDirPath, workingRelPath);
+
+    if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
+      services.logger.showWarn(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, projUri);
+      continue;
+    }
+
+    // for consistency with behaviour elsewhere (including path.relative())
+    if (projectRelPath === ".")
+      projectRelPath = "";
 
     const fsPath = vscode.Uri.joinPath(projUri, projectRelPath).fsPath;
     if (!fs.existsSync(fsPath)) {

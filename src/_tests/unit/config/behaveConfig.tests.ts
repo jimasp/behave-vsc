@@ -19,6 +19,8 @@ suite("getBehaveConfigPaths - basic paths checks", () => {
     sandbox = sinon.createSandbox();
     logger = { logInfo: sandbox.stub() };
     services.logger = logger;
+    sandbox.stub(fs, 'existsSync').returns(true);
+    sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
   });
 
   teardown(() => {
@@ -26,35 +28,56 @@ suite("getBehaveConfigPaths - basic paths checks", () => {
     logger.logInfo.resetHistory();
   });
 
-  const workDirUris = [projUri, vscode.Uri.file(projUri.fsPath + "/working")];
+  const workDirUris = [
+    projUri,
+    vscode.Uri.file(projUri.fsPath + "/working")
+  ];
 
   for (const workDirUri of workDirUris) {
+
+
 
     test(`should return project-relative feature path when behave.ini contains a "." and workingDirUri is "${workDirUri}`, () => {
       // [behave]
       // paths=/home/me/project/features
       const projUri = vscode.Uri.file("/home/me/project");
       const fileContent = `[behave]\npaths=.\n`;
-      sandbox.stub(fs, 'existsSync').returns(true);
-      sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
+      // sandbox.stub(fs, 'existsSync').returns(true);
+      // sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
-      const resPaths = [path.join(workDirRelPath, "features")];
+      const resPaths = workDirRelPath === "" ? [""] : [workDirRelPath];
       const resPathsText = `"${resPaths.join('", "')}"`;
       assert.deepStrictEqual(result.projectRelativePaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
     });
 
 
+    test(`should return project-relative feature path when behave.ini contains "./features" and workingDirUri is "${workDirUri}`, () => {
+      // [behave]
+      // paths=/home/me/project/features
+      const projUri = vscode.Uri.file("/home/me/project");
+      const fileContent = `[behave]\npaths=./features\n`;
+      // sandbox.stub(fs, 'existsSync').returns(true);
+      // sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
+      sandbox.stub(fs, 'readFileSync').returns(fileContent);
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      const resPaths = [path.join(workDirRelPath, "./features")];
+      const resPathsText = `"${resPaths.join('", "')}"`;
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
+    });
+
     test(`should return project-relative feature path when behave.ini contains a relative path and workingDirUri is "${workDirUri}`, () => {
       // [behave]
       // paths=/home/me/project/features
 
       const fileContent = '[behave]\npaths=features\n';
-      sandbox.stub(fs, 'existsSync').returns(true);
+      // sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
       const resPaths = [path.join(workDirRelPath, "features")];
       const resPathsText = `"${resPaths.join('", "')}"`;
@@ -67,9 +90,9 @@ suite("getBehaveConfigPaths - basic paths checks", () => {
       // paths=/home/me/project/features
       const projUri = vscode.Uri.file("/home/me/project");
       const fileContent = `[behave]\npaths=${workDirUri.fsPath}/features\n`;
-      sandbox.stub(fs, 'existsSync').returns(true);
+      // sandbox.stub(fs, 'existsSync').returns(true);
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
       const resPaths = [path.join(workDirRelPath, "features")];
       const resPathsText = `"${resPaths.join('", "')}"`;
@@ -109,7 +132,7 @@ suite("getBehaveConfigPaths - more path checks", () => {
       const workDirUri = i === 0
         ? vscode.Uri.file(projUri.fsPath + "/" + rndNumeric())
         : vscode.Uri.file(projUri.fsPath);
-      const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath, "").replace(/^\//, "");
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       params.push(new Params(projUri, workDirUri, workDirRelPath));
     }
     return params;
@@ -122,12 +145,15 @@ suite("getBehaveConfigPaths - more path checks", () => {
       sandbox = sinon.createSandbox();
       logger = { logInfo: sandbox.stub() };
       services.logger = logger;
+      if (!(fs.statSync as any)['isSinonProxy'])
+        sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
     });
 
     teardown(() => {
       sandbox.restore();
       logger.logInfo.resetHistory();
     });
+
 
     test(`should return empty array when no behave config file found, params: ${p}`, () => {
       sandbox.stub(fs, 'existsSync').returns(false);
@@ -147,7 +173,6 @@ suite("getBehaveConfigPaths - more path checks", () => {
       assert.deepStrictEqual(result.projectRelativePaths, []);
       assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', p.projUri));
     });
-
 
     test(`should return empty array when paths is empty, params: ${p}`, () => {
       // [behave]
@@ -218,6 +243,7 @@ suite("getBehaveConfigPaths - more path checks", () => {
       sandbox.restore();
       logger.logInfo.resetHistory();
     });
+
 
     // TODO: include pyproject.toml when we support behave 1.2.7
     const filePrecedence = BEHAVE_CONFIG_FILES_PRECEDENCE.slice(0, BEHAVE_CONFIG_FILES_PRECEDENCE.length - 1);
