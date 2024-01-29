@@ -8,6 +8,58 @@ import { BEHAVE_CONFIG_FILES_PRECEDENCE, rndNumeric } from '../../../common/help
 import { services } from '../../../services';
 
 
+suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
+  let sandbox: sinon.SinonSandbox;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let logger: any;
+  const projUri = vscode.Uri.file(rndNumeric());
+  const workDirUri = vscode.Uri.file(projUri.fsPath + "/" + rndNumeric());
+  const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "");
+  const fileContent = ' [behave]\n  paths =features';
+  const resPaths = [path.join(workDirRelPath, "features")];
+  const resPathsText = `"${resPaths.join('", "')}"`;
+
+  setup(() => {
+    sandbox = sinon.createSandbox();
+    logger = { logInfo: sandbox.stub() };
+    services.logger = logger;
+  });
+
+  teardown(() => {
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+  });
+
+
+  // TODO: include pyproject.toml when we support behave 1.2.7
+  const filePrecedence = BEHAVE_CONFIG_FILES_PRECEDENCE.slice(0, BEHAVE_CONFIG_FILES_PRECEDENCE.length - 1);
+
+  for (let i = 0; i < filePrecedence.length; i++) {
+
+    const filesPresent = filePrecedence.slice(i);
+
+    test(`should get content from ${filesPresent[0]} when files present are: ${filesPresent}`, () => {
+
+      sandbox.stub(fs, 'readFileSync').returns(fileContent);
+      sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
+
+      const fsExistsStub = sandbox.stub(fs, 'existsSync').withArgs(path.join(workDirUri.fsPath, "features")).returns(true);
+
+      for (const element of filesPresent) {
+        const file = element;
+        fsExistsStub.withArgs(path.join(workDirUri.fsPath, file)).returns(true);
+      }
+
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "${filesPresent[0]}" sets project-relative paths: ${resPathsText}`, projUri));
+
+    });
+  }
+
+});
+
+
 
 suite("getBehaveConfigPaths - basic paths checks", () => {
   let sandbox: sinon.SinonSandbox;
@@ -218,6 +270,19 @@ suite("getBehaveConfigPaths - more path checks", () => {
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, p.projUri));
     });
 
+    test(`should return working dir features when paths is features/my.feature, params: ${p}`, () => {
+      // [behave]
+      // paths = ./features  
+      const fileContent = '[behave]\n  paths =features/my.feature\n';
+      sandbox.stub(fs, 'existsSync').returns(true);
+      sandbox.stub(fs, 'readFileSync').returns(fileContent);
+      const result = getBehaveConfigPaths(p.projUri, p.workDirUri, p.workDirRelPath);
+      const resPaths = [path.join(p.workDirRelPath, "features")];
+      const resPathsText = `"${resPaths.join('", "')}"`;
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, p.projUri));
+    });
+
     test(`should return 2 features paths when behave.ini file contains 2 paths and both paths exist, params: ${p}`, () => {
       //  [behave]
       //    paths =features
@@ -241,54 +306,6 @@ suite("getBehaveConfigPaths - more path checks", () => {
 
 
 
-  suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
-    let sandbox: sinon.SinonSandbox;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let logger: any;
-    const projUri = vscode.Uri.file(rndNumeric());
-    const workDirUri = vscode.Uri.file(projUri.fsPath + "/" + rndNumeric());
-    const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "");
-    const fileContent = ' [behave]\n  paths =features';
-    const resPaths = [path.join(workDirRelPath, "features")];
-    const resPathsText = `"${resPaths.join('", "')}"`;
-
-    setup(() => {
-      sandbox = sinon.createSandbox();
-      logger = { logInfo: sandbox.stub() };
-      services.logger = logger;
-    });
-
-    teardown(() => {
-      sandbox.restore();
-      logger.logInfo.resetHistory();
-    });
-
-
-    // TODO: include pyproject.toml when we support behave 1.2.7
-    const filePrecedence = BEHAVE_CONFIG_FILES_PRECEDENCE.slice(0, BEHAVE_CONFIG_FILES_PRECEDENCE.length - 1);
-
-    for (let i = 0; i < filePrecedence.length; i++) {
-
-      const filesPresent = filePrecedence.slice(i);
-
-      test(`should get content from ${filesPresent[0]} when files present are: ${filesPresent}`, () => {
-
-        sandbox.stub(fs, 'readFileSync').returns(fileContent);
-        const fsExistsStub = sandbox.stub(fs, 'existsSync').withArgs(path.join(workDirUri.fsPath, "features")).returns(true);
-
-        for (const element of filesPresent) {
-          const file = element;
-          fsExistsStub.withArgs(path.join(workDirUri.fsPath, file)).returns(true);
-        }
-
-        const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
-        assert.deepStrictEqual(result.projectRelativePaths, resPaths);
-        assert(logger.logInfo.calledOnceWithExactly(`Behave config file "${filesPresent[0]}" sets project-relative paths: ${resPathsText}`, projUri));
-
-      });
-    }
-
-  });
 
 });
 

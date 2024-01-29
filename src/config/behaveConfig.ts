@@ -45,12 +45,16 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
   }
 
   let relPaths: string[] = [];
-  for (const biniPath of paths) {
+  for (let biniPath of paths) {
     // the behave config "paths" setting may be either:
     // a) working-directory-relative paths,
     // b) absolute paths (that includes the working directory path),
-    // c) a combination of both 
+    // c) a combination of both,
+    // d) it may also be a paths to .feature files
     // we need to convert them all to project-relative paths, then check they exist
+
+    if (biniPath.endsWith(".feature"))
+      biniPath = path.dirname(biniPath);
 
     const rx = new RegExp(`^${workDirUri.fsPath}/?`);
     const workingRelPath = biniPath.replace(rx, "");
