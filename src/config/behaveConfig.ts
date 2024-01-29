@@ -82,8 +82,9 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     }
   }
 
-  // remove duplicates and sort
-  relPaths = [...new Set(relPaths)].sort((a, b) => a.localeCompare(b));
+  // NOTE - do not sort these. behave will use the first path in the config file 
+  // for finding the steps folder, so preserve the order for when we do the same ourselves later
+  relPaths = [...new Set(relPaths)];
 
   services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
     `${relPaths.map(p => `"${p}"`).join(", ")}`, projUri);

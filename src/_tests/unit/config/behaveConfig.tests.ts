@@ -60,8 +60,58 @@ suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
 });
 
 
+suite("getBehaveConfigPaths - basic paths checks 1", () => {
+  let sandbox: sinon.SinonSandbox;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let logger: any;
+  const projUri = vscode.Uri.file("/home/me/project");
 
-suite("getBehaveConfigPaths - basic paths checks", () => {
+  setup(() => {
+    sandbox = sinon.createSandbox();
+    logger = { logInfo: sandbox.stub() };
+    services.logger = logger;
+    sandbox.stub(fs, 'existsSync').returns(true);
+    sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
+  });
+
+  teardown(() => {
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+  });
+
+  const workDirUri = vscode.Uri.file(projUri.fsPath + "/working");
+
+
+  test(`should return project-relative feature path when behave.ini paths is "." and ".." and workingDirUri is a level below`, () => {
+    // [behave]
+    // paths=..
+    const fileContent = `[behave]\npaths=.\t\n..\n`;
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
+    const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    const resPaths = [workDirRelPath, ""];
+    const resPathsText = `"${resPaths.join('", "')}"`;
+    assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
+  });
+
+  test(`should return project-relative feature path when behave.ini paths is "../" and workingDirUri is a level below`, () => {
+    // [behave]
+    // paths=..
+    const fileContent = `[behave]\npaths=../\n`;
+    sandbox.stub(fs, 'readFileSync').returns(fileContent);
+    const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
+    const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+    const resPaths = [""];
+    const resPathsText = `"${resPaths.join('", "')}"`;
+    assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+    assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
+  });
+
+});
+
+
+suite("getBehaveConfigPaths - basic paths checks 2", () => {
   let sandbox: sinon.SinonSandbox;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let logger: any;
@@ -87,7 +137,21 @@ suite("getBehaveConfigPaths - basic paths checks", () => {
 
   for (const workDirUri of workDirUris) {
 
-    test(`should return project-relative feature path when behave.ini paths is "." and workingDirUri is "${workDirUri}`, () => {
+    test(`should return project-relative feature paths in same (preserved) order`, () => {
+      // [behave]
+      // paths=.
+      const fileContent = `[behave]\npaths=z\n\ta\n\tm\n`;
+      sandbox.stub(fs, 'readFileSync').returns(fileContent);
+      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
+      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
+      const resPaths = workDirRelPath === "" ? ["z", "a", "m"] : [workDirRelPath + "/z", workDirRelPath + "/a", workDirRelPath + "/m"];
+      const resPathsText = `"${resPaths.join('", "')}"`;
+      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
+      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
+    });
+
+
+    test(`should return project-relative feature path when behave.ini paths is "."`, () => {
       // [behave]
       // paths=.
       const fileContent = `[behave]\npaths=.\n`;
@@ -100,37 +164,7 @@ suite("getBehaveConfigPaths - basic paths checks", () => {
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
     });
 
-    test(`should return project-relative feature path when behave.ini paths is "." and ".." and workingDirUri is a level below`, () => {
-      // conditional skip on outer loop
-      if (workDirUri === projUri)
-        return;
-      // [behave]
-      // paths=..
-      const fileContent = `[behave]\npaths=.\t\n..\n`;
-      sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
-      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
-      const resPaths = ["", workDirRelPath];
-      const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
-      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
-    });
 
-    test(`should return project-relative feature path when behave.ini paths is "../" and workingDirUri is a level below`, () => {
-      // conditional skip on outer loop
-      if (workDirUri === projUri)
-        return;
-      // [behave]
-      // paths=..
-      const fileContent = `[behave]\npaths=../\n`;
-      sandbox.stub(fs, 'readFileSync').returns(fileContent);
-      const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
-      const result = getBehaveConfigPaths(projUri, workDirUri, workDirRelPath);
-      const resPaths = [""];
-      const resPathsText = `"${resPaths.join('", "')}"`;
-      assert.deepStrictEqual(result.projectRelativePaths, resPaths);
-      assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
-    });
 
     test(`should return project-relative feature path when behave.ini paths is "./features" and workingDirUri is "${workDirUri}`, () => {
       // [behave]
