@@ -25,7 +25,7 @@ export class ProjectWatcherManager {
       // onDidCreate fires on either new file/folder creation OR rename (inc. git actions)
       // (bear in mind that an entire folder tree can copied in one go)    
       try {
-        if (!await handleIt(uri))
+        if (!await shouldHandleIt(uri))
           return;
         const lcPath = uri.path.toLowerCase();
         const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
@@ -48,7 +48,7 @@ export class ProjectWatcherManager {
     watcher.onDidChange(async (uri) => {
       // onDidChange fires on file save ONLY (inc. git actions)    
       try {
-        if (!await handleIt(uri))
+        if (!await shouldHandleIt(uri))
           return;
         reparseTheFile(uri);
       }
@@ -62,7 +62,7 @@ export class ProjectWatcherManager {
       // onDidDelete fires on either file/folder delete OR move/rename (inc. git actions)
       // (bear in mind that an entire folder tree can renamed/moved in one go)        
       try {
-        if (!await handleIt(uri))
+        if (!await shouldHandleIt(uri))
           return;
         if (uri.scheme !== "file")
           return;
@@ -105,13 +105,13 @@ export class ProjectWatcherManager {
     }
 
 
-    const handleIt = async (uri: vscode.Uri): Promise<boolean> => {
+    const shouldHandleIt = async (uri: vscode.Uri): Promise<boolean> => {
       // multiple watchers are not needed, because for a given project, all the files and folders we are 
       // interested in are in the same project root, so we'll just have one watcher 
       // for the project root and use this handleIt function as a filter.
       // THIS FUNCTION SHOULD RETURN FAST (i.e. early exits where possible) as it is called for every project file/folder change
 
-      if (uri.path.endsWith(".tmp")) // vscode file history file
+      if (uri.path.endsWith(".tmp")) // vscode file history file (and we also use .tmp in our integration tests for behave.ini backup)
         return false;
 
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {

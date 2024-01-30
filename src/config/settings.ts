@@ -9,7 +9,7 @@ import {
   findFilesSync,
   getStepsDir,
   getActualWorkspaceSetting,
-  getWatcherOptimisedPaths
+  getOptimisedPaths
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -298,7 +298,7 @@ function getPaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: Impor
       projRelStepsFolders.push(stepsFolder);
   }
 
-  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelativeWorkingDirPath, projRelBehaveConfigPaths);
+  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelBehaveConfigPaths);
 
   return {
     // for consistency, these are all project-relative
@@ -362,7 +362,7 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelat
 }
 
 
-function getProjectRelativeFeatureFolders(projUri: vscode.Uri, projRelWorkingDirPath: string, relativeConfigPaths: string[]): string[] {
+function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
   const start = performance.now();
 
   // if paths specifically set in behave.ini, and not set to root path, skip gathering feature paths and use those
@@ -392,8 +392,8 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, projRelWorkingDir
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
   const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 
-  // optimise to longest common paths (for filewatchers)
-  const relFeaturePaths = getWatcherOptimisedPaths(relFeatureFolders);
+  // optimise to longest common search paths (for parsing etc.)
+  const relFeaturePaths = getOptimisedPaths(relFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)

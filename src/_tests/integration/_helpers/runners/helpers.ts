@@ -47,7 +47,7 @@ export async function replaceBehaveIni(projUri: vscode.Uri, workDirUri: vscode.U
 		replaced = true;
 	}
 	if (replaced)
-		await waitForWatcherParse(projUri, false, paths.behaveIniPath + (content ? " write" : " deletion"));
+		await waitForWatcherParse(projUri, false, (content ? "write of " : "deletion of ") + paths.behaveIniPath);
 
 	return replaced;
 }
@@ -67,7 +67,7 @@ export async function restoreBehaveIni(projUri: vscode.Uri, workDirUri: vscode.U
 		deletion = true;
 	}
 	if (wait)
-		await waitForWatcherParse(projUri, true, paths.behaveIniPath + (!deletion ? " write" : " deletion"));
+		await waitForWatcherParse(projUri, true, (!deletion ? "write of " : "deletion of ") + paths.behaveIniPath);
 }
 
 
@@ -88,13 +88,10 @@ export async function waitForWatcherParse(projUri: vscode.Uri, waitUntilComplete
 			waited += 5;
 		}
 
-		const message = (`waitForWatcherParseToStart waited ${waited}ms for parse (that should have been) instigated by ` +
-			`${fileTrigger} to ${untilComplete ? "complete" : "start"} - is the system busy?`);
-
-		if (waited === 5000)
-			throw new Error(message);
-		else
-			console.log(message);
+		if (waited === 5000) {
+			throw new Error(`waitForWatcherParseToStart waited ${waited}ms for parse (that should have been) instigated by ${fileTrigger} to ` +
+				`${untilComplete ? "complete" : "start"} - check for any previous console errors that would have stopped a parse`);
+		}
 	}
 
 	await waitForParse(false);

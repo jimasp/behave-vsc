@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { services } from '../../../services';
-import { getFeatureNodePath, getWatcherOptimisedPaths } from '../../../common/helpers';
+import { getFeatureNodePath, getOptimisedPaths } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
 
 suite("getLongestCommonPathsFromRelativePaths", () => {
@@ -25,7 +25,7 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
   test(`should return "" for ""`, () => {
     const paths = [""];
     const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
-    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+    const result = getOptimisedPaths(randomOrderedPaths);
 
     // smallest set of longest paths that contain all paths
     const expected = [""];
@@ -35,7 +35,7 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
   test(`should return "" if "" is included as any path`, () => {
     const paths = ["", "a", "b", "c"];
     const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
-    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+    const result = getOptimisedPaths(randomOrderedPaths);
 
     // smallest set of longest paths that contain all paths
     const expected = [""];
@@ -52,7 +52,7 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
     ];
 
     const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
-    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+    const result = getOptimisedPaths(randomOrderedPaths);
 
     // smallest set of longest paths that contain all paths
     const expected = ["working folder"];
@@ -77,7 +77,7 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
     ];
 
     const randomOrderedPaths = paths.sort(() => Math.random() - 0.5);
-    const result = getWatcherOptimisedPaths(randomOrderedPaths);
+    const result = getOptimisedPaths(randomOrderedPaths);
 
     // smallest set of longest paths that contain all paths
     const expected = [

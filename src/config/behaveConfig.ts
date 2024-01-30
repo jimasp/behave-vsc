@@ -65,7 +65,7 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
       continue;
     }
 
-    // for consistency with behaviour elsewhere (including path.relative())
+    // use "" for consistency with behaviour elsewhere (i.e. path.relative() and path.replace())
     if (projectRelPath === "." || projectRelPath === "./")
       projectRelPath = "";
 

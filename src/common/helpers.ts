@@ -368,7 +368,7 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 }
 
 
-export function getWatcherOptimisedPaths(relativePaths: string[]): string[] {
+export function getOptimisedPaths(relativePaths: string[]): string[] {
   // gets the smallest set of longest paths that contain all paths
   // (see unit tests for examples)  
   if (relativePaths.includes(""))
