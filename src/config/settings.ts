@@ -98,7 +98,6 @@ export class ProjectSettings {
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
   public readonly rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
-  public readonly projRelativeBehaveConfigPaths: string[] = []; // behave.ini config paths in project-relative form
   public readonly projRelativeFeatureFolders: string[] = []; // all folders in the project where a .feature is found
   public readonly projRelativeBaseDirPath: string = ""; // directory that contains "steps" folder/environment.py file
   public readonly projRelativeStepsFolders: string[] = []; // the folder containing the steps files
@@ -180,7 +179,6 @@ export class ProjectSettings {
     }
 
     this.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
-    this.projRelativeBehaveConfigPaths = projRelPaths.projRelBehaveConfigPaths;
     this.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
     this.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
     this.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;

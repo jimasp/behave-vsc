@@ -33,7 +33,7 @@ export function getBehaveIniPaths(workDirUri: vscode.Uri) {
 	return { behaveIniPath, behaveIniTmpPath };
 }
 
-export async function replaceBehaveIni(projUri: vscode.Uri, workDirUri: vscode.Uri, content: string) {
+export async function replaceBehaveIni(consoleName: string, projUri: vscode.Uri, workDirUri: vscode.Uri, content: string) {
 	// behave behaviour is dictated by a file on disk, 
 	// i.e. we cannot mock out behave.ini or we would go out of sync with behave
 	const paths = getBehaveIniPaths(workDirUri);
@@ -46,66 +46,70 @@ export async function replaceBehaveIni(projUri: vscode.Uri, workDirUri: vscode.U
 		fs.writeFileSync(paths.behaveIniPath, Buffer.from(content));
 		replaced = true;
 	}
-	if (replaced)
-		await waitForWatcherParse(projUri, false, (content ? "write of " : "deletion of ") + paths.behaveIniPath);
+	// if (replaced)
+	// 	await waitForWatcherParse(consoleName, projUri, false, (content ? "write of " : "deletion of ") + paths.behaveIniPath);
 
 	return replaced;
 }
 
 
-export async function restoreBehaveIni(projUri: vscode.Uri, workDirUri: vscode.Uri) {
+export async function restoreBehaveIni(consoleName: string, projUri: vscode.Uri, workDirUri: vscode.Uri) {
 	const paths = getBehaveIniPaths(workDirUri);
-	let wait = false;
-	let deletion = false;
+	// let wait = false;
+	// let deletion = false;
 	if (fs.existsSync(paths.behaveIniTmpPath)) {
 		fs.renameSync(paths.behaveIniTmpPath, paths.behaveIniPath);
-		wait = true;
+		// wait = true;
 	}
 	else if (fs.existsSync(paths.behaveIniPath)) {
 		fs.unlinkSync(paths.behaveIniPath);
-		wait = true;
-		deletion = true;
+		// wait = true;
+		// deletion = true;
 	}
-	if (wait)
-		await waitForWatcherParse(projUri, true, (!deletion ? "write of " : "deletion of ") + paths.behaveIniPath);
+	// if (wait)
+	// 	await waitForWatcherParse(consoleName, projUri, true, (!deletion ? "write of " : "deletion of ") + paths.behaveIniPath);
 }
 
 
-export async function waitForWatcherParse(projUri: vscode.Uri, waitUntilComplete: boolean, fileTrigger: string) {
-	// replacing the behave.ini file will, after a DELAY, fire a reparse via the projectWatcher (fileSystemWatcher).
-	// for testing, we need to make sure the delayed parse has kicked off BEFORE config is 
-	// reloaded in runAllTestsAndAssertTheResults via configurationChangedHandler, otherwise:
-	// a. this delayed parse would cancel the reparse inside configurationChangedHandler, and
-	// b. equally it would not be cancelled itself by the configurationChangedHandler reparse because it hasn't started yet.
-	// so we wait for the parse to kick off:
+// export async function waitForWatcherParse(consoleName: string, projUri: vscode.Uri, waitUntilComplete: boolean, fileTrigger: string) {
+// 	// replacing the behave.ini file will, after a DELAY, fire a reparse via the projectWatcher (fileSystemWatcher).
+// 	// for testing, we need to make sure the delayed parse has kicked off BEFORE config is 
+// 	// reloaded in runAllTestsAndAssertTheResults via configurationChangedHandler, otherwise:
+// 	// a. this delayed parse would cancel the reparse inside configurationChangedHandler, and
+// 	// b. equally it would not be cancelled itself by the configurationChangedHandler reparse because it hasn't started yet.
+// 	// so we wait for the parse to kick off
+// 	// HOWEVER,  the filesystemwater
 
-	async function waitForParse(untilComplete: boolean) {
-		let waited = 0;
-		while (waited < 5000) {
-			if (untilComplete !== services.parser.parseIsActiveForProject(projUri))
-				break;
-			await new Promise(t => setTimeout(t, 5));
-			waited += 5;
-		}
+// 	async function waitForParse(untilComplete: boolean) {
+// 		console.log(`${consoleName}: waitForWatcherParse waiting on parse to ${untilComplete ? "complete" : "start"} after ${fileTrigger}`);
+// 		let waited = 0;
+// 		while (waited < 5000) {
+// 			if (untilComplete !== services.parser.parseIsActiveForProject(projUri))
+// 				break;
+// 			await new Promise(t => setTimeout(t, 5));
+// 			waited += 5;
+// 		}
 
-		if (waited === 5000) {
-			throw new Error(`waitForWatcherParseToStart waited ${waited}ms for parse (that should have been) instigated by ${fileTrigger} to ` +
-				`${untilComplete ? "complete" : "start"} - check for any previous console errors that would have stopped a parse`);
-		}
-	}
+// 		if (waited === 5000) {
+// 			debugger; // eslint-disable-line no-debugger
+// 			throw new Error(`${consoleName}: waitForWatcherParse waited ${waited}ms for parse (that should have been) ` +
+// 				`instigated by ${fileTrigger} to ${untilComplete ? "complete" : "start"} - check for any previous console errors ` +
+// 				`that would have stopped a parse`);
+// 		}
+// 	}
 
-	await waitForParse(false);
+// 	await waitForParse(false);
 
-	// now that we know parse has started, then if waitUntilComplete is true, also wait for it to complete, this is so that:
-	// a) we're clean for our next run, and 
-	// b) to stop the "Canceled" red console error appearing when we're actually expecting a cancel due to the integration test suite 
-	// exiting the IDE on successful test completion
-	if (!waitUntilComplete)
-		return;
+// 	// now that we know parse has started, then if waitUntilComplete is true, also wait for it to complete, this is so that:
+// 	// a) we're clean for our next run, and 
+// 	// b) to stop the "Canceled" red console error appearing when we're actually expecting a cancel due to the integration test suite 
+// 	// exiting the IDE on successful test completion
+// 	if (!waitUntilComplete)
+// 		return;
 
-	await waitForParse(true);
+// 	await waitForParse(true);
 
-}
+// }
 
 
 

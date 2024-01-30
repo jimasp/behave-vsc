@@ -67,7 +67,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
   // would then reload settings.json from disk and replace the test config we are about to load
   // if (behaveIniContent) {
-  const behaveIniReplaced = await replaceBehaveIni(projUri, workDirUri, behaveIni.content);
+  const behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);
   console.log(`${consoleName}: replaceBehaveIni completed`);
   //}
 
@@ -164,7 +164,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   }
   finally {
     if (behaveIniReplaced)
-      await restoreBehaveIni(projUri, workDirUri);
+      await restoreBehaveIni(consoleName, projUri, workDirUri);
   }
 }
 
