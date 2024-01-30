@@ -59,7 +59,19 @@
 
 ---
 
+### Terminology
+
+- The "source" environment refers to the instance of vscode that contains the Behave VSC extension source code.
+- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the source environment.
+- Also see [terminology](./README.md#terminology) in the README, i.e. the difference between "workspace" and "project".
+
 ### Debugging with the example projects
+
+#### Getting your code path to execute
+
+- Because most of the extension code relates to parsing etc., most of the time you can get to your breakpoint either when the host environment starts up, or by hitting the refresh button in the test explorer UI in the host environment.
+
+#### Debugging process
 
 1. Set up your development environment as above.
 2. Make sure you have disabled the marketplace version of the extension.
@@ -210,12 +222,6 @@ feature file formatting is provided by:
 ## Development guidelines
 
 ---
-
-### Terminology
-
-- The "source" environment refers to the instance of vscode that contains the Behave VSC source code.
-- The "host" environment refers to the instance of vscode that that says "Extension Development Host" in the title bar, i.e. the instance that is spawned by clicking the run button in the source environment.
-- Also see [terminology](./README.md#terminology) in the README, i.e. the difference between "workspace" and "project".
 
 ### Guidelines
 

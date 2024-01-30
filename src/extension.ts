@@ -16,7 +16,7 @@ import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForSteps
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
-import { ProjectWatcherManager } from './watchers/projectWatcherManager';
+import { ProjectWatcher } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
 
@@ -24,16 +24,14 @@ import { RunProfile } from './config/settings';
 const config = services.config;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
-const wkspWatchers = new Map<vscode.Uri, vscode.FileSystemWatcher>();
-const projectWatcherManager = new ProjectWatcherManager();
+const projWatchers = new Map<vscode.Uri, ProjectWatcher>();
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
 export function deactivate() {
-  // clean up any potentially large non-disposable objects,  
-  // or any disposable objects not handled by context.subscriptions
-  wkspWatchers.forEach(w => w.dispose());
-  wkspWatchers.clear();
+  // clean any disposable objects not handled by context.subscriptions (or any potentially large non-disposable objects)
+  projWatchers.forEach(w => w.dispose());
+  projWatchers.clear();
 }
 
 
@@ -58,8 +56,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      const projWatcher = projectWatcherManager.startWatchingProject(projUri, ctrl, testData);
-      wkspWatchers.set(projUri, projWatcher);
+      const projWatcher = new ProjectWatcher(projUri, ctrl, testData);
+      projWatchers.set(projUri, projWatcher);
     }
 
     const junitWatcher = new JunitWatcher();
@@ -207,11 +205,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           config.reloadSettings(projUri);
           reloadRunProfiles(ctrl, runHandler);
 
-          const oldProjWatcher = wkspWatchers.get(projUri);
+          const oldProjWatcher = projWatchers.get(projUri);
           if (oldProjWatcher)
             oldProjWatcher.dispose();
-          const projWatcher = projectWatcherManager.startWatchingProject(projUri, ctrl, testData);
-          wkspWatchers.set(projUri, projWatcher);
+          const projWatcher = new ProjectWatcher(projUri, ctrl, testData);
+          projWatchers.set(projUri, projWatcher);
         }
 
         // code.workspace or settings.json configuration has now changed, so we need to reparse files

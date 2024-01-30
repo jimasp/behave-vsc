@@ -6,22 +6,33 @@ import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
 
 
-export class ProjectWatcherManager {
 
-  startWatchingProject(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): vscode.FileSystemWatcher {
 
+export class ProjectWatcher {
+
+  #watcherEvents: vscode.Disposable[] = [];
+  #watcher: vscode.FileSystemWatcher | undefined = undefined;
+
+  constructor(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData) {
     const projectPattern = new vscode.RelativePattern(projUri, `**`);
-    const projectWatcher = vscode.workspace.createFileSystemWatcher(projectPattern);
-    this._setWatcherEventHandlers(projectWatcher, projUri, ctrl, testData);
-    return projectWatcher;
+    this.#watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
+    this.#watcherEvents = this._setWatcherEventHandlers(this.#watcher, projUri, ctrl, testData);
+  }
+
+  public dispose() {
+    xRayLog("junitWatcher: disposing");
+    this.#watcherEvents.forEach(e => e.dispose());
+    this.#watcher?.dispose();
   }
 
 
-  _setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData) {
+  _setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
+    testData: TestData): vscode.Disposable[] {
 
     const projSettings = services.config.projectSettings[projUri.path];
+    const events: vscode.Disposable[] = [];
 
-    watcher.onDidCreate(async (uri) => {
+    events.push(watcher.onDidCreate(async (uri) => {
       // onDidCreate fires on either new file/folder creation OR rename (inc. git actions)
       // (bear in mind that an entire folder tree can copied in one go)    
       try {
@@ -43,9 +54,9 @@ export class ProjectWatcherManager {
         services.logger.showError(e, projUri);
       }
 
-    });
+    }));
 
-    watcher.onDidChange(async (uri) => {
+    events.push(watcher.onDidChange(async (uri) => {
       // onDidChange fires on file save ONLY (inc. git actions)    
       try {
         if (!await shouldHandleIt(uri))
@@ -56,9 +67,9 @@ export class ProjectWatcherManager {
         // unawaited entry point (event handler) - show error
         services.logger.showError(e, projUri);
       }
-    });
+    }));
 
-    watcher.onDidDelete(async (uri) => {
+    events.push(watcher.onDidDelete(async (uri) => {
       // onDidDelete fires on either file/folder delete OR move/rename (inc. git actions)
       // (bear in mind that an entire folder tree can renamed/moved in one go)        
       try {
@@ -95,7 +106,7 @@ export class ProjectWatcherManager {
         // unawaited entry point (event handler) - show error
         services.logger.showError(e, projUri);
       }
-    });
+    }));
 
 
     function deletedPathWasProbablyAFile(path: string) {
@@ -154,6 +165,7 @@ export class ProjectWatcherManager {
       services.parser.reparseFile(uri, testData, ctrl, "watcher event > reparseTheFile");
     }
 
+    return events;
   }
 
 }

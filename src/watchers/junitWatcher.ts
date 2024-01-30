@@ -61,7 +61,6 @@ export class JunitWatcher {
   }
 
 
-  // do not make this method async, it is called from activate()
   startWatchingJunitFolder() {
 
     if (watcher) // simple singleton check
@@ -76,6 +75,7 @@ export class JunitWatcher {
 
     // we want a generous timeout here, because the filesystemwatcher can take a while to "wake up" on extension 
     // start up. (a user will not wait for that long, as it is not checked until startWatchingRun)
+    // do NOT await this here or it will hold up activate!
     this._waitForFolderWatch(junitDirectoryUri, 10000);
   }
 
