@@ -99,6 +99,20 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // 3. here to insert our test config.
     // 4. if behave ini is restored in the finally block (i.e. if 2 happened)
     console.log(`${consoleName}: calling configurationChangedHandler`);
+
+    // let waited = 0;
+    // while (waited < 5000) {
+    //   if (!services.parser.parseIsActiveForProject(projUri))
+    //     break;
+    //   await new Promise(t => setTimeout(t, 5));
+    //   waited += 5;
+    // }
+
+    // if (waited === 5000) {
+    //   debugger; // eslint-disable-line no-debugger
+    //   throw new Error(`${consoleName}: waitForWatcherParse waited ${waited}ms for parse (instigated by replaceBehaveIni) to complete`);
+    // }
+
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
 

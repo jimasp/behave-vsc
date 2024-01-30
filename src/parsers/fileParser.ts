@@ -557,6 +557,7 @@ export class FileParser {
   }
 
 
+  // TODO: remove if not used
   parseIsActiveForProject(projUri: vscode.Uri) {
     if (!services.config.isIntegrationTestRun)
       throw new Error("parseIsActiveForProject() is only for integration test support");
