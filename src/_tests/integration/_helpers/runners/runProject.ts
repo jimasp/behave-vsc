@@ -50,6 +50,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const projUri = getTestProjectUri(projName);
   logStore.clearProjLogs(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
+  let behaveIniReplaced = false;
 
 
   // ARRANGE
@@ -63,13 +64,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
 
-  // we do this BEFORE we call configurationChangedHandler() to load our test config,
-  // because replacing the behave.ini file will itself trigger configurationChangedHandler() which 
-  // would then reload settings.json from disk and replace the test config we are about to load
-  // if (behaveIniContent) {
-  const behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);
-  console.log(`${consoleName}: replaceBehaveIni completed`);
-  //}
 
   try {
 
@@ -83,12 +77,18 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // this lock (as well as parseFilesForProject and runHandler)
     await setLock(consoleName, ACQUIRE);
 
+
     // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
     // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
     // (outside of integration tests, cp.spawn is always used)
     if (execFriendlyCmd)
       services.config.integrationTestRunUseCpExec[projId] = true;
 
+    // we do this BEFORE we directly call configurationChangedHandler() to load our test config,
+    // because replacing the behave.ini file will itself trigger a filewatcher to call configurationChangedHandler() which 
+    // would then reload settings.json from disk and replace the test config we are about to load
+    behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);
+    console.log(`${consoleName}: replaceBehaveIni completed`);
 
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
     // and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
@@ -99,20 +99,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // 3. here to insert our test config.
     // 4. if behave ini is restored in the finally block (i.e. if 2 happened)
     console.log(`${consoleName}: calling configurationChangedHandler`);
-
-    // let waited = 0;
-    // while (waited < 5000) {
-    //   if (!services.parser.parseIsActiveForProject(projUri))
-    //     break;
-    //   await new Promise(t => setTimeout(t, 5));
-    //   waited += 5;
-    // }
-
-    // if (waited === 5000) {
-    //   debugger; // eslint-disable-line no-debugger
-    //   throw new Error(`${consoleName}: waitForWatcherParse waited ${waited}ms for parse (instigated by replaceBehaveIni) to complete`);
-    // }
-
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
 
