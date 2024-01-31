@@ -9,7 +9,7 @@ import {
   findFilesSync,
   getStepsDir,
   getActualWorkspaceSetting,
-  getOptimisedPaths
+  getOptimisedFeatureParsingPaths
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -98,9 +98,9 @@ export class ProjectSettings {
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
   public readonly rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
-  public readonly projRelativeFeatureFolders: string[] = []; // all folders in the project where a .feature is found
   public readonly projRelativeBaseDirPath: string = ""; // directory that contains "steps" folder/environment.py file
-  public readonly projRelativeStepsFolders: string[] = []; // the folder containing the steps files
+  public readonly projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
+  public readonly projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)
   // integration test only
   public readonly integrationTestRunUseCpExec = false;
 
@@ -364,42 +364,24 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
   const start = performance.now();
 
   // if paths specifically set in behave.ini, skip gathering feature paths and use those
-  if (relativeConfigPaths.includes(""))
-    return [""]; // optimise
-  if (relativeConfigPaths.length > 0)
+  if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes(""))
     return relativeConfigPaths;
 
-  /* 
-  we want the smallest set of longest feature folder paths that contain all other feature folder paths,
-  e.g. this structure:
-
-    my_project
-    └── tests
-        ├── pytest
-        │    └── unittest.py    
-        ├── features
-        │   ├── a.feature
-        │   └── web
-        │       └── a.feature
-        └── features2
-            └── a.feature
- 
-  will return:
-    "tests/features"
-    "tests/features2"
-  */
   const featureFiles = findFilesSync(projUri, undefined, ".feature");
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
 
   // we only include the project root if it's requested in the behave config paths 
   // (which is an early exit at the start of this function)
   // i.e. behave would ignore a feature file in the root if not set in the paths, and so will we
-  foldersContainingFeatureFiles.splice(foldersContainingFeatureFiles.indexOf(projUri.fsPath), 1);
+  if (!relativeConfigPaths.includes(""))
+    foldersContainingFeatureFiles.splice(foldersContainingFeatureFiles.indexOf(projUri.fsPath), 1);
 
   const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 
-  // optimise to longest common search paths (for parsing etc.)
-  const relFeaturePaths = getOptimisedPaths(relFeatureFolders);
+  // optimise to longest common search paths for parsing search paths
+  // note that if "" is included in relativeFolders, then we maintain it as a distinct case 
+  // (see _parseFeatureFiles in fileParser.ts)
+  const relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)

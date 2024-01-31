@@ -316,7 +316,7 @@ export function cleanBehaveText(text: string) {
 
 // custom function to replace vscode.workspace.findFiles() functionality when required
 // due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
-export async function findFiles(directory: vscode.Uri, match: RegExp,
+export async function findFiles(directory: vscode.Uri, match: RegExp, recursive: boolean,
   cancelToken?: vscode.CancellationToken | undefined): Promise<vscode.Uri[]> {
 
   const entries = await vwfs.readDirectory(directory);
@@ -328,8 +328,8 @@ export async function findFiles(directory: vscode.Uri, match: RegExp,
     const fileName = entry[0];
     const fileType = entry[1];
     const entryUri = vscode.Uri.joinPath(directory, fileName);
-    if (fileType === vscode.FileType.Directory) {
-      results.push(...await findFiles(entryUri, match, cancelToken));
+    if (recursive && fileType === vscode.FileType.Directory) {
+      results.push(...await findFiles(entryUri, match, recursive, cancelToken));
       continue;
     }
     if (match.test(entryUri.path))
@@ -368,11 +368,43 @@ export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string |
 }
 
 
-export function getOptimisedPaths(relativePaths: string[]): string[] {
-  // gets the smallest set of longest paths that contain all paths
-  // (see unit tests for examples)  
-  if (relativePaths.includes(""))
-    return [""];
+export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string[] {
+  /* 
+  get the smallest set of longest paths that contain all feature folder paths
+  these will be used as the search paths for parsing feature files
+  (see unit tests for examples)  
+
+  e.g. for this structure:
+
+  my_project
+  ├── my.feature
+  └── tests
+      ├── pytest
+      │    └── unittest.py    
+      ├── features
+      │   ├── a.feature
+      │   └── web
+      │       └── a.feature
+      └── features2
+          └── a.feature 
+
+  we would be passed in all folder paths containing the feature files, i.e.:
+  [
+    "",
+    "tests/features",
+    "tests/features/web"
+    "tests/features2",
+  ]
+
+  and we will return:
+    [
+      "", 
+      "tests/features",  
+      "tests/features2"   
+    ]
+    
+  (note that the project-root "" is a special case (non-recursive) in _parseFeatureFiles in fileParser.ts)
+  */
   const splitPaths = relativePaths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
   const shortPaths: string[][] = [];
   for (const path of splitPaths) {

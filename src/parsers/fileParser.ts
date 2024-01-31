@@ -343,7 +343,12 @@ export class FileParser {
         // e.g. user has deleted/renamed folder
         continue;
       }
-      const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), cancelToken));
+
+      // for performance, don't recurse from root, i.e. if there are .feature files in the project root, then
+      // we only want to parse those root files, as there will be subsequent relFeaturesFolder paths to cover the other paths
+      const recursive = relFeaturesFolder !== "";
+
+      const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), recursive, cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
         services.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
@@ -381,7 +386,7 @@ export class FileParser {
       if (!fs.existsSync(stepsSearchUri.fsPath))
         continue;
 
-      stepFiles = await findFiles(stepsSearchUri, new RegExp(".*\\.py$"), cancelToken);
+      stepFiles = await findFiles(stepsSearchUri, new RegExp(".*\\.py$"), true, cancelToken);
 
       if (stepFiles.length < 1 && !cancelToken.isCancellationRequested)
         continue;
