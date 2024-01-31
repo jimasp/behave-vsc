@@ -363,8 +363,10 @@ function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelat
 function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
   const start = performance.now();
 
-  // if paths specifically set in behave.ini, and not set to root path, skip gathering feature paths and use those
-  if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes("."))
+  // if paths specifically set in behave.ini, skip gathering feature paths and use those
+  if (relativeConfigPaths.includes(""))
+    return [""]; // optimise
+  if (relativeConfigPaths.length > 0)
     return relativeConfigPaths;
 
   /* 
@@ -388,6 +390,12 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
   */
   const featureFiles = findFilesSync(projUri, undefined, ".feature");
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
+
+  // we only include the project root if it's requested in the behave config paths 
+  // (which is an early exit at the start of this function)
+  // i.e. behave would ignore a feature file in the root if not set in the paths, and so will we
+  foldersContainingFeatureFiles.splice(foldersContainingFeatureFiles.indexOf(projUri.fsPath), 1);
+
   const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 
   // optimise to longest common search paths (for parsing etc.)
