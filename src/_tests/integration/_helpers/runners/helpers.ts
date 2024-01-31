@@ -10,14 +10,11 @@ import {
 } from '../../../../common/helpers';
 import { services } from '../../../../services';
 import { assertInstances } from './assertions';
-import { logStore } from '../../../runner';
-import { Configuration } from '../../../../config/configuration';
 import { RunOptions } from '../common';
 import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getFriendlyEnvVars } from '../../../../runners/helpers';
 import { ProjRun } from '../../../../runners/testRunHandler';
-import { INT_TEST_NO_RELOAD_SECTION } from '../../../../watchers/projectWatcher';
 
 
 
@@ -44,7 +41,6 @@ export async function replaceBehaveIni(consoleName: string, projUri: vscode.Uri,
 		replaced = true;
 	}
 	if (content) {
-		content = INT_TEST_NO_RELOAD_SECTION + "\n\n" + content;
 		fs.writeFileSync(paths.behaveIniPath, Buffer.from(content));
 		replaced = true;
 	}

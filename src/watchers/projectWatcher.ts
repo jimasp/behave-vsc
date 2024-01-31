@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES_PRECEDENCE, getContentFromFilesystem, isStepsFile } from '../common/helpers';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE, isStepsFile } from '../common/helpers';
 import { services } from "../services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
@@ -97,7 +97,7 @@ export class ProjectWatcher {
         if (deletedPathWasProbablyAFile(uri.path) && !uri.path.endsWith(".feature"))
           return;
 
-        // reparse the entire project
+        // deleted feature file (or folder), reparse the entire project
         services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
       }
@@ -127,10 +127,8 @@ export class ProjectWatcher {
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
         const configPath = `${projSettings.workingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
-          const content = await getContentFromFilesystem(uri);
-          console.log("content", content);
-          if (content.includes(INT_TEST_NO_RELOAD_SECTION))
-            return false;
+          if (services.config.isIntegrationTestRun)
+            return false; // don't reload when integration tests change the behave.ini file
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
@@ -173,5 +171,3 @@ export class ProjectWatcher {
 
 }
 
-
-export const INT_TEST_NO_RELOAD_SECTION = "[integrationTest.noReload]";
