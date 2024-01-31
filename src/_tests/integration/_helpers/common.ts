@@ -21,7 +21,9 @@ export type TestBehaveIni = {
   expectedProjRelPaths: string[];
 }
 
-export const noBehaveIni: TestBehaveIni = {
+export const emptyBehaveIni: TestBehaveIni = {
+  // note - we use this rather than having no behave.ini because we want the filewatcher to be 
+  // able to check for INT_TEST_NO_RELOAD_SECTION (added later), which we couldn't do if there was no file
   content: "",
   expectedProjRelPaths: []
 }

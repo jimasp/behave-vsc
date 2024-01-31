@@ -84,9 +84,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     if (execFriendlyCmd)
       services.config.integrationTestRunUseCpExec[projId] = true;
 
-    // we do this BEFORE we directly call configurationChangedHandler() to load our test config,
-    // because replacing the behave.ini file will itself trigger a filewatcher to call configurationChangedHandler() which 
-    // would then reload settings.json from disk and replace the test config we are about to load
+    // replace behave.ini if required
     behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);
     console.log(`${consoleName}: replaceBehaveIni completed`);
 

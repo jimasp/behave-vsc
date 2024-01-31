@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES_PRECEDENCE, isStepsFile } from '../common/helpers';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE, getContentFromFilesystem, isStepsFile } from '../common/helpers';
 import { services } from "../services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-
 
 
 
@@ -128,7 +127,11 @@ export class ProjectWatcher {
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
         const configPath = `${projSettings.workingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
-          xRayLog(`behave config file change detected: ${uri.path} - reloading/reparsing project`, projUri);
+          const content = await getContentFromFilesystem(uri);
+          console.log("content", content);
+          if (content.includes(INT_TEST_NO_RELOAD_SECTION))
+            return false;
+          xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
           return false; // just handled it
@@ -171,8 +174,4 @@ export class ProjectWatcher {
 }
 
 
-
-
-
-
-
+export const INT_TEST_NO_RELOAD_SECTION = "[integrationTest.noReload]";

@@ -1,5 +1,5 @@
 import { TestProjectRunner } from "../_helpers/runners/projectRunner";
-import { noBehaveIni, noConfig, parallelConfig, noRunOptions } from "../_helpers/common";
+import { emptyBehaveIni, noConfig, parallelConfig, noRunOptions } from "../_helpers/common";
 import { behaveIni, expectations } from "./defaults";
 
 
@@ -12,13 +12,13 @@ suite(`sibling steps folder 1 suite`, () => {
 	const testProjectRunner = new TestProjectRunner("sibling steps folder 1");
 
 	test("runAll", async () =>
-		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, emptyBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
 		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
 
 	test("runAll - parallel", async () =>
-		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(parallelConfig, emptyBehaveIni, noRunOptions, expectations));
 
 });
 
