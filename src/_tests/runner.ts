@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as Mocha from 'mocha';
 import * as glob from 'glob';
 import * as vscode from 'vscode';
-import inspector = require('inspector');
+import * as inspector from 'inspector';
 import { services } from '../services';
 
 

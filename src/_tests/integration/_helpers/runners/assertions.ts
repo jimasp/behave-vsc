@@ -11,7 +11,7 @@ import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers
 import { featureFileStepRe } from "../../../../parsers/featureParser";
 import { funcRe } from "../../../../parsers/stepsParser";
 import { logStore } from "../../../runner";
-
+import * as inspector from "inspector";
 
 
 export function assertInstances(instances: IntegrationTestAPI) {
@@ -255,8 +255,9 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
   getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts,
   actualCounts: ProjParseCounts, hasMultiRootWkspNode: boolean) {
 
+  const expectedCounts = getExpectedCountsFunc(projUri, config);
+
   try {
-    const expectedCounts = getExpectedCountsFunc(projUri, config);
 
     assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, projName + ": featureFilesExceptEmptyOrCommentedOut");
     assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, projName + ": stepFilesExceptEmptyOrCommentedOut");
@@ -268,7 +269,11 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
     if (!config.instanceSettings.xRay)
       return;
 
-    assert(actualCounts.tests.testCount === expectedCounts.tests.testCount, projName + ": testCount");
+    // note >= because:
+    // if the number of tests is greater than expected, it may be because we've just 
+    // added a new feature/scenario to our test project, either way, we will to continue on to 
+    // the other asserts so we can see the extra TestResult in the console output 
+    assert(actualCounts.tests.testCount >= expectedCounts.tests.testCount, projName + ": testCount");
 
     if (hasMultiRootWkspNode) {
       assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, projName + ": nodeCount");
@@ -277,9 +282,11 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
       assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, projName + ": nodeCount");
     }
   }
-  catch (e: unknown) {
-    // UHOH - did we add a test or comment something out? do a git diff?
-    debugger; // eslint-disable-line no-debugger
+  catch (assertErr: unknown) {
+    // UHOH - did we comment something out? do a git diff?
+    debugger; // eslint-disable-line no-debugger      
+
+    throw new Error(`assertExpectedCounts failed for ${projName} project:\n${assertErr}`);
   }
 }
 
@@ -389,13 +396,32 @@ function getChildrenIds(children: vscode.TestItemCollection): string | undefined
 }
 
 
+async function getFilesInFolders(projUri: vscode.Uri, projectRelativeFolders: string[], fileExtension: string): Promise<vscode.Uri[]> {
+  const fileUris: vscode.Uri[] = [];
+  for (const relFolder of projectRelativeFolders) {
+    const pattern = relFolder === ""
+      ? new vscode.RelativePattern(projUri, `*.${fileExtension}`)
+      : new vscode.RelativePattern(projUri, `${relFolder}/**/*.${fileExtension}`);
+    const fileUrisForFolder = await vscode.workspace.findFiles(pattern, null);
+    fileUris.push(...fileUrisForFolder);
+  }
+
+  return fileUris;
+}
+
 async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 
-  const stepLines = new Map<FileStep, string>();
-  const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders}/**/*.feature`);
-  const featureFileUris = await vscode.workspace.findFiles(pattern, null);
+  const fileExtension = "feature";
+  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeFeatureFolders, fileExtension);
 
-  for (const featFileUri of featureFileUris) {
+  if (fileUris.length === 0) {
+    debugger; // eslint-disable-line no-debugger
+    throw new Error(`no .${fileExtension} files found in ${projSettings.uri.path}`);
+  }
+
+
+  const stepLines = new Map<FileStep, string>();
+  for (const featFileUri of fileUris) {
     if (isFeatureFile(featFileUri)) {
       const doc = await vscode.workspace.openTextDocument(featFileUri);
       const content = doc.getText();
@@ -403,21 +429,37 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
     }
   }
 
+  if (stepLines.size === 0) {
+    debugger; // eslint-disable-line no-debugger
+    throw new Error(`no step lines found in ${projSettings.uri.path}`);
+  }
+
   return [...stepLines];
 }
 
+
 async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
 
-  const funcLines = new Map<FileStep, string>();
-  const pattern = new vscode.RelativePattern(projSettings.uri, `${projSettings.projRelativeFeatureFolders} /steps/ *.py`);
-  const stepFileUris = await vscode.workspace.findFiles(pattern, null);
+  const fileExtension = "py";
+  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeFeatureFolders, fileExtension);
 
-  for (const stepFileUri of stepFileUris) {
+  if (fileUris.length === 0) {
+    debugger; // eslint-disable-line no-debugger
+    throw new Error(`no .${fileExtension} files found in ${projSettings.uri.path}`);
+  }
+
+  const funcLines = new Map<FileStep, string>();
+  for (const stepFileUri of fileUris) {
     if (isStepsFile(stepFileUri)) {
       const doc = await vscode.workspace.openTextDocument(stepFileUri);
       const content = doc.getText();
       addStepsFromStepsFile(stepFileUri, content, funcLines);
     }
+  }
+
+  if (funcLines.size === 0) {
+    debugger; // eslint-disable-line no-debugger
+    throw new Error(`no step function lines found in ${projSettings.uri.path}`);
   }
 
   return [...funcLines];

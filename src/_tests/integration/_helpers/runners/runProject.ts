@@ -89,13 +89,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: replaceBehaveIni completed`);
 
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
-    // and we cannot intercept this because activate() runs as soon as the extension host loads, but we can change 
-    // it afterwards - we do this here by calling configurationChangedHandler() with our own test config.
-    // The configuration will be actually be loaded once, then reloaded 1-3 times:
+    // and we cannot intercept that because activate() runs as soon as the extension host loads, but we can change 
+    // it afterwards. rather than replaing the settings.json on disk, we call configurationChangedHandler() with our own test config.
+    // So the configuration will be actually be loaded twice:
     // 1. on the initial load (activate) of the extension,
-    // 2. if behave ini is replaced on disk above,
-    // 3. here to insert our test config.
-    // 4. if behave ini is restored in the finally block (i.e. if 2 happened)
+    // 2. here where we inject our test config.
+    // (note that we don't need to do this separately for our behave.ini replacement as that will also get reloaded by firing this handler.)
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
