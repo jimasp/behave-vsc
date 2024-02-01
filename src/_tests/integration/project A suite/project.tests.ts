@@ -12,7 +12,7 @@ suite(`higher steps folder suite test debug run`, () => {
   test("debugFeaturesScenariosSubSets", async () =>
     await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, noRunOptions, expectations));
 
-  test("runAll - execFriendlyCmd with behave.ini", async () =>
+  test("runAll - execFriendlyCmd", async () =>
     await testProjectRunner.runAll(wsConfig, behaveIni, noRunOptions, expectations, true));
 
   test("runScenariosSubSetForEachFeature - execFriendlyCmd", async () =>
