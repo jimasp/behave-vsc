@@ -18,6 +18,7 @@ import { services } from '../services';
 
 
 
+
 export type EnvSetting = { [key: string]: string };
 
 export type RunProfilesSetting = { [key: string]: RunProfile };
@@ -370,11 +371,14 @@ function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPat
   const featureFiles = findFilesSync(projUri, undefined, ".feature");
   const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
 
-  // we only include the project root if it's requested in the behave config paths 
-  // (which is an early exit at the start of this function)
-  // i.e. behave would ignore a feature file in the root if not set in the paths, and so will we
-  if (!relativeConfigPaths.includes(""))
-    foldersContainingFeatureFiles.splice(foldersContainingFeatureFiles.indexOf(projUri.fsPath), 1);
+  // behave would ignore a feature file in the root if not set in the behave config paths, and so must we,
+  // i.e. we only include the project root if it's requested in the behave config paths,
+  // (and if that were the case it would have been intercepted by the early exit on "" at the start of this function)
+  if (!relativeConfigPaths.includes("")) {
+    const projectRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === projUri.fsPath);
+    if (projectRootIndex !== -1)
+      foldersContainingFeatureFiles.splice(projectRootIndex, 1);
+  }
 
   const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
 

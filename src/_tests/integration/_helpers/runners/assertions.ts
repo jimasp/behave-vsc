@@ -182,8 +182,9 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) 
   let closestMatch = { log: '', failedOnInclude: '', highestIndex: 0, mismatchIndex: 0 };
   const projLogs = logStore.get().filter(x => x[0] === projUri.path).map(x => x[1]);
 
-  // for simplicity, we use an ordered includes array here rather than a regex, 
-  // this is so we can do a a direct string comparison (vs getting caught up in regex escaping issues)  
+  // we use an ordered includes array here rather than a regex, so that:
+  // a) we can do a a direct string comparison vs getting caught up in regex escaping issues
+  // b) we have an easy way to get the closest match for the error message if there is no match
   const matchingLogs = projLogs.filter(x => {
     let lastIndex = -1;
     let includesIndex = 0;
@@ -419,7 +420,6 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
     throw new Error(`no .${fileExtension} files found in ${projSettings.uri.path}`);
   }
 
-
   const stepLines = new Map<FileStep, string>();
   for (const featFileUri of fileUris) {
     if (isFeatureFile(featFileUri)) {
@@ -441,7 +441,7 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
 
   const fileExtension = "py";
-  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeFeatureFolders, fileExtension);
+  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeStepsFolders, fileExtension);
 
   if (fileUris.length === 0) {
     debugger; // eslint-disable-line no-debugger
