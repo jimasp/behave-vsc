@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import * as xml2js from 'xml2js';
-import * as path from 'path';
 import { QueueItem } from "../extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common/helpers';
 import { services } from '../services';
 import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
 import { ProjectSettings } from '../config/settings';
-import { Scenario } from './testFile';
+import { getJunitFeatureName } from '../behaveLogic';
 
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
@@ -165,30 +164,6 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
 }
 
 
-
-function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario): string {
-  // NOTE: THIS FUNCTION MUST HAVE BASICALLY THE SAME LOGIC AS THE 
-  // BEHAVE SOURCE CODE FUNCTION "make_feature_filename()".
-  // IF THAT FUNCTION CHANGES IN BEHAVE, THEN IT IS LIKELY THIS WILL ALSO HAVE TO CHANGE.    
-  let jFeatureName = "";
-  const relFeatureFilePath = scenario.featureFileProjectRelativePath;
-
-  for (const path of projSettings.rawBehaveConfigPaths) {
-    // adjust path to account for behave's working directory
-    const behaveRelPath = projSettings.projRelativeWorkingDirPath ? projSettings.projRelativeWorkingDirPath + "/" + path : path;
-    if (relFeatureFilePath.startsWith(behaveRelPath)) {
-      jFeatureName = relFeatureFilePath.slice(behaveRelPath.length + (behaveRelPath !== "" ? 1 : 0));
-      break;
-    }
-  }
-
-  if (!jFeatureName)
-    jFeatureName = path.relative(projSettings.projRelativeBaseDirPath, relFeatureFilePath);
-
-  jFeatureName = jFeatureName.split('.').slice(0, -1).join('.');
-  jFeatureName = jFeatureName.replace(/\\/g, '/').replace(/\//g, '.');
-  return jFeatureName;
-}
 
 
 function getJunitFileUri(projSettings: ProjectSettings, queueItem: QueueItem, projJunitRunDirUri: vscode.Uri): vscode.Uri {

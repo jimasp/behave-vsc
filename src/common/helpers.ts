@@ -130,7 +130,7 @@ export const normaliseUserSuppliedRelativePath = (path: string) => {
 let workspaceFoldersWithFeatures: vscode.Uri[];
 export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
 
-  // NOTE: this function must be fast (ideally < 1ms) 
+  // NOTE: THIS FUNCTION MUST BE FAST (IDEALLY < 1MS) 
   // so we'll default to returning a cached result
   if (!forceRefresh && workspaceFoldersWithFeatures)
     return workspaceFoldersWithFeatures;
