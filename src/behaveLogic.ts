@@ -13,10 +13,10 @@ export function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, pr
   // this function will determine the baseDir
   // where the baseDir = the directory that contains the "steps" folder / environment.py file
 
-  // NOTE: THIS FUNCTION MUST HAVE LOOSELY SIMILAR LOGIC TO THE 
-  // BEHAVE SOURCE CODE FUNCTION "setup_paths()".
+  // NOTE: THIS FUNCTION MUST HAVE LOOSELY SIMILAR LOGIC TO THE BEHAVE SOURCE CODE FUNCTION "setup_paths()".
   // IF THAT FUNCTION LOGIC CHANGES IN BEHAVE, THEN IT IS LIKELY THIS FUNCTION WILL ALSO HAVE TO CHANGE.  
-  // THIS IS BECAUSE THE BASE DIR IS USED TO CALCULATE (PREDICT) THE JUNIT FILENAME THAT BEHAVE WILL USE.
+  // This is because the base dir is used in function getJunitFeatureName (below) to 
+  // calculate (predict) the junit filename that behave will use.
 
   const relativeBaseDir = relativeBehaveConfigPaths.length > 0
     ? relativeBehaveConfigPaths[0]
@@ -54,10 +54,11 @@ export function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, pr
 
 
 export function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario): string {
-  // NOTE: THIS FUNCTION MUST HAVE BASICALLY THE SAME LOGIC AS THE 
-  // BEHAVE SOURCE CODE FUNCTION "make_feature_filename()".
+
+  // NOTE: THIS FUNCTION MUST HAVE BASICALLY THE SAME LOGIC AS THE BEHAVE SOURCE CODE FUNCTION "make_feature_filename()".
   // IF THAT FUNCTION CHANGES IN BEHAVE, THEN IT IS LIKELY THIS WILL ALSO HAVE TO CHANGE.    
-  // THIS IS BECAUSE THIS FUNCTION IS USED TO CALCULATE (PREDICT) THE JUNIT FILENAME THAT BEHAVE WILL USE.  
+  // This is because this function is used to calculate (predict) the junit filename that behave will use.  
+
   let jFeatureName = "";
   const relFeatureFilePath = scenario.featureFileProjectRelativePath;
 
