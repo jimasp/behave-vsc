@@ -424,10 +424,8 @@ export function getFeatureNodePath(uri: vscode.Uri, projSettings: ProjectSetting
 
   if (projRelativeFeatureFolders.length > 1) {
     const topProjectNodes = [...new Set(projRelativeFeatureFolders.map(f => f.split("/")[0]))];
-    if (topProjectNodes.length === 1) {
+    if (topProjectNodes.length === 1)
       stripPath = projSettings.uri.path + "/" + topProjectNodes[0];
-      console.log(stripPath);
-    }
   }
   else {
     stripPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;

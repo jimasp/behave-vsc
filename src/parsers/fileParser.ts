@@ -463,7 +463,7 @@ export class FileParser {
       return { testItem: existingItem, testFile: testData.get(existingItem) as TestFile || new TestFile() };
     }
 
-    console.log(`${caller}: creating test item for ${uri.path}`);
+    xRayLog(`${caller}: creating test item for ${uri.path}`);
 
     const testItem = controller.createTestItem(uriId(uri), featureName, uri);
     testItem.canResolveChildren = true;

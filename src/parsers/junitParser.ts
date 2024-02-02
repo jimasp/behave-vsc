@@ -173,9 +173,11 @@ function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario):
   let jFeatureName = "";
   const relFeatureFilePath = scenario.featureFileProjectRelativePath;
 
-  for (const relConfigPath of projSettings.rawBehaveConfigPaths) {
-    if (relFeatureFilePath.startsWith(relConfigPath)) {
-      jFeatureName = relFeatureFilePath.slice(relConfigPath.length + (relConfigPath !== "" ? 1 : 0));
+  for (const path of projSettings.rawBehaveConfigPaths) {
+    // adjust path to account for behave's working directory
+    const behaveRelPath = projSettings.projRelativeWorkingDirPath ? projSettings.projRelativeWorkingDirPath + "/" + path : path;
+    if (relFeatureFilePath.startsWith(behaveRelPath)) {
+      jFeatureName = relFeatureFilePath.slice(behaveRelPath.length + (behaveRelPath !== "" ? 1 : 0));
       break;
     }
   }
