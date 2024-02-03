@@ -103,7 +103,7 @@ export class ProjectSettings {
   public readonly projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
   public readonly projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)
   // integration test only
-  public readonly integrationTestRunUseCpExec = false;
+  public readonly integrationTestRunUseCpExec;
 
 
   constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
@@ -113,10 +113,12 @@ export class ProjectSettings {
     this.name = getWorkspaceFolder(projUri).name;
     this.uri = projUri;
     this.workingDirUri = projUri; // default
+    this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
 
-    // note: for all settings, projConfig.get() should never return undefined (unless packages.json is wrong),
-    // as get() will always return a default value for any packages.json setting.
-    // (if we want the actual settings.json setting (not default) then use getActualWorkspaceSetting.)    
+    // For all settings read from settings.json (derived from package.json), projConfig.get() should never return
+    // undefined (unless package.json is wrong), as get() will always return a default value for any packages.json setting.
+    // Separately, in cases where we want the actual settings.json setting (not default) then use 
+    // getActualWorkspaceSetting(), i.e. to determine if the user has set something vs it just being a default value.   
 
     const justMyCodeCfg: boolean | undefined = projConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
@@ -266,10 +268,7 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 function getPaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
   projRelativeWorkingDirPath: string) {
 
-  const behaveConfigPaths = getBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
-  const projRelBehaveConfigPaths = behaveConfigPaths.projectRelativePaths;
-  const rawBehaveConfigPaths = behaveConfigPaths.originalPaths;
-
+  const { rawBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   

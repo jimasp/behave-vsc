@@ -380,11 +380,13 @@ export class FileParser {
     deleteStepFileStepsForProject(projUri);
 
     const processed: string[] = [];
-    for (const relStepsSearchPath of projSettings.projRelativeStepsFolders) {
+    for (const relStepsFolder of projSettings.projRelativeStepsFolders) {
       let stepFiles: vscode.Uri[] = [];
-      const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsSearchPath);
-      if (!fs.existsSync(stepsSearchUri.fsPath))
+      const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsFolder);
+      if (!fs.existsSync(stepsSearchUri.fsPath)) {
+        // e.g. user has deleted/renamed folder
         continue;
+      }
 
       stepFiles = await findFiles(stepsSearchUri, new RegExp(".*\\.py$"), true, cancelToken);
 

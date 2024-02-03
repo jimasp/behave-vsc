@@ -11,6 +11,8 @@ export class TestWorkspaceConfigWithProjUri {
 // (i.e. independent of the actual settings.json)
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
+	public integrationTestRunUseCpExec = false;
+
 	public runParallel?: boolean;
 	private env?: { [name: string]: string };
 	private envVarOverrides?: { [name: string]: string };
@@ -77,6 +79,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
 			case "importedSteps":
 				return <T><unknown>(this.importedSteps === undefined ? [] : this.importedSteps);
+			case "integrationTestRunUseCpExec":
+				return <T><unknown>(this.integrationTestRunUseCpExec);
 			case "runProfiles":
 				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
 			case "relativeWorkingDir":

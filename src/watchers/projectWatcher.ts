@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { BEHAVE_CONFIG_FILES_PRECEDENCE, isStepsFile } from '../common/helpers';
 import { services } from "../services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
+import { isStepsFile } from '../common/helpers';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 
 
 

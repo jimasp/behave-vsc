@@ -22,6 +22,7 @@ import { RunProfile } from './config/settings';
 
 
 const config = services.config;
+const logger = services.logger;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
 const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
 const projWatchers = new Map<vscode.Uri, ProjectWatcher>();
@@ -47,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     xRayLog("activate called, node pid:" + process.pid);
 
 
-    services.logger.syncChannelsToWorkspaceFolders();
+    logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
@@ -110,7 +111,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     //   }
     //   catch (e: unknown) {
     //     // entry point function (handler) - show error
-    //     services.logger.showError(e);
+    //     logger.showError(e);
     //   }
     // };
 
@@ -125,7 +126,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        logger.showError(e);
       }
     };
 
@@ -140,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        logger.showError(e);
       }
     }));
 
@@ -160,7 +161,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        logger.showError(e);
       }
     }));
 
@@ -189,11 +190,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
           return;
 
         if (!testCfg)
-          services.logger.clearAllProjects();
+          logger.clearAllProjects();
 
         // adding/removing/renaming workspaces will not only change the 
         // set of workspaces we are watching, but also the output channels
-        services.logger.syncChannelsToWorkspaceFolders();
+        logger.syncChannelsToWorkspaceFolders();
 
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
@@ -228,7 +229,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        logger.showError(e);
       }
     }
 
@@ -256,7 +257,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
   catch (e: unknown) {
     // entry point function (handler) - show error    
     if (config && services.logger) {
-      services.logger.showError(e);
+      logger.showError(e);
     }
     else {
       // no logger yet, use vscode.window.showErrorMessage directly

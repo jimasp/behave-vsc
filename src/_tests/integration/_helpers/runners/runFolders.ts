@@ -32,7 +32,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
   if (execFriendlyCmd)
-    services.config.integrationTestRunUseCpExec[projId] = true;
+    testExtConfig.integrationTestRunUseCpExec = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));

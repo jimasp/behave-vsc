@@ -1,24 +1,26 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { BEHAVE_CONFIG_FILES_PRECEDENCE } from "../common/helpers";
 import { services } from '../services';
+import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 
 
+type BehaveConfigPaths = {
+  rawBehaveConfigPaths: string[];
+  projRelBehaveConfigPaths: string[];
+}
 
 
 export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri,
-  projRelativeWorkDirPath: string) {
+  projRelativeWorkDirPath: string): BehaveConfigPaths {
 
   let paths: string[] | null = null;
-
-  // BEHAVE_CONFIG_FILES ARRAY HAS THE SAME ORDER OF PRECEDENCE AS IN THE BEHAVE 
-  // SOURCE CODE FUNCTION "config_filenames()",
-  // however we DON'T need to reverse() it like behave because we are only 
-  // interested in the "paths" setting (not all cumulative settings), 
-  // i.e. we can just break on the first file in the order that has a "paths" setting.
   let matchedConfigFile;
   let lastExistingConfigFile;
+
+  // we DON'T need to reverse() BEHAVE_CONFIG_FILES like behave because we are only 
+  // interested in the "paths" setting (not all cumulative settings), 
+  // i.e. we can just break on the first file in the order that has a "paths" setting.  
   for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
     const configFilePath = path.join(workDirUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
@@ -36,12 +38,12 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
 
   if (!lastExistingConfigFile) {
     services.logger.logInfo(`No Behave config file found, using default paths.`, projUri);
-    return { projectRelativePaths: [], originalPaths: [] };
+    return { rawBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
   }
 
   if (!paths) {
     services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, projUri);
-    return { projectRelativePaths: [], originalPaths: [] };
+    return { rawBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
   }
 
   let relPaths: string[] = [];
@@ -90,8 +92,8 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     `${relPaths.map(p => `"${p}"`).join(", ")}`, projUri);
 
   return {
-    projectRelativePaths: relPaths,
-    originalPaths: paths
+    rawBehaveConfigPaths: paths,
+    projRelBehaveConfigPaths: relPaths
   };
 }
 

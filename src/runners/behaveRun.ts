@@ -21,7 +21,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
 
     // on integration test runs ONLY, we sometimes use cp.exec 
     // instead of cp.spawn, so that we can test the generated friendlyCmd executes correctly
-    if (services.config.isIntegrationTestRun && services.config.integrationTestRunUseCpExec[pr.projSettings.id]) {
+    if (services.config.isIntegrationTestRun && pr.projSettings.integrationTestRunUseCpExec) {
       xRayLog("--- integration test running in exec mode ---")
       cp = exec(`${friendlyCmd}`);
     }

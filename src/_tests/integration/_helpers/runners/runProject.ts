@@ -82,7 +82,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
     // (outside of integration tests, cp.spawn is always used)
     if (execFriendlyCmd)
-      services.config.integrationTestRunUseCpExec[projId] = true;
+      testExtConfig.integrationTestRunUseCpExec = true;
 
     // replace behave.ini if required
     behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);

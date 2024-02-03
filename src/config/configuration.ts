@@ -6,8 +6,7 @@ import { ProjectSettings, InstanceSettings } from './settings';
 
 export class Configuration {
   isIntegrationTestRun = false;
-  integrationTestRunUseCpExec: { [key: string]: boolean } = {};
-  instanceSettingsLoaded = false; // used by diagLog to check if instanceSettings is available (i.e. without calling the getter)
+  instanceSettingsLoaded = false; // used by xRayLog to check if instanceSettings is available (i.e. without get() side-effects)
   readonly exampleProject: boolean = false;
   readonly extensionTempFilesUri;
   private _windowSettings: InstanceSettings | undefined = undefined;
