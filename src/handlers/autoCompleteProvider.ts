@@ -6,14 +6,14 @@ import { getStepFilesSteps } from '../parsers/stepsParser';
 
 
 export const autoCompleteProvider = {
-  provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
+  async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.CompletionItem[] | undefined> {
     try {
       const lcLine = document.lineAt(position).text.trimStart().toLowerCase();
       const step = featureFileStepRe.exec(lcLine);
       if (!step)
         return;
 
-      const projSettings = getProjectSettingsForFile(document.uri);
+      const projSettings = await getProjectSettingsForFile(document.uri);
       if (!projSettings)
         return;
 

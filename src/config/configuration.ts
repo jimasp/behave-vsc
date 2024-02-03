@@ -19,14 +19,14 @@ export class Configuration {
   }
 
   // called by onDidChangeConfiguration
-  reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
+  async reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
     if (testConfig) {
       this._windowSettings = new InstanceSettings(testConfig);
-      this._resourceSettings[projUri.path] = new ProjectSettings(projUri, testConfig, this._windowSettings);
+      this._resourceSettings[projUri.path] = await ProjectSettings.create(projUri, testConfig, this._windowSettings);
     }
     else {
       this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this._resourceSettings[projUri.path] = new ProjectSettings(projUri,
+      this._resourceSettings[projUri.path] = await ProjectSettings.create(projUri,
         vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings);
     }
   }
@@ -39,15 +39,15 @@ export class Configuration {
     return this._windowSettings;
   }
 
-  get projectSettings(): { [projUriPath: string]: ProjectSettings } {
+  async getProjectSettings(projUriPath: string): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
-    getUrisOfWkspFoldersWithFeatures().forEach(projUri => {
+    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
       if (!this._resourceSettings[projUri.path]) {
         this._resourceSettings[projUri.path] =
-          new ProjectSettings(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
+          await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
       }
-    });
-    return this._resourceSettings;
+    }
+    return this._resourceSettings[projUriPath];
   }
 
   // note - python interpreter can be changed dynamically by the user, so don't store the result

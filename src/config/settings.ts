@@ -98,15 +98,38 @@ export class ProjectSettings {
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
-  public readonly rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
-  public readonly projRelativeBaseDirPath: string = ""; // directory that contains "steps" folder/environment.py file
-  public readonly projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
-  public readonly projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)
+  public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
+  public projRelativeBaseDirPath = ""; // directory that contains "steps" folder/environment.py file
+  public projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
+  public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)
   // integration test only
   public readonly integrationTestRunUseCpExec;
 
 
-  constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
+  public static async create(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings):
+    Promise<ProjectSettings> {
+
+    const instance = new ProjectSettings(projUri, projConfig, winSettings);
+
+    // do "real work" on filesystem
+    const projRelPaths = getPaths(instance);
+    if (!projRelPaths) {
+      // most likely behave config "paths" is misconfigured, 
+      // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
+      return instance;
+    }
+
+    // update properties after real work
+    instance.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
+    instance.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
+    instance.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
+    instance.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
+
+    return instance;
+  }
+
+
+  private constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
     xRayLog("constructing ProjectSettings");
 
     this.id = uriId(projUri);
@@ -167,24 +190,10 @@ export class ProjectSettings {
       this.projRelativeWorkingDirPath = relWorkingDirCfg;
     }
 
-
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
       throw new Error("importedSteps is undefined");
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
-
-
-    const projRelPaths = getPaths(this);
-    if (!projRelPaths) {
-      // most likely behave config "paths" is misconfigured, 
-      // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
-      return;
-    }
-
-    this.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
-    this.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
-    this.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
-    this.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
 
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);

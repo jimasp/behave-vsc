@@ -13,7 +13,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	public integrationTestRunUseCpExec = false;
 
-	public runParallel?: boolean;
+	public readonly runParallel?: boolean;
 	private env?: { [name: string]: string };
 	private envVarOverrides?: { [name: string]: string };
 	private justMyCode?: boolean;
@@ -23,8 +23,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	private relativeWorkingDir?: string;
 	private xRay?: boolean;
 
-	// all USER-SETTABLE settings in settings.json or *.code-workspace
 	constructor({
+		// all USER-SETTABLE settings in settings.json or *.code-workspace		
 		envVarOverrides = undefined,
 		env = undefined,
 		justMyCode = undefined,

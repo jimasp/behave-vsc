@@ -50,7 +50,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
   try {
 
-    if (textEditor && (!fileUri || !isStepsFile(fileUri))) {
+    if (textEditor && (!fileUri || !await isStepsFile(fileUri))) {
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
       services.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
         "(i.e. /steps/ or a behave-vsc.importedSteps setting path). Project-relative file path was: " +

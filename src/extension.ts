@@ -39,9 +39,9 @@ export function deactivate() {
 // construction function called on extension activation OR the first time a new/unrecognised workspace gets added.
 // - call anything that needs to be initialised/kicked off async on startup, and 
 // - set up all relevant event handlers/hooks/subscriptions to the vscode api
-// NOTE - THIS MUST RETURN FAST: AVOID using "await" here unless absolutely necessary (except inside handlers)
 // this function should only contain initialisation, registering event handlers, and unawaited async calls
-export async function activate(context: vscode.ExtensionContext): Promise<IntegrationTestAPI | undefined> {
+// DO NOT MAKE THIS FUNCTION ASYNC (we want to kick off async tasks and then return)
+export function activate(context: vscode.ExtensionContext): IntegrationTestAPI | undefined {
 
   try {
     const start = performance.now();
@@ -56,10 +56,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
-    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      const projWatcher = new ProjectWatcher(projUri, ctrl, testData);
-      projWatchers.set(projUri, projWatcher);
-    }
+    createProjectWatchers(ctrl, testData);
 
     const junitWatcher = new JunitWatcher();
     junitWatcher.startWatchingJunitFolder();
@@ -155,7 +152,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
       try {
         const uri = event.document.uri;
-        if (!isFeatureFile(uri) && !isStepsFile(uri))
+        if (!isFeatureFile(uri) && !await isStepsFile(uri))
           return;
         services.parser.reparseFile(uri, testData, ctrl, "onDidChangeTextDocument", event.document.getText());
       }
@@ -199,17 +196,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testCfg) {
             if (urisMatch(testCfg.projUri, projUri))
-              config.reloadSettings(projUri, testCfg.testConfig);
+              await config.reloadSettings(projUri, testCfg.testConfig);
             continue;
           }
 
-          config.reloadSettings(projUri);
+          await config.reloadSettings(projUri);
           reloadRunProfiles(ctrl, runHandler);
 
           const oldProjWatcher = projWatchers.get(projUri);
           if (oldProjWatcher)
             oldProjWatcher.dispose();
-          const projWatcher = new ProjectWatcher(projUri, ctrl, testData);
+          const projWatcher = await ProjectWatcher.create(projUri, ctrl, testData);
           projWatchers.set(projUri, projWatcher);
         }
 
@@ -328,6 +325,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<Integr
 
 } // end activate()
 
+
+async function createProjectWatchers(ctrl: vscode.TestController, testData: TestData) {
+  for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+    const projWatcher = await ProjectWatcher.create(projUri, ctrl, testData);
+    projWatchers.set(projUri, projWatcher);
+  }
+}
 
 
 // public API (i.e. the activate function return type) is normally there to be called from other 

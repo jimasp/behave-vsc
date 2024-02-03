@@ -170,9 +170,9 @@ export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): v
 }
 
 
-export const getProjectSettingsForFile = (fileorFolderUri: vscode.Uri | undefined): ProjectSettings => {
+export const getProjectSettingsForFile = async (fileorFolderUri: vscode.Uri | undefined): Promise<ProjectSettings> => {
   const projUri = getProjectUriForFile(fileorFolderUri);
-  return services.config.projectSettings[projUri.path];
+  return await services.config.getProjectSettings(projUri.path);
 }
 
 
@@ -217,7 +217,7 @@ export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
 }
 
 
-export const isStepsFile = (fileUri: vscode.Uri): boolean => {
+export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
   // fast checks first
   if (fileUri.scheme !== "file")
     return false;
@@ -240,7 +240,7 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   }
 
   if (!/.*\/steps\/.*/.test(lcPath)) {
-    const projSettings = getProjectSettingsForFile(fileUri);
+    const projSettings = await getProjectSettingsForFile(fileUri);
     const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
     const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
     if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))

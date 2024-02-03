@@ -80,9 +80,6 @@ export class FileParser {
     this._parseFilesCallCounts[projPath]++;
 
     const parseId = `${projPath}#${this._parseFilesCallCounts[projPath]}`;
-    const ps: ProjectSettings = services.config.projectSettings[projPath];
-    const projName = ps.name;
-    const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
     this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
 
     // if caller itself cancels, pass it on to the internal token
@@ -91,7 +88,7 @@ export class FileParser {
         this._cancelTokenSources[parseId].cancel();
     });
 
-    const cancelOtherParsesForThisProject = async () => {
+    const cancelOtherParsesForThisProject = async (projName: string) => {
       for (const key of Object.keys(this._cancelTokenSources)) {
         if (key !== parseId && key.startsWith(projPath + "#")) {
           const cancelledLogId = key.replace(projPath + "#", projName + "#");
@@ -105,13 +102,18 @@ export class FileParser {
     }
 
     try {
+
+      const ps: ProjectSettings = await services.config.getProjectSettings(projPath);
+      const projName = ps.name;
+      const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
+
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
       const callName = `parseFiles[${logId}] (${intiator})`;
       xRayLog(`\n===== ${callName}: started =====`);
 
       // IMPORTANT: this function is not generally awaited, and therefore re-entrant, so 
       // cancel any existing parseFiles call for this project
-      await cancelOtherParsesForThisProject();
+      await cancelOtherParsesForThisProject(projName);
 
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
         xRayLog(`${callName}: cancellation complete`);
@@ -295,14 +297,14 @@ export class FileParser {
       const isAFeatureFile = isFeatureFile(fileUri);
       let isAStepsFile = false;
       if (!isAFeatureFile)
-        isAStepsFile = isStepsFile(fileUri);
+        isAStepsFile = await isStepsFile(fileUri);
       if (!isAStepsFile && !isAFeatureFile)
         return;
 
       if (!content)
         content = await getContentFromFilesystem(fileUri);
 
-      ps = getProjectSettingsForFile(fileUri);
+      ps = await getProjectSettingsForFile(fileUri);
 
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
@@ -399,7 +401,7 @@ export class FileParser {
         // the importedSteps setting could result in multiple matches, so skip if already processed
         if (processed.includes(uriId(uri)))
           continue;
-        if (!isStepsFile(uri))
+        if (!await isStepsFile(uri))
           continue;
         const content = await getContentFromFilesystem(uri);
         await parseStepsFileContent(projUri, content, uri, caller);

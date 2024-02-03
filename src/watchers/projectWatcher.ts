@@ -13,10 +13,12 @@ export class ProjectWatcher {
   #watcherEvents: vscode.Disposable[] = [];
   #watcher: vscode.FileSystemWatcher | undefined = undefined;
 
-  constructor(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData) {
-    const projectPattern = new vscode.RelativePattern(projUri, `**`);
-    this.#watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
-    this.#watcherEvents = this._setWatcherEventHandlers(this.#watcher, projUri, ctrl, testData);
+  private constructor(
+    watcher: vscode.FileSystemWatcher,
+    watcherEvents: vscode.Disposable[]
+  ) {
+    this.#watcher = watcher;
+    this.#watcherEvents = watcherEvents;
   }
 
   public dispose() {
@@ -25,11 +27,18 @@ export class ProjectWatcher {
     this.#watcher?.dispose();
   }
 
+  public static async create(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): Promise<ProjectWatcher> {
+    const projectPattern = new vscode.RelativePattern(projUri, `**`);
+    const watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
+    const watcherEvents = await ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);
+    const projectWatcher = new ProjectWatcher(watcher, watcherEvents);
+    return projectWatcher;
+  }
 
-  _setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
-    testData: TestData): vscode.Disposable[] {
+  static async setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
+    testData: TestData): Promise<vscode.Disposable[]> {
 
-    const projSettings = services.config.projectSettings[projUri.path];
+    const projSettings = await services.config.getProjectSettings(projUri.path);
     const events: vscode.Disposable[] = [];
 
     events.push(watcher.onDidCreate(async (uri) => {
@@ -78,7 +87,7 @@ export class ProjectWatcher {
         if (uri.scheme !== "file")
           return;
 
-        if (isStepsFile(uri)) {
+        if (await isStepsFile(uri)) {
           deleteStepsAndStepMappingsForStepsFile(uri);
           return;
         }

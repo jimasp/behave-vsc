@@ -96,7 +96,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // (note that we don't need to do this separately for our behave.ini replacement as that will also get reloaded by firing this handler.)
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
-    assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
+    await assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
 
 
     // ACT 1

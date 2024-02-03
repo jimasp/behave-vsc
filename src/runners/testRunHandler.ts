@@ -101,7 +101,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
     }
     else {
       if (data instanceof TestFile && !data.didResolve) {
-        const projSettings = getProjectSettingsForFile(test.uri);
+        const projSettings = await getProjectSettingsForFile(test.uri);
         const content = await getContentFromFilesystem(test.uri);
         await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedTestItems");
       }
@@ -125,7 +125,9 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   const projRunPromises: Promise<void>[] = [];
   const winSettings = services.config.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
-  const allProjectsSettings = getUrisOfWkspFoldersWithFeatures().map(projUri => services.config.projectSettings[projUri.path]);
+  const allProjectsSettings = await Promise.all(getUrisOfWkspFoldersWithFeatures().map(async (projUri) =>
+    await services.config.getProjectSettings(projUri.path)
+  ));
 
   for (const projSettings of allProjectsSettings) {
     const idMatch = uriId(projSettings.uri);

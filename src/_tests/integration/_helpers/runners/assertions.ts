@@ -11,7 +11,7 @@ import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers
 import { featureFileStepRe } from "../../../../parsers/featureParser";
 import { funcRe } from "../../../../parsers/stepsParser";
 import { logStore } from "../../../runner";
-import * as inspector from "inspector";
+
 
 
 export function assertInstances(instances: IntegrationTestAPI) {
@@ -25,7 +25,7 @@ export function assertInstances(instances: IntegrationTestAPI) {
 }
 
 
-export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, behaveIni: TestBehaveIni,
+export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, behaveIni: TestBehaveIni,
   testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {
 
   // multiroot will read window settings from multiroot.code-workspace file, not config
@@ -39,7 +39,7 @@ export function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName:
       `${projName} project: runProfiles`);
   }
 
-  const projSettings = config.projectSettings[projUri.path];
+  const projSettings = await config.getProjectSettings(projUri.path);
   assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
     `${projName} project: env`);
   assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
@@ -127,7 +127,7 @@ function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResul
 
 export async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-  const projSettings = services.config.projectSettings[projUri.path];
+  const projSettings = await services.config.getProjectSettings(projUri.path);
   const featureFileSteps = await getAllStepLinesFromFeatureFiles(projSettings);
 
   for (const [step, stepText] of featureFileSteps) {
@@ -152,7 +152,7 @@ export async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: v
 
 export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-  const projSettings = services.config.projectSettings[projUri.path];
+  const projSettings = await services.config.getProjectSettings(projUri.path);
   const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(projSettings);
 
   for (const [step, funcLine] of stepFileSteps) {
@@ -450,7 +450,7 @@ async function getAllStepFunctionLinesFromStepsFiles(ps: ProjectSettings) {
 
   const funcLines = new Map<FileStep, string>();
   for (const stepFileUri of fileUris) {
-    if (isStepsFile(stepFileUri)) {
+    if (await isStepsFile(stepFileUri)) {
       const doc = await vscode.workspace.openTextDocument(stepFileUri);
       const content = doc.getText();
       addStepsFromStepsFile(stepFileUri, content, funcLines);
