@@ -122,7 +122,7 @@ export class ProjectWatcher {
       // for the project root and use this handleIt function as a filter.
       // THIS FUNCTION SHOULD RETURN FAST (i.e. early exits where possible) as it is called for every project file/folder change
 
-      if (uri.path.endsWith(".tmp")) // vscode file history file (and we also use .tmp in our integration tests for behave.ini backup)
+      if (uri.path.endsWith(".tmp")) // vscode file history file 
         return false;
 
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
