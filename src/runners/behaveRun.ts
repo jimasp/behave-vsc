@@ -1,5 +1,5 @@
 import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
-import { services } from "../services";
+import { services } from "../common/services";
 import { cleanBehaveText } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';

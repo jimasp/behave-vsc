@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../services";
+import { services } from "../common/services";
 import { uriId, getProjectUriForFile, isStepsFile, openDocumentRange } from '../common/helpers';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';

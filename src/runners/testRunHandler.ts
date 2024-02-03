@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
-import { services } from "../services";
+import { services } from "../common/services";
 import { RunProfile, ProjectSettings } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';

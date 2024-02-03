@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ProjectSettings } from "../config/settings";
 import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common/helpers';
 import { xRayLog } from '../common/logger';
-import { services } from '../services';
+import { services } from '../common/services';
 
 
 const featureRe = /^\s*Feature:(.*)$/i;

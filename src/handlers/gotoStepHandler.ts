@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../services";
+import { services } from "../common/services";
 import { getProjectUriForFile, isFeatureFile, openDocumentRange } from '../common/helpers';
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { featureFileStepRe } from '../parsers/featureParser';

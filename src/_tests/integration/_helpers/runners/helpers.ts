@@ -8,7 +8,7 @@ import { IntegrationTestAPI } from '../../../../extension';
 import {
 	getUrisOfWkspFoldersWithFeatures,
 } from '../../../../common/helpers';
-import { services } from '../../../../services';
+import { services } from '../../../../common/services';
 import { assertInstances } from './assertions';
 import { RunOptions } from '../common';
 import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';

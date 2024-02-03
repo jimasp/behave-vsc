@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { services } from '../../../services';
+import { services } from '../../../common/services';
 import { getFeatureNodePath, getOptimisedFeatureParsingPaths } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
 

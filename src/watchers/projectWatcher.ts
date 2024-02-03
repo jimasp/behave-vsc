@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from "../services";
+import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';

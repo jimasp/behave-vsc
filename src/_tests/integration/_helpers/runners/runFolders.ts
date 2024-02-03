@@ -4,7 +4,7 @@ import * as path from 'path';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { uriId } from '../../../../common/helpers';
-import { services } from '../../../../services';
+import { services } from '../../../../common/services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
 import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";

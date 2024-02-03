@@ -5,7 +5,7 @@ import { IntegrationTestAPI, QueueItem } from "../../../../extension";
 import { ProjParseCounts } from "../../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "../testWorkspaceConfig";
 import { Expectations, TestBehaveIni, TestResult } from "../common";
-import { services } from "../../../../services";
+import { services } from "../../../../common/services";
 import { ProjectSettings } from "../../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
 import { featureFileStepRe } from "../../../../parsers/featureParser";

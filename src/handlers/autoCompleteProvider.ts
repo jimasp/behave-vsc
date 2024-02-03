@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectSettingsForFile, getProjectUriForFile, sepr } from '../common/helpers';
-import { services } from '../services';
+import { services } from '../common/services';
 import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFilesSteps } from '../parsers/stepsParser';
 

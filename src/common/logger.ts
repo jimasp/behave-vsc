@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { services } from '../services';
+import { services } from './services';
 import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 
 

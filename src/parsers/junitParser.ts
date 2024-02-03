@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as xml2js from 'xml2js';
 import { QueueItem } from "../extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common/helpers';
-import { services } from '../services';
+import { services } from '../common/services';
 import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
 import { ProjectSettings } from '../config/settings';
 import { getJunitFeatureName } from '../behaveLogic';

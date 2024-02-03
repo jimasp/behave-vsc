@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
-import { services } from "../services";
+import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
 import { StepImport, ProjectSettings } from '../config/settings';
 import { xRayLog } from './logger';

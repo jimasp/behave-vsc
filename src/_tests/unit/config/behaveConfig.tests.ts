@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getBehaveConfigPaths } from '../../../config/behaveConfig';
-import { services } from '../../../services';
+import { services } from '../../../common/services';
 import { rndNumeric } from '../../../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../../../behaveLogic';
 

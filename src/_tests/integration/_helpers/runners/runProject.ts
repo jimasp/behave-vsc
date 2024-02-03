@@ -5,7 +5,7 @@ import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../common';
-import { services } from '../../../../services';
+import { services } from '../../../../common/services';
 import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,

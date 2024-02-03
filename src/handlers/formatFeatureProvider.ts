@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getProjectUriForFile, getLines } from '../common/helpers';
-import { services } from '../services';
+import { services } from '../common/services';
 
 const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
 const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario Template:).*/;

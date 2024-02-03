@@ -14,7 +14,7 @@ import {
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
 import { getBehaveConfigPaths } from './behaveConfig';
-import { services } from '../services';
+import { services } from '../common/services';
 import { getRelativeBaseDirPath } from '../behaveLogic';
 
 

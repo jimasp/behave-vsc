@@ -3,7 +3,7 @@ import * as Mocha from 'mocha';
 import * as glob from 'glob';
 import * as vscode from 'vscode';
 import * as inspector from 'inspector';
-import { services } from '../services';
+import { services } from '../common/services';
 
 
 export async function runner(globStr: string, ignore?: string[]): Promise<void> {

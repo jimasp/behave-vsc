@@ -6,7 +6,7 @@ import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps }
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';
 import { performance } from 'perf_hooks';
 import { retriggerSemanticHighlighting } from '../handlers/semHighlightProvider';
-import { services } from '../services';
+import { services } from '../common/services';
 
 
 let stepMappings: StepMapping[] = [];

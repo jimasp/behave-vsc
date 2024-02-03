@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { performance } from 'perf_hooks';
-import { services } from "../services";
+import { services } from "../common/services";
 import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
