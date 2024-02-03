@@ -1,4 +1,3 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { services } from './common/services';
@@ -40,17 +39,16 @@ export function getJunitFeatureName(ps: ProjectSettings, scenario: Scenario): st
 }
 
 
-export function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, projRelativeWorkingDirPath: string,
-  relativeBehaveConfigPaths: string[]): string | null {
+export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfigPaths: string[]): string | null {
   // this function should contain similar logic to the behave source code function "setup_paths()"
 
   // the baseDir = the parent directory of the "steps" folder / environment.py file
   // (although baseDir is only ever used in getJunitFeatureName(), we don't want to call it every time that gets called,
   // but we do want to re-determine it if settings change, so this function is called from and stored in the ProjectSettings object.)
 
-  const relativeBaseDir = relativeBehaveConfigPaths.length > 0 ? relativeBehaveConfigPaths[0] : projRelativeWorkingDirPath + "/features";
-  const project_parent_dir = path.dirname(projUri.fsPath);
-  let new_base_dir = path.join(projUri.fsPath, relativeBaseDir);
+  const relativeBaseDir = relativeBehaveConfigPaths.length > 0 ? relativeBehaveConfigPaths[0] : ps.projRelativeWorkingDirPath + "/features";
+  const project_parent_dir = path.dirname(ps.uri.fsPath);
+  let new_base_dir = path.join(ps.uri.fsPath, relativeBaseDir);
 
   while (
     !(fs.existsSync(path.join(new_base_dir, "steps")) ||
@@ -63,18 +61,18 @@ export function getRelativeBaseDirPath(projUri: vscode.Uri, projName: string, pr
 
   if (new_base_dir === project_parent_dir) {
     if (relativeBehaveConfigPaths.length === 0) {
-      services.logger.showWarn(`Could not find "steps" directory for project "${projName}". ` +
+      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". ` +
         'Please either: (a) specify a "paths" setting in your behave configuration file for this project, and/or ' +
         '(b) if your behave working directory is not the same as your project root then specify a "behave-vsc.relWorkingDir"' +
-        'in settings.json', projUri);
+        'in settings.json', ps.uri);
     }
     else {
-      services.logger.showWarn(`Could not find "steps" directory for project "${projName}". ` +
-        `Using the first behave configuration paths value "${new_base_dir}"`, projUri);
+      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". ` +
+        `Using the first behave configuration paths value "${new_base_dir}"`, ps.uri);
     }
     return null;
   }
 
   // adjust basedir path to a project-relative path
-  return path.relative(projUri.fsPath, new_base_dir);
+  return path.relative(ps.uri.fsPath, new_base_dir);
 }

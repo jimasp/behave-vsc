@@ -18,109 +18,12 @@ import { ProjRun } from '../../../../runners/testRunHandler';
 
 
 
-export function getTestProjectUri(projName: string) {
-	const uris = getUrisOfWkspFoldersWithFeatures();
-	const projUri = uris.find(uri => uri.path.includes(projName));
-	assert(projUri, "projUri");
-	return projUri;
-}
-
-export function getBehaveIniPaths(workDirUri: vscode.Uri) {
-	const behaveIniPath = path.join(workDirUri.fsPath, 'behave.ini');
-	const behaveIniTmpPath = path.join(workDirUri.fsPath, 'behave.ini.tmp');
-	return { behaveIniPath, behaveIniTmpPath };
-}
-
-export async function replaceBehaveIni(consoleName: string, projUri: vscode.Uri, workDirUri: vscode.Uri, content: string) {
-	// behave behaviour is dictated by a file on disk, 
-	// i.e. we cannot mock out behave.ini or we would go out of sync with behave
-	const paths = getBehaveIniPaths(workDirUri);
-	let replaced = false;
-	if (fs.existsSync(paths.behaveIniPath)) {
-		fs.renameSync(paths.behaveIniPath, paths.behaveIniTmpPath);
-		replaced = true;
-	}
-	if (content) {
-		fs.writeFileSync(paths.behaveIniPath, Buffer.from(content));
-		replaced = true;
-	}
-	// if (replaced)
-	// 	await waitForWatcherParse(consoleName, projUri, false, paths.behaveIniPath);
-
-	return replaced;
-}
-
-
-export async function restoreBehaveIni(consoleName: string, projUri: vscode.Uri, workDirUri: vscode.Uri) {
-	const paths = getBehaveIniPaths(workDirUri);
-	//let restored = false;
-	if (fs.existsSync(paths.behaveIniTmpPath)) {
-		fs.renameSync(paths.behaveIniTmpPath, paths.behaveIniPath);
-		//restored = true;
-	}
-	else if (fs.existsSync(paths.behaveIniPath)) {
-		fs.unlinkSync(paths.behaveIniPath);
-		//restored = true;
-	}
-	// if (restored)
-	// 	await waitForWatcherParse(consoleName, projUri, true, paths.behaveIniPath);
-}
-
-
-// export async function waitForWatcherParse(consoleName: string, projUri: vscode.Uri, waitUntilComplete: boolean, fileTrigger: string) {
-// 	// replacing the behave.ini file will, after a DELAY, fire a reparse via the projectWatcher (fileSystemWatcher).
-// 	// for testing, we need to make sure the delayed parse has kicked off BEFORE config is 
-// 	// reloaded in runAllTestsAndAssertTheResults via configurationChangedHandler, otherwise:
-// 	// a. a delayed parse would cancel the reparse inside configurationChangedHandler, and
-// 	// b. equally it would not be cancelled itself by the configurationChangedHandler reparse because it hasn't started yet.
-// 	// so we wait for the parse to kick off
-
-// 	// note - on project start up, the projectWatcher may not pick up on a 
-// 	// file change, so we'll assume if it hasn't picked it up after
-// 	// half a second that it isn't going to
-// 	async function waitForParse(untilComplete: boolean) {
-// 		let waited = 0;
-// 		const waitTime = untilComplete ? 5000 : 500;
-// 		while (waited < 500) {
-// 			if (untilComplete !== services.parser.parseIsActiveForProject(projUri))
-// 				break;
-// 			await new Promise(t => setTimeout(t, 5));
-// 			waited += 5;
-// 		}
-
-// 		if (untilComplete && waited === 5000) {
-// 			debugger; // eslint-disable-line no-debugger
-// 			throw new Error(`${consoleName}: waitForWatcherParse waited ${waited}ms for parse started by ` +
-// 				`${fileTrigger} to complete - check for any previous console errors that would have stopped a parse`);
-// 		}
-
-// 		return waited < waitTime && !untilComplete;
-// 	}
-
-// 	const parseWasStarted = await waitForParse(false);
-
-// 	if (!parseWasStarted || !waitUntilComplete)
-// 		return;
-
-// 	// also wait for it to complete, this is so that:
-// 	// a) we're clean for our next run, and 
-// 	// b) to stop the "Canceled" red console error appearing when we're actually expecting a cancel due to the integration test suite 
-// 	// exiting the IDE on successful test completion
-// 	await waitForParse(true);
-// }
-
-
-
-//declare const global: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-//global.lock = "";
 let lockVal = "";
-
 export const ACQUIRE = "acquire";
 export const RELEASE = "release";
-
-// used to mitigate parallel project initialisation for multiroot parallel project testing
-// (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)
 export async function setLock(consoleName: string, acquireOrRelease: string) {
+	// this function is used to mitigate parallel project initialisation for multiroot parallel project testing
+	// (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)	
 
 	if (!(global as any).multiRootTest)
 		return;
@@ -157,6 +60,40 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 		console.log(`${consoleName}: setLock acquired lock after ${waited}`);
 	}
 
+}
+
+
+export function getTestProjectUri(projName: string) {
+	const uris = getUrisOfWkspFoldersWithFeatures();
+	const projUri = uris.find(uri => uri.path.includes(projName));
+	assert(projUri, "projUri");
+	return projUri;
+}
+
+
+export function getBehaveIniPaths(workDirUri: vscode.Uri) {
+	const behaveIniPath = path.join(workDirUri.fsPath, 'behave.ini');
+	const behaveIniBakPath = path.join(workDirUri.fsPath, 'behave.ini.bak');
+	return { behaveIniPath, behaveIniBakPath };
+}
+
+
+export async function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content: string) {
+	const paths = getBehaveIniPaths(workDirUri);
+	await fs.promises.writeFile(paths.behaveIniPath, Buffer.from(content));
+	console.log(`${consoleName}: replaceBehaveIni wrote "${content}" to ${paths.behaveIniPath}`);
+}
+
+
+export async function restoreBehaveIni(consoleName: string, workDirUri: vscode.Uri) {
+	const paths = getBehaveIniPaths(workDirUri);
+	if (fs.existsSync(paths.behaveIniBakPath)) {
+		await fs.promises.copyFile(paths.behaveIniBakPath, paths.behaveIniPath);
+		console.log(`${consoleName}: replaceBehaveIni copied "${paths.behaveIniBakPath}" to ${paths.behaveIniPath}`);
+		return;
+	}
+	await fs.promises.unlink(paths.behaveIniPath);
+	console.log(`${consoleName}: replaceBehaveIni removed "${paths.behaveIniPath}"`);
 }
 
 

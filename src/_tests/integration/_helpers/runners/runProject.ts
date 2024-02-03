@@ -50,7 +50,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const projUri = getTestProjectUri(projName);
   logStore.clearProjLogs(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
-  let behaveIniReplaced = false;
 
 
   // ARRANGE
@@ -85,8 +84,8 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
       testExtConfig.integrationTestRunUseCpExec = true;
 
     // replace behave.ini if required
-    behaveIniReplaced = await replaceBehaveIni(consoleName, projUri, workDirUri, behaveIni.content);
-    console.log(`${consoleName}: replaceBehaveIni completed`);
+    // note that we cannot inject this like our test workspace config, because behave will always read it from disk
+    await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
     // and we cannot intercept that because activate() runs as soon as the extension host loads, but we can change 
@@ -160,8 +159,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
       assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
   finally {
-    if (behaveIniReplaced)
-      await restoreBehaveIni(consoleName, projUri, workDirUri);
+    await restoreBehaveIni(consoleName, workDirUri);
   }
 }
 

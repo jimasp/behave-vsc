@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { services } from '../common/services';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
+import { ProjectSettings } from './settings';
 
 
 type BehaveConfigPaths = {
@@ -11,40 +12,12 @@ type BehaveConfigPaths = {
 }
 
 
-export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri,
-  projRelativeWorkDirPath: string): BehaveConfigPaths {
+export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
 
-  let paths: string[] | null = null;
-  let matchedConfigFile;
-  let lastExistingConfigFile;
+  const { matchedConfigFile, paths } = getBehavePathsFromConfigFile(ps);
 
-  // we DON'T need to reverse() BEHAVE_CONFIG_FILES like behave because we are only 
-  // interested in the "paths" setting (not all cumulative settings), 
-  // i.e. we can just break on the first file in the order that has a "paths" setting.  
-  for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-    const configFilePath = path.join(workDirUri.fsPath, configFile);
-    if (fs.existsSync(configFilePath)) {
-      lastExistingConfigFile = configFile;
-      // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
-      if (configFile === "pyproject.toml")
-        continue;
-      paths = getBehavePathsFromIni(configFilePath);
-      if (paths) {
-        matchedConfigFile = configFile;
-        break;
-      }
-    }
-  }
-
-  if (!lastExistingConfigFile) {
-    services.logger.logInfo(`No Behave config file found, using default paths.`, projUri);
+  if (!paths)
     return { rawBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
-  }
-
-  if (!paths) {
-    services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, projUri);
-    return { rawBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
-  }
 
   let relPaths: string[] = [];
   for (let biniPath of paths) {
@@ -58,12 +31,12 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     if (biniPath.endsWith(".feature"))
       biniPath = path.dirname(biniPath);
 
-    const rx = new RegExp(`^${workDirUri.fsPath}/?`);
+    const rx = new RegExp(`^${ps.workingDirUri.fsPath}/?`);
     const workingRelPath = biniPath.replace(rx, "");
-    let projectRelPath = path.join(projRelativeWorkDirPath, workingRelPath);
+    let projectRelPath = path.join(ps.projRelativeWorkingDirPath, workingRelPath);
 
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
-      services.logger.showWarn(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, projUri);
+      services.logger.showWarn(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
       continue;
     }
 
@@ -71,13 +44,13 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
     if (projectRelPath === "." || projectRelPath === "./")
       projectRelPath = "";
 
-    const fsPath = vscode.Uri.joinPath(projUri, projectRelPath).fsPath;
+    const fsPath = vscode.Uri.joinPath(ps.uri, projectRelPath).fsPath;
     if (!fs.existsSync(fsPath)) {
-      services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
+      services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
     }
     else {
       if (!fs.statSync(fsPath).isDirectory()) {
-        services.logger.showWarn(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, projUri);
+        services.logger.showWarn(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
         continue;
       }
       relPaths.push(projectRelPath);
@@ -89,7 +62,7 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
   relPaths = [...new Set(relPaths)];
 
   services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
-    `${relPaths.map(p => `"${p}"`).join(", ")}`, projUri);
+    `${relPaths.map(p => `"${p}"`).join(", ")}`, ps.uri);
 
   return {
     rawBehaveConfigPaths: paths,
@@ -98,7 +71,42 @@ export function getBehaveConfigPaths(projUri: vscode.Uri, workDirUri: vscode.Uri
 }
 
 
-function getBehavePathsFromIni(filePath: string): string[] | null {
+function getBehavePathsFromConfigFile(ps: ProjectSettings) {
+  let paths: string[] | null = null;
+  let matchedConfigFile;
+  let lastExistingConfigFile = null;
+
+  // we DON'T need to reverse() BEHAVE_CONFIG_FILES like behave because we are only 
+  // interested in the "paths" setting (not all cumulative settings), 
+  // i.e. we can just break on the first file in the order that has a "paths" setting.  
+
+  for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
+    const configFilePath = path.join(ps.workingDirUri.fsPath, configFile);
+    if (fs.existsSync(configFilePath)) {
+      lastExistingConfigFile = configFile;
+      // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
+      if (configFile === "pyproject.toml")
+        continue;
+      const contents = fs.readFileSync(configFilePath, 'utf-8');
+      paths = getBehavePathsFromIniContents(contents);
+      if (paths) {
+        matchedConfigFile = configFile;
+        break;
+      }
+    }
+  }
+
+  if (!lastExistingConfigFile) {
+    services.logger.logInfo(`No Behave config file found, using default paths.`, ps.uri);
+  }
+  else if (!paths) {
+    services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, ps.uri);
+  }
+
+  return { matchedConfigFile, paths };
+}
+
+function getBehavePathsFromIniContents(iniFileContents: string): string[] | null {
 
   // WE HAVE TO FOLLOW BEHAVE'S OWN PATHS BEHAVIOUR HERE
   // (see "read_configuration" in behave's source code)
@@ -132,8 +140,7 @@ function getBehavePathsFromIni(filePath: string): string[] | null {
     return p.replaceAll("/./", "/");
   }
 
-  const data = fs.readFileSync(filePath, 'utf-8');
-  const lines = data.split('\n');
+  const lines = iniFileContents.split('\n');
   let currentSection = '';
   let paths: string[] | null = null;
 
