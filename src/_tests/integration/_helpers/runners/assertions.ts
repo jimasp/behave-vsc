@@ -410,14 +410,14 @@ async function getFilesInFolders(projUri: vscode.Uri, projectRelativeFolders: st
   return fileUris;
 }
 
-async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
+async function getAllStepLinesFromFeatureFiles(ps: ProjectSettings) {
 
   const fileExtension = "feature";
-  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeFeatureFolders, fileExtension);
+  const fileUris = await getFilesInFolders(ps.uri, ps.projRelativeFeatureFolders, fileExtension);
 
   if (fileUris.length === 0) {
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`no .${fileExtension} files found in ${projSettings.uri.path}`);
+    throw new Error(`no .${fileExtension} files found in ${ps.uri.path}`);
   }
 
   const stepLines = new Map<FileStep, string>();
@@ -431,21 +431,21 @@ async function getAllStepLinesFromFeatureFiles(projSettings: ProjectSettings) {
 
   if (stepLines.size === 0) {
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`no step lines found in ${projSettings.uri.path}`);
+    throw new Error(`no step lines found in ${ps.uri.path}`);
   }
 
   return [...stepLines];
 }
 
 
-async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettings) {
+async function getAllStepFunctionLinesFromStepsFiles(ps: ProjectSettings) {
 
   const fileExtension = "py";
-  const fileUris = await getFilesInFolders(projSettings.uri, projSettings.projRelativeStepsFolders, fileExtension);
+  const fileUris = await getFilesInFolders(ps.uri, ps.projRelativeStepsFolders, fileExtension);
 
   if (fileUris.length === 0) {
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`no .${fileExtension} files found in ${projSettings.uri.path}`);
+    throw new Error(`no .${fileExtension} files found in ${ps.uri.path}`);
   }
 
   const funcLines = new Map<FileStep, string>();
@@ -459,7 +459,7 @@ async function getAllStepFunctionLinesFromStepsFiles(projSettings: ProjectSettin
 
   if (funcLines.size === 0) {
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`no step function lines found in ${projSettings.uri.path}`);
+    throw new Error(`no step function lines found in ${ps.uri.path}`);
   }
 
   return [...funcLines];

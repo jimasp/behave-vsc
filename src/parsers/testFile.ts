@@ -12,7 +12,7 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
-  public async createScenarioTestItemsFromFeatureFileContent(projSettings: ProjectSettings, content: string, testData: TestData,
+  public async createScenarioTestItemsFromFeatureFileContent(ps: ProjectSettings, content: string, testData: TestData,
     controller: vscode.TestController, featureItem: vscode.TestItem, caller: string) {
     if (!featureItem.uri)
       throw new Error("missing test item uri");
@@ -74,7 +74,7 @@ export class TestFile {
       ancestors.push({ item: featureItem, children: [] });
     }
 
-    parseFeatureContent(projSettings, featureUri, content, caller, onScenarioLine, onFeatureLine);
+    parseFeatureContent(ps, featureUri, content, caller, onScenarioLine, onFeatureLine);
 
     ascend(0); // assign children for all remaining items
   }

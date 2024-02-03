@@ -174,7 +174,7 @@ export class ProjectSettings {
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
 
 
-    const projRelPaths = getPaths(projUri, this.workingDirUri, this.importedSteps, this.name, this.projRelativeWorkingDirPath);
+    const projRelPaths = getPaths(this);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
@@ -265,15 +265,15 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 
-function getPaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: ImportedSteps, projName: string,
-  projRelativeWorkingDirPath: string) {
+function getPaths(ps: ProjectSettings) {
 
-  const { rawBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(projUri, workUri, projRelativeWorkingDirPath);
+  const { rawBehaveConfigPaths, projRelBehaveConfigPaths } =
+    getBehaveConfigPaths(ps.uri, ps.workingDirUri, ps.projRelativeWorkingDirPath);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
   // and it is also used to determine the steps folder (below)
-  const projRelBaseDirPath = getRelativeBaseDirPath(projUri, projName, projRelativeWorkingDirPath, projRelBehaveConfigPaths);
+  const projRelBaseDirPath = getRelativeBaseDirPath(ps.uri, ps.name, ps.projRelativeWorkingDirPath, projRelBehaveConfigPaths);
   if (projRelBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
@@ -281,22 +281,22 @@ function getPaths(projUri: vscode.Uri, workUri: vscode.Uri, importedSteps: Impor
 
   const projRelStepsFolders: string[] = [];
   projRelStepsFolders.push(
-    ...getStepLibraryStepPaths(projUri, importedSteps));
+    ...getStepLibraryStepPaths(ps.uri, ps.importedSteps));
 
   // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
   // stepReferences if multiple matches are found across step folders. i.e. THE LAST ONE WINS, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
-  const baseDirUri = vscode.Uri.joinPath(projUri, projRelBaseDirPath);
+  const baseDirUri = vscode.Uri.joinPath(ps.uri, projRelBaseDirPath);
   const stepsFolder = getStepsDir(baseDirUri.fsPath);
   if (stepsFolder) {
     if (projRelStepsFolders.includes(stepsFolder))
-      services.logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, projUri);
+      services.logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, ps.uri);
     else
       projRelStepsFolders.push(stepsFolder);
   }
 
-  const projRelFeatureFolders = getProjectRelativeFeatureFolders(projUri, projRelBehaveConfigPaths);
+  const projRelFeatureFolders = getProjectRelativeFeatureFolders(ps.uri, projRelBehaveConfigPaths);
 
   return {
     // for consistency, these are all project-relative

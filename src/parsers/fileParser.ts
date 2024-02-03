@@ -80,8 +80,8 @@ export class FileParser {
     this._parseFilesCallCounts[projPath]++;
 
     const parseId = `${projPath}#${this._parseFilesCallCounts[projPath]}`;
-    const projSettings: ProjectSettings = services.config.projectSettings[projPath];
-    const projName = projSettings.name;
+    const ps: ProjectSettings = services.config.projectSettings[projPath];
+    const projName = ps.name;
     const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
     this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
 
@@ -121,7 +121,7 @@ export class FileParser {
       // FEATURE FILES PARSE
 
       const featsStart = performance.now();
-      const featureFileCount = await this._parseFeatureFiles(projSettings, testData, ctrl, this._cancelTokenSources[parseId].token,
+      const featureFileCount = await this._parseFeatureFiles(ps, testData, ctrl, this._cancelTokenSources[parseId].token,
         callName, firstRun);
       const featTime = performance.now() - featsStart;
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
@@ -144,7 +144,7 @@ export class FileParser {
       // STEPS FILES PARSE
 
       const stepsStart = performance.now();
-      const stepFileCount = await this._parseStepsFiles(projSettings, this._cancelTokenSources[parseId].token, callName);
+      const stepFileCount = await this._parseStepsFiles(ps, this._cancelTokenSources[parseId].token, callName);
       const stepsTime = performance.now() - stepsStart;
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
         xRayLog(`${callName}: cancellation complete`);
@@ -155,7 +155,7 @@ export class FileParser {
       xRayLog(`${callName}: steps loaded`);
 
       const updateMappingsStart = performance.now();
-      const mappingsCount = rebuildStepMappings(projSettings.uri);
+      const mappingsCount = rebuildStepMappings(ps.uri);
       const buildMappingsTime = performance.now() - updateMappingsStart;
       xRayLog(`${callName}: stepmappings built`);
 
@@ -190,9 +190,9 @@ export class FileParser {
         tests: testCounts,
         featureFilesExceptEmptyOrCommentedOut: featureFileCount,
         stepFilesExceptEmptyOrCommentedOut: stepFileCount,
-        stepFileStepsExceptCommentedOut: getStepFilesSteps(projSettings.uri).length,
-        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(projSettings.uri).length,
-        stepMappings: getStepMappings(projSettings.uri).length
+        stepFileStepsExceptCommentedOut: getStepFilesSteps(ps.uri).length,
+        featureFileStepsExceptCommentedOut: getFeatureFilesSteps(ps.uri).length,
+        stepMappings: getStepMappings(ps.uri).length
       };
     }
     catch (e: unknown) {
@@ -287,7 +287,7 @@ export class FileParser {
 
   async reparseFile(fileUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, caller: string, content?: string) {
 
-    let projSettings: ProjectSettings | undefined;
+    let ps: ProjectSettings | undefined;
 
     try {
       this._reparsingFile = true;
@@ -302,23 +302,23 @@ export class FileParser {
       if (!content)
         content = await getContentFromFilesystem(fileUri);
 
-      projSettings = getProjectSettingsForFile(fileUri);
+      ps = getProjectSettingsForFile(fileUri);
 
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
-        await parseStepsFileContent(projSettings.uri, content, fileUri, `reparseFile (${caller})`);
+        await parseStepsFileContent(ps.uri, content, fileUri, `reparseFile (${caller})`);
       }
 
       if (isAFeatureFile) {
         deleteStepsAndStepMappingsForFeatureFile(fileUri);
-        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, fileUri, `reparseFile (${caller})`, false);
+        await this._updateTestItemFromFeatureFileContent(ps, content, testData, ctrl, fileUri, `reparseFile (${caller})`, false);
       }
 
-      rebuildStepMappings(projSettings.uri);
+      rebuildStepMappings(ps.uri);
     }
     catch (e: unknown) {
       // unawaited async func, show error
-      services.logger.showError(e, projSettings ? projSettings.uri : undefined);
+      services.logger.showError(e, ps ? ps.uri : undefined);
     }
     finally {
       this._reparsingFile = false;
@@ -326,18 +326,18 @@ export class FileParser {
   }
 
 
-  private _parseFeatureFiles = async (projSettings: ProjectSettings, testData: TestData, ctrl: vscode.TestController,
+  private _parseFeatureFiles = async (ps: ProjectSettings, testData: TestData, ctrl: vscode.TestController,
     cancelToken: vscode.CancellationToken, caller: string, firstRun: boolean): Promise<number> => {
 
-    const projUri = projSettings.uri;
+    const projUri = ps.uri;
 
-    xRayLog(`_parseFeatureFiles (${caller}): removing existing test nodes/items for project: ${projSettings.name}`);
-    deleteTestTreeNodes(projSettings.id, testData, ctrl);
+    xRayLog(`_parseFeatureFiles (${caller}): removing existing test nodes/items for project: ${ps.name}`);
+    deleteTestTreeNodes(ps.id, testData, ctrl);
     deleteFeatureFilesStepsForProject(projUri);
     clearStepMappings(projUri);
 
     let processed = 0;
-    for (const relFeaturesFolder of projSettings.projRelativeFeatureFolders) {
+    for (const relFeaturesFolder of ps.projRelativeFeatureFolders) {
       const featuresFolderUri = vscode.Uri.joinPath(projUri, relFeaturesFolder);
       if (!fs.existsSync(featuresFolderUri.fsPath)) {
         // e.g. user has deleted/renamed folder
@@ -357,7 +357,7 @@ export class FileParser {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateTestItemFromFeatureFileContent(projSettings, content, testData, ctrl, uri, caller, firstRun);
+        await this._updateTestItemFromFeatureFileContent(ps, content, testData, ctrl, uri, caller, firstRun);
         processed++;
       }
 
@@ -371,16 +371,16 @@ export class FileParser {
   }
 
 
-  private _parseStepsFiles = async (projSettings: ProjectSettings, cancelToken: vscode.CancellationToken,
+  private _parseStepsFiles = async (ps: ProjectSettings, cancelToken: vscode.CancellationToken,
     caller: string): Promise<number> => {
 
-    const projUri = projSettings.uri;
+    const projUri = ps.uri;
 
-    xRayLog("removing existing steps for project: " + projSettings.name);
+    xRayLog("removing existing steps for project: " + ps.name);
     deleteStepFileStepsForProject(projUri);
 
     const processed: string[] = [];
-    for (const relStepsFolder of projSettings.projRelativeStepsFolders) {
+    for (const relStepsFolder of ps.projRelativeStepsFolders) {
       let stepFiles: vscode.Uri[] = [];
       const stepsSearchUri = vscode.Uri.joinPath(projUri, relStepsFolder);
       if (!fs.existsSync(stepsSearchUri.fsPath)) {
@@ -416,7 +416,7 @@ export class FileParser {
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(projSettings: ProjectSettings, content: string, testData: TestData,
+  private async _updateTestItemFromFeatureFileContent(ps: ProjectSettings, content: string, testData: TestData,
     controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
 
     if (!isFeatureFile(uri))
@@ -425,11 +425,11 @@ export class FileParser {
     if (!content)
       return;
 
-    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(projSettings, content, testData,
+    const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(ps, content, testData,
       controller, uri, caller, firstRun);
     if (item) {
       xRayLog(`${caller}: parsing ${uri.path}`);
-      await item.testFile.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, controller, item.testItem, caller);
+      await item.testFile.createScenarioTestItemsFromFeatureFileContent(ps, content, testData, controller, item.testItem, caller);
     }
     else {
       xRayLog(`${caller}: no scenarios found in ${uri.path}`);
@@ -437,7 +437,7 @@ export class FileParser {
   }
 
 
-  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(projSettings: ProjectSettings, content: string,
+  private async _getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(ps: ProjectSettings, content: string,
     testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string,
     firstRun: boolean): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
@@ -476,10 +476,10 @@ export class FileParser {
     // if it's a multi-root workspace, use project grandparent nodes, e.g. "project_1", "project_2"
     let projGrandParent: vscode.TestItem | undefined;
     if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-      projGrandParent = controller.items.get(projSettings.id);
+      projGrandParent = controller.items.get(ps.id);
       if (!projGrandParent) {
-        const projName = projSettings.name;
-        projGrandParent = controller.createTestItem(projSettings.id, projName);
+        const projName = ps.name;
+        projGrandParent = controller.createTestItem(ps.id, projName);
         projGrandParent.canResolveChildren = true;
         controller.items.add(projGrandParent);
       }
@@ -494,7 +494,7 @@ export class FileParser {
     let parent: vscode.TestItem | undefined = undefined;
     let current: vscode.TestItem | undefined;
 
-    const nodePath = getFeatureNodePath(uri, projSettings);
+    const nodePath = getFeatureNodePath(uri, ps);
 
     // if not a "root" (of the features path) feature, create parent folder nodes
     if (nodePath.includes("/")) {
@@ -503,7 +503,7 @@ export class FileParser {
       for (let folderNo = 0; folderNo < folders.length; folderNo++) {
         const path = folders.slice(0, folderNo + 1).join("/");
         const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon
-        const folderTestItemId = `${uriId(projSettings.uri)}/${path}`;
+        const folderTestItemId = `${uriId(ps.uri)}/${path}`;
 
         if (folderNo === 0)
           parent = projGrandParent;
@@ -512,7 +512,7 @@ export class FileParser {
           current = parent.children.get(folderTestItemId);
 
         if (!current) { // TODO: try to move getTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getTestItems(projSettings.id, controller.items);
+          const allTestItems = getTestItems(ps.id, controller.items);
           current = allTestItems.find(item => item.id === folderTestItemId);
         }
 

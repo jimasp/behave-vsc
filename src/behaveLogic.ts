@@ -15,16 +15,16 @@ import { Scenario } from './parsers/testFile';
 export const BEHAVE_CONFIG_FILES_PRECEDENCE = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
 
 
-export function getJunitFeatureName(projSettings: ProjectSettings, scenario: Scenario): string {
+export function getJunitFeatureName(ps: ProjectSettings, scenario: Scenario): string {
   // this function should contain similar logic to the behave source code function "make_feature_filename()".
   // this is needed to determine the junit filename that behave will use.
 
   let jFeatureName = "";
   const projRelFeatureFilePath = scenario.featureFileProjectRelativePath;
 
-  for (const path of projSettings.rawBehaveConfigPaths) {
+  for (const path of ps.rawBehaveConfigPaths) {
     // adjust path to account for behave's working directory
-    const behaveRelPath = projSettings.projRelativeWorkingDirPath ? projSettings.projRelativeWorkingDirPath + "/" + path : path;
+    const behaveRelPath = ps.projRelativeWorkingDirPath ? ps.projRelativeWorkingDirPath + "/" + path : path;
     if (projRelFeatureFilePath.startsWith(behaveRelPath)) {
       jFeatureName = projRelFeatureFilePath.slice(behaveRelPath.length + (behaveRelPath !== "" ? 1 : 0));
       break;
@@ -32,7 +32,7 @@ export function getJunitFeatureName(projSettings: ProjectSettings, scenario: Sce
   }
 
   if (!jFeatureName)
-    jFeatureName = path.relative(projSettings.projRelativeBaseDirPath, projRelFeatureFilePath);
+    jFeatureName = path.relative(ps.projRelativeBaseDirPath, projRelFeatureFilePath);
 
   jFeatureName = jFeatureName.split('.').slice(0, -1).join('.');
   jFeatureName = jFeatureName.replace(/\\/g, '/').replace(/\//g, '.');

@@ -12,6 +12,7 @@ export class TestWorkspaceConfigWithProjUri {
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	public integrationTestRunUseCpExec = false;
+	public integrationTestBehaveIniContents = "";
 
 	public runParallel?: boolean;
 	private env?: { [name: string]: string };
@@ -81,6 +82,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.importedSteps === undefined ? [] : this.importedSteps);
 			case "integrationTestRunUseCpExec":
 				return <T><unknown>(this.integrationTestRunUseCpExec);
+			case "integrationBehaveIniContents":
+				return <T><unknown>(this.integrationTestBehaveIniContents);
 			case "runProfiles":
 				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
 			case "relativeWorkingDir":

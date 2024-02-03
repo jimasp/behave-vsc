@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
 import { uriId } from '../../../../common/helpers';
@@ -9,7 +8,7 @@ import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, get
 import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx, projDirRelativePathToWorkDirRelativePath } from '../../../../runners/helpers';
+import { getFeaturePathsRegEx } from '../../../../runners/helpers';
 import { QueueItem } from '../../../../extension';
 
 

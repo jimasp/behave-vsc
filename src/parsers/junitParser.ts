@@ -97,7 +97,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
 }
 
 
-function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
+function CreateParseResult(ps: ProjectSettings, debug: boolean, testCase: TestCase, actualDuration?: number): ParseResult {
 
   let xmlDuration = testCase.$.time * 1000;
   const xmlStatus = testCase.$.status;
@@ -112,7 +112,7 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
     if (debug)
       showDebugWindow();
     else
-      services.logger.show(projSettings.uri);
+      services.logger.show(ps.uri);
     return { status: "untested", duration: xmlDuration };
   }
 
@@ -166,9 +166,9 @@ function CreateParseResult(projSettings: ProjectSettings, debug: boolean, testCa
 
 
 
-function getJunitFileUri(projSettings: ProjectSettings, queueItem: QueueItem, projJunitRunDirUri: vscode.Uri): vscode.Uri {
+function getJunitFileUri(ps: ProjectSettings, queueItem: QueueItem, projJunitRunDirUri: vscode.Uri): vscode.Uri {
 
-  const junitName = getJunitFeatureName(projSettings, queueItem.scenario);
+  const junitName = getJunitFeatureName(ps, queueItem.scenario);
   const junitFileUri = vscode.Uri.joinPath(projJunitRunDirUri, `TESTS-${junitName}.xml`);
 
   if (os.platform() !== "win32")
@@ -191,29 +191,29 @@ export class QueueItemMapEntry {
 }
 
 
-export function getProjQueueJunitFileMap(projSettings: ProjectSettings, run: vscode.TestRun, projQueueItems: QueueItem[]) {
-  const projJunitRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
+export function getProjQueueJunitFileMap(ps: ProjectSettings, run: vscode.TestRun, projQueueItems: QueueItem[]) {
+  const projJunitRunDirUri = getJunitProjRunDirUri(run, ps.name);
   return projQueueItems.map(qi => {
-    const junitFileUri = getJunitFileUri(projSettings, qi, projJunitRunDirUri);
-    return new QueueItemMapEntry(qi, junitFileUri, projSettings);
+    const junitFileUri = getJunitFileUri(ps, qi, projJunitRunDirUri);
+    return new QueueItemMapEntry(qi, junitFileUri, ps);
   });
 }
 
 
 
 
-export async function parseJunitFileAndUpdateTestResults(projSettings: ProjectSettings, run: vscode.TestRun, debug: boolean,
+export async function parseJunitFileAndUpdateTestResults(ps: ProjectSettings, run: vscode.TestRun, debug: boolean,
   junitFileUri: vscode.Uri, filteredQueue: QueueItem[]): Promise<void> {
 
   if (!junitFileUri.fsPath.toLowerCase().endsWith(".xml"))
-    throw new projError("junitFileUri must be an xml file", projSettings.uri);
+    throw new projError("junitFileUri must be an xml file", ps.uri);
 
   let junitXml: string;
   try {
     junitXml = await getContentFromFilesystem(junitFileUri);
   }
   catch {
-    updateTestResultsForUnreadableJunitFile(projSettings, run, filteredQueue, junitFileUri);
+    updateTestResultsForUnreadableJunitFile(ps, run, filteredQueue, junitFileUri);
     return;
   }
 
@@ -223,13 +223,13 @@ export async function parseJunitFileAndUpdateTestResults(projSettings: ProjectSe
     junitContents = await parser.parseStringPromise(junitXml);
   }
   catch {
-    throw new projError(`Unable to parse junit file ${junitFileUri.fsPath}`, projSettings.uri);
+    throw new projError(`Unable to parse junit file ${junitFileUri.fsPath}`, ps.uri);
   }
 
 
   for (const queueItem of filteredQueue) {
 
-    const fullFeatureName = getJunitFeatureName(projSettings, queueItem.scenario);
+    const fullFeatureName = getJunitFeatureName(ps, queueItem.scenario);
     const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
     const scenarioName = queueItem.scenario.scenarioName;
 
@@ -272,13 +272,13 @@ export async function parseJunitFileAndUpdateTestResults(projSettings: ProjectSe
       }
     }
 
-    const parseResult = CreateParseResult(projSettings, debug, queueItemResult);
+    const parseResult = CreateParseResult(ps, debug, queueItemResult);
     updateTest(run, debug, parseResult, queueItem);
   }
 }
 
 
-export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSettings, run: vscode.TestRun,
+export function updateTestResultsForUnreadableJunitFile(ps: ProjectSettings, run: vscode.TestRun,
   queueItems: QueueItem[], junitFileUri: vscode.Uri) {
 
   const parseResult: ParseResult = {
@@ -296,5 +296,5 @@ export function updateTestResultsForUnreadableJunitFile(projSettings: ProjectSet
     throw new Error(`JUnit file ${junitFileUri.fsPath} could not be read.`);
   }
 
-  services.logger.show(projSettings.uri);
+  services.logger.show(ps.uri);
 }

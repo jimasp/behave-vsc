@@ -225,10 +225,10 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   if (!lcPath.endsWith(".py"))
     return false;
 
-  const getStepLibraryMatch = (projSettings: ProjectSettings, relPath: string) => {
+  const getStepLibraryMatch = (ps: ProjectSettings, relPath: string) => {
     let stepLibMatch: StepImport | null = null;
     let currentMatchLen = 0, lenPath = 0;
-    for (const stepLib of projSettings.importedSteps) {
+    for (const stepLib of ps.importedSteps) {
       if (relPath.startsWith(stepLib.relativePath))
         lenPath = stepLib.relativePath.length;
       if (lenPath > currentMatchLen) {
@@ -250,9 +250,9 @@ export const isStepsFile = (fileUri: vscode.Uri): boolean => {
   return true;
 }
 
-export const getFeaturesFolderUriForFeatureFileUri = (projSettings: ProjectSettings, featureFileUri: vscode.Uri) => {
-  for (const relFeaturesPath of projSettings.projRelativeFeatureFolders) {
-    const featuresFolderUri = vscode.Uri.joinPath(projSettings.uri, relFeaturesPath);
+export const getFeaturesFolderUriForFeatureFileUri = (ps: ProjectSettings, featureFileUri: vscode.Uri) => {
+  for (const relFeaturesPath of ps.projRelativeFeatureFolders) {
+    const featuresFolderUri = vscode.Uri.joinPath(ps.uri, relFeaturesPath);
     if (featureFileUri.fsPath.startsWith(featuresFolderUri.fsPath + path.sep))
       return featuresFolderUri;
   }
@@ -414,20 +414,20 @@ export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string
 }
 
 
-export function getFeatureNodePath(uri: vscode.Uri, projSettings: ProjectSettings) {
+export function getFeatureNodePath(uri: vscode.Uri, ps: ProjectSettings) {
   let stripPath: string | undefined = undefined;
 
-  let nodePath = uri.path.substring(projSettings.uri.path.length + 1);
+  let nodePath = uri.path.substring(ps.uri.path.length + 1);
 
-  const projRelativeFeatureFolders = projSettings.projRelativeFeatureFolders;
+  const projRelativeFeatureFolders = ps.projRelativeFeatureFolders;
 
   if (projRelativeFeatureFolders.length > 1) {
     const topProjectNodes = [...new Set(projRelativeFeatureFolders.map(f => f.split("/")[0]))];
     if (topProjectNodes.length === 1)
-      stripPath = projSettings.uri.path + "/" + topProjectNodes[0];
+      stripPath = ps.uri.path + "/" + topProjectNodes[0];
   }
   else {
-    stripPath = getFeaturesFolderUriForFeatureFileUri(projSettings, uri)?.path;
+    stripPath = getFeaturesFolderUriForFeatureFileUri(ps, uri)?.path;
   }
 
   if (stripPath)

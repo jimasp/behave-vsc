@@ -170,28 +170,28 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 }
 
 
-async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
+async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
 
   let pr: ProjRun | undefined = undefined;
 
-  xRayLog(`runWorkspaceQueue: started for run ${run.name}`, projSettings.uri);
+  xRayLog(`runWorkspaceQueue: started for run ${run.name}`, ps.uri);
 
   try {
 
-    const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, projSettings, ctrl, testData);
-    const projIncludedFeatures = getIncludedFeaturesForProj(projSettings.uri, request);
-    const pythonExec = await services.config.getPythonExecutable(projSettings.uri, projSettings.name);
+    const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, ps, ctrl, testData);
+    const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
+    const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
     const sortedQueue = projQueue;
     sortedQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitProjRunDirUri = getJunitProjRunDirUri(run, projSettings.name);
+    const junitProjRunDirUri = getJunitProjRunDirUri(run, ps.name);
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
-    const allenv = { ...projSettings.env, ...runProfile.env };
+    const allenv = { ...ps.env, ...runProfile.env };
 
     pr = new ProjRun(
-      projSettings, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
+      ps, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       runProfile.tagExpression ?? "", allenv
     )
@@ -205,10 +205,10 @@ async function runProjectQueue(projSettings: ProjectSettings, ctrl: vscode.TestC
   catch (e: unknown) {
     pr?.run.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
-    services.logger.showError(e, projSettings.uri, run);
+    services.logger.showError(e, ps.uri, run);
   }
 
-  xRayLog(`runWorkspaceQueue: completed for run ${run.name}`, projSettings.uri);
+  xRayLog(`runWorkspaceQueue: completed for run ${run.name}`, ps.uri);
 }
 
 
@@ -323,19 +323,19 @@ async function runFeaturesParallel(pr: ProjRun) {
 }
 
 
-function allTestsForThisProjAreIncluded(request: vscode.TestRunRequest, projSettings: ProjectSettings,
+function allTestsForThisProjAreIncluded(request: vscode.TestRunRequest, ps: ProjectSettings,
   ctrl: vscode.TestController, testData: TestData) {
 
   let allTestsForThisProjIncluded = (!request.include || request.include.length == 0)
     && (!request.exclude || request.exclude.length == 0);
 
   if (!allTestsForThisProjIncluded) {
-    const projGrandParentItemIncluded = request.include?.filter(item => item.id === projSettings.id).length === 1;
+    const projGrandParentItemIncluded = request.include?.filter(item => item.id === ps.id).length === 1;
 
     if (projGrandParentItemIncluded)
       allTestsForThisProjIncluded = true;
     else {
-      const allProjItems = getTestItems(projSettings.id, ctrl.items);
+      const allProjItems = getTestItems(ps.id, ctrl.items);
       const projTestCount = countTestItems(testData, allProjItems).testCount;
       allTestsForThisProjIncluded = request.include?.length === projTestCount;
     }

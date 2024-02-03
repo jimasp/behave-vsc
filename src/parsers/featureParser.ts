@@ -69,7 +69,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFeatureContent = (projSettings: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
+export const parseFeatureContent = (ps: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {
 
@@ -135,7 +135,7 @@ export const parseFeatureContent = (projSettings: ProjectSettings, uri: vscode.U
 
   }
 
-  xRayLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, projSettings.uri);
+  xRayLog(`${caller}: parsed ${fileScenarios} scenarios and ${fileSteps} steps from ${uri.path}`, ps.uri);
 };
 
 
