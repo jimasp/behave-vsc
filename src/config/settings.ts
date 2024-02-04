@@ -7,7 +7,6 @@ import {
   normaliseUserSuppliedRelativePath,
   uriId,
   findFilesSync,
-  getStepsDir,
   getActualWorkspaceSetting,
   getOptimisedFeatureParsingPaths
 } from '../common/helpers';
@@ -281,24 +280,19 @@ function getPaths(ps: ProjectSettings) {
   const { rawBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
   // base dir is a concept borrowed from behave's source code
-  // NOTE: relativeBaseDirPath is used to calculate junit filenames (see getJunitFeatureName in junitParser.ts)   
-  // and it is also used to determine the steps folder (below)
+  // NOTE: projRelBaseDirPath is used to calculate junit filenames (see getJunitFeatureName)
   const projRelBaseDirPath = getRelativeBaseDirPath(ps, projRelBehaveConfigPaths);
   if (projRelBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
   }
+  const stepsFolder = path.join(projRelBaseDirPath, "steps");
+  const projRelStepsFolders = getStepLibraryStepPaths(ps);
 
-  const projRelStepsFolders: string[] = [];
-  projRelStepsFolders.push(
-    ...getStepLibraryStepPaths(ps));
-
-  // *** NOTE *** - the order of the relativeStepsFolders determines which step folder step is used as the match for 
+  // NOTE: the order of the relativeStepsFolders determines which step folder step is used as the match for 
   // stepReferences if multiple matches are found across step folders. i.e. THE LAST ONE WINS, so we'll 
   // push our main steps directory in last so it comes last in a loop of relativeStepsFolders and so gets set as the match.
   // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
-  const baseDirUri = vscode.Uri.joinPath(ps.uri, projRelBaseDirPath);
-  const stepsFolder = getStepsDir(baseDirUri.fsPath);
   if (stepsFolder) {
     if (projRelStepsFolders.includes(stepsFolder))
       services.logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, ps.uri);

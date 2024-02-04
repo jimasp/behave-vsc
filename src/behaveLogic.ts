@@ -46,7 +46,10 @@ export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfig
   // (although baseDir is only ever used in getJunitFeatureName(), we don't want to call it every time that gets called,
   // but we do want to re-determine it if settings change, so this function is called from and stored in the ProjectSettings object.)
 
-  const relativeBaseDir = relativeBehaveConfigPaths.length > 0 ? relativeBehaveConfigPaths[0] : ps.projRelativeWorkingDirPath + "/features";
+  const relativeBaseDir = relativeBehaveConfigPaths.length > 0
+    ? relativeBehaveConfigPaths[0] // as per behave logic
+    : path.join(ps.projRelativeWorkingDirPath, "features");
+
   const project_parent_dir = path.dirname(ps.uri.fsPath);
   let new_base_dir = path.join(ps.uri.fsPath, relativeBaseDir);
 

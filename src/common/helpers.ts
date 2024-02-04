@@ -184,23 +184,6 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 }
 
 
-export const getStepsDir = (baseDirFsPath: string): string | null => {
-
-  const list = fs.readdirSync(baseDirFsPath);
-  for (const fileOrDir of list) {
-    if (fileOrDir !== "steps")
-      continue;
-    const filePath = path.join(baseDirFsPath, fileOrDir);
-    if (fs.statSync(filePath).isDirectory()) {
-      const relPath = vscode.workspace.asRelativePath(filePath, false);
-      return relPath;
-    }
-  }
-
-  return null;
-}
-
-
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience
     throw new Error("uri is undefined");
