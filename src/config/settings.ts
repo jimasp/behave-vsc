@@ -109,7 +109,7 @@ export class ProjectSettings {
   public static async create(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings):
     Promise<ProjectSettings> {
 
-    const instance = new ProjectSettings(projUri, projConfig, winSettings);
+    const instance = new ProjectSettings(projUri, projConfig);
 
     // do "real work" on filesystem
     const projRelPaths = getPaths(instance);
@@ -125,11 +125,13 @@ export class ProjectSettings {
     instance.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
     instance.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
 
+    instance.logSettings(winSettings);
+
     return instance;
   }
 
 
-  private constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings) {
+  private constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration) {
     xRayLog("constructing ProjectSettings");
 
     this.id = uriId(projUri);
@@ -198,11 +200,11 @@ export class ProjectSettings {
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
 
-    this._logSettings(winSettings);
+
   }
 
 
-  private _logSettings(winSettings: InstanceSettings) {
+  logSettings(winSettings: InstanceSettings) {
 
     // build sorted output dict of window settings
     const windowSettingsDic: { [name: string]: string; } = {};

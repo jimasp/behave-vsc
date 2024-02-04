@@ -2,6 +2,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
+import { services } from '../common/services';
 
 
 export class Configuration {
@@ -9,8 +10,8 @@ export class Configuration {
   instanceSettingsLoaded = false; // used by xRayLog to check if instanceSettings is available (i.e. without get() side-effects)
   readonly exampleProject: boolean = false;
   readonly extensionTempFilesUri;
-  private _windowSettings: InstanceSettings | undefined = undefined;
-  private _resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
+  #windowSettings: InstanceSettings | undefined = undefined;
+  #resourceSettings: { [projUriPath: string]: ProjectSettings } = {};
 
   constructor() {
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
@@ -21,33 +22,50 @@ export class Configuration {
   // called by onDidChangeConfiguration
   async reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
     if (testConfig) {
-      this._windowSettings = new InstanceSettings(testConfig);
-      this._resourceSettings[projUri.path] = await ProjectSettings.create(projUri, testConfig, this._windowSettings);
+      this.#windowSettings = new InstanceSettings(testConfig);
+      this.#resourceSettings[projUri.path] = await ProjectSettings.create(projUri, testConfig, this.#windowSettings);
     }
     else {
-      this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this._resourceSettings[projUri.path] = await ProjectSettings.create(projUri,
-        vscode.workspace.getConfiguration("behave-vsc", projUri), this._windowSettings);
+      this.#windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
+      this.#resourceSettings[projUri.path] = await ProjectSettings.create(projUri,
+        vscode.workspace.getConfiguration("behave-vsc", projUri), this.#windowSettings);
     }
   }
 
   get instanceSettings(): InstanceSettings {
-    if (this._windowSettings)
-      return this._windowSettings;
-    this._windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
+    if (this.#windowSettings)
+      return this.#windowSettings;
+    this.#windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
     this.instanceSettingsLoaded = true;
-    return this._windowSettings;
+    return this.#windowSettings;
   }
 
+  #processing = false;
   async getProjectSettings(projUriPath: string): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
-    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      if (!this._resourceSettings[projUri.path]) {
-        this._resourceSettings[projUri.path] =
-          await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
+
+    // this is a lazy async get that can be called multiple times in parallel, and
+    //  we don't want it to do the same work multiple times if we can avoid it
+    let wait = 0;
+    const timeout = 10000;
+    while (this.#processing && wait < timeout) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      wait += 50;
+    }
+
+    try {
+      this.#processing = true;
+      for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+        if (!this.#resourceSettings[projUri.path]) {
+          this.#resourceSettings[projUri.path] =
+            await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
+        }
       }
     }
-    return this._resourceSettings[projUriPath];
+    finally {
+      this.#processing = false;
+    }
+    return this.#resourceSettings[projUriPath];
   }
 
   // note - python interpreter can be changed dynamically by the user, so don't store the result
