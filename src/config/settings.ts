@@ -86,47 +86,49 @@ export class ProjectSettings {
   // class for package.json scope:"resource" settings in settings.json
   // these apply to a specific workspace root folder
 
-  // user-settable
+  // user-settable:
   public readonly env: EnvSetting = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly importedSteps: ImportedSteps = [];
-  public readonly projRelativeWorkingDirPath: string = ""; // "relativeWorkingDir" in settings.json
-  // calculated
+  // calculated:
   public readonly id: string; // project id (unique)
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
+  public readonly projRelativeWorkingDirPath: string = ""; // "relativeWorkingDir" in settings.json
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
+  // calculated after real work in create():
   public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
-  public projRelativeBaseDirPath = ""; // directory that contains "steps" folder/environment.py file
+  public projRelativeBaseDirPath = ""; // parent directory of "steps" folder/environment.py file
   public projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
-  public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)
-  // integration test only
+  public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)  
+  // integration test only:
   public readonly integrationTestRunUseCpExec;
 
 
   public static async create(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings):
     Promise<ProjectSettings> {
 
-    const instance = new ProjectSettings(projUri, projConfig);
+    const ps = new ProjectSettings(projUri, projConfig);
 
     // do "real work" on filesystem
-    const projRelPaths = getPaths(instance);
+    const projRelPaths = getPaths(ps);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
-      return instance;
+      return ps;
     }
 
     // update properties after real work
-    instance.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
-    instance.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
-    instance.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
-    instance.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
+    ps.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
+    ps.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
+    ps.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
+    ps.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
 
-    instance.logSettings(winSettings);
+    // pass projRelBehaveConfigPaths separately, because is not a public property of ProjectSettings
+    logSettings(winSettings, ps, projRelPaths.projRelBehaveConfigPaths);
 
-    return instance;
+    return ps;
   }
 
 
@@ -198,46 +200,10 @@ export class ProjectSettings {
 
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
-
-
-  }
-
-
-  logSettings(winSettings: InstanceSettings) {
-
-    // build sorted output dict of window settings
-    const windowSettingsDic: { [name: string]: string; } = {};
-    const winEntries = Object.entries(winSettings).sort(([a], [b]) => a.localeCompare(b));
-    winEntries.forEach(([key, value]) => {
-      if (!key.startsWith("_")) {
-        windowSettingsDic[key] = value;
-      }
-    });
-
-    // build sorted output dict of resource settings
-    const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
-    let projEntries = Object.entries(this);
-    projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
-    projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
-    const resourceSettingsDic: { [name: string]: object; } = {};
-    const userEntries: { [name: string]: object; } = {};
-    projEntries.forEach(([key, value]) => userEntries[key] = value);
-    resourceSettingsDic["user:"] = userEntries;
-    resourceSettingsDic["auto:"] = {
-      "featureFolders": this.projRelativeFeatureFolders,
-      "stepsFolders": this.projRelativeStepsFolders
-    }
-
-    // output settings, and any warnings or errors for settings
-
-    const projUris = getUrisOfWkspFoldersWithFeatures();
-    if (projUris.length > 0 && this.uri === projUris[0])
-      services.logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
-
-    services.logger.logInfo(`\nProject settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, this.uri);
   }
 
 }
+
 
 function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: ImportedStepsSetting): ImportedSteps {
   try {
@@ -380,3 +346,44 @@ function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
 
   return stepLibraryPaths;
 }
+
+
+
+
+function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRelBehaveConfigPaths: string[]) {
+
+  // build sorted output dict of window settings
+  const windowSettingsDic: { [name: string]: string; } = {};
+  const winEntries = Object.entries(winSettings).sort(([a], [b]) => a.localeCompare(b));
+  winEntries.forEach(([key, value]) => {
+    if (!key.startsWith("_")) {
+      windowSettingsDic[key] = value;
+    }
+  });
+
+  // build sorted output dict of resource settings
+  const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
+  let projEntries = Object.entries(ps);
+  projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
+  projEntries.push(["relativeWorkingDir", ps.projRelativeWorkingDirPath]);
+  projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
+  const resourceSettingsDic: { [name: string]: object; } = {};
+  const userEntries: { [name: string]: object; } = {};
+  projEntries.forEach(([key, value]) => userEntries[key] = value);
+  resourceSettingsDic["user:"] = userEntries;
+  resourceSettingsDic["auto:"] = {
+    "projectRelativeBehaveConfigPaths": projRelBehaveConfigPaths,
+    "projectRelativeBehaveBaseDir": ps.projRelativeBaseDirPath,
+    "projectRelativeFeatureFolders": ps.projRelativeFeatureFolders,
+    "projectRelativeStepsFolders": ps.projRelativeStepsFolders
+  }
+
+  // output settings, and any warnings or errors for settings
+
+  const projUris = getUrisOfWkspFoldersWithFeatures();
+  if (projUris.length > 0 && ps.uri === projUris[0])
+    services.logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
+
+  services.logger.logInfo(`\nProject settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, ps.uri);
+}
+
