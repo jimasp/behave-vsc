@@ -44,8 +44,10 @@ export class Configuration {
   async getProjectSettings(projUriPath: string): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
 
-    // this is a lazy async get that can be called multiple times in parallel, and
-    //  we don't want it to do the same work multiple times if we can avoid it
+    // This is a lazy async get that can be called multiple times in parallel, and we don't want 
+    // it to do the same work multiple times if we can avoid it.
+    // If it's longer than the timeout, then we will just carry on and do the work again 
+    // in the hope it completes (not much else we can do)
     let wait = 0;
     const timeout = 10000;
     while (this.#processing && wait < timeout) {
