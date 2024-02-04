@@ -46,8 +46,8 @@ export class Configuration {
 
     // This is a lazy async get that can be called multiple times in parallel, and we don't want 
     // it to do the same work multiple times if we can avoid it.
-    // If it's longer than the timeout, then we will just carry on and do the work again 
-    // in the hope it completes (not much else we can do)
+    // If the timeout expires, then we will just carry on and try do the work again 
+    // in the hope it completes, as there's not much else we can do.
     let wait = 0;
     const timeout = 10000;
     while (this.#processing && wait < timeout) {
