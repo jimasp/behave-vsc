@@ -49,8 +49,8 @@ export class Configuration {
     let wait = 0;
     const timeout = 10000;
     while (this.#processing && wait < timeout) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      wait += 50;
+      await new Promise(resolve => setTimeout(resolve, 20));
+      wait += 20;
     }
 
     try {
