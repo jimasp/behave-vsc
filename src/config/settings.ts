@@ -6,9 +6,9 @@ import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  findFilesSync,
+  findFeatureFolders,
   getActualWorkspaceSetting,
-  getOptimisedFeatureParsingPaths
+  getOptimisedFeatureParsingPaths,
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -112,7 +112,7 @@ export class ProjectSettings {
     const ps = new ProjectSettings(projUri, projConfig);
 
     // do "real work" on filesystem
-    const projRelPaths = getPaths(ps);
+    const projRelPaths = await getPaths(ps);
     if (!projRelPaths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
@@ -241,7 +241,7 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 
 
-function getPaths(ps: ProjectSettings) {
+async function getPaths(ps: ProjectSettings) {
 
   const { rawBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
@@ -266,7 +266,7 @@ function getPaths(ps: ProjectSettings) {
       projRelStepsFolders.push(stepsFolder);
   }
 
-  const projRelFeatureFolders = getProjectRelativeFeatureFolders(ps.uri, projRelBehaveConfigPaths);
+  const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
   return {
     // for consistency, these are all project-relative
@@ -280,44 +280,43 @@ function getPaths(ps: ProjectSettings) {
 }
 
 
-
-
-
-function getProjectRelativeFeatureFolders(projUri: vscode.Uri, relativeConfigPaths: string[]): string[] {
+async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeConfigPaths: string[]): Promise<string[]> {
   const start = performance.now();
 
-  // if paths specifically set in behave.ini, skip gathering feature paths and use those
+  // if paths specifically set in behave.ini, SKIP gathering feature paths and use those
   if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes(""))
     return relativeConfigPaths;
 
-  const featureFiles = findFilesSync(projUri, undefined, ".feature");
-  const foldersContainingFeatureFiles = [...new Set(featureFiles.map(f => path.dirname(f.fsPath)))];
+  // no config paths set, so we'll gather feature paths from disk
+  const foldersContainingFeatureFiles = await findFeatureFolders(ps.uri.fsPath, ps.workingDirUri.fsPath);
 
   // behave would ignore a feature file in the root if not set in the behave config paths, and so must we,
   // i.e. we only include the project root if it's requested in the behave config paths,
   // (and if that were the case it would have been intercepted by the early exit on "" at the start of this function)
   if (!relativeConfigPaths.includes("")) {
-    const projectRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === projUri.fsPath);
-    if (projectRootIndex !== -1)
-      foldersContainingFeatureFiles.splice(projectRootIndex, 1);
+    const workRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === ps.workingDirUri.fsPath);
+    if (workRootIndex !== -1)
+      foldersContainingFeatureFiles.splice(workRootIndex, 1);
   }
 
-  const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(projUri.fsPath, folder));
+  const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
 
   // optimise to longest common search paths for parsing search paths
   // note that if "" is included in relativeFolders, then we maintain it as a distinct case 
   // (see _parseFeatureFiles in fileParser.ts)
-  const relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
+  let relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
+
+  // add the config paths even if there are no feature files in those paths (yet)
+  relFeaturePaths = [...new Set(relFeaturePaths.concat(relativeConfigPaths))];
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)
     relFeaturePaths.push("features");
 
-  xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${projUri.path}`);
+  xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${ps.workingDirUri.path}`);
 
   return relFeaturePaths;
 }
-
 
 
 function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
@@ -346,8 +345,6 @@ function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
 
   return stepLibraryPaths;
 }
-
-
 
 
 function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRelBehaveConfigPaths: string[]) {

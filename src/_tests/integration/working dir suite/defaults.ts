@@ -21,11 +21,9 @@ export const expectations: Expectations = {
   getExpectedResultsFunc: getExpectedResults,
 }
 
-const expectedPaths = ["working folder/features"];
 
 export const behaveIniWithRelPathsSetting: TestBehaveIni = {
-  content: `[behave]\npaths=features`,
-  expectedProjRelPaths: expectedPaths
+  content: `[behave]\npaths=features`
 }
 
 const fullPath = path
@@ -33,8 +31,7 @@ const fullPath = path
   .replace("/out/_tests/", "/");
 
 export const behaveIniFullPathsSetting: TestBehaveIni = {
-  content: `[behave]\npaths=${fullPath}`,
-  expectedProjRelPaths: expectedPaths
+  content: `[behave]\npaths=${fullPath}`
 }
 
 

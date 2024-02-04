@@ -52,8 +52,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
   - (In the below examples the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
-  
-  - Basic example 1 - steps folder is a child of the `features` folder:
+
+  - Basic example:
 
     ```text
     my-project/
@@ -70,34 +70,24 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             └── web_steps.py
     ```
 
-  - Basic example 2 - steps folder is a sibling of a `my_features` folder:
-
-    ```text
-    my-project/
-    ├── behave.ini
-    ├── environment.py       
-    ├── my_features/
-    │   ├── db_features/
-    │   │   └── db1.feature   
-    │   └── web_features/
-    │       └── web1.feature       
-    └── steps/
-        ├── shared_steps.py
-        ├── db_steps.py                             
-        └── web_steps.py
-    ```
-
 - See [advanced project configuration](#advanced-project-configuration) for information on how to configure non-standard project structures.
 
 ---
 
+## Behave settings
+
+- If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your project folder to determine the feature folder(s).
+
 ## Extension settings
 
-- This extension has various options to customise your test run via `settings.json`, e.g. `runParallel`, and `env`.
+For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`:
+
+- Customise your test run via `settings.json`, e.g. `relativeWorkingDir`, `env`, etc.
+- Import steps from step libraries via `importedSteps`.
 - You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- Note that environment variables (and behave tags) can also be set on a per run basis via the test run profiles in the test explorer UI.
+- Environment variables (and behave tags) can be set on a per run basis via custom `runProfiles` which then appear in the test explorer UI.
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
-- For more information on available options, go to the extension settings in vscode.
+- For information on all available options, go to the extension settings in vscode.
 
 ---
 
@@ -113,7 +103,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 
-- You can adjust the run behaviour via extension settings in your `settings.json` file, e.g. `runParallel`, `env`, `runProfiles`.
+- You can adjust the run behaviour via extension settings in your `settings.json` file.
 
 - Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
 
@@ -127,7 +117,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
 
-- You can adjust the debug behaviour via extension settings in your `settings.json` file, e.g. `env` or `runProfiles`. Note that debug ignores the `runParallel` setting.
+- You can adjust the debug behaviour via extension settings in your `settings.json` file. Note that debug ignores the `runParallel` setting.
 
 - The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
 

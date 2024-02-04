@@ -145,8 +145,7 @@ export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.U
     throw `Please disable the marketplace Behave VSC extension before beginning extension debugging!`;
 
   for (const folder of folders) {
-    const featureFiles = findFilesSync(folder.uri, undefined, ".feature", true);
-    if (featureFiles.length === 1)
+    if (projectContainsAFeatureFileSync(folder.uri))
       workspaceFoldersWithFeatures.push(folder.uri);
   }
 
@@ -322,28 +321,53 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 }
 
 
-export function findFilesSync(directory: vscode.Uri, matchSubDirectory: string | undefined, extension: string,
-  stopOnFirstMatch = false): vscode.Uri[] {
+export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
+  const entries = fs.readdirSync(uri.fsPath);
+  for (const entry of entries) {
+    if (entry.endsWith(".feature"))
+      return true;
+    const stat = fs.statSync(path.join(uri.fsPath, entry));
+    if (stat.isDirectory() && projectContainsAFeatureFileSync(vscode.Uri.file(path.join(uri.fsPath, entry))))
+      return true;
+  }
+  return false;
+}
 
-  const entries = fs.readdirSync(directory.fsPath);
-  const results: vscode.Uri[] = [];
 
-  for (const fileName of entries) {
-    const entryPath = path.join(directory.fsPath, fileName);
-    const entryUri = vscode.Uri.file(entryPath);
-    if (fs.statSync(entryPath).isDirectory()) {
-      const subDirResults = findFilesSync(entryUri, matchSubDirectory, extension, stopOnFirstMatch);
-      results.push(...subDirResults);
-      if (stopOnFirstMatch && subDirResults.length > 0)
-        return results;
+export async function findFeatureFolders(projUriPath: string, absoluteDirPath: string, stopOnFirstMatch = false): Promise<string[]> {
+
+  // find feature folders, with early exit where possible
+  // e.g. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
+
+  const entries = await fs.promises.readdir(absoluteDirPath);
+  const absDirEntries: string[] = [];
+  const results: string[] = [];
+  console.log("absoluteDirPath: ", absoluteDirPath);
+  console.log("entries: ", entries);
+
+  // first pass = files only
+  for (const entry of entries) {
+    const entryPath = path.join(absoluteDirPath, entry);
+    const stat = await fs.promises.stat(entryPath);
+    if (stat.isDirectory()) {
+      console.log(absoluteDirPath + " pushing: ", entryPath);
+      absDirEntries.push(entryPath);
     }
     else {
-      if (fileName.endsWith(extension) && (!matchSubDirectory || new RegExp(`/ ${matchSubDirectory} / `, "i").test(entryUri.path))) {
-        results.push(entryUri);
-        if (stopOnFirstMatch)
+      if (entry.endsWith(".feature")) {
+        results.push(absoluteDirPath);
+        // if it's the project root, keep going and find other paths
+        // (for performance reasons, fileParser will not recurse on the project root)
+        if (stopOnFirstMatch || absoluteDirPath !== projUriPath)
           return results;
       }
     }
+  }
+
+  // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
+  for (const absDirEntry of absDirEntries) {
+    const subDirResults = await findFeatureFolders(projUriPath, absDirEntry, stopOnFirstMatch);
+    results.push(...subDirResults);
   }
 
   return results;
@@ -384,7 +408,7 @@ export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string
       "tests/features",  
       "tests/features2"   
     ]
-    
+
   (note that the project-root "" is a special case (non-recursive) in _parseFeatureFiles in fileParser.ts)
   */
   const splitPaths = relativePaths.map(path => path.split('/')).sort((a, b) => a.length - b.length);

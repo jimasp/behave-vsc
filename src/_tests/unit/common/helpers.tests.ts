@@ -1,9 +1,103 @@
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { services } from '../../../common/services';
-import { getFeatureNodePath, getOptimisedFeatureParsingPaths } from '../../../common/helpers';
+import { findFeatureFolders, getFeatureNodePath, getOptimisedFeatureParsingPaths } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
+
+
+suite("findFeatureFolders", () => {
+  let sandbox: sinon.SinonSandbox;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let logger: any;
+  const projUri = vscode.Uri.file("/home/me/src/myproj");
+
+  setup(() => {
+    sandbox = sinon.createSandbox();
+    logger = { logInfo: sandbox.stub() };
+    services.logger = logger;
+
+    const statStub = sandbox.stub(fs.promises, 'stat');
+    statStub.callsFake((path: fs.PathLike) => {
+      const isDirectory = !path.toString().includes(".");
+      return Promise.resolve({ isDirectory: () => isDirectory } as fs.Stats);
+    });
+
+  });
+
+  teardown(() => {
+    sandbox.restore();
+    logger.logInfo.resetHistory();
+  });
+
+  test(`should return proj root path for root "my.feature"`, async () => {
+    // proj/
+    // ├── root.feature    
+    sandbox.stub(fs.promises, 'readdir').withArgs(projUri.fsPath)
+      .returns(Promise.resolve(["root.feature"]) as unknown as Promise<fs.Dirent[]>);
+
+    const result = await findFeatureFolders(projUri.fsPath, projUri.fsPath, false);
+    const expected = [projUri.fsPath];
+    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
+  });
+
+  test(`should return expected paths set 1`, async () => {
+    // proj/
+    // ├── root.feature
+    // ├── a/
+    // │   └── a.feature
+    // ├── b/
+    // │   └── b.feature   
+    // ├── c/
+    // │   ├── 1/
+    // │   │   └── c1.feature
+    // │   └── 2/
+    // │       ├── c2.feature
+    // │       └── 1/
+    // │           └── c21.feature
+    // ├── d/
+    // │   └── 1/
+    // │       └── d1.feature
+    // ├── e/
+    // │   ├── 1/
+    // │   │   ├── 1/
+    // │   │   │   └── e11.feature
+    // │   │   └── 2/
+    // │   │       ├── e12.feature
+    // │   │       └── 1/
+    // │   │           └── e121.feature
+    // ├── f/
+    //     └── 1/
+    //         └── 1/
+    //             └── 1/
+    //                 └── f111.feature
+    sandbox.stub(fs.promises, 'readdir')
+      .withArgs(projUri.fsPath).returns(Promise.resolve(["root.feature", "a", "b", "c", "d", "e", "f"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/a").returns(Promise.resolve(["a.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/b").returns(Promise.resolve(["b.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/c").returns(Promise.resolve(["1", "2"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/c/1").returns(Promise.resolve(["c1.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/c/2").returns(Promise.resolve(["1", "c2.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/c/2/1").returns(Promise.resolve(["c21.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/d").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/d/1").returns(Promise.resolve(["d1.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/e").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/e/1").returns(Promise.resolve(["1", "2"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/e/1/1").returns(Promise.resolve(["e11.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/e/1/2").returns(Promise.resolve(["e12.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/e/1/2/1").returns(Promise.resolve(["e121.feature"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/f").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/f/1").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/f/1/1").returns(Promise.resolve(["f111.feature"]) as unknown as Promise<fs.Dirent[]>);
+
+    const result = await findFeatureFolders(projUri.fsPath, projUri.fsPath, false);
+    const expected = ["", "a", "b", "c/1", "c/2", "d/1", "e/1/1", "e/1/2", "f/1/1"].map(rel => path.join(projUri.fsPath, rel));
+    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
+  });
+
+});
 
 suite("getLongestCommonPathsFromRelativePaths", () => {
   let sandbox: sinon.SinonSandbox;

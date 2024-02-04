@@ -1,5 +1,5 @@
 import { TestProjectRunner } from "../_helpers/runners/projectRunner";
-import { emptyBehaveIni, noRunOptions } from "../_helpers/common";
+import { noBehaveIni, noRunOptions } from "../_helpers/common";
 import { behaveIniFullPathsSetting, behaveIniWithRelPathsSetting, expectations, wsConfig, wsParallelConfig } from "./defaults";
 
 
@@ -14,7 +14,7 @@ suite(`working dir suite`, function () {
 	const testProjectRunner = new TestProjectRunner("working dir");
 
 	test("runAll", async () =>
-		await testProjectRunner.runAll(wsConfig, emptyBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini paths as relative path", async () =>
 		await testProjectRunner.runAll(wsConfig, behaveIniWithRelPathsSetting, noRunOptions, expectations));
@@ -23,7 +23,7 @@ suite(`working dir suite`, function () {
 		await testProjectRunner.runAll(wsConfig, behaveIniFullPathsSetting, noRunOptions, expectations));
 
 	test("runAll - parallel", async () =>
-		await testProjectRunner.runAll(wsParallelConfig, emptyBehaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(wsParallelConfig, noBehaveIni, noRunOptions, expectations));
 
 });
 

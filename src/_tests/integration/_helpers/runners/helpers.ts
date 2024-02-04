@@ -78,22 +78,29 @@ export function getBehaveIniPaths(workDirUri: vscode.Uri) {
 }
 
 
-export async function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content: string) {
+export async function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content?: string) {
 	const paths = getBehaveIniPaths(workDirUri);
-	await fs.promises.writeFile(paths.behaveIniPath, Buffer.from(content));
+	if (content === undefined) {
+		if (fs.existsSync(paths.behaveIniPath))
+			await fs.promises.unlink(paths.behaveIniPath);
+		return;
+	}
+	await fs.promises.writeFile(paths.behaveIniPath, content);
 	console.log(`${consoleName}: replaceBehaveIni wrote "${content}" to ${paths.behaveIniPath}`);
 }
 
 
 export async function restoreBehaveIni(consoleName: string, workDirUri: vscode.Uri) {
 	const paths = getBehaveIniPaths(workDirUri);
+	if (fs.existsSync(paths.behaveIniPath)) {
+		await fs.promises.unlink(paths.behaveIniPath);
+		console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniPath}"`);
+	}
 	if (fs.existsSync(paths.behaveIniBakPath)) {
 		await fs.promises.copyFile(paths.behaveIniBakPath, paths.behaveIniPath);
-		console.log(`${consoleName}: replaceBehaveIni copied "${paths.behaveIniBakPath}" to ${paths.behaveIniPath}`);
+		console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakPath}" to ${paths.behaveIniPath}`);
 		return;
 	}
-	await fs.promises.unlink(paths.behaveIniPath);
-	console.log(`${consoleName}: replaceBehaveIni removed "${paths.behaveIniPath}"`);
 }
 
 

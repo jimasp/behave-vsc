@@ -13,7 +13,6 @@ export const expectations: Expectations = {
 
 const expectedPaths = ["subfolder 1/subfolder 2/features", "subfolder 1/features", "subfolder 1/features2"];
 export const behaveIni: TestBehaveIni = {
-  content: `[behave]\npaths=${expectedPaths.join("\n\t")}`,
-  expectedProjRelPaths: expectedPaths
+  content: `[behave]\npaths=${expectedPaths.join("\n\t")}`
 }
 

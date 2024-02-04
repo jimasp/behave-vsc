@@ -353,7 +353,8 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), recursive, cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        services.logger.showWarn(`No feature files found in ${relFeaturesFolder}`, projUri);
+        services.logger.showWarn(`No feature files found in (project-relative) path "${relFeaturesFolder}".
+          Check behave config "paths" setting.`, projUri);
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)

@@ -51,7 +51,8 @@ export class ProjectWatcher {
         const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
         if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {
           // reparse the entire project        
-          services.config.reloadSettings(projSettings.uri);
+          await services.config.reloadSettings(projSettings.uri);
+          // no need to await the parse
           services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
           return;
         }
@@ -108,7 +109,8 @@ export class ProjectWatcher {
           return;
 
         // deleted feature file (or folder), reparse the entire project
-        services.config.reloadSettings(projUri);
+        await services.config.reloadSettings(projUri);
+        // no need to await the parse
         services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
       }
       catch (e: unknown) {
@@ -140,7 +142,8 @@ export class ProjectWatcher {
           if (services.config.isIntegrationTestRun)
             return false; // don't reload when integration tests change the behave.ini file
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
-          services.config.reloadSettings(projUri);
+          await services.config.reloadSettings(projUri);
+          // no need to await the parse
           services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
           return false; // just handled it
         }

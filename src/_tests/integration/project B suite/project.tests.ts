@@ -1,12 +1,12 @@
 import { TestProjectRunner } from "../_helpers/runners/projectRunner";
-import { emptyBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common";
+import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common";
 import { expectations, behaveIni } from "./defaults";
 
 suite(`project B suite`, () => {
   const testProjectRunner = new TestProjectRunner("project B");
 
   test("debugAll", async () =>
-    await testProjectRunner.debugAll(noConfig, emptyBehaveIni, noRunOptions, expectations));
+    await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
   test("debugFeaturesScenariosSubSets", async () =>
     await testProjectRunner.debugSubsetOfScenariosForEachFeature(noConfig, noRunOptions, expectations));
@@ -46,13 +46,13 @@ suite(`project B suite`, () => {
   // same tests run in multi.test.ts but with execFriendlyCmd=true:
 
   test("runAl (execFriendlyCmd)", async () =>
-    await testProjectRunner.runAll(noConfig, emptyBehaveIni, noRunOptions, expectations, true));
+    await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
   test("runAll - with behave.ini (execFriendlyCmd)", async () =>
     await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations, true));
 
   test("runAll - parallel (execFriendlyCmd)", async () =>
-    await testProjectRunner.runAll(parallelConfig, emptyBehaveIni, noRunOptions, expectations, true));
+    await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations, true));
 
 
 });

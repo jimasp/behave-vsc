@@ -117,7 +117,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
       try {
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
-          config.reloadSettings(projUri);
+          await config.reloadSettings(projUri);
           await services.parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
         }
       }

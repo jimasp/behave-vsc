@@ -5,32 +5,16 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 75, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 25, stepFilesExceptEmptyOrCommentedOut: 5,
+    tests: { nodeCount: 71, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 24, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 122, stepMappings: 121 // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 119, stepMappings: 118 // (1 diff = "When we have a missing step")
   };
 }
 
 export function getExpectedResults(): TestResult[] {
 
   const expectedResults: TestResult[] = [
-
-    new TestResult({
-      scenario_featureFileRelativePath: 'root.feature',
-      scenario_featureName: 'Root (included via behave.ini paths ".")',
-      scenario_getLabel: 'run a test',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'run a test',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project A/root.feature/run a test',
-      test_label: 'run a test',
-      test_parent: '.../project A/root.feature',
-      test_uri: '.../project A/root.feature',
-    }),
 
     new TestResult({
       scenario_featureName: 'Basic',

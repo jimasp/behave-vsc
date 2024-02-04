@@ -21,7 +21,7 @@ export const wsConfigParallel = new TestWorkspaceConfig({
 export const expectations: Expectations = {
   expectedProjectRelativeWorkingDirPath: "",
   expectedProjectRelativeBaseDirPath: "behave tests/some tests",
-  expectedProjectRelativeFeatureFolders: ["", "behave tests/some tests"],
+  expectedProjectRelativeFeatureFolders: ["behave tests/some tests"],
   expectedProjectRelativeStepsFolders: ["behave tests/some tests/steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
@@ -29,6 +29,5 @@ export const expectations: Expectations = {
 
 
 export const behaveIni: TestBehaveIni = {
-  content: `[behave]\npaths=behave tests/some tests\n\t.`,
-  expectedProjRelPaths: ["", "behave tests/some tests"]
+  content: `[behave]\npaths=behave tests/some tests`
 }
