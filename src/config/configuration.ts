@@ -44,9 +44,9 @@ export class Configuration {
   async getProjectSettings(projUriPath: string): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
 
-    // This is a lazy async get that can be called multiple times in parallel, and we don't want 
-    // it to do the same work multiple times if we can avoid it.
-    // If the timeout expires, then we will just carry on and try do the work again 
+    // This is a lazy async get that can be called multiple times in parallel, and 
+    // we don't want it to do the same work multiple times if we can avoid it.
+    // If the timeout expires, then we will just carry on and do the work again 
     // in the hope it completes, as there's not much else we can do.
     let wait = 0;
     const timeout = 10000;
@@ -58,6 +58,7 @@ export class Configuration {
     try {
       this.#processing = true;
       for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+        // only create the project settings if they are not already loaded
         if (!this.#resourceSettings[projUri.path]) {
           this.#resourceSettings[projUri.path] =
             await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);

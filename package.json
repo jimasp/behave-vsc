@@ -6,8 +6,8 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "envVarOverrides setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
-					"deprecationMessage": "envVarOverrides setting has been renamed. Please use the new \"behave-vsc.env\" setting.",
+					"markdownDescription": "envVarOverrides setting is deprecated. Please rename to \"behave-vsc.env\".",
+					"deprecationMessage": "envVarOverrides setting is deprecated. Please rename to \"behave-vsc.env\".",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -23,9 +23,9 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "featuresPath legacy setting is IGNORED. Feature paths are now determined automatically.",
+					"markdownDescription": "IGNORED legacy setting. Feature paths are now auto-discovered or controlled via the the \"behave-vsc.relativeWorkingDir\" and/or behave config file \"paths\".",
 					"default": "features",
-					"deprecationMessage": "featuresPath legacy setting is IGNORED. Feature paths are now determined automatically."
+					"deprecationMessage": "IGNORED legacy setting. Feature paths are now auto-discovered or controlled via the the \"behave-vsc.relativeWorkingDir\" and/or behave config file \"paths\"."
 				},
 				"behave-vsc.importedSteps": {
 					"scope": "resource",
@@ -57,7 +57,7 @@
 				"behave-vsc.relativeWorkingDir": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "Behave working directory, if it is not the same as the project root."
+					"markdownDescription": "Behave working directory, if it is not the project root."
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",

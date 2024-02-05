@@ -299,15 +299,16 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeCon
       foldersContainingFeatureFiles.splice(workRootIndex, 1);
   }
 
-  const relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
-
-  // optimise to longest common search paths for parsing search paths
-  // note that if "" is included in relativeFolders, then we maintain it as a distinct case 
-  // (see _parseFeatureFiles in fileParser.ts)
-  let relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
+  let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
 
   // add the config paths even if there are no feature files in those paths (yet)
-  relFeaturePaths = [...new Set(relFeaturePaths.concat(relativeConfigPaths))];
+  // (they don't have to exist yet as the watcher uses the project root)
+  relFeatureFolders = [...new Set(relFeatureFolders.concat(relativeConfigPaths))];
+
+  // optimise to longest common search paths for parsing search paths
+  // note that if "" is included in relFeatureFolders, then we maintain it 
+  // as a distinct case (see _parseFeatureFiles)
+  const relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)

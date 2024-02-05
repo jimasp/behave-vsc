@@ -38,7 +38,6 @@ export class ProjectWatcher {
   static async setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
     testData: TestData): Promise<vscode.Disposable[]> {
 
-    const projSettings = await services.config.getProjectSettings(projUri.path);
     const events: vscode.Disposable[] = [];
 
     events.push(watcher.onDidCreate(async (uri) => {
@@ -47,15 +46,14 @@ export class ProjectWatcher {
       try {
         if (!await shouldHandleIt(uri))
           return;
-        const lcPath = uri.path.toLowerCase();
-        const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
-        if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {
-          // reparse the entire project        
-          await services.config.reloadSettings(projSettings.uri);
-          // no need to await the parse
-          services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
-          return;
-        }
+        // const lcPath = uri.path.toLowerCase();
+        // const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
+        // if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {   
+        //   await services.config.reloadSettings(projSettings.uri);
+        //   // no need to await the parse
+        //   services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
+        //   return;
+        // }
 
         reparseTheFile(uri);
       }
@@ -104,12 +102,13 @@ export class ProjectWatcher {
         //     - "." is valid in folder names so we can't really determine by looking at the path.      
         // so we'll do a best guess via deletedPathWasProbablyAFile, i.e. if the path is not a feature file, and the 
         // last part of the path contains ".", then for efficiency we'll *assume* it's a file and not a folder and do nothing.
-        // (in cases where this assumption is wrong, then the user will have to refresh the test explorer manually)
+        // in cases where this assumption is wrong, then the user will have to refresh the test explorer manually.
+        // (".py" is handled above via isStepsFile)
         if (deletedPathWasProbablyAFile(uri.path) && !uri.path.endsWith(".feature"))
           return;
 
-        // deleted feature file (or folder), reparse the entire project
-        await services.config.reloadSettings(projUri);
+        // deleted feature/steps file (or folder), reparse the entire project to rebuild the test tree
+        //await services.config.reloadSettings(projUri);
         // no need to await the parse
         services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
       }
@@ -128,10 +127,12 @@ export class ProjectWatcher {
 
 
     const shouldHandleIt = async (uri: vscode.Uri): Promise<boolean> => {
-      // multiple watchers are not needed, because for a given project, all the files and folders we are 
-      // interested in are in the same project root, so we'll just have one watcher 
-      // for the project root and use this handleIt function as a filter.
-      // THIS FUNCTION SHOULD RETURN FAST (i.e. early exits where possible) as it is called for every project file/folder change
+      // we'll have one watcher per project root and use this handleIt function as a filter.
+      // *** THIS FUNCTION SHOULD RETURN FAST *** (i.e. early exits where possible) as 
+      // it is called for EVERY project file/folder change
+
+      // get the latest project settings (this project watcher has a lifetime as long as the extension)
+      const projSettings = await services.config.getProjectSettings(projUri.path);
 
       if (uri.path.endsWith(".tmp")) // vscode file history file 
         return false;
@@ -144,10 +145,18 @@ export class ProjectWatcher {
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           await services.config.reloadSettings(projUri);
           // no need to await the parse
-          services.parser.parseFilesForProject(projUri, testData, ctrl, "behaveConfigChange", false);
+          services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
           return false; // just handled it
         }
       }
+
+      // // (*_environment = a stage environment file like stage1_environment.py etc.)
+      // if (/(environment|_environment)\.py$/.test(uri.path.toLowerCase())) {
+      //   await services.config.reloadSettings(projSettings.uri);
+      //   // no need to await the parse
+      //   services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
+      //   return false; // just handled it
+      // }
 
       // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
       const relFolderPaths = projSettings.projRelativeFeatureFolders.concat(projSettings.projRelativeStepsFolders);
