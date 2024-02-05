@@ -342,15 +342,12 @@ export async function findFeatureFolders(projUriPath: string, absoluteDirPath: s
   const entries = await fs.promises.readdir(absoluteDirPath);
   const absDirEntries: string[] = [];
   const results: string[] = [];
-  console.log("absoluteDirPath: ", absoluteDirPath);
-  console.log("entries: ", entries);
 
   // first pass = files only
   for (const entry of entries) {
     const entryPath = path.join(absoluteDirPath, entry);
     const stat = await fs.promises.stat(entryPath);
     if (stat.isDirectory()) {
-      console.log(absoluteDirPath + " pushing: ", entryPath);
       absDirEntries.push(entryPath);
     }
     else {
