@@ -156,9 +156,15 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ### How feature/step discovery works
 
-- It determines the features and steps folders by a combination of the `relativeWorkingDir` setting and the `paths` setting in the behave configuration file. If these are not supplied, then it uses defaults.
+- It determines the features and steps folders by a combination of the following *optional* settings. If these are not supplied, then it uses defaults:
+  - `relativeWorkingDir` extension setting,
+  - `paths` in the behave configuration file,
+  - `importedSteps` extension setting.
+
 - The extension parses `*.feature` files from the determined feature folders. It then uses this information to build a test tree in the test explorer UI.
-- The extension parses `*.py` files from the determined steps folders. It then uses this information to providestep navigation.
+
+- The extension parses `*.py` files from the determined steps folders. It then uses this information to provide step navigation.
+
 - It uses a file system watcher to keep the test tree up to date with changes to feature and step files.
 
 ### How test runs work
