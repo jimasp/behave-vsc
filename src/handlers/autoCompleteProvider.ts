@@ -5,6 +5,7 @@ import { featureFileStepRe } from "../parsers/featureParser";
 import { getStepFilesSteps } from '../parsers/stepsParser';
 
 
+// provides autocompletion in feature files (i.e. available steps) after typing "Given", "When", "Then", "And", "But"
 export const autoCompleteProvider = {
   async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): Promise<vscode.CompletionItem[] | undefined> {
     try {
@@ -23,6 +24,8 @@ export const autoCompleteProvider = {
       let matchText1 = `^${stepType}${sepr}${textWithoutType}`;
       const matchText2 = `^step${sepr}${textWithoutType}`;
 
+      // if step is "and" or "but", find the previous step and substitute that step type 
+      // as matchText1 (e.g. and I do something -> given I do something, when I do something, etc.)
       if (stepType === "and" || stepType === "but") {
         for (let i = position.line - 1; i > -1; i--) {
           const lcPrevLine = document.lineAt(i).text.trimStart().toLowerCase();
@@ -38,6 +41,9 @@ export const autoCompleteProvider = {
       const stepFileSteps = getStepFilesSteps(projSettings.uri);
       const items: vscode.CompletionItem[] = [];
 
+      // find stepFileSteps that match either:
+      // (a) matchText1: the text typed so far (with "and"/"but" switched if required), or 
+      // (b) matchText2: "step" + text typed so far
       for (const [key, value] of stepFileSteps) {
         const lcKey = key.toLowerCase();
         if (lcKey.startsWith(matchText1) || lcKey.startsWith(matchText2)) {

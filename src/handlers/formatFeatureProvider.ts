@@ -9,7 +9,8 @@ const threeIndent = /^\s*\|.*/;
 const allIndents = [oneIndent, twoIndent, threeIndent].map(r => r.source).join("|");
 const indent = "\t";
 
-// this fires on format document or format selection
+// this fires on "format document" or "format selection/paste" or "format on save"
+// (gherkin.language-configuration.json sets indentation used on typing out a feature file, e.g. pressing enter)
 export const formatFeatureProvider = {
   async provideDocumentRangeFormattingEdits(document: vscode.TextDocument) {
     try {

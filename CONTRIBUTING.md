@@ -143,14 +143,14 @@ If you have a customised fork and you just want to distribute it to your team, y
 
 ## How autocompletion, highlighting and snippets are hooked up
 
-- autocompletion is provided by:
+- feature file autocompletion is provided by:
   - autoCompleteProvider.ts
 feature file syntax highlighting is provided by:
   - gherkin.grammar.json
-  - semHighlightProvider.ts. (only for step parameters and missing steps called by vscode on-demand as required.)
+- semHighlightProvider.ts. (only for step parameters and missing steps called by vscode on-demand as required.)
 feature file formatting is provided by:
+  - gherkin.language-configuration.json - (sets indentation used on typing out a feature file, e.g. pressing enter)
   - formatFeatureProvider.ts - (sets indentation on user request - CTRL K+F, inc. file save if set)
-  - language-configuration.ts - (sets indentation used on typing out a feature file, e.g. pressing enter)
 
 ### Diagnostics
 
