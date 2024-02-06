@@ -10,7 +10,7 @@ import { wsConfig, expectations, behaveIni } from "./defaults";
 suite(`imported steps suite`, () => {
 	const testProjectRunner = new TestProjectRunner("imported steps");
 
-	test("runAll", async () =>
+	test("runAll - no behave.ini", async () =>
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>

@@ -51,9 +51,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
-  - (In the below examples the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
+  - (In the below example the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
 
-  - Basic example:
+  - Basic example (no configuration required):
 
     ```text
     my-project/
@@ -68,9 +68,13 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             ├── shared_steps.py
             ├── db_steps.py                             
             └── web_steps.py
-    ```
 
-- See [advanced project configuration](#advanced-project-configuration) for information on how to configure non-standard project structures.
+- The default working directory (and auto-discovery directory) is the project root. For very large projects, it is recommended to either:
+  - a. use a `behave.ini` file in the project-root to specify the `paths` setting, or
+  - b. use a subfolder for behave tests, e.g. `mytests/features`, and set the `relativeWorkingDir` to e.g. `mytests`.
+  This will stop the extension from having to parse/watch your entire project folder looking for feature and steps files.
+
+- In most cases, auto-discovery (along with `relativeWorkingDir` if required) will "just work", but otherwise see [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
 
 ---
 
@@ -83,8 +87,8 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`:
 
 - Customise your test run via `settings.json`, e.g. `relativeWorkingDir`, `env`, etc.
+- Enable/disable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Import steps from step libraries via `importedSteps`.
-- You can also disable/enable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Environment variables (and behave tags) can be set on a per run basis via custom `runProfiles` which then appear in the test explorer UI.
 - If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
 - For information on all available options, go to the extension settings in vscode.
@@ -92,6 +96,13 @@ For simple setups, the extension should work "out of the box", but there is plen
 ---
 
 ## How the extension works
+
+### How feature/step discovery works
+
+- It determines the features and steps folders by a combination of the `relativeWorkingDir` setting and the `paths` setting in the behave configuration file. If these are not supplied, then it uses defaults.
+- The extension parses `*.feature` files from the determined feature folders. It then uses this information to build a test tree in the test explorer UI.
+- The extension parses `*.py` files from the determined steps folders. It then uses this information to providestep navigation.
+- It uses a file system watcher to keep the test tree up to date with changes to feature and step files.
 
 ### How test runs work
 
@@ -111,7 +122,7 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ### How debug works
 
-- It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug launch.json and enables the `ms-python.python` extension to do the work of debugging.)
+- It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug `launch.json` and enables the `ms-python.python` extension to do the work of debugging.)
 
 - You can control whether debug steps into external code via the extension setting `justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
 
@@ -285,6 +296,8 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ## Known issues and limitations
 
+- If your project is so large that you file watchers do not work, then you will need to use the refresh button in the test explorer to see new/modified tests.
+
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
@@ -305,7 +318,9 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ## Advanced project configuration
 
-- If your behave working directory is not the same as your project directory, then you can set the `relativeWorkingDir` to specify a project-relative path to the behave working directory.
+- Autodiscovery is based on the behave config `paths` setting and the extension `relativeWorkingDir` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
+
+- If your behave working directory is not the same as your project directory, then you can set the `relativeWorkingDir` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
 
   - Example:
 
@@ -323,7 +338,7 @@ For simple setups, the extension should work "out of the box", but there is plen
 
   then you can use the `paths` setting in your behave configuration file to specify a behave-working-directory-relative path to the features folder(s):
 
-  - Example A, features folder is a subfolder called `my_folder/my_features`:
+  - Example A, features folder is a subfolder of the working directory called `my_folder/my_features` and does not have a sibling `steps` folder:
 
       ```ini
       # behave.ini (or .behaverc, setup.cfg, tox.ini)

@@ -14,7 +14,7 @@ suite(`multiple top-level features folders suite`, () => {
 
 	// NOTE THAT THERE ARE 2 EXPECTATION OBJECTS HERE which correlate to with/without behave.ini 
 
-	test("runAll", async () =>
+	test("runAll - no behave.ini", async () =>
 		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
