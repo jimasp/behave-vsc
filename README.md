@@ -28,7 +28,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ---
 
-## Terminology
+## Terminology used in this readme
 
 - "workspace": the root context of the development environment in the IDE. There is only one workspace per vscode instance.
 - "workspace folder" : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
@@ -95,45 +95,6 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ---
 
-## How the extension works
-
-### How feature/step discovery works
-
-- It determines the features and steps folders by a combination of the `relativeWorkingDir` setting and the `paths` setting in the behave configuration file. If these are not supplied, then it uses defaults.
-- The extension parses `*.feature` files from the determined feature folders. It then uses this information to build a test tree in the test explorer UI.
-- The extension parses `*.py` files from the determined steps folders. It then uses this information to providestep navigation.
-- It uses a file system watcher to keep the test tree up to date with changes to feature and step files.
-
-### How test runs work
-
-- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. By default, the behave command working directory is your root project directory.
-
-- For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
-
-- The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated workspace.
-
-- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
-
-- You can adjust the run behaviour via extension settings in your `settings.json` file.
-
-- Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
-
-- Run profiles can be used for per-run settings (see [Running a subset of tests](#running-a-subset-of-tests)).
-
-### How debug works
-
-- It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug `launch.json` and enables the `ms-python.python` extension to do the work of debugging.)
-
-- You can control whether debug steps into external code via the extension setting `justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
-
-- Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
-
-- You can adjust the debug behaviour via extension settings in your `settings.json` file. Note that debug ignores the `runParallel` setting.
-
-- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
-
----
-
 ## Running a subset of tests
 
 - There are several options here. Using a combination of all of these is recommended:
@@ -189,10 +150,51 @@ For simple setups, the extension should work "out of the box", but there is plen
           - which `before_all` will use to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
         - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
 
+---
+
+## How the extension works
+
+### How feature/step discovery works
+
+- It determines the features and steps folders by a combination of the `relativeWorkingDir` setting and the `paths` setting in the behave configuration file. If these are not supplied, then it uses defaults.
+- The extension parses `*.feature` files from the determined feature folders. It then uses this information to build a test tree in the test explorer UI.
+- The extension parses `*.py` files from the determined steps folders. It then uses this information to providestep navigation.
+- It uses a file system watcher to keep the test tree up to date with changes to feature and step files.
+
+### How test runs work
+
+- The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. By default, the behave command working directory is your root project directory.
+
+- For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
+
+- The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated workspace.
+
+- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+
+- You can adjust the run behaviour via extension settings in your `settings.json` file.
+
+- Tests runs are smart, so for example if you select to run three feature nodes it will build a behave `-i` regex to run them in a single behave instance rather than separate instances (unless you are using `runParallel`). If you choose a nested folder it will run that folder in a behave instance, etc.
+
+- Run profiles can be used for per-run settings (see [Running a subset of tests](#running-a-subset-of-tests)).
+
+### How debug works
+
+- It dynamically builds a debug launch config with the behave command and runs that. (This is a programmatic equivalent to creating your own debug `launch.json` and enables the `ms-python.python` extension to do the work of debugging.)
+
+- You can control whether debug steps into external code via the extension setting `justMyCode` (i.e. in your `settings.json` *not* your `launch.json`).
+
+- Behave stderr output (only) is shown in the debug console window. (This is to reduce noise when debugging. Run the test instead if you want to see the full behave output.)
+
+- You can adjust the debug behaviour via extension settings in your `settings.json` file. Note that debug ignores the `runParallel` setting.
+
+- The extension parses the junit file output and updates the test result in the UI. Any assertion failures and python exceptions are shown in the test run detail accessible in the feature file.
+
+---
+
 ## Q&A
 
 - *How can I see all effective settings for the extension?*
-  - On starting vscode, look in the Behave VSC output window.
+  - On vscode startup, look in the Behave VSC output window.
 
 - *How can I see the active behave configuration being used for behave execution?*
   - In your behave config file, set `verbose=true`.
