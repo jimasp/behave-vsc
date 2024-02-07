@@ -49,7 +49,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
   const projUri = getTestProjectUri(projName);
   logStore.clearProjLogs(projUri);
-  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("relativeWorkingDir"));
+  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
 
 
   // ARRANGE
@@ -169,7 +169,7 @@ function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vsc
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
   if (!testExtConfig.runParallel) {
 

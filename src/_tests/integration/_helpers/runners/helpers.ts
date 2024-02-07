@@ -170,7 +170,7 @@ export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, request: v
 
 	const projSettings = {
 		runParallel: testExtConfig.get("runParallel"),
-		projRelativeWorkingDirPath: testExtConfig.get("relativeWorkingDir"),
+		projRelativeWorkingDirPath: testExtConfig.get("behaveWorkingDirectory"),
 	} as ProjectSettings;
 
 	return {

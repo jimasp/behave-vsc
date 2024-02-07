@@ -23,7 +23,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: simple workspace",
+			"name": "Debug: simple",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -40,7 +40,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: multiroot workspace",
+			"name": "Debug: multiroot",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -57,7 +57,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: sibling steps folder 1 workspace",
+			"name": "Debug: sibling steps folder 1",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -74,7 +74,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: sibling steps folder 2 workspace",
+			"name": "Debug: sibling steps folder 2",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -91,7 +91,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: higher steps folder workspace",
+			"name": "Debug: higher steps folder",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -108,7 +108,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: project A workspace",
+			"name": "Debug: project A",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -125,7 +125,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: project B workspace",
+			"name": "Debug: project B",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -142,7 +142,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: working dir workspace",
+			"name": "Debug: working dir",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -159,7 +159,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: multiple top-level features folders workspace",
+			"name": "Debug: multiple top-level features folders",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -176,7 +176,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: bad import workspace",
+			"name": "Debug: handle bad import",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -193,7 +193,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: imported steps workspace",
+			"name": "Debug: imported steps",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -210,7 +210,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: run profiles workspace",
+			"name": "Debug: run profiles",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -227,7 +227,7 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Integration Tests: simple workspace",
+			"name": "Integration Tests: simple",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -242,7 +242,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: multiroot workspace",
+			"name": "Integration Tests: multiroot",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -257,7 +257,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: sibling steps folder 1 workspace",
+			"name": "Integration Tests: sibling steps folder 1",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -272,7 +272,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: sibling steps folder 2 workspace",
+			"name": "Integration Tests: sibling steps folder 2",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -287,7 +287,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: higher steps folder workspace",
+			"name": "Integration Tests: higher steps folder",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -302,7 +302,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: project A workspace",
+			"name": "Integration Tests: project A",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -317,7 +317,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: project B workspace",
+			"name": "Integration Tests: project B",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -332,7 +332,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: working dir workspace",
+			"name": "Integration Tests: working dir",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -347,7 +347,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: multiple top-level features folders workspace",
+			"name": "Integration Tests: multiple top-level features folders",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -362,7 +362,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: imported steps workspace",
+			"name": "Integration Tests: imported steps",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -377,7 +377,7 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: run profiles workspace",
+			"name": "Integration Tests: run profiles",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
@@ -397,7 +397,7 @@
 			"request": "launch",
 			"args": [
 				// vscode object requires a vscode instance	(would be nice if this was headless)
-				"${workspaceFolder}/src/_tests/unit/no workspace",
+				"${workspaceFolder}/src/_tests/unit/no",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/_tests/unit/index"
 			],

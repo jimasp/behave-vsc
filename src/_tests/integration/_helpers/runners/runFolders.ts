@@ -72,7 +72,7 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
   const pr = createFakeProjRun(testExtConfig, request);
 
   const featuresInFolder = folderItem.descendents.filter(x => x.id.endsWith(".feature"));
@@ -114,7 +114,7 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
   const pr = createFakeProjRun(testExtConfig, request);
 
   const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id, true) === exp.test_id));

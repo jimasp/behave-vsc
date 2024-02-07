@@ -64,10 +64,10 @@ export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfig
 
   if (new_base_dir === project_parent_dir) {
     if (relativeBehaveConfigPaths.length === 0) {
-      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". ` +
-        'Please either: (a) specify a "paths" setting in your behave configuration file for this project, and/or ' +
-        '(b) if your behave working directory is not the same as your project root then specify a "behave-vsc.relWorkingDir"' +
-        'in settings.json', ps.uri);
+      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". `, ps.uri)// +
+      // 'Please either: (a) specify a "paths" setting in your behave configuration file for this project, and/or ' +
+      // '(b) if your behave working directory is not the same as your project root then specify a "behave-vsc.relWorkingDir"' +
+      // 'in settings.json', ps.uri);
     }
     else {
       services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". ` +

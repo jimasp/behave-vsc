@@ -90,7 +90,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
   // while it's tempting to just reuse requestItems from the caller here, 
   // we must use expectedResults to validate (belt and braces)

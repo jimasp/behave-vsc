@@ -37,16 +37,20 @@
 			"name": "sibling steps folder 2"
 		},
 		{
-			"path": "./multiroot bad paths",
-			"name": "bad paths"
+			"path": "./handle bad import",
+			"name": "handle bad import (behave failure)"
 		},
 		{
-			"path": "./multiroot unconfigured paths",
-			"name": "unconfigured paths"
+			"path": "./handle empty folder",
+			"name": "handle empty folder (ignore)"
 		},
 		{
-			"path": "./multiroot empty folder",
-			"name": "empty folder"
+			"path": "./handle incorrect paths",
+			"name": "handle incorrect paths (show warning)"
+		},
+		{
+			"path": "./handle unconfigured paths",
+			"name": "handle unconfigured paths (show warning)"
 		}
 	],
 	"settings": {

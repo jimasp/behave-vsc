@@ -95,7 +95,7 @@ export class ProjectSettings {
   public readonly id: string; // project id (unique)
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
-  public readonly projRelativeWorkingDirPath: string = ""; // "relativeWorkingDir" in settings.json
+  public readonly projRelativeWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
   // calculated after real work in create():
   public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
@@ -141,10 +141,16 @@ export class ProjectSettings {
     this.workingDirUri = projUri; // default
     this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
 
+    const featuresPath = getActualWorkspaceSetting(projConfig, "featuresPath");
+    if (featuresPath !== undefined) {
+      services.logger.showWarn(`"behave-vsc.featuresPath" is an ignored legacy setting. Please remove it from your settings.json. 
+        (Feature paths are now auto-discovered and controlled by the the "behave-vsc.behaveWorkingDirectory" setting and/or the 
+        behave config file "paths" setting.)`, projUri);
+    }
+
     // For all settings read from settings.json (derived from package.json), projConfig.get() should never return
     // undefined (unless package.json is wrong), as get() will always return a default value for any packages.json setting.
-    // Separately, in cases where we want the actual settings.json setting (not default) then use 
-    // getActualWorkspaceSetting(), i.e. to determine if the user has set something vs it just being a default value.   
+    // Separately, in cases where we want the actual settings.json setting (not default) then use getActualWorkspaceSetting().
 
     const justMyCodeCfg: boolean | undefined = projConfig.get("justMyCode");
     if (justMyCodeCfg === undefined)
@@ -163,11 +169,12 @@ export class ProjectSettings {
       this.env = envCfg;
     }
     catch {
-      vscode.window.showWarningMessage('Invalid "behave-vsc.env" setting was ignored.', "OK");
+      services.logger.showWarn('Invalid "behave-vsc.env" setting was ignored.', projUri);
     }
 
     try {
       // DEPRECATED, so only used if env is not set in settings.json
+      // get the new setting first, and if it's not set then get the old setting
       const envActual = getActualWorkspaceSetting(projConfig, "env");
       if (envActual === undefined) {
         const envCfg: { [name: string]: string } | undefined = projConfig.get("envVarOverrides");
@@ -177,16 +184,16 @@ export class ProjectSettings {
       }
     }
     catch {
-      vscode.window.showWarningMessage('Invalid "behave-vsc.envVarOverrides" setting was ignored.', "OK");
+      services.logger.showWarn('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
     }
 
-    const relWorkingDirCfg: string | undefined = projConfig.get("relativeWorkingDir");
+    const relWorkingDirCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
     if (relWorkingDirCfg === undefined)
-      throw new Error("relativeWorkingDir is undefined");
+      throw new Error("behaveWorkingDirectory is undefined");
     const workingDirUri = vscode.Uri.joinPath(projUri, relWorkingDirCfg);
     if (!fs.existsSync(workingDirUri.fsPath)) {
-      vscode.window.showWarningMessage(`Invalid "behave-vsc.relativeWorkingDir" setting: "${relWorkingDirCfg}" ` +
-        "does not exist and will be ignored.", "OK");
+      services.logger.showWarn(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${relWorkingDirCfg}" ` +
+        "does not exist and will be ignored.", projUri);
     }
     else {
       this.workingDirUri = workingDirUri;
@@ -363,7 +370,7 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
   const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
   let projEntries = Object.entries(ps);
   projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
-  projEntries.push(["relativeWorkingDir", ps.projRelativeWorkingDirPath]);
+  projEntries.push(["behaveWorkingDirectory", ps.projRelativeWorkingDirPath]);
   projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
   const resourceSettingsDic: { [name: string]: object; } = {};
   const userEntries: { [name: string]: object; } = {};

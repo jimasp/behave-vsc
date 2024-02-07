@@ -4,12 +4,12 @@ import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 export const wsConfig = new TestWorkspaceConfig({
-  relativeWorkingDir: "working folder",
+  behaveWorkingDirectory: "working folder",
 });
 
 export const wsParallelConfig = new TestWorkspaceConfig({
   runParallel: true,
-  relativeWorkingDir: "working folder",
+  behaveWorkingDirectory: "working folder",
 });
 
 export const expectations: Expectations = {

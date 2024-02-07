@@ -3,11 +3,15 @@
 		"configuration": {
 			"title": "behave-vsc",
 			"properties": {
+				"behave-vsc.behaveWorkingDirectory": {
+					"scope": "resource",
+					"type": "string",
+					"markdownDescription": "The project-relative behave working directory (only required if it is not the project root)."
+				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "envVarOverrides setting is deprecated. Please rename to \"behave-vsc.env\".",
-					"deprecationMessage": "envVarOverrides setting is deprecated. Please rename to \"behave-vsc.env\".",
+					"deprecationMessage": "This setting has been renamed. Please use the \"env\" setting.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -15,7 +19,7 @@
 				"behave-vsc.env": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using `behave-vsc.runProfiles`.",
+					"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using the `runProfiles` setting.",
 					"additionalProperties": {
 						"type": "string"
 					}
@@ -23,9 +27,8 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "IGNORED legacy setting. Feature paths are now auto-discovered or controlled via the the \"behave-vsc.relativeWorkingDir\" and/or behave config file \"paths\".",
-					"default": "features",
-					"deprecationMessage": "IGNORED legacy setting. Feature paths are now auto-discovered or controlled via the the \"behave-vsc.relativeWorkingDir\" and/or behave config file \"paths\"."
+					"deprecationMessage": "IGNORED legacy setting. Feature paths are now auto-discovered and controlled by the \"behaveWorkingDirectory\" setting and/or behave config file \"paths\".",
+					"default": "features"
 				},
 				"behave-vsc.importedSteps": {
 					"scope": "resource",
@@ -50,14 +53,8 @@
 				"behave-vsc.multiRootRunWorkspacesInParallel": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "This legacy setting is IGNORED. Please use \"behave-vsc.runMultiRootProjectsInParallel\".",
 					"default": true,
-					"deprecationMessage": "This legacy setting is IGNORED. Please use \"behave-vsc.runMultiRootProjectsInParallel\"."
-				},
-				"behave-vsc.relativeWorkingDir": {
-					"scope": "resource",
-					"type": "string",
-					"markdownDescription": "Behave working directory, if it is not the project root."
+					"deprecationMessage": "IGNORED legacy setting. Please use \"runMultiRootProjectsInParallel\"."
 				},
 				"behave-vsc.runParallel": {
 					"scope": "resource",
@@ -68,7 +65,7 @@
 				"behave-vsc.runProfiles": {
 					"type": "object",
 					"scope": "window",
-					"markdownDescription": "A dictionary of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to all projects in the workspace. See example in readme.",
+					"markdownDescription": "A dictionary of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to ALL projects in the workspace. See example in readme.",
 					"additionalProperties": {
 						"type": "object",
 						"properties": {

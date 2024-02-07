@@ -13,7 +13,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Shows failed test run result inside the feature file.
   - Shows full behave output in the Behave VSC output window.
   - Shows the behave command in the output so you can generate commands to run manually.  
-  - Allows you to set behave's working directory (via `relativeWorkingDir` setting).  
+  - Allows you to set behave's working directory (via `behaveWorkingDirectory` setting).  
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
@@ -71,10 +71,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - The default working directory (and auto-discovery directory) is the project root. For very large projects, it is recommended to either:
   - a. use a `behave.ini` file in the project-root to specify the `paths` setting, or
-  - b. use a subfolder for behave tests, e.g. `mytests/features`, and set the `relativeWorkingDir` to e.g. `mytests`.
+  - b. use a subfolder for behave tests, e.g. `mytests/features`, and set the `behaveWorkingDirectory` to e.g. `mytests`.
   This will stop the extension from having to parse/watch your entire project folder looking for feature and steps files.
 
-- In most cases, auto-discovery (along with `relativeWorkingDir` if required) will "just work", but otherwise see [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
+- In most cases, auto-discovery (along with `behaveWorkingDirectory` if required) will "just work", but otherwise see [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
 
 ---
 
@@ -86,7 +86,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`:
 
-- Customise your test run via `settings.json`, e.g. `relativeWorkingDir`, `env`, etc.
+- Customise your test run via `settings.json`, e.g. `behaveWorkingDirectory`, `env`, etc.
 - Enable/disable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Import steps from step libraries via `importedSteps`.
 - Environment variables (and behave tags) can be set on a per run basis via custom `runProfiles` which then appear in the test explorer UI.
@@ -157,7 +157,7 @@ For simple setups, the extension should work "out of the box", but there is plen
 ### How feature/step discovery works
 
 - It determines the features and steps folders by a combination of the following *optional* settings. If these are not supplied, then it uses defaults:
-  - `relativeWorkingDir` extension setting,
+  - `behaveWorkingDirectory` extension setting,
   - `paths` in the behave configuration file,
   - `importedSteps` extension setting.
 
@@ -326,16 +326,16 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ## Advanced project configuration
 
-- Autodiscovery is based on the behave config `paths` setting and the extension `relativeWorkingDir` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
+- Autodiscovery is based on the behave config `paths` setting and the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
 
-- If your behave working directory is not the same as your project directory, then you can set the `relativeWorkingDir` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
+- If your behave working directory is not the same as your project directory, then you can set the `behaveWorkingDirectory` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
 
   - Example:
 
     ```json
       // settings.json
       {
-        "behave-vsc.relativeWorkingDir": "my_behave_working_folder", // project-relative path
+        "behave-vsc.behaveWorkingDirectory": "my_behave_working_folder", // project-relative path
       }
     ```
 

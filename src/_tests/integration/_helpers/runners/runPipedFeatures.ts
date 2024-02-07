@@ -83,7 +83,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, skippedFeatur
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("relativeWorkingDir") as string;
+  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
   const filteredExpectedResults = expectedResults.filter(x => !skippedFeatureRelPath.endsWith(x.scenario_featureFileRelativePath));
 

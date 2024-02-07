@@ -1,6 +1,9 @@
 {
     "behave-vsc.xRay": true,
     "behave-vsc.featuresPath": "features",
+    "behave-vsc.env": {
+        "foo": "bar2"
+    },
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ]
