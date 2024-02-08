@@ -2,7 +2,6 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
-import { services } from '../common/services';
 
 
 export class Configuration {

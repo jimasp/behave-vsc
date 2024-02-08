@@ -66,6 +66,15 @@ async function npmRunTest() {
       launchArgs
     });
 
+    launchArgs = ["example-projects/multiroot.code-workspace"];
+    extensionTestsPath = path.resolve(__dirname, './integration/multiroot suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
     launchArgs = ["example-projects/sibling steps folder 1"];
     extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 1 suite/index');
     await runTests({
@@ -129,14 +138,6 @@ async function npmRunTest() {
       launchArgs
     });
 
-    launchArgs = ["example-projects/multiroot.code-workspace"];
-    extensionTestsPath = path.resolve(__dirname, './integration/multiroot suite/index');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
 
     console.log("test run complete");
 

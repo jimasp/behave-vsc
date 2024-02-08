@@ -25,7 +25,7 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	// this function is used to mitigate parallel project initialisation for multiroot parallel project testing
 	// (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)	
 
-	if (!(global as any).multiRootTest)
+	if (!(global as any).multiRootTest) // eslint-disable-line @typescript-eslint/no-explicit-any
 		return;
 
 	if (![ACQUIRE, RELEASE].includes(acquireOrRelease))

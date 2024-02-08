@@ -110,6 +110,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "env":
 				response = <T><unknown>this.env;
 				break;
+			case "featuresPath": // DEPRECATED (IGNORED except for warning)
+				response = undefined;
+				break;
 			case "justMyCode":
 				response = <T><unknown>this.justMyCode;
 				break;

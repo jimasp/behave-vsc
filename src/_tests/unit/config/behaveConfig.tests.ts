@@ -263,7 +263,7 @@ suite("getBehaveConfigPaths - more path checks", () => {
       sandbox = sinon.createSandbox();
       logger = { logInfo: sandbox.stub() };
       services.logger = logger;
-      if (!(fs.statSync as any)['isSinonProxy'])
+      if (!('isSinonProxy' in fs.statSync)) // if not already stubbed
         sandbox.stub(fs, 'statSync').returns({ isDirectory: () => true } as unknown as fs.Stats);
     });
 

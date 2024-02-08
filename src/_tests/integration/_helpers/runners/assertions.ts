@@ -29,7 +29,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
   testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {
 
   // multiroot will read window settings from multiroot.code-workspace file, not config
-  if (!(global as any).multiRootTest) {
+  if (!(global as any).multiRootTest) { // eslint-disable-line @typescript-eslint/no-explicit-any
     const instanceSettings = config.instanceSettings;
     assert.strictEqual(instanceSettings.runMultiRootProjectsInParallel, testConfig.getExpected("runMultiRootProjectsInParallel"),
       `${projName} project: runMultiRootProjectsInParallel`);

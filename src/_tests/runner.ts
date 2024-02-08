@@ -1,48 +1,45 @@
 import * as path from 'path';
 import * as Mocha from 'mocha';
-import * as glob from 'glob';
 import * as vscode from 'vscode';
 import * as inspector from 'inspector';
+import { globSync } from 'glob';
 import { services } from '../common/services';
 
 
-export async function runner(globStr: string, ignore?: string[]): Promise<void> {
+export function runner(globStr: string, ignore?: string[]): Promise<void> {
 
-	const debugging = inspector.url() !== undefined;
+	const debuggerAttached = inspector.url() !== undefined;
 
 	const mocha = new Mocha({
 		ui: 'tdd',
 		color: true,
 		bail: true,
-		timeout: debugging ? 900000 : 30000,
+		timeout: debuggerAttached ? 900000 : 30000,
 	});
 
 	const testsRoot = __dirname;
 
-	return new Promise((c, e) => {
+	return new Promise((resolve, reject): void => {
 
-		glob(globStr, { cwd: testsRoot, ignore: ignore }, (err, files) => {
-			if (err) {
-				return e(err);
-			}
-
+		try {
+			const files = globSync(globStr, { cwd: testsRoot, ignore: ignore });
 			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
-			try {
-				mocha.run(failures => {
-					if (failures > 0) {
-						e(new Error(`${failures} tests failed.`));
-					} else {
-						c();
-					}
-				});
-			}
-			catch (err) {
-				console.error(err);
-				e(err);
-				debugger; // eslint-disable-line no-debugger
-			}
-		});
+			mocha.run(failures => {
+				if (failures > 0) {
+					reject(new Error(`${failures} tests failed.`));
+				}
+				else {
+					resolve();
+				}
+			});
+		}
+		catch (err) {
+			console.error(err);
+			debugger; // eslint-disable-line no-debugger
+			return reject(err);
+		}
+
 	});
 }
 
