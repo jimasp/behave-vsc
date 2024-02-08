@@ -7,6 +7,9 @@ export async function run(): Promise<void[]> {
 
 	(global as any).multiRootTest = true; //eslint-disable-line @typescript-eslint/no-explicit-any
 
+	// we could include all these in a single glob, but it's better to keep them separate 
+	// so we can comment them out individually whenever required for debugging etc.
+
 	const sSuite = runner("../**/simple suite/multi.tests.js");
 	const aSuite = runner("../**/project A suite/multi.tests.js");
 	const bSuite = runner("../**/project B suite/multi.tests.js");
