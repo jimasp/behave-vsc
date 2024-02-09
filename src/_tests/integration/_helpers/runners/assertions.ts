@@ -14,16 +14,6 @@ import { logStore } from "../../../runner";
 
 
 
-export function assertInstances(instances: IntegrationTestAPI) {
-  assert(instances);
-  assert(instances.ctrl);
-  assert(instances.getStepFileStepForFeatureFileStep);
-  assert(instances.getStepMappingsForStepsFileFunction);
-  assert(instances.runHandler);
-  assert(instances.testData);
-  assert(instances.configurationChangedHandler);
-}
-
 
 export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, behaveIni: TestBehaveIni,
   testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {

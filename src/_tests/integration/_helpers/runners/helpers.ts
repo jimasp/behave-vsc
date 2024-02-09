@@ -8,8 +8,6 @@ import { IntegrationTestAPI } from '../../../../extension';
 import {
 	getUrisOfWkspFoldersWithFeatures,
 } from '../../../../common/helpers';
-import { services } from '../../../../common/services';
-import { assertInstances } from './assertions';
 import { RunOptions } from '../common';
 import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
@@ -104,33 +102,17 @@ export async function restoreBehaveIni(consoleName: string, workDirUri: vscode.U
 }
 
 
-// gets the extension API
-// also does some other stuff we only want to happen once for each integration test run
-// e.g. where multiple projects are running in parallel (i.e. multiroot workspace)
-let api: IntegrationTestAPI | undefined = undefined;
 export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
-
-	if (api)
-		return api;
-
-	// starting up a vscode host instance gets busy with cpu etc., so give the extension a 
-	// chance to complete any async initialisation it needs to do on startup
-	// before our integration tests start messing with it
-	await new Promise(t => setTimeout(t, 3000));
 
 	const extension = vscode.extensions.getExtension("jimasp.behave-vsc");
 	assert(extension);
 	assert(extension.isActive);
 
-	// because the extension is already active (see assert above)
-	// this doesn't actually call activate() again, it just returns the API	
-	api = await extension.activate() as IntegrationTestAPI;
-	console.log(extension);
+	const api: IntegrationTestAPI = extension.exports; // i.e. what activate() returns
+	assert(api);
+	assertApiInstances(api);
 
-	assertInstances(api);
-	services.config.isIntegrationTestRun = true;
-
-	await vscode.commands.executeCommand("testing.clearTestResults");
+	await api.parseAllPromise;
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	return api;
 }
@@ -177,4 +159,16 @@ export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, request: v
 		projSettings: projSettings,
 		request: request
 	} as ProjRun;
+}
+
+
+function assertApiInstances(api: IntegrationTestAPI) {
+	assert(api);
+	assert(api.ctrl);
+	assert(api.getStepFileStepForFeatureFileStep);
+	assert(api.getStepMappingsForStepsFileFunction);
+	assert(api.runHandler);
+	assert(api.testData);
+	assert(api.configurationChangedHandler);
+	assert(api.parseAllPromise);
 }

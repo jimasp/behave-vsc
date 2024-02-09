@@ -151,12 +151,12 @@ export class ProjectWatcher {
       }
 
       // // (*_environment = a stage environment file like stage1_environment.py etc.)
-      // if (/(environment|_environment)\.py$/.test(uri.path.toLowerCase())) {
-      //   await services.config.reloadSettings(projSettings.uri);
-      //   // no need to await the parse
-      //   services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
-      //   return false; // just handled it
-      // }
+      if (/(environment|_environment)\.py$/.test(uri.path.toLowerCase())) {
+        // environment.py affects the baseDir, so reload settings and reparse
+        await services.config.reloadSettings(projUri);
+        services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
+        return false; // just handled it
+      }
 
       // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
       const relFolderPaths = projSettings.projRelativeFeatureFolders.concat(projSettings.projRelativeStepsFolders);

@@ -43,28 +43,39 @@ export class FileParser {
   private _errored = false;
   private _reparsingFile = false;
 
-
+  // NOTE: 
+  // This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
   async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
-    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken) {
+    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken): Promise<(ProjParseCounts | undefined)[]> {
 
-    this._finishedFeaturesParseForAllProjects = false;
-    this._errored = false;
+    try {
+      this._finishedFeaturesParseForAllProjects = false;
+      this._errored = false;
 
-    // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
-    // clear everything up-front so that we rebuild the top level nodes
-    xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
-    deleteTestTreeNodes(null, testData, ctrl);
+      // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
+      // clear everything up-front so that we rebuild the top level nodes
+      xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
+      deleteTestTreeNodes(null, testData, ctrl);
 
-    for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-      this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
-        firstRun, cancelToken);
+      const promises: Promise<ProjParseCounts | undefined>[] = [];
+      for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+        promises.push(this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
+          firstRun, cancelToken));
+      }
+
+      return Promise.all(promises);
+    }
+    catch (e: unknown) {
+      // unawaited async func, show error
+      services.logger.showError(e);
+      return [];
     }
   }
 
 
-  // NOTE:
+  // NOTES:
+  // - This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
   // - This is a self-cancelling RE-ENTRANT function, i.e. when called, any current parse for the same project will stop.   
-  // - This is normally a BACKGROUND task. It should ONLY be await-ed on user request, i.e. when called by the refreshHandler.
   async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
 

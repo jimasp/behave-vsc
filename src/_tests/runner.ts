@@ -8,15 +8,7 @@ import { services } from '../common/services';
 
 export function runner(globStr: string, ignore?: string[]): Promise<void> {
 
-	const debuggerAttached = inspector.url() !== undefined;
-
-	const mocha = new Mocha({
-		ui: 'tdd',
-		color: true,
-		bail: true,
-		timeout: debuggerAttached ? 900000 : 30000,
-	});
-
+	const mocha = initialise();
 	const testsRoot = __dirname;
 
 	return new Promise((resolve, reject): void => {
@@ -43,6 +35,33 @@ export function runner(globStr: string, ignore?: string[]): Promise<void> {
 	});
 }
 
+function initialise() {
+	services.config.isIntegrationTestRun = true;
+
+	if (!(global as any).multiRootTest) // eslint-disable-line @typescript-eslint/no-explicit-any
+		vscode.commands.executeCommand("testing.clearTestResults");
+
+	(global as any).debuggerAttached = inspector.url() !== undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+	const mocha = new Mocha({
+		ui: 'tdd',
+		color: true,
+		bail: true,
+		timeout: (global as any).debuggerAttached ? 900000 : 30000, // eslint-disable-line @typescript-eslint/no-explicit-any
+	});
+
+	return mocha;
+}
+
+
+// note - this won't store logs in activate() when the extension host is initially fired up
+// because when the extension host instance loads the extension, it calls activate() before we get here
+const logInfo = services.logger.logInfo;
+services.logger.logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+	logStore.get().push([projUri.path, text]);
+	logInfo.call(services.logger, text, projUri, run);
+};
+
 
 class LogStore {
 	#logStore: [string, string][] = [];
@@ -58,10 +77,7 @@ class LogStore {
 
 export const logStore = new LogStore();
 
-// note - this won't store logs in activate() when the extension host is initially fired up
-// because when the extension host instance loads the extension, it calls activate() before we get here
-const logInfo = services.logger.logInfo;
-services.logger.logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
-	logStore.get().push([projUri.path, text]);
-	logInfo.call(services.logger, text, projUri, run);
-};
+
+
+
+

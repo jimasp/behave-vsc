@@ -19,6 +19,7 @@ import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider
 import { ProjectWatcher } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { RunProfile } from './config/settings';
+import { ProjParseCounts } from './parsers/fileParser';
 
 
 const config = services.config;
@@ -51,7 +52,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     logger.syncChannelsToWorkspaceFolders();
     logExtensionVersion(context);
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
-    services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
+    const parseAllPromise = services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
 
     const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
     cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
@@ -118,8 +119,8 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       try {
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           await config.reloadSettings(projUri);
-          await services.parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
         }
+        services.parser.parseFilesForAllProjects(testData, ctrl, "refreshHandler", false, cancelToken);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -248,6 +249,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
       getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
       configurationChangedHandler: configurationChangedHandler,
+      parseAllPromise: parseAllPromise
     }
 
   }
@@ -344,5 +346,6 @@ export type IntegrationTestAPI = {
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
-    forceRefresh?: boolean) => Promise<void>
+    forceRefresh?: boolean) => Promise<void>,
+  parseAllPromise: Promise<(ProjParseCounts | undefined)[]>
 };

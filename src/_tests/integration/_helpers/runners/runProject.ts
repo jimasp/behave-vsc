@@ -55,21 +55,31 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   // ARRANGE
 
   const projId = uriId(projUri);
-  const api = await checkExtensionIsReady();
   const consoleName = `runProject ${projName}`;
 
   let runProfile = undefined;
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
+  // if execFriendlyCmd=true, then in runBehaveInstance() in the code under test, we will use
+  // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
+  // (outside of integration tests, cp.spawn is always used)
+  if (execFriendlyCmd)
+    testExtConfig.integrationTestRunUseCpExec = true;
 
+  // replace behave.ini if required
+  // note that we cannot inject this like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
+
+  // get the extension api
+  const api = await checkExtensionIsReady();
 
   try {
 
     // ==================== START LOCK SECTION ====================
 
     // we can't run runHandler while parsing is active, so we lock here until two things have happened for the given project:
-    // 1. all (re)parses have completed, and 
+    // 1. all (re)parses have completed for the project, and 
     // 2. the runHandler has been started.
     // once that has happened, we will release the lock for the next project.
     // NOTE: any config change causes a reparse, so behave.ini and test config changes must also be inside 
@@ -77,23 +87,14 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     await setLock(consoleName, ACQUIRE);
 
 
-    // if execFriendlyCmd=true, then in runBehaveInsance() in the code under test, we will use
-    // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
-    // (outside of integration tests, cp.spawn is always used)
-    if (execFriendlyCmd)
-      testExtConfig.integrationTestRunUseCpExec = true;
-
-    // replace behave.ini if required
-    // note that we cannot inject this like our test workspace config, because behave will always read it from disk
-    await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
-    // and we cannot intercept that because activate() runs as soon as the extension host loads, but we can change 
-    // it afterwards. rather than replaing the settings.json on disk, we call configurationChangedHandler() with our own test config.
+    // and we cannot intercept that because activate() runs as soon as the extension host loads, but we can change settings 
+    // afterwards. Rather than replacing the settings.json on disk, we can call configurationChangedHandler() with our own test config.
     // So the configuration will be actually be loaded twice:
     // 1. on the initial load (activate) of the extension,
     // 2. here where we inject our test config.
-    // (note that we don't need to do this separately for our behave.ini replacement as that will also get reloaded by firing this handler.)
+    // (this will also act to manually reload settings after replaceBehaveIni, because behave.ini replacement is 
+    // intentionally ignored by projectWatcher while running integration tests to stop unnecessary reparses.)
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
     await assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
@@ -101,7 +102,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
     // ACT 1
 
-    // parse to get check counts (checked later, but we want to do this inside the lock)
+    // call parse directly so we can check counts 
+    // (also this means we don't have to check if the parse kicked off by 
+    // configurationChangedHandler has completed before we check api.ctrl.items etc.)
     const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
       "runAllProjectAndAssertTheResults", false);
     assert(actualCounts, "actualCounts was undefined");
@@ -109,6 +112,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     const allProjTestItems = getTestItems(projId, api.ctrl.items);
     console.log(`${consoleName}: workspace nodes:${allProjTestItems.length}`);
     const hasMultiRootWkspNode = allProjTestItems.find(item => item.id === uriId(projUri)) !== undefined;
+    assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
 
     // sanity check included tests length matches expected length
     const includedTests = getScenarioTests(api.testData, allProjTestItems);
@@ -117,7 +121,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ASSERT 1 (pre-run asserts)
     await assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri, api);
     await assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri, api);
-    assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
+
 
     // run behave tests - we kick the runHandler off inside the lock to ensure that featureParseComplete() check
     // will complete inside the runHandler, i.e. so no other parsing gets kicked off until the parse is complete.

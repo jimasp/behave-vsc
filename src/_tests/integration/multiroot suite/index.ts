@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { runner } from "../../runner";
 
 
@@ -6,6 +7,7 @@ import { runner } from "../../runner";
 export async function run(): Promise<void[]> {
 
 	(global as any).multiRootTest = true; //eslint-disable-line @typescript-eslint/no-explicit-any
+	vscode.commands.executeCommand("testing.clearTestResults");
 
 	// we could include all these in a single glob, but it's better to keep them separate 
 	// so we can comment them out individually whenever required for debugging etc.
