@@ -250,11 +250,15 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
 
   try {
 
-    assert(actualCounts.featureFilesExceptEmptyOrCommentedOut == expectedCounts.featureFilesExceptEmptyOrCommentedOut, projName + ": featureFilesExceptEmptyOrCommentedOut");
-    assert(actualCounts.stepFilesExceptEmptyOrCommentedOut === expectedCounts.stepFilesExceptEmptyOrCommentedOut, projName + ": stepFilesExceptEmptyOrCommentedOut");
-    assert(actualCounts.stepFileStepsExceptCommentedOut === expectedCounts.stepFileStepsExceptCommentedOut, projName + ": stepFileStepsExceptCommentedOut");
-    assert(actualCounts.featureFileStepsExceptCommentedOut === expectedCounts.featureFileStepsExceptCommentedOut, projName + ": featureFileStepsExceptCommentedOut");
-    assert(actualCounts.stepMappings === expectedCounts.stepMappings, projName + ": stepMappings");
+    assert.strictEqual(actualCounts.featureFilesExceptEmptyOrCommentedOut, expectedCounts.featureFilesExceptEmptyOrCommentedOut,
+      projName + ": unexpected featureFilesExceptEmptyOrCommentedOut count");
+    assert.strictEqual(actualCounts.stepFilesExceptEmptyOrCommentedOut, expectedCounts.stepFilesExceptEmptyOrCommentedOut,
+      projName + ": unexpected stepFilesExceptEmptyOrCommentedOut count");
+    assert.strictEqual(actualCounts.stepFileStepsExceptCommentedOut, expectedCounts.stepFileStepsExceptCommentedOut,
+      projName + ": unexpected stepFileStepsExceptCommentedOut count");
+    assert.strictEqual(actualCounts.featureFileStepsExceptCommentedOut, expectedCounts.featureFileStepsExceptCommentedOut,
+      projName + ": unexpected featureFileStepsExceptCommentedOut count");
+    assert.strictEqual(actualCounts.stepMappings, expectedCounts.stepMappings, projName + ": unexpected stepMappings count");
 
     // (test counts are only calculated if xRay is true)
     if (!config.instanceSettings.xRay)
@@ -264,13 +268,13 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
     // if the number of tests is greater than expected, it may be because we've just 
     // added a new feature/scenario to our test project, either way, we will to continue on to 
     // the other asserts so we can see the extra TestResult in the console output 
-    assert(actualCounts.tests.testCount >= expectedCounts.tests.testCount, projName + ": testCount");
+    assert(actualCounts.tests.testCount >= expectedCounts.tests.testCount, projName + ": unexpected testCount");
 
     if (hasMultiRootWkspNode) {
-      assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount + 1, projName + ": nodeCount");
+      assert.strictEqual(actualCounts.tests.nodeCount, expectedCounts.tests.nodeCount + 1, projName + ": unexpected nodeCount");
     }
     else {
-      assert(actualCounts.tests.nodeCount === expectedCounts.tests.nodeCount, projName + ": nodeCount");
+      assert.strictEqual(actualCounts.tests.nodeCount, expectedCounts.tests.nodeCount, projName + ": unexpected nodeCount");
     }
   }
   catch (assertErr: unknown) {

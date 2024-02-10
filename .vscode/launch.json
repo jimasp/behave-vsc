@@ -57,6 +57,40 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
+			"name": "Debug: working dir",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/working dir",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Debug: run profiles",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/run profiles",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Debug: sibling steps folder 1",
 			"type": "extensionHost",
 			"request": "launch",
@@ -142,45 +176,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: working dir",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"${workspaceFolder}/example-projects/working dir",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			],
-			"preLaunchTask": "${defaultBuildTask}",
-		},
-		{
 			"name": "Debug: multiple top-level features folders",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
 				"${workspaceFolder}/example-projects/multiple top-level features folders",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-			],
-			"outFiles": [
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"skipFiles": [
-				"<node_internals>/**",
-				"**/app/out/vs/**"
-			],
-			"preLaunchTask": "${defaultBuildTask}",
-		},
-		{
-			"name": "Debug: handle bad import",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"${workspaceFolder}/example-projects/bad import",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -210,11 +210,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: run profiles",
+			"name": "Debug: handle bad import",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/run profiles",
+				"${workspaceFolder}/example-projects/handle bad import",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -249,6 +249,36 @@
 				"${workspaceFolder}/example-projects/multiroot.code-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiroot suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Integration Tests: working dir",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/working dir",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Integration Tests: run profiles",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/run profiles",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -332,21 +362,6 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: working dir",
-			"type": "extensionHost",
-			"request": "launch",
-			"args": [
-				"${workspaceFolder}/example-projects/working dir",
-				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/index"
-			],
-			"outFiles": [
-				"${workspaceFolder}/out/**/*.js",
-				"${workspaceFolder}/dist/**/*.js"
-			],
-			"preLaunchTask": "tasks: watch-tests",
-		},
-		{
 			"name": "Integration Tests: multiple top-level features folders",
 			"type": "extensionHost",
 			"request": "launch",
@@ -377,13 +392,13 @@
 			"preLaunchTask": "tasks: watch-tests",
 		},
 		{
-			"name": "Integration Tests: run profiles",
+			"name": "Integration Tests: handle bad import",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/run profiles",
+				"${workspaceFolder}/example-projects/handle bad import",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/handle bad import suite/index"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

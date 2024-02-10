@@ -2,17 +2,15 @@ import * as vscode from 'vscode';
 import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../../config/settings';
 
 
-// used only in the extension tests themselves
-export class TestWorkspaceConfigWithProjUri {
-	constructor(public testConfig: TestWorkspaceConfig, public projUri: vscode.Uri) { }
-}
-
 // used in extension code to allow us to dynamically inject a test workspace configuration
 // (i.e. independent of the actual settings.json)
 export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
+	// additional integration-test-only settings
 	public integrationTestRunUseCpExec = false;
+	public testProjUri: vscode.Uri | undefined;
 
+	// user-settable settings
 	public readonly runParallel?: boolean;
 	private env?: { [name: string]: string };
 	private envVarOverrides?: { [name: string]: string };

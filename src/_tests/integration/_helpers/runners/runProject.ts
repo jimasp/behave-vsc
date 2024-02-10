@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { RunProfilesSetting } from "../../../../config/settings";
-import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../common';
 import { services } from '../../../../common/services';
@@ -96,7 +96,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // (this will also act to manually reload settings after replaceBehaveIni, because behave.ini replacement is 
     // intentionally ignored by projectWatcher while running integration tests to stop unnecessary reparses.)
     console.log(`${consoleName}: calling configurationChangedHandler`);
-    await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
+    await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
     await assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
 
 

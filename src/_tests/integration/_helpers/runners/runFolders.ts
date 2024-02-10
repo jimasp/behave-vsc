@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import { RunProfilesSetting } from "../../../../config/settings";
-import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { uriId } from '../../../../common/helpers';
 import { services } from '../../../../common/services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
@@ -34,7 +34,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     testExtConfig.integrationTestRunUseCpExec = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
-  await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
+  await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
   const folderItems = getFolderItems(api.ctrl.items, projId);
 

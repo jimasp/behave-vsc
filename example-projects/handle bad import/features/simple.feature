@@ -1,26 +1,16 @@
-Feature: Bad import: scenarios should fail (or not run if cancelled)
+Feature: Bad import: scenarios should fail (unless cancelled)
 
    Scenario: fail 1
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result
+      Given we have a bad import
+      When we run any test
+      Then we can handle behave failing
 
    Scenario: fail 2
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result
+      Given we have a bad import
+      When we run any test
+      Then we can handle behave failing
 
    Scenario: fail 3
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result
-
-   Scenario: fail 4
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result                  
-
-   Scenario: fail 5
-      Given we have behave installed
-      When we implement a successful test
-      Then we will see the result
+      Given we have a bad import
+      When we run any test
+      Then we can handle behave failing

@@ -80,13 +80,15 @@ interface TestGlobal {
 }
 
 class TestGlobalSettings {
+  // do not use testGlobals in non-test code.
+  // non-test code should not reference test code because:
+  // a) it's not clean, and
+  // b) we want to optimise our distributed compilation
   public multiRootTest: boolean;
   public debuggerAttached: boolean;
-  //public integrationTestRunUseCpExec: boolean;
   constructor() {
     this.multiRootTest = false;
     this.debuggerAttached = false;
-    //this.integrationTestRunUseCpExec = false;
   }
 }
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import { RunProfilesSetting } from "../../../../config/settings";
-import { TestWorkspaceConfig, TestWorkspaceConfigWithProjUri } from '../testWorkspaceConfig';
+import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../../common/helpers';
 import { services } from '../../../../common/services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
@@ -40,7 +40,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
     testExtConfig.integrationTestRunUseCpExec = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
-  await api.configurationChangedHandler(undefined, new TestWorkspaceConfigWithProjUri(testExtConfig, projUri));
+  await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
   const allProjTestItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 

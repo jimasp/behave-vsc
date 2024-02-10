@@ -9,7 +9,6 @@ import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
 import { testRunHandler } from './runners/testRunHandler';
-import { TestWorkspaceConfigWithProjUri } from './_tests/integration/_helpers/testWorkspaceConfig';
 import { xRayLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
@@ -137,7 +136,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
-        await configurationChangedHandler(undefined, undefined, true);
+        await configurationChangedHandler(true);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -170,12 +169,15 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
-    const configurationChangedHandler = async (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
-      forceFullRefresh?: boolean) => {
+    const configurationChangedHandler = async (forceFullRefresh: boolean, event?: vscode.ConfigurationChangeEvent,
+      testConfig?: vscode.WorkspaceConfiguration, testProjUri?: vscode.Uri) => {
+
+      if (testConfig && !testProjUri)
+        throw new Error("testProjUri must be supplied when testConfig is supplied");
 
       // for integration test runAllTestsAndAssertTheResults, 
       // only reload config on request (i.e. when testCfg supplied)
-      if (config.isIntegrationTestRun && !testCfg)
+      if (config.isIntegrationTestRun && !testConfig)
         return;
 
       try {
@@ -186,10 +188,10 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         // (separately, just note that the settings change could be a global window setting 
         // from *.code-workspace file, rather than from settings.json)
         const affected = event?.affectsConfiguration("behave-vsc");
-        if (!affected && !forceFullRefresh && !testCfg)
+        if (!affected && !forceFullRefresh && !testConfig)
           return;
 
-        if (!testCfg)
+        if (!testConfig)
           logger.clearAllProjects();
 
         // adding/removing/renaming workspaces will not only change the 
@@ -197,9 +199,9 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         logger.syncChannelsToWorkspaceFolders();
 
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
-          if (testCfg) {
-            if (urisMatch(testCfg.projUri, projUri))
-              await config.reloadSettings(projUri, testCfg.testConfig);
+          if (testConfig) {
+            if (urisMatch(testProjUri!, projUri))
+              await config.reloadSettings(projUri, testConfig.testConfig);
             continue;
           }
 
@@ -217,8 +219,8 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
         // (in the case of a testConfig insertion we just reparse the supplied project to avoid issues 
         // with parallel integration test suite runs)
-        if (testCfg) {
-          await services.parser.parseFilesForProject(testCfg.projUri, testData, ctrl, "configurationChangedHandler", false);
+        if (testConfig) {
+          await services.parser.parseFilesForProject(testProjUri!, testData, ctrl, "configurationChangedHandler", false);
           return;
         }
 
@@ -235,7 +237,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
-      await configurationChangedHandler(event);
+      await configurationChangedHandler(false, event);
     }));
 
     xRayLog(`PERF: activate took  ${performance.now() - start} ms`);
@@ -347,7 +349,7 @@ export type IntegrationTestAPI = {
   runHandler: (debug: boolean, request: vscode.TestRunRequest, runProfile?: RunProfile) => Promise<QueueItem[] | undefined>,
   getStepMappingsForStepsFileFunction: (stepsFileUri: vscode.Uri, lineNo: number) => StepMapping[],
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
-  configurationChangedHandler: (event?: vscode.ConfigurationChangeEvent, testCfg?: TestWorkspaceConfigWithProjUri,
-    forceRefresh?: boolean) => Promise<void>,
+  configurationChangedHandler: (forceRefresh: boolean, event?: vscode.ConfigurationChangeEvent,
+    testCfg?: vscode.WorkspaceConfiguration, testProjUri?: vscode.Uri) => Promise<void>,
   parseAllPromise: Promise<(ProjParseCounts | undefined)[]>
 };
