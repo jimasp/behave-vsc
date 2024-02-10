@@ -9,6 +9,7 @@ import {
   findFeatureFolders,
   getActualWorkspaceSetting,
   getOptimisedFeatureParsingPaths,
+  getExcludedPathPatterns,
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -95,6 +96,7 @@ export class ProjectSettings {
   public readonly id: string; // project id (unique)
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
+  public readonly excludedPathPatterns: { [key: string]: boolean; } = {}; // paths specifically excluded from watching/parsing
   public readonly projRelativeWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
   public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
   // calculated after real work in create():
@@ -140,6 +142,7 @@ export class ProjectSettings {
     this.uri = projUri;
     this.workingDirUri = projUri; // default
     this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
+    this.excludedPathPatterns = getExcludedPathPatterns(projConfig);
 
     const featuresPath = getActualWorkspaceSetting(projConfig, "featuresPath");
     if (featuresPath !== undefined) {
@@ -204,9 +207,9 @@ export class ProjectSettings {
     if (importedStepsCfg === undefined)
       throw new Error("importedSteps is undefined");
     this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
-
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
+
   }
 
 }
@@ -244,8 +247,6 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
   }
 
 }
-
-
 
 
 async function getPaths(ps: ProjectSettings) {
@@ -295,7 +296,7 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeCon
     return relativeConfigPaths;
 
   // no config paths set, so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(ps.uri, ps.workingDirUri.fsPath);
+  const foldersContainingFeatureFiles = await findFeatureFolders(ps, ps.workingDirUri.fsPath);
 
   // behave would ignore a feature file in the root if not set in the behave config paths, and so must we,
   // i.e. we only include the project root if it's requested in the behave config paths,

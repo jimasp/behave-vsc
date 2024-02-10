@@ -337,35 +337,34 @@ export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
 }
 
 
-export async function findFeatureFolders(projUri: vscode.Uri, absoluteWorkingDirPath: string, stopOnFirstMatch = false): Promise<string[]> {
+export async function findFeatureFolders(ps: ProjectSettings, absolutePath: string, stopOnFirstMatch = false): Promise<string[]> {
 
   // find feature folders, with early exit where possible
   // e.g. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
 
   const start = performance.now();
-  const entries = await fs.promises.readdir(absoluteWorkingDirPath);
+  const entries = await fs.promises.readdir(absolutePath);
   const absDirEntries: string[] = [];
   const results: string[] = [];
 
-  const relPath = vscode.workspace.asRelativePath(absoluteWorkingDirPath);
-  if (isExcludedPath(relPath)) {
-    xRayLog(`findFeatureFolders: ignoring excluded path "${relPath}"`, projUri);
+  const relPath = vscode.workspace.asRelativePath(absolutePath);
+  if (isExcludedPath(ps, relPath)) {
+    xRayLog(`findFeatureFolders: ignoring excluded path "${relPath}"`, ps.uri);
     return [];
   }
 
   // first pass = files only
   for (const entry of entries) {
-    const entryPath = path.join(absoluteWorkingDirPath, entry);
+    const entryPath = path.join(absolutePath, entry);
     const stat = await fs.promises.stat(entryPath);
     if (stat.isDirectory()) {
       absDirEntries.push(entryPath);
     }
     else {
       if (entry.endsWith(".feature")) {
-        results.push(absoluteWorkingDirPath);
-        const projUriPath = projUri.path;
+        results.push(absolutePath);
         // if it's the project root, keep going and find subfolers
-        if (stopOnFirstMatch || absoluteWorkingDirPath !== projUriPath)
+        if (stopOnFirstMatch || absolutePath !== ps.uri.path)
           return results;
       }
     }
@@ -373,24 +372,33 @@ export async function findFeatureFolders(projUri: vscode.Uri, absoluteWorkingDir
 
   // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
   for (const absDirEntry of absDirEntries) {
-    const subDirResults = await findFeatureFolders(projUri, absDirEntry, stopOnFirstMatch);
+    const subDirResults = await findFeatureFolders(ps, absDirEntry, stopOnFirstMatch);
     results.push(...subDirResults);
   }
 
   const end = performance.now() - start;
-  xRayLog(`PERF: findFeatureFolders(${absoluteWorkingDirPath}) took ${end}ms`, projUri);
+  xRayLog(`PERF: findFeatureFolders(${absolutePath}) took ${end}ms`, ps.uri);
 
   return results;
 }
 
 
-function isExcludedPath(wsRelPath: string): boolean {
-  const config = vscode.workspace.getConfiguration();
+
+export function isExcludedPath(ps: ProjectSettings, wsRelPath: string): boolean {
+  for (const pattern of Object.keys(ps.excludedPathPatterns)) {
+    if (ps.excludedPathPatterns[pattern] && minimatch(wsRelPath, pattern))
+      return true;
+  }
+  return false;
+}
+
+
+export function getExcludedPathPatterns(projConfig: vscode.WorkspaceConfiguration): { [key: string]: boolean; } {
 
   const excludePatterns: { [key: string]: boolean } = {
-    ...config.get<object>('files.exclude'),
-    ...config.get<object>('files.watcherExclude'),
-    ...config.get<object>('search.exclude'),
+    ...projConfig.get<object>('files.exclude'),
+    ...projConfig.get<object>('files.watcherExclude'),
+    ...projConfig.get<object>('search.exclude'),
     "**/.*_cache": true,
     "**/node_modules": true,
     "**/.venv": true,
@@ -402,7 +410,13 @@ function isExcludedPath(wsRelPath: string): boolean {
     "**/.vscode": true,
   };
 
-  return Object.keys(excludePatterns).some(pattern => excludePatterns[pattern] && minimatch(wsRelPath, pattern));
+  // append {,/**}' to each pattern so we also match child files and folders
+  for (const pattern of Object.keys(excludePatterns)) {
+    if (excludePatterns[pattern] && !pattern.endsWith("{,/**}"))
+      excludePatterns[pattern + "{,/**}"] = true;
+  }
+
+  return excludePatterns;
 }
 
 
@@ -505,4 +519,3 @@ export function basename(uri: vscode.Uri) {
 export function getLines(text: string) {
   return text.split(/\r\n|\r|\n/);
 }
-

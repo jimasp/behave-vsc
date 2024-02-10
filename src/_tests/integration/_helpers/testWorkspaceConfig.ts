@@ -87,6 +87,12 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 				return <T><unknown>(this.behaveWorkingDirectory === undefined ? "" : this.behaveWorkingDirectory);
 			case "xRay":
 				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
+			case "files.exclude":
+				return <T><unknown>({ "**/.git": true });
+			case "files.watcherExclude":
+				return <T><unknown>({ "**/.git": true });
+			case "search.exclude":
+				return <T><unknown>({ "**/.git": true });
 			default:
 				debugger; // eslint-disable-line no-debugger
 				throw new Error("get() missing case for section: " + section);

@@ -3,7 +3,7 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { isStepsFile } from '../common/helpers';
+import { isExcludedPath, isStepsFile } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 
 
@@ -133,6 +133,11 @@ export class ProjectWatcher {
 
       // get the latest project settings (this project watcher has a lifetime as long as the extension)
       const projSettings = await services.config.getProjectSettings(projUri.path);
+
+      if (isExcludedPath(projSettings, uri.path)) {
+        xRayLog(`ignoring fie change to "${uri.path}" as it matches an excluded path `, projUri);
+        return false;
+      }
 
       if (uri.path.endsWith(".tmp")) // vscode file history file 
         return false;

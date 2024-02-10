@@ -4,14 +4,46 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { services } from '../../../common/services';
-import { findFeatureFolders, getFeatureNodePath, getOptimisedFeatureParsingPaths } from '../../../common/helpers';
+import { findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath, getOptimisedFeatureParsingPaths, isExcludedPath } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
+import { TestWorkspaceConfig } from '../../integration/_helpers/testWorkspaceConfig';
+
+
+suite("isExcludedPath", () => {
+  const projUri = vscode.Uri.file("/home/me/src/myproj");
+
+  const projSettings = {
+    uri: projUri,
+    excludedPathPatterns: { "**/.venv{,/**}": true },
+  } as unknown as ProjectSettings;
+
+  test(`should return [] for excluded paths`, () => {
+    const paths = [
+      '.venv',
+      'folder/.venv',
+      'folder/folder/.venv',
+      'folder/folder/.venv/some.py',
+      'folder/folder/.venv/something/some.py'];
+
+    for (const path of paths) {
+      const result = isExcludedPath(projSettings, path);
+      const expected = true;
+      assert.deepStrictEqual(result, expected, `path:"${path}", expected: ${expected}, got: ${result}`);
+    }
+  });
+
+});
 
 
 suite("findFeatureFolders", () => {
   let sandbox: sinon.SinonSandbox;
   let logger: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   const projUri = vscode.Uri.file("/home/me/src/myproj");
+
+  const projSettings = {
+    uri: projUri,
+    excludedPathPatterns: getExcludedPathPatterns(new TestWorkspaceConfig()),
+  } as ProjectSettings;
 
   setup(() => {
     sandbox = sinon.createSandbox();
@@ -40,7 +72,7 @@ suite("findFeatureFolders", () => {
       .withArgs(ignoredFolder)
       .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(projUri, ignoredFolder, false);
+    const result = await findFeatureFolders(projSettings, ignoredFolder, false);
     const expected: string[] = [];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
   });
@@ -55,7 +87,7 @@ suite("findFeatureFolders", () => {
       .withArgs(ignoredFolder)
       .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(projUri, ignoredFolder, false);
+    const result = await findFeatureFolders(projSettings, ignoredFolder, false);
     const expected: string[] = [];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
   });
@@ -67,7 +99,7 @@ suite("findFeatureFolders", () => {
       .withArgs(projUri.fsPath)
       .returns(Promise.resolve(["root.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(projUri, projUri.fsPath, false);
+    const result = await findFeatureFolders(projSettings, projUri.fsPath, false);
     const expected = [projUri.fsPath];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
@@ -121,7 +153,7 @@ suite("findFeatureFolders", () => {
       .withArgs(projUri.fsPath + "/f/1").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
       .withArgs(projUri.fsPath + "/f/1/1").returns(Promise.resolve(["f111.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(projUri, projUri.fsPath, false);
+    const result = await findFeatureFolders(projSettings, projUri.fsPath, false);
     const expected = ["", "a", "b", "c/1", "c/2", "d/1", "e/1/1", "e/1/2", "f/1/1"].map(rel => path.join(projUri.fsPath, rel));
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
