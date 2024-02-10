@@ -560,20 +560,18 @@ export class FileParser {
   private _logTimesToConsole = (callName: string, testCounts: TestCounts, featParseTime: number, stepsParseTime: number,
     mappingsCount: number, buildMappingsTime: number, featureFileCount: number, stepFileCount: number) => {
     xRayLog(
-      `--- PERF:` +
-      `\n${callName} completed.` +
-      `\nProcessing ${featureFileCount} feature files, ${stepFileCount} step files, ` +
-      `producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. ` +
-      `\nBreakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms` +
-      `\nNOTE: Ignore parse processing times if any of these are true:` +
-      `\n   (a) times were taken during vscode startup contention, ` +
-      `\n   (b) you are running an extension integration test,` +
-      `\n   (c) you are debugging the extension itself and have breakpoints,` +
-      `\n   (d) busy cpu due to background processes, ` +
-      `\n   (e) another test extension is also refreshing.` +
-      `\nFor a more representative time, disable other test extensions then click the test refresh button a few times.` +
-      `\n(Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFile time as the total time.)` +
-      `\n---`
+      `PERF:
+      ${callName} completed.
+      Processing ${featureFileCount} feature files, ${stepFileCount} step files, producing ${testCounts.nodeCount} tree nodes, ${testCounts.testCount} tests, and ${mappingsCount} stepMappings took ${stepsParseTime + featParseTime} ms. 
+      Breakdown: feature file parsing ${featParseTime} ms, step file parsing ${stepsParseTime} ms, building step mappings: ${buildMappingsTime} ms
+      NOTE: Ignore parse processing times if any of these are true:
+         (a) times were taken during vscode startup contention, 
+         (b) you are running an extension integration test,
+         (c) you are debugging the extension itself and have breakpoints,
+         (d) busy cpu due to background processes, 
+         (e) another test extension is also refreshing.
+      For a more representative time, disable other test extensions then click the test refresh button a few times.
+      (Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFiles[] time as the total time.)`
     );
   }
 

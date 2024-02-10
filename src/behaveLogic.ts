@@ -1,8 +1,9 @@
-import * as fs from 'fs';
 import * as path from 'path';
 import { services } from './common/services';
 import { ProjectSettings } from './config/settings';
 import { Scenario } from './parsers/testFile';
+import { fileExists } from './common/helpers';
+import { xRayLog } from './common/logger';
 
 
 // =========================================================================================================
@@ -39,12 +40,14 @@ export function getJunitFeatureName(ps: ProjectSettings, scenario: Scenario): st
 }
 
 
-export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfigPaths: string[]): string | null {
+export async function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfigPaths: string[]): Promise<string | null> {
   // this function should contain similar logic to the behave source code function "setup_paths()"
 
   // the baseDir = the parent directory of the "steps" folder / environment.py file
   // (although baseDir is only ever used in getJunitFeatureName(), we don't want to call it every time that gets called,
   // but we do want to re-determine it if settings change, so this function is called from and stored in the ProjectSettings object.)
+
+  const start = performance.now();
 
   const relativeBaseDir = relativeBehaveConfigPaths.length > 0
     ? relativeBehaveConfigPaths[0] // as per behave logic
@@ -54,8 +57,9 @@ export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfig
   let new_base_dir = path.join(ps.uri.fsPath, relativeBaseDir);
 
   while (
-    !(fs.existsSync(path.join(new_base_dir, "steps")) ||
-      fs.existsSync(path.join(new_base_dir, "environment.py")) ||
+    !(await fileExists(path.join(new_base_dir, "steps")) ||
+      await fileExists(path.join(new_base_dir, "environment.py")) ||
+      await fileExists(path.join(new_base_dir, "*_environment.py")) ||
       new_base_dir === project_parent_dir)
   ) {
     new_base_dir = path.dirname(new_base_dir);
@@ -75,6 +79,9 @@ export function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfig
     }
     return null;
   }
+
+  const waited = performance.now() - start;
+  xRayLog(`PERF: getRelativeBaseDirPath() took ${waited}ms`, ps.uri);
 
   // adjust basedir path to a project-relative path
   return path.relative(ps.uri.fsPath, new_base_dir);

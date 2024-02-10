@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { services } from "./services";
@@ -8,6 +10,8 @@ import { Scenario, TestData } from '../parsers/testFile';
 import { StepImport, ProjectSettings } from '../config/settings';
 import { xRayLog } from './logger';
 import { getJunitDirUri } from '../watchers/junitWatcher';
+
+
 
 const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
@@ -333,28 +337,35 @@ export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
 }
 
 
-export async function findFeatureFolders(projUriPath: string, absoluteDirPath: string, stopOnFirstMatch = false): Promise<string[]> {
+export async function findFeatureFolders(projUri: vscode.Uri, absoluteWorkingDirPath: string, stopOnFirstMatch = false): Promise<string[]> {
 
   // find feature folders, with early exit where possible
   // e.g. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
 
-  const entries = await fs.promises.readdir(absoluteDirPath);
+  const start = performance.now();
+  const entries = await fs.promises.readdir(absoluteWorkingDirPath);
   const absDirEntries: string[] = [];
   const results: string[] = [];
 
+  const relPath = vscode.workspace.asRelativePath(absoluteWorkingDirPath);
+  if (isExcludedPath(relPath)) {
+    xRayLog(`findFeatureFolders: ignoring excluded path "${relPath}"`, projUri);
+    return [];
+  }
+
   // first pass = files only
   for (const entry of entries) {
-    const entryPath = path.join(absoluteDirPath, entry);
+    const entryPath = path.join(absoluteWorkingDirPath, entry);
     const stat = await fs.promises.stat(entryPath);
     if (stat.isDirectory()) {
       absDirEntries.push(entryPath);
     }
     else {
       if (entry.endsWith(".feature")) {
-        results.push(absoluteDirPath);
-        // if it's the project root, keep going and find other paths
-        // (for performance reasons, fileParser will not recurse on the project root)
-        if (stopOnFirstMatch || absoluteDirPath !== projUriPath)
+        results.push(absoluteWorkingDirPath);
+        const projUriPath = projUri.path;
+        // if it's the project root, keep going and find subfolers
+        if (stopOnFirstMatch || absoluteWorkingDirPath !== projUriPath)
           return results;
       }
     }
@@ -362,11 +373,36 @@ export async function findFeatureFolders(projUriPath: string, absoluteDirPath: s
 
   // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
   for (const absDirEntry of absDirEntries) {
-    const subDirResults = await findFeatureFolders(projUriPath, absDirEntry, stopOnFirstMatch);
+    const subDirResults = await findFeatureFolders(projUri, absDirEntry, stopOnFirstMatch);
     results.push(...subDirResults);
   }
 
+  const end = performance.now() - start;
+  xRayLog(`PERF: findFeatureFolders(${absoluteWorkingDirPath}) took ${end}ms`, projUri);
+
   return results;
+}
+
+
+function isExcludedPath(wsRelPath: string): boolean {
+  const config = vscode.workspace.getConfiguration();
+
+  const excludePatterns: { [key: string]: boolean } = {
+    ...config.get<object>('files.exclude'),
+    ...config.get<object>('files.watcherExclude'),
+    ...config.get<object>('search.exclude'),
+    "**/.*_cache": true,
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/__venv__": true,
+    "**/env": true,
+    "**/__env__": true,
+    "**/.env": true,
+    "**/__.env__": true,
+    "**/.vscode": true,
+  };
+
+  return Object.keys(excludePatterns).some(pattern => excludePatterns[pattern] && minimatch(wsRelPath, pattern));
 }
 
 
@@ -438,6 +474,10 @@ export function getFeatureNodePath(uri: vscode.Uri, ps: ProjectSettings) {
   return nodePath;
 }
 
+export async function fileExists(pattern: string): Promise<boolean> {
+  const files = await glob(pattern, {});
+  return files.length > 0;
+}
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");

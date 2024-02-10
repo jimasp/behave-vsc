@@ -34,6 +34,8 @@ export function deactivate() {
   // clean any disposable objects not handled by context.subscriptions (or any potentially large non-disposable objects)
   projWatchers.forEach(w => w.dispose());
   projWatchers.clear();
+  xRayLog("PERF: ignore all PERF times during vscode startup, as most functions are async and affected by startup contention, " +
+    "(in most cases you can click refresh in test explorer for a more representative time)");
 }
 
 

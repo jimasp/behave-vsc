@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { services } from './services';
 import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 
@@ -171,8 +172,16 @@ export const xRayLog = (message: string, projUri?: vscode.Uri, logType?: LogType
   if (!inDiagnosticMode())
     return;
 
-  if (projUri)
-    message = `${projUri}: ${message}`;
+  if (projUri) {
+    const projName = path.basename(projUri.path);
+    if (message.startsWith("PERF:")) {
+      message = message.slice(5).trim();
+      message = `PERF: ${projName}: ${message}`;
+    }
+    else {
+      message = `${projName}: ${message}`;
+    }
+  }
 
   message = `[Behave VSC] ${message}`;
 

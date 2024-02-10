@@ -254,7 +254,7 @@ async function getPaths(ps: ProjectSettings) {
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: projRelBaseDirPath is used to calculate junit filenames (see getJunitFeatureName)
-  const projRelBaseDirPath = getRelativeBaseDirPath(ps, projRelBehaveConfigPaths);
+  const projRelBaseDirPath = await getRelativeBaseDirPath(ps, projRelBehaveConfigPaths);
   if (projRelBaseDirPath === null) {
     // e.g. an empty workspace folder
     return;
@@ -295,7 +295,7 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeCon
     return relativeConfigPaths;
 
   // no config paths set, so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(ps.uri.fsPath, ps.workingDirUri.fsPath);
+  const foldersContainingFeatureFiles = await findFeatureFolders(ps.uri, ps.workingDirUri.fsPath);
 
   // behave would ignore a feature file in the root if not set in the behave config paths, and so must we,
   // i.e. we only include the project root if it's requested in the behave config paths,
@@ -321,7 +321,7 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeCon
   if (relFeaturePaths.length === 0)
     relFeaturePaths.push("features");
 
-  xRayLog(`PERF: _getProjectRelativeFeaturePaths took ${performance.now() - start} ms for ${ps.workingDirUri.path}`);
+  xRayLog(`PERF: getProjectRelativeFeatureFolders took ${performance.now() - start} ms for ${ps.workingDirUri.path}`);
 
   return relFeaturePaths;
 }
