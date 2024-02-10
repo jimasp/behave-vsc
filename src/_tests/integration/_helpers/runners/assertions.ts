@@ -4,7 +4,7 @@ import { Configuration } from "../../../../config/configuration";
 import { IntegrationTestAPI, QueueItem } from "../../../../extension";
 import { ProjParseCounts } from "../../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "../testWorkspaceConfig";
-import { Expectations, TestBehaveIni, TestResult } from "../common";
+import { Expectations, TestBehaveIni, TestResult, testGlobals } from "../common";
 import { services } from "../../../../common/services";
 import { ProjectSettings } from "../../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
@@ -19,7 +19,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
   testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {
 
   // multiroot will read window settings from multiroot.code-workspace file, not config
-  if (!(global as any).multiRootTest) { // eslint-disable-line @typescript-eslint/no-explicit-any
+  if (!testGlobals.multiRootTest) {
     const instanceSettings = config.instanceSettings;
     assert.strictEqual(instanceSettings.runMultiRootProjectsInParallel, testConfig.getExpected("runMultiRootProjectsInParallel"),
       `${projName} project: runMultiRootProjectsInParallel`);

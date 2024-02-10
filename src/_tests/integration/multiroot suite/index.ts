@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
 import { runner } from "../../runner";
+import { testGlobals } from "../_helpers/common";
+
 
 
 // MULTIROOT SUITE SPECIFIES ITS OWN TEST FILE GLOBS (AND IGNORES) SUCH THAT
 // WE RUN PROJECTS IN PARALLEL (TO SIMULATE runMultiRootProjectsInParallel=True).
 export async function run(): Promise<void[]> {
 
-	(global as any).multiRootTest = true; //eslint-disable-line @typescript-eslint/no-explicit-any
+	testGlobals.multiRootTest = true;
 	vscode.commands.executeCommand("testing.clearTestResults");
 
 	// we could include all these in a single glob, but it's better to keep them separate 

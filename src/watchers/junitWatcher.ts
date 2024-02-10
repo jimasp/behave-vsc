@@ -131,7 +131,6 @@ export class JunitWatcher {
       const notUpdatedAfterGrace = notUpdated();
       if (services.config.exampleProject && notUpdatedAfterGrace.length === stoppedRun.queue.length &&
         fs.existsSync(notUpdatedAfterGrace[0].junitFileUri.fsPath)) {
-        debugger; // eslint-disable-line no-debugger          
         throw new Error(`No test results were updated by _updateResult for ${run.name}.If you did not hit run stop or debug stop, ` +
           `then either there was a previous error(see log), or the file system watcher is not raising events.`);
       }

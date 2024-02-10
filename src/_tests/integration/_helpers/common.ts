@@ -74,3 +74,23 @@ export class TestResult implements ITestResult {
     Object.assign(this, testResult);
   }
 }
+
+interface TestGlobal {
+  testGlobalSettings: TestGlobalSettings;
+}
+
+class TestGlobalSettings {
+  public multiRootTest: boolean;
+  public debuggerAttached: boolean;
+  //public integrationTestRunUseCpExec: boolean;
+  constructor() {
+    this.multiRootTest = false;
+    this.debuggerAttached = false;
+    //this.integrationTestRunUseCpExec = false;
+  }
+}
+
+declare const global: TestGlobal;
+global.testGlobalSettings = new TestGlobalSettings();
+
+export const testGlobals: TestGlobalSettings = global.testGlobalSettings;

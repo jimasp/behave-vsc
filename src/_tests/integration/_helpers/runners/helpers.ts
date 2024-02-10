@@ -8,7 +8,7 @@ import { IntegrationTestAPI } from '../../../../extension';
 import {
 	getUrisOfWkspFoldersWithFeatures,
 } from '../../../../common/helpers';
-import { RunOptions } from '../common';
+import { RunOptions, testGlobals } from '../common';
 import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getFriendlyEnvVars } from '../../../../runners/helpers';
@@ -23,7 +23,9 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	// this function is used to mitigate parallel project initialisation for multiroot parallel project testing
 	// (it's a bad lock implementation, but works for our needs here, and more importantly adds logs to let us know what's happening)	
 
-	if (!(global as any).multiRootTest) // eslint-disable-line @typescript-eslint/no-explicit-any
+	console.log(testGlobals.multiRootTest);
+
+	if (!testGlobals.multiRootTest)
 		return;
 
 	if (![ACQUIRE, RELEASE].includes(acquireOrRelease))

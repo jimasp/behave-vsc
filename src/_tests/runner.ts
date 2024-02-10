@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as inspector from 'inspector';
 import { globSync } from 'glob';
 import { services } from '../common/services';
+import { testGlobals } from './integration/_helpers/common';
 
 
 export function runner(globStr: string, ignore?: string[]): Promise<void> {
@@ -38,16 +39,16 @@ export function runner(globStr: string, ignore?: string[]): Promise<void> {
 function initialise() {
 	services.config.isIntegrationTestRun = true;
 
-	if (!(global as any).multiRootTest) // eslint-disable-line @typescript-eslint/no-explicit-any
+	if (!testGlobals.multiRootTest)
 		vscode.commands.executeCommand("testing.clearTestResults");
 
-	(global as any).debuggerAttached = inspector.url() !== undefined; // eslint-disable-line @typescript-eslint/no-explicit-any
+	testGlobals.debuggerAttached = inspector.url() !== undefined;
 
 	const mocha = new Mocha({
 		ui: 'tdd',
 		color: true,
 		bail: true,
-		timeout: (global as any).debuggerAttached ? 900000 : 30000, // eslint-disable-line @typescript-eslint/no-explicit-any
+		timeout: testGlobals.debuggerAttached ? 900000 : 30000,
 	});
 
 	return mocha;
