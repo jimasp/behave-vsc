@@ -201,7 +201,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
           if (testConfig) {
             if (urisMatch(testProjUri!, projUri))
-              await config.reloadSettings(projUri, testConfig.testConfig);
+              await config.reloadSettings(projUri, testConfig);
             continue;
           }
 
