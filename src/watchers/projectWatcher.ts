@@ -156,7 +156,7 @@ export class ProjectWatcher {
       }
 
       // // (*_environment = a stage environment file like stage1_environment.py etc.)
-      if (/(environment|_environment)\.py$/.test(uri.path.toLowerCase())) {
+      if (/(\/steps$|^environment\.py$|_environment\.py$)/.test(uri.path.toLowerCase())) {
         // environment.py affects the baseDir, so reload settings and reparse
         await services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);

@@ -69,9 +69,10 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
   if (new_base_dir === project_parent_dir) {
     if (behaveWrkDirRelativeConfigPaths.length === 0) {
       services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}".
-        Please either: 
-        (a) specify a "behave-vsc.behaveWorkingDirectory" setting (if it is not the same as you project root), and/or
-        (b) specify a "paths" setting in your behave configuration file. 
+        Please: 
+        (a) add a steps folder, and/or
+        (b) specify a "behave-vsc.behaveWorkingDirectory" setting (if it is not the same as you project root), and/or
+        (c) specify a "paths" setting in your behave configuration file. 
         (If you have a behave configuration file, please ensure that it is in your project root or 
         "behave-vsc.behaveWorkingDirectory".)`, ps.uri);
     }
