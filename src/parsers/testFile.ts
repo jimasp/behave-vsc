@@ -16,8 +16,8 @@ export class TestFile {
     controller: vscode.TestController, featureItem: vscode.TestItem, caller: string) {
     if (!featureItem.uri)
       throw new Error("missing test item uri");
-    if (!isFeatureFile(featureItem.uri))
-      throw new Error(`${featureItem.uri.path} is not a feature file`);
+    if (!await isFeatureFile(featureItem.uri))
+      throw new Error(`${featureItem.uri.path} is not a recognised feature file`);
 
 
     const featureUri = featureItem.uri;

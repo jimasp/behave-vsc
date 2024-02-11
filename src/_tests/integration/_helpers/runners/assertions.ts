@@ -416,7 +416,7 @@ async function getAllStepLinesFromFeatureFiles(ps: ProjectSettings) {
 
   const stepLines = new Map<FileStep, string>();
   for (const featFileUri of fileUris) {
-    if (isFeatureFile(featFileUri)) {
+    if (await isFeatureFile(featFileUri)) {
       const doc = await vscode.workspace.openTextDocument(featFileUri);
       const content = doc.getText();
       addStepsFromFeatureFile(featFileUri, content, stepLines);

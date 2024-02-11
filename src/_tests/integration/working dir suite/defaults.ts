@@ -1,7 +1,8 @@
 import path = require("path");
 import { Expectations, TestBehaveIni } from "../_helpers/common";
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { getExpectedCounts, getExpectedResults } from "./expectedResults"
+import { getExpectedCountsWithBehaveIni, getExpectedResultsWithBehaveIni } from "./expectedResultsWithBehaveIni"
+import { getExpectedCountsWithoutBehaveIni, getExpectedResultsWithoutBehaveIni } from "./expectedResultsWithoutBehaveIni";
 
 export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "working folder",
@@ -12,18 +13,28 @@ export const wsParallelConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "working folder",
 });
 
-export const expectations: Expectations = {
+export const expectationsWithBehaveIni: Expectations = {
+  expectedProjRelativeBehaveWorkingDirPath: "working folder",
+  expectedBaseDirPath: "features",
+  expectedProjRelativeFeatureFolders: ["", "working folder/features"],
+  expectedProjRelativeStepsFolders: ["working folder/features/steps"],
+  getExpectedCountsFunc: getExpectedCountsWithBehaveIni,
+  getExpectedResultsFunc: getExpectedResultsWithBehaveIni,
+}
+
+export const expectationsWithoutBehaveIni: Expectations = {
   expectedProjRelativeBehaveWorkingDirPath: "working folder",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["working folder/features"],
   expectedProjRelativeStepsFolders: ["working folder/features/steps"],
-  getExpectedCountsFunc: getExpectedCounts,
-  getExpectedResultsFunc: getExpectedResults,
+  getExpectedCountsFunc: getExpectedCountsWithoutBehaveIni,
+  getExpectedResultsFunc: getExpectedResultsWithoutBehaveIni,
 }
 
 
+
 export const behaveIniWithRelPathsSetting: TestBehaveIni = {
-  content: `[behave]\npaths=features`
+  content: `[behave]\npaths=features\n\t..` // (.. to include the root feature)
 }
 
 const fullPath = path
@@ -31,7 +42,7 @@ const fullPath = path
   .replace("/out/_tests/", "/");
 
 export const behaveIniFullPathsSetting: TestBehaveIni = {
-  content: `[behave]\npaths=${fullPath}`
+  content: `[behave]\npaths=${fullPath}\n\t..` // (.. to include the root feature)
 }
 
 

@@ -154,7 +154,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
       try {
         const uri = event.document.uri;
-        if (!isFeatureFile(uri) && !await isStepsFile(uri))
+        if (!await isFeatureFile(uri) && !await isStepsFile(uri))
           return;
         services.parser.reparseFile(uri, testData, ctrl, "onDidChangeTextDocument", event.document.getText());
       }

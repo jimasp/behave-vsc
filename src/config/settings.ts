@@ -294,12 +294,15 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativ
   if (projRelativeBehaveConfigPaths.length > 0 && !projRelativeBehaveConfigPaths.includes(""))
     return projRelativeBehaveConfigPaths;
 
-  // behave ignores feature file(s) in the root folder unless the root folder is specifically included in 
-  // the behave config paths setting, and therefore so must we
-  const excludeRoot = !projRelativeBehaveConfigPaths.includes("");
-
   // no config paths set, so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(false, ps, ps.behaveWorkingDirUri.fsPath, excludeRoot);
+  const foldersContainingFeatureFiles = await findFeatureFolders(false, ps, ps.behaveWorkingDirUri.fsPath);
+
+  // behave would ignore a feature file in the root if not set in the behave config paths, and therefore so must we
+  if (!projRelativeBehaveConfigPaths.includes("")) {
+    const workRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === ps.uri.fsPath);
+    if (workRootIndex !== -1)
+      foldersContainingFeatureFiles.splice(workRootIndex, 1);
+  }
 
   let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
 

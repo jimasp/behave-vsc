@@ -23,7 +23,7 @@ export async function run(): Promise<void[]> {
 	const sf1Suite = runner("../**/sibling steps folder 1 suite/multi.tests.js");
 	const sf2Suite = runner("../**/sibling steps folder 2 suite/multi.tests.js");
 	const wdSuite = runner("../**/working dir suite/multi.tests.js");
-	const biSuite = runner("../**/handle bad import/multi.tests.js");
+	const biSuite = runner("../**/handle bad import suite/multi.tests.js");
 
 	return Promise.all([aSuite, bSuite, sSuite, rpSuite, isSuite, mtlfSuite, sf1Suite, sf2Suite, wdSuite, biSuite]);
 }

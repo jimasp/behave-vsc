@@ -7,7 +7,7 @@ import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
 import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
-import { StepImport, ProjectSettings } from '../config/settings';
+import { ProjectSettings, StepImport } from '../config/settings';
 import { xRayLog } from './logger';
 import { getJunitDirUri } from '../watchers/junitWatcher';
 
@@ -194,22 +194,39 @@ export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Pro
 };
 
 
-export const isFeatureFile = (fileUri: vscode.Uri): boolean => {
+export const isFeatureFile = async (fileUri: vscode.Uri): Promise<boolean> => {
+
   if (fileUri.scheme !== "file")
     return false;
+
   const lcPath = fileUri.path.toLowerCase();
-  return lcPath.endsWith(".feature");
+  if (!lcPath.endsWith(".feature"))
+    return false;
+
+  // as per behave, ignore feature files that are not in in known feature folder locations
+  const ps = await getProjectSettingsForFile(fileUri);
+  if (!ps.projRelativeFeatureFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}`)))
+    return false;
+
+  return true;
 }
 
 
 export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
-  // fast checks first
+
   if (fileUri.scheme !== "file")
     return false;
+
   const lcPath = fileUri.path.toLowerCase();
   if (!lcPath.endsWith(".py"))
     return false;
 
+  // as per behave, ignore .py files that are not in in known steps folder locations
+  const ps = await getProjectSettingsForFile(fileUri);
+  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}`)))
+    return false;
+
+  // check if the path matches a step library setting path AND regex string
   const getStepLibraryMatch = (ps: ProjectSettings, relPath: string) => {
     let stepLibMatch: StepImport | null = null;
     let currentMatchLen = 0, lenPath = 0;
@@ -339,7 +356,7 @@ export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
 
 
 
-export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectSettings, absolutePath: string, excludeWorkDirRoot: boolean):
+export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectSettings, absolutePath: string):
   Promise<string[]> {
 
   // THIS IS CALLED TO SEARCH FOR FEATURE FOLDERS ONLY WHEN THERE ARE NO BEHAVE CONFIG PATHS SET 
@@ -367,7 +384,7 @@ export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectS
       childFolders.push(entryPath);
     }
     else {
-      if (entry.endsWith(".feature") && !(excludeWorkDirRoot && absolutePath === ps.behaveWorkingDirUri.fsPath)) {
+      if (entry.endsWith(".feature")) {
         results.push(absolutePath);
         // if it's the project root, keep going and find subfolers
         if (stopOnFirstMatch || absolutePath !== ps.uri.path)
@@ -378,7 +395,7 @@ export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectS
 
   // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
   for (const absFolderPath of childFolders) {
-    const subDirResults = await findFeatureFolders(stopOnFirstMatch, ps, absFolderPath, excludeWorkDirRoot);
+    const subDirResults = await findFeatureFolders(stopOnFirstMatch, ps, absFolderPath);
     results.push(...subDirResults);
   }
 

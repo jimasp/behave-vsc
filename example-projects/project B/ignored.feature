@@ -1,4 +1,4 @@
-Feature: Ignored - not in features folder
+Feature: Should be ignored (root feature that is not in behave.ini paths)
 
    Scenario: run a test
       Given we have behave installed

@@ -305,7 +305,7 @@ export class FileParser {
     try {
       this._reparsingFile = true;
 
-      const isAFeatureFile = isFeatureFile(fileUri);
+      const isAFeatureFile = await isFeatureFile(fileUri);
       let isAStepsFile = false;
       if (!isAFeatureFile)
         isAStepsFile = await isStepsFile(fileUri);
@@ -433,7 +433,7 @@ export class FileParser {
   private async _updateTestItemFromFeatureFileContent(ps: ProjectSettings, content: string, testData: TestData,
     controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
 
-    if (!isFeatureFile(uri))
+    if (!await isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
 
     if (!content)
@@ -455,8 +455,8 @@ export class FileParser {
     testData: TestData, controller: vscode.TestController, uri: vscode.Uri, caller: string,
     firstRun: boolean): Promise<{ testItem: vscode.TestItem, testFile: TestFile } | undefined> {
 
-    if (!isFeatureFile(uri))
-      throw new Error(`${uri.path} is not a feature file`);
+    if (!await isFeatureFile(uri))
+      throw new Error(`${uri.path} is not a recognised feature file`);
 
     if (!content)
       return;
