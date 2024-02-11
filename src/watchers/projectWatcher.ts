@@ -143,7 +143,7 @@ export class ProjectWatcher {
         return false;
 
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-        const configPath = `${projSettings.workingDirUri.path}/${configFile}`;
+        const configPath = `${projSettings.behaveWorkingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
           if (services.config.isIntegrationTestRun)
             return false; // don't reload when integration tests change the behave.ini file

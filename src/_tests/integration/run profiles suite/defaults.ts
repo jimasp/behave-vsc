@@ -49,10 +49,10 @@ export const runOptions: RunOptions = {
 }
 
 export const expectations: Expectations = {
-  expectedProjectRelativeWorkingDirPath: "",
-  expectedProjectRelativeBaseDirPath: "features",
-  expectedProjectRelativeFeatureFolders: ["features"],
-  expectedProjectRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
+  expectedProjRelativeBehaveWorkingDirPath: "",
+  expectedBaseDirPath: "features",
+  expectedProjRelativeFeatureFolders: ["features"],
+  expectedProjRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResultsForAProfileWithoutTags,
 }

@@ -17,7 +17,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     local_args.unshift("-m", "behave");
     xRayLog(`${pr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...pr.env };
-    const options: SpawnOptions = { cwd: pr.projSettings.workingDirUri.fsPath, env: env };
+    const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
 
     // on integration test runs ONLY, we sometimes use cp.exec 
     // instead of cp.spawn, so that we can test the generated friendlyCmd executes correctly

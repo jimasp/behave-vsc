@@ -15,7 +15,7 @@ import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
 import { getBehaveConfigPaths } from './behaveConfig';
 import { services } from '../common/services';
-import { getRelativeBaseDirPath } from '../behaveLogic';
+import { getBaseDirPath } from '../behaveLogic';
 
 
 
@@ -97,11 +97,11 @@ export class ProjectSettings {
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly excludedPathPatterns: { [key: string]: boolean; } = {}; // paths specifically excluded from watching/parsing
-  public readonly projRelativeWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
-  public readonly workingDirUri: vscode.Uri; // optional working directory (projRelativeWorkingDirPath in absolute uri form)
+  public readonly projRelativeBehaveWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
+  public readonly behaveWorkingDirUri: vscode.Uri; // optional working directory (projRelativeBehaveWorkingDirPath in absolute uri form)
   // calculated after real work in create():
-  public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in original form
-  public projRelativeBaseDirPath = ""; // parent directory of "steps" folder/environment.py file
+  public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in their original form
+  public baseDirPath = ""; // behave-working-dir-relative-path to the parent directory of the "steps" folder/environment.py file 
   public projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
   public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)  
   // integration test only:
@@ -114,21 +114,21 @@ export class ProjectSettings {
     const ps = new ProjectSettings(projUri, projConfig);
 
     // do "real work" on filesystem
-    const projRelPaths = await getPaths(ps);
-    if (!projRelPaths) {
+    const paths = await getPaths(ps);
+    if (!paths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
       return ps;
     }
 
     // update properties after real work
-    ps.rawBehaveConfigPaths = projRelPaths.rawBehaveConfigPaths;
-    ps.projRelativeBaseDirPath = projRelPaths.projRelBaseDirPath;
-    ps.projRelativeFeatureFolders = projRelPaths.projRelFeatureFolders;
-    ps.projRelativeStepsFolders = projRelPaths.projRelStepsFolders;
+    ps.rawBehaveConfigPaths = paths.rawBehaveConfigPaths;
+    ps.baseDirPath = paths.baseDirPath;
+    ps.projRelativeFeatureFolders = paths.projRelFeatureFolders;
+    ps.projRelativeStepsFolders = paths.projRelStepsFolders;
 
     // pass projRelBehaveConfigPaths separately, because is not a public property of ProjectSettings
-    logSettings(winSettings, ps, projRelPaths.projRelBehaveConfigPaths);
+    logSettings(winSettings, ps, paths.projRelBehaveConfigPaths);
 
     return ps;
   }
@@ -140,7 +140,7 @@ export class ProjectSettings {
     this.id = uriId(projUri);
     this.name = getWorkspaceFolder(projUri).name;
     this.uri = projUri;
-    this.workingDirUri = projUri; // default
+    this.behaveWorkingDirUri = projUri; // default
     this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
     this.excludedPathPatterns = getExcludedPathPatterns(projConfig);
 
@@ -190,17 +190,17 @@ export class ProjectSettings {
       services.logger.showWarn('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
     }
 
-    const relWorkingDirCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
-    if (relWorkingDirCfg === undefined)
+    const behaveWorkingDirectoryCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
+    if (behaveWorkingDirectoryCfg === undefined)
       throw new Error("behaveWorkingDirectory is undefined");
-    const workingDirUri = vscode.Uri.joinPath(projUri, relWorkingDirCfg);
+    const workingDirUri = vscode.Uri.joinPath(projUri, behaveWorkingDirectoryCfg);
     if (!fs.existsSync(workingDirUri.fsPath)) {
-      services.logger.showWarn(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${relWorkingDirCfg}" ` +
+      services.logger.showWarn(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${behaveWorkingDirectoryCfg}" ` +
         "does not exist and will be ignored.", projUri);
     }
     else {
-      this.workingDirUri = workingDirUri;
-      this.projRelativeWorkingDirPath = relWorkingDirCfg;
+      this.behaveWorkingDirUri = workingDirUri;
+      this.projRelativeBehaveWorkingDirPath = behaveWorkingDirectoryCfg;
     }
 
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
@@ -251,16 +251,15 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
 
 async function getPaths(ps: ProjectSettings) {
 
-  const { rawBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
+  const { rawBehaveConfigPaths, behaveWrkDirRelBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
   // base dir is a concept borrowed from behave's source code
   // NOTE: projRelBaseDirPath is used to calculate junit filenames (see getJunitFeatureName)
-  const projRelBaseDirPath = await getRelativeBaseDirPath(ps, projRelBehaveConfigPaths);
-  if (projRelBaseDirPath === null) {
-    // e.g. an empty workspace folder
+  const baseDirPath = await getBaseDirPath(ps, behaveWrkDirRelBehaveConfigPaths);
+  if (baseDirPath === null)
     return;
-  }
-  const stepsFolder = path.join(projRelBaseDirPath, "steps");
+
+  const stepsFolder = path.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
   const projRelStepsFolders = getStepLibraryStepPaths(ps);
 
   // NOTE: the order of the relativeStepsFolders determines which step folder step is used as the match for 
@@ -277,10 +276,9 @@ async function getPaths(ps: ProjectSettings) {
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
   return {
-    // for consistency, these are all project-relative
     rawBehaveConfigPaths,
+    baseDirPath,
     projRelBehaveConfigPaths,
-    projRelBaseDirPath,
     projRelFeatureFolders,
     projRelStepsFolders
   }
@@ -288,30 +286,26 @@ async function getPaths(ps: ProjectSettings) {
 }
 
 
-async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeConfigPaths: string[]): Promise<string[]> {
+async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativeBehaveConfigPaths: string[]): Promise<string[]> {
   const start = performance.now();
 
-  // if paths specifically set in behave.ini, SKIP gathering feature paths and use those
-  if (relativeConfigPaths.length > 0 && !relativeConfigPaths.includes(""))
-    return relativeConfigPaths;
+  // if paths specifically set in behave.ini, AND one of the relative paths is not "", 
+  // then SKIP gathering feature paths and just use those
+  if (projRelativeBehaveConfigPaths.length > 0 && !projRelativeBehaveConfigPaths.includes(""))
+    return projRelativeBehaveConfigPaths;
+
+  // behave ignores feature file(s) in the root folder unless the root folder is specifically included in 
+  // the behave config paths setting, and therefore so must we
+  const excludeRoot = !projRelativeBehaveConfigPaths.includes("");
 
   // no config paths set, so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(ps, ps.workingDirUri.fsPath);
-
-  // behave would ignore a feature file in the root if not set in the behave config paths, and so must we,
-  // i.e. we only include the project root if it's requested in the behave config paths,
-  // (and if that were the case it would have been intercepted by the early exit on "" at the start of this function)
-  if (!relativeConfigPaths.includes("")) {
-    const workRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === ps.workingDirUri.fsPath);
-    if (workRootIndex !== -1)
-      foldersContainingFeatureFiles.splice(workRootIndex, 1);
-  }
+  const foldersContainingFeatureFiles = await findFeatureFolders(false, ps, ps.behaveWorkingDirUri.fsPath, excludeRoot);
 
   let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
 
   // add the config paths even if there are no feature files in those paths (yet)
   // (they don't have to exist yet as the watcher uses the project root)
-  relFeatureFolders = [...new Set(relFeatureFolders.concat(relativeConfigPaths))];
+  relFeatureFolders = [...new Set(relFeatureFolders.concat(projRelativeBehaveConfigPaths))];
 
   // optimise to longest common search paths for parsing search paths
   // note that if "" is included in relFeatureFolders, then we maintain it 
@@ -322,7 +316,7 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, relativeCon
   if (relFeaturePaths.length === 0)
     relFeaturePaths.push("features");
 
-  xRayLog(`PERF: getProjectRelativeFeatureFolders took ${performance.now() - start} ms for ${ps.workingDirUri.path}`);
+  xRayLog(`PERF: getProjectRelativeFeatureFolders took ${performance.now() - start} ms for ${ps.behaveWorkingDirUri.path}`);
 
   return relFeaturePaths;
 }
@@ -371,7 +365,7 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
   const userSettableProjSettings = ["env", "justMyCode", "runParallel", "importedSteps"];
   let projEntries = Object.entries(ps);
   projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
-  projEntries.push(["behaveWorkingDirectory", ps.projRelativeWorkingDirPath]);
+  projEntries.push(["behaveWorkingDirectory", ps.projRelativeBehaveWorkingDirPath]);
   projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
   const resourceSettingsDic: { [name: string]: object; } = {};
   const userEntries: { [name: string]: object; } = {};
@@ -379,7 +373,7 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
   resourceSettingsDic["user:"] = userEntries;
   resourceSettingsDic["auto:"] = {
     "projectRelativeBehaveConfigPaths": projRelBehaveConfigPaths,
-    "projectRelativeBehaveBaseDir": ps.projRelativeBaseDirPath,
+    "projectRelativeBehaveBaseDir": ps.baseDirPath,
     "projectRelativeFeatureFolders": ps.projRelativeFeatureFolders,
     "projectRelativeStepsFolders": ps.projRelativeStepsFolders
   }

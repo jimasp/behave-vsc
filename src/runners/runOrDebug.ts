@@ -30,7 +30,7 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const args = addTags(pr, friendlyArgs, false, false);
   friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
-  const friendlyCmd = `${ps1}cd "${pr.projSettings.workingDirUri.fsPath}"\n` +
+  const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
   if (pr.debug) {
@@ -59,7 +59,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const args = addTags(pr, friendlyArgs, false, false);
     friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
-    const friendlyCmd = `${ps1}cd "${pr.projSettings.workingDirUri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {
@@ -109,7 +109,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     ];
     args = addTags(pr, args, true, false);
 
-    const friendlyCmd = `${ps1}cd "${pr.projSettings.workingDirUri.fsPath}"\n` +
+    const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {

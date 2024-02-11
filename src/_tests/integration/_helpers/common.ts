@@ -8,10 +8,10 @@ export type RunOptions = {
 }
 
 export type Expectations = {
-  expectedProjectRelativeWorkingDirPath?: string;
-  expectedProjectRelativeBaseDirPath: string;
-  expectedProjectRelativeFeatureFolders: string[];
-  expectedProjectRelativeStepsFolders: string[];
+  expectedProjRelativeBehaveWorkingDirPath?: string;
+  expectedBaseDirPath: string;
+  expectedProjRelativeFeatureFolders: string[];
+  expectedProjRelativeStepsFolders: string[];
   getExpectedCountsFunc: (projUri: vscode.Uri, config: Configuration) => ProjParseCounts;
   getExpectedResultsFunc: (projUri: vscode.Uri, config: Configuration) => TestResult[];
 }

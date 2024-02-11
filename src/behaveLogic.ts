@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { services } from './common/services';
 import { ProjectSettings } from './config/settings';
 import { Scenario } from './parsers/testFile';
@@ -11,37 +12,35 @@ import { xRayLog } from './common/logger';
 // =========================================================================================================
 
 
-// this array must have the same order of precedence as in the behave source code function "config_filenames()",
+// this array must have the same order of precedence as in the behave source code function "config_filenames",
 export const BEHAVE_CONFIG_FILES_PRECEDENCE = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
 
 
 export function getJunitFeatureName(ps: ProjectSettings, scenario: Scenario): string {
-  // this function should contain similar logic to the behave source code function "make_feature_filename()".
+  // this function should contain similar logic to the behave source code function "make_feature_filename".
   // this is needed to determine the junit filename that behave will use.
 
-  let jFeatureName = "";
-  const projRelFeatureFilePath = scenario.featureFileProjectRelativePath;
+  let jName = "";
+  const featureFilename = path.relative(ps.projRelativeBehaveWorkingDirPath, scenario.featureFileProjectRelativePath);
 
   for (const path of ps.rawBehaveConfigPaths) {
-    // adjust path to account for behave's working directory
-    const behaveRelPath = ps.projRelativeWorkingDirPath ? ps.projRelativeWorkingDirPath + "/" + path : path;
-    if (projRelFeatureFilePath.startsWith(behaveRelPath)) {
-      jFeatureName = projRelFeatureFilePath.slice(behaveRelPath.length + (behaveRelPath !== "" ? 1 : 0));
+    if (featureFilename.startsWith(path)) {
+      jName = featureFilename.slice(path.length + 1);
       break;
     }
   }
 
-  if (!jFeatureName)
-    jFeatureName = path.relative(ps.projRelativeBaseDirPath, projRelFeatureFilePath);
+  if (!jName)
+    jName = path.relative(ps.baseDirPath, featureFilename);
 
-  jFeatureName = jFeatureName.split('.').slice(0, -1).join('.');
-  jFeatureName = jFeatureName.replace(/\\/g, '/').replace(/\//g, '.');
-  return jFeatureName;
+  jName = jName.split('.').slice(0, -1).join('.');
+  jName = jName.replace(/\\/g, '/').replace(/\//g, '.');
+  return jName;
 }
 
 
-export async function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehaveConfigPaths: string[]): Promise<string | null> {
-  // this function should contain similar logic to the behave source code function "setup_paths()"
+export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeConfigPaths: string[]): Promise<string | null> {
+  // this function should contain similar logic to the behave source code function "setup_paths"
 
   // the baseDir = the parent directory of the "steps" folder / environment.py file
   // (although baseDir is only ever used in getJunitFeatureName(), we don't want to call it every time that gets called,
@@ -49,12 +48,13 @@ export async function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehave
 
   const start = performance.now();
 
-  const relativeBaseDir = relativeBehaveConfigPaths.length > 0
-    ? relativeBehaveConfigPaths[0] // as per behave logic
-    : path.join(ps.projRelativeWorkingDirPath, "features");
+  const relativeBaseDir = behaveWrkDirRelativeConfigPaths.length > 0
+    ? behaveWrkDirRelativeConfigPaths[0] // as per behave logic
+    : "features";
 
   const project_parent_dir = path.dirname(ps.uri.fsPath);
-  let new_base_dir = path.join(ps.uri.fsPath, relativeBaseDir);
+  const initial_base_dir = vscode.Uri.joinPath(ps.behaveWorkingDirUri, relativeBaseDir).fsPath;
+  let new_base_dir = initial_base_dir;
 
   while (
     !(await fileExists(path.join(new_base_dir, "steps")) ||
@@ -67,15 +67,17 @@ export async function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehave
 
 
   if (new_base_dir === project_parent_dir) {
-    if (relativeBehaveConfigPaths.length === 0) {
-      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". `, ps.uri)// +
-      // 'Please either: (a) specify a "paths" setting in your behave configuration file for this project, and/or ' +
-      // '(b) if your behave working directory is not the same as your project root then specify a "behave-vsc.relWorkingDir"' +
-      // 'in settings.json', ps.uri);
+    if (behaveWrkDirRelativeConfigPaths.length === 0) {
+      services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}".
+        Please either: 
+        (a) specify a "behave-vsc.behaveWorkingDirectory" setting (if it is not the same as you project root), and/or
+        (b) specify a "paths" setting in your behave configuration file. 
+        (If you have a behave configuration file, please ensure that it is in your project root or 
+        "behave-vsc.behaveWorkingDirectory".)`, ps.uri);
     }
     else {
       services.logger.showWarn(`Could not find "steps" directory for project "${ps.name}". ` +
-        `Using the first behave configuration paths value "${new_base_dir}"`, ps.uri);
+        `Using the first behave configuration paths value "${initial_base_dir}"`, ps.uri);
     }
     return null;
   }
@@ -83,6 +85,6 @@ export async function getRelativeBaseDirPath(ps: ProjectSettings, relativeBehave
   const waited = performance.now() - start;
   xRayLog(`PERF: getRelativeBaseDirPath() took ${waited}ms`, ps.uri);
 
-  // adjust basedir path to a project-relative path
-  return path.relative(ps.uri.fsPath, new_base_dir);
+  // adjust basedir path to a behave-working-dir-relative path
+  return path.relative(ps.behaveWorkingDirUri.fsPath, new_base_dir);
 }

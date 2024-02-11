@@ -16,7 +16,7 @@ export function runner(globStr: string, ignore?: string[]): Promise<void> {
 
 		try {
 			const files = globSync(globStr, { cwd: testsRoot, ignore: ignore });
-			files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
+			files.reverse().forEach(f => mocha.addFile(path.resolve(testsRoot, f)));
 
 			mocha.run(failures => {
 				if (failures > 0) {

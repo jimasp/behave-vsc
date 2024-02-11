@@ -298,7 +298,7 @@ export function cleanBehaveText(text: string) {
 }
 
 
-// custom function to replace vscode.workspace.findFiles() functionality when required
+// cancellable custom function to replace vscode.workspace.findFiles() functionality when required
 // due to the glob INTERMITTENTLY not returning results on vscode startup in Windows OS for multiroot workspaces
 export async function findFiles(directory: vscode.Uri, match: RegExp, recursive: boolean,
   cancelToken?: vscode.CancellationToken | undefined): Promise<vscode.Uri[]> {
@@ -325,6 +325,7 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 
 
 export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
+  // early exit sync function
   const entries = fs.readdirSync(uri.fsPath);
   for (const entry of entries) {
     if (entry.endsWith(".feature"))
@@ -337,19 +338,24 @@ export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
 }
 
 
-export async function findFeatureFolders(ps: ProjectSettings, absolutePath: string, stopOnFirstMatch = false): Promise<string[]> {
 
-  // find feature folders, with early exit where possible
-  // e.g. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
+export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectSettings, absolutePath: string, excludeWorkDirRoot: boolean):
+  Promise<string[]> {
+
+  // THIS IS CALLED TO SEARCH FOR FEATURE FOLDERS ONLY WHEN THERE ARE NO BEHAVE CONFIG PATHS SET 
+  // (or behave config paths is set to "." or "")
+
+  // find feature folders, perform an early exit where possible:
+  // immediately return on first path if stopOnFirstMatch is true, or
+  // if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
 
   const start = performance.now();
   const entries = await fs.promises.readdir(absolutePath);
-  const absDirEntries: string[] = [];
+  const childFolders: string[] = [];
   const results: string[] = [];
 
-  const relPath = vscode.workspace.asRelativePath(absolutePath);
-  if (isExcludedPath(ps, relPath)) {
-    xRayLog(`findFeatureFolders: ignoring excluded path "${relPath}"`, ps.uri);
+  if (isExcludedPath(ps, absolutePath)) {
+    xRayLog(`findFeatureFolders: ignoring excluded path "${absolutePath}"`, ps.uri);
     return [];
   }
 
@@ -358,10 +364,10 @@ export async function findFeatureFolders(ps: ProjectSettings, absolutePath: stri
     const entryPath = path.join(absolutePath, entry);
     const stat = await fs.promises.stat(entryPath);
     if (stat.isDirectory()) {
-      absDirEntries.push(entryPath);
+      childFolders.push(entryPath);
     }
     else {
-      if (entry.endsWith(".feature")) {
+      if (entry.endsWith(".feature") && !(excludeWorkDirRoot && absolutePath === ps.behaveWorkingDirUri.fsPath)) {
         results.push(absolutePath);
         // if it's the project root, keep going and find subfolers
         if (stopOnFirstMatch || absolutePath !== ps.uri.path)
@@ -371,8 +377,8 @@ export async function findFeatureFolders(ps: ProjectSettings, absolutePath: stri
   }
 
   // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
-  for (const absDirEntry of absDirEntries) {
-    const subDirResults = await findFeatureFolders(ps, absDirEntry, stopOnFirstMatch);
+  for (const absFolderPath of childFolders) {
+    const subDirResults = await findFeatureFolders(stopOnFirstMatch, ps, absFolderPath, excludeWorkDirRoot);
     results.push(...subDirResults);
   }
 

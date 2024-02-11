@@ -8,6 +8,7 @@ import { ProjectSettings } from './settings';
 
 type BehaveConfigPaths = {
   rawBehaveConfigPaths: string[];
+  behaveWrkDirRelBehaveConfigPaths: string[];
   projRelBehaveConfigPaths: string[];
 }
 
@@ -17,7 +18,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
   const { matchedConfigFile, paths } = getBehavePathsFromConfigFile(ps);
 
   if (!paths)
-    return { rawBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
+    return { rawBehaveConfigPaths: [], behaveWrkDirRelBehaveConfigPaths: [], projRelBehaveConfigPaths: [] };
 
   let relPaths: string[] = [];
   for (let biniPath of paths) {
@@ -31,20 +32,22 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
     if (biniPath.endsWith(".feature"))
       biniPath = path.dirname(biniPath);
 
-    const rx = new RegExp(`^${ps.workingDirUri.fsPath}/?`);
-    const workingRelPath = biniPath.replace(rx, "");
-    let projectRelPath = path.join(ps.projRelativeWorkingDirPath, workingRelPath);
+    // convert any absolute paths to relative paths
+    const rx = new RegExp(`^${ps.behaveWorkingDirUri.fsPath}/?`);
+    let behaveWrkRelPath = biniPath.replace(rx, "");
 
+    const projectRelPath = path.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
       services.logger.showWarn(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
       continue;
     }
 
     // use "" for consistency with behaviour elsewhere (i.e. path.relative() and path.replace())
-    if (projectRelPath === "." || projectRelPath === "./")
-      projectRelPath = "";
+    if (behaveWrkRelPath === "." || behaveWrkRelPath === "./")
+      behaveWrkRelPath = "";
 
-    const fsPath = vscode.Uri.joinPath(ps.uri, projectRelPath).fsPath;
+    // check path exists
+    const fsPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, behaveWrkRelPath).fsPath;
     if (!fs.existsSync(fsPath)) {
       services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
     }
@@ -53,7 +56,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
         services.logger.showWarn(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
         continue;
       }
-      relPaths.push(projectRelPath);
+      relPaths.push(behaveWrkRelPath);
     }
   }
 
@@ -61,12 +64,15 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
   // for finding the steps folder, so preserve the order for when we do the same ourselves later
   relPaths = [...new Set(relPaths)];
 
+  const projRelPaths = relPaths.map(p => path.join(ps.projRelativeBehaveWorkingDirPath, p).replace(/^\.$/g, ""));
+
   services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
-    `${relPaths.map(p => `"${p}"`).join(", ")}`, ps.uri);
+    `${projRelPaths.map(p => `"${p}"`).join(", ")}`, ps.uri);
 
   return {
     rawBehaveConfigPaths: paths,
-    projRelBehaveConfigPaths: relPaths
+    behaveWrkDirRelBehaveConfigPaths: relPaths,
+    projRelBehaveConfigPaths: projRelPaths
   };
 }
 
@@ -81,7 +87,7 @@ function getBehavePathsFromConfigFile(ps: ProjectSettings) {
   // i.e. we can just break on the first file in the order that has a "paths" setting.  
 
   for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-    const configFilePath = path.join(ps.workingDirUri.fsPath, configFile);
+    const configFilePath = path.join(ps.behaveWorkingDirUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
       lastExistingConfigFile = configFile;
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      

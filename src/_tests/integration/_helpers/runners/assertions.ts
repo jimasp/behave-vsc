@@ -32,13 +32,13 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
   const projSettings = await config.getProjectSettings(projUri.path);
   assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
     `${projName} project: env`);
-  assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjectRelativeFeatureFolders,
+  assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjRelativeFeatureFolders,
     `${projName} project: projRelativeFeatureFolders`);
-  assert.deepStrictEqual(projSettings.projRelativeStepsFolders, expectations.expectedProjectRelativeStepsFolders,
+  assert.deepStrictEqual(projSettings.projRelativeStepsFolders, expectations.expectedProjRelativeStepsFolders,
     `${projName} project: projRelativeStepsFolders`);
-  assert.strictEqual(projSettings.projRelativeBaseDirPath, expectations.expectedProjectRelativeBaseDirPath,
-    `${projName} project: projRelativeBaseDirPath`);
-  assert.strictEqual(projSettings.projRelativeWorkingDirPath, expectations.expectedProjectRelativeWorkingDirPath,
+  assert.strictEqual(projSettings.baseDirPath, expectations.expectedBaseDirPath,
+    `${projName} project: baseDirPath`);
+  assert.strictEqual(projSettings.projRelativeBehaveWorkingDirPath, expectations.expectedProjRelativeBehaveWorkingDirPath,
     `${projName} project: projRelativeWorkingDirPath`);
   assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
     `${projName} project: justMyCode`);
