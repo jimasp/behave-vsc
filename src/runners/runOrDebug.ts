@@ -4,7 +4,7 @@ import { QueueItem } from '../extension';
 import { projError } from '../common/helpers';
 import { ProjRun } from './testRunHandler';
 import {
-  addTags, getFriendlyEnvVars, getPSCmdModifyIfWindows, getFeaturePathsRegEx,
+  addTags, getFriendlyEnvVars, getPSCmdModifyIfWindows, getOptimisedFeaturePathsRegEx,
   getPipedScenarioNamesRegex, projDirRelativePathToWorkDirRelativePath
 } from './helpers';
 
@@ -52,7 +52,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     if (pr.projSettings.runParallel && pr.debug)
       throw new Error("running async debug is not supported");
 
-    const featurePathsPattern = getFeaturePathsRegEx(pr, scenarioQueueItems);
+    const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     let friendlyArgs = ["-i", `"${featurePathsPattern}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];

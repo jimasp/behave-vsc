@@ -77,7 +77,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
       return;
 
     const waitMs = textEditor ? 500 : 5000;
-    if (!await waitOnReadyForStepsNavigation(waitMs, refreshStore.uri))
+    if (!await waitOnReadyForStepsNavigation(waitMs))
       return;
 
     const stepReferences = getFeatureReferencesToStepFileFunction(refreshStore.uri, refreshStore.lineNo);

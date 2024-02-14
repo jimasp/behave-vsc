@@ -9,7 +9,7 @@ import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../../extension';
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx } from '../../../../runners/helpers';
+import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
 
 
 
@@ -97,7 +97,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, skippedFeatur
   }
 
   const pr = createFakeProjRun(testExtConfig, request);
-  const pipedFeaturePathsRx = getFeaturePathsRegEx(pr, queueItems);
+  const pipedFeaturePathsRx = getOptimisedFeaturePathsRegEx(pr, queueItems);
 
   const expectCmdOrderedIncludes = [
     `cd `,

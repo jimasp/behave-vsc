@@ -66,15 +66,8 @@ export function clearStepMappings(projUri: vscode.Uri) {
 }
 
 
-export async function waitOnReadyForStepsNavigation(waitMs: number, uri: vscode.Uri) {
-  const ready = await services.parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
-  if (!ready) {
-    const msg = "Cannot navigate steps while step files are being parsed, please try again.";
-    xRayLog(msg, undefined, LogType.warn);
-    services.logger.showWarn(msg, getProjectUriForFile(uri));
-  }
-
-  return ready;
+export async function waitOnReadyForStepsNavigation(waitMs: number) {
+  return await services.parser.stepsParseComplete(waitMs, "waitOnReadyForStepsNavigation");
 }
 
 export function rebuildStepMappings(projUri: vscode.Uri): number {

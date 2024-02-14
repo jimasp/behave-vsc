@@ -16,7 +16,7 @@ import {
   assertExpectedResults
 } from "./assertions";
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx } from '../../../../runners/helpers';
+import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
 import { QueueItem } from '../../../../extension';
 
 
@@ -204,7 +204,7 @@ function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vsc
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
-    const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
+    const featurePathRx = getOptimisedFeaturePathsRegEx(pr, [qi]);
 
     const expectCmdOrderedIncludes = [
       `cd `,

@@ -9,7 +9,7 @@ import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../../extension';
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../../runners/helpers';
+import { getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../../runners/helpers';
 import { Scenario } from '../../../../parsers/testFile';
 import path = require('path');
 
@@ -114,7 +114,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
   }
 
   const pr = createFakeProjRun(testExtConfig, request);
-  const featurePathRx = getFeaturePathsRegEx(pr, queueItems);
+  const featurePathRx = getOptimisedFeaturePathsRegEx(pr, queueItems);
   const pipedScenariosRx = getPipedScenarioNamesRegex(queueItems, true);
 
   const expectCmdOrderedIncludes = [

@@ -4,7 +4,8 @@ import { ProjRun } from "./testRunHandler";
 import { QueueItem } from "../extension";
 
 
-export function getFeaturePathsRegEx(pr: ProjRun, filteredChildItems: QueueItem[]) {
+
+export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: QueueItem[]) {
 
   function getRegEx(featureFileProjectRelativePath: string) {
     const workDirRelFeaturePath = projDirRelativePathToWorkDirRelativePath(pr, featureFileProjectRelativePath);
@@ -23,38 +24,66 @@ export function getFeaturePathsRegEx(pr: ProjRun, filteredChildItems: QueueItem[
 
   // runParallel only runs one feature at a time, so we can simply use the single featuresPath to create the regex
   if (pr.projSettings.runParallel)
-    return getRegEx(filteredChildItems[0].scenario.featureFileProjectRelativePath);
+    return getRegEx(scenarioQueueItems[0].scenario.featureFileProjectRelativePath);
 
-  // build the -i path pattern parameter for behave
+
+  // build an optimised -i path pattern parameter for behave 
   // which is a regex of the form: 
   // features/path1/|features/path2/|features/path3/|features/path4/my.feature$|features/path5/path6/my.feature$
 
-  // reduce the folders to the top-level where possible
-  const folderPaths: string[] = [];
-
-  // get the user-selected folder paths
+  // get the user-selected folders paths
   const selectedFolderIds = pr.request.include?.filter(x => !x.uri).map(x => x.id) ?? [];
 
-  folderPaths.push(...selectedFolderIds.map(id => vscode.workspace.asRelativePath(vscode.Uri.parse(id), false) + "/"));
+  // remove any scenarios already covered by a parent folder selected by the user
+  const scenariosNotCoveredBySelectedFolders = scenarioQueueItems.filter(x => !selectedFolderIds.includes(x.test.parent?.parent?.id ?? ''));
+
+  // Filter out scenarios where all the siblings of the parent feature are selected, and add the parent folder of those features instead,
+  // (i.e. where the parent folder is effectively selected because all the children of the folder are selected).
+  // Note that in the case of nested folders, those siblings will include folders, not just features.
+  let allMatched = true;
+  const parentFoldersProcessed: string[] = [];
+  let filteredScenarioQueueItems = [...scenariosNotCoveredBySelectedFolders];
+
+  for (const scenario of scenariosNotCoveredBySelectedFolders) {
+    const parentFolder = scenario.test.parent?.parent;
+    if (!parentFolder || parentFoldersProcessed.includes(parentFolder.id))
+      continue;
+    parentFoldersProcessed.push(parentFolder.id);
+    const siblingIds: string[] = [];
+    // sibling can be a feature or a folder
+    for (const sibling of parentFolder.children) {
+      siblingIds.push(sibling[0]);
+      if (!scenariosNotCoveredBySelectedFolders.find(x =>
+        x.test.id.startsWith(sibling[0] + "/")) && !selectedFolderIds.includes(sibling[0])) {
+        allMatched = false;
+        break;
+      }
+    }
+    if (allMatched) {
+      filteredScenarioQueueItems = scenarioQueueItems.filter(x => siblingIds.includes(x.test.id));
+      selectedFolderIds.push(parentFolder.id);
+    }
+  }
+
+  // convert folder ids to relative paths
+  const selectedFolderPaths = [...selectedFolderIds.map(id => vscode.workspace.asRelativePath(vscode.Uri.parse(id), false) + "/")];
 
   // keep only the top level folder paths (i.e. if we have a/b/c and a/b, remove a/b/c)
-  folderPaths.sort((a, b) => a.localeCompare(b));
-  for (let i = folderPaths.length - 1; i > 0; i--) {
-    if (folderPaths[i].startsWith(folderPaths[i - 1]))
-      folderPaths.splice(i, 1);
+  selectedFolderPaths.sort((a, b) => a.localeCompare(b));
+  for (let i = selectedFolderPaths.length - 1; i > 0; i--) {
+    if (selectedFolderPaths[i].startsWith(selectedFolderPaths[i - 1]))
+      selectedFolderPaths.splice(i, 1);
   }
 
   // get the feature paths and remove duplicates
-  const distinctFeaturePaths = [...new Set(filteredChildItems.map(qi => qi.scenario.featureFileProjectRelativePath))];
-
-  // remove any feature path already covered by a parent folder selected by the user
-  const featurePathsNotCoveredByFolderPaths = distinctFeaturePaths.filter(x => folderPaths.every(y => !x.includes(y)));
+  const distinctFeaturePaths = [...new Set(filteredScenarioQueueItems.map(qi => qi.scenario.featureFileProjectRelativePath))];
 
   // sort the feature paths for consistency (testability)
-  const orderedPaths = [...featurePathsNotCoveredByFolderPaths].sort((a, b) => a.localeCompare(b));
+  const orderedFeaturePaths = [...distinctFeaturePaths].sort((a, b) => a.localeCompare(b));
 
-  return folderPaths.map(x => x)
-    .concat(...orderedPaths.map(getRegEx))
+  // concatenate the folder and feature paths
+  return selectedFolderPaths.map(x => x)
+    .concat(...orderedFeaturePaths.map(getRegEx))
     .join('|')
     .replaceAll("\\", "/");
 }

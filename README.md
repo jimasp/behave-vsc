@@ -171,7 +171,7 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 - The python path is obtained from the `ms-python.python` extension (exported settings) i.e. your `python.defaultInterpreterPath` or selected python interpreter override. This is read before each run, so it is kept in sync with your project. By default, the behave command working directory is your root project directory.
 
-- For each run, the behave command to run the test manually appears in the `Behave VSC` output window.
+- For each run, the behave command to run the test manually appears in the `Behave VSC` output window. The command is optimised based on the test selection, and adds any tags or environment variables as required.
 
 - The behave process is spawned, and behave output is written to the `Behave VSC` output window for the associated workspace.
 

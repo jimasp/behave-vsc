@@ -5,7 +5,7 @@ import { services } from "../common/services";
 import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, getTestItems, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
+  countTestItemsInCollection, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
   TestCounts, findFiles, getContentFromFilesystem, deleteTestTreeNodes,
   getProjectSettingsForFile,
   getFeatureNodePath,
@@ -514,10 +514,13 @@ export class FileParser {
     if (nodePath.includes("/")) {
 
       const folders = nodePath.split("/").slice(0, -1);
+      console.log(uri.path);
+      const basePath = uri.path.slice(0, -nodePath.length);
+
       for (let folderNo = 0; folderNo < folders.length; folderNo++) {
-        const path = folders.slice(0, folderNo + 1).join("/");
-        const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon
-        const folderTestItemId = `${uriId(ps.uri)}/${path}`;
+        // note that the uriId here is used in getFeaturePathsRegEx while optimising the behave command
+        const folderTestItemId = uriId(vscode.Uri.file(basePath + folders.slice(0, folderNo + 1).join("/")));
+        const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon        
 
         if (folderNo === 0)
           parent = projGrandParent;
@@ -525,9 +528,11 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderTestItemId);
 
-        if (!current) { // TODO: try to move getTestItems above the loop (moving it would need thorough testing of UI interactions of folder/file renames)
-          const allTestItems = getTestItems(ps.id, controller.items);
-          current = allTestItems.find(item => item.id === folderTestItemId);
+        if (!current) {
+          // TODO: remove after testing
+          // const allTestItems = getTestItems(ps.id, controller.items);
+          // current = allTestItems.find(item => item.id === folderTestItemId);
+          current = controller.items.get(folderTestItemId);
         }
 
         if (!current) {

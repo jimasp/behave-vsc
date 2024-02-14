@@ -8,7 +8,7 @@ import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, get
 import { Expectations, RunOptions, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../../runner';
-import { getFeaturePathsRegEx } from '../../../../runners/helpers';
+import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
 import { QueueItem } from '../../../../extension';
 
 
@@ -91,7 +91,7 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
-    const featurePathRx = getFeaturePathsRegEx(pr, [qi]);
+    const featurePathRx = getOptimisedFeaturePathsRegEx(pr, [qi]);
 
     const expectCmdOrderedIncludes = [
       `cd `,
@@ -128,7 +128,7 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
     queueItems.push(qi);
   }
 
-  const pipedWorkDirRelFolderPaths = getFeaturePathsRegEx(pr, queueItems);
+  const pipedWorkDirRelFolderPaths = getOptimisedFeaturePathsRegEx(pr, queueItems);
 
   const expectCmdOrderedIncludes = [
     `cd `,
