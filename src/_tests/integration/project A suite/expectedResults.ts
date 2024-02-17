@@ -5,10 +5,10 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 71, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 24, stepFilesExceptEmptyOrCommentedOut: 5,
+    tests: { nodeCount: 77, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 26, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 119, stepMappings: 118 // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 125, stepMappings: 124 // (1 diff = "When we have a missing step")
   };
 }
 

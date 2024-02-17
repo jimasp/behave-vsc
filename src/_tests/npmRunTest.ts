@@ -66,6 +66,15 @@ async function npmRunTest() {
       launchArgs
     });
 
+    launchArgs = ["example-projects/project A"]
+    extensionTestsPath = path.resolve(__dirname, './integration/project A suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
     launchArgs = ["example-projects/multiroot.code-workspace"];
     extensionTestsPath = path.resolve(__dirname, './integration/multiroot suite/index');
     await runTests({
@@ -113,15 +122,6 @@ async function npmRunTest() {
 
     launchArgs = ["example-projects/run profiles"];
     extensionTestsPath = path.resolve(__dirname, './integration/run profiles suite/index');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/project A"]
-    extensionTestsPath = path.resolve(__dirname, './integration/project A suite/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
