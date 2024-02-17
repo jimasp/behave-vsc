@@ -38,7 +38,7 @@
 		},
 		{
 			"path": "./handle bad import",
-			"name": "handle bad import (behave failure)"
+			"name": "handle bad import"
 		},
 		{
 			"path": "./handle empty folder",

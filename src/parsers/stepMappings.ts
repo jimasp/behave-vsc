@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { getProjectUriForFile, sepr, uriId, urisMatch } from '../common/helpers';
-import { xRayLog, LogType } from '../common/logger';
+import { sepr, uriId, urisMatch } from '../common/helpers';
+import { xRayLog } from '../common/logger';
 import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';
 import { FeatureFileStep, deleteFeatureFilesStepsForFile, getFeatureFilesSteps } from './featureParser';
 import { refreshStepReferencesView } from '../handlers/findStepReferencesHandler';

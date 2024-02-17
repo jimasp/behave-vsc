@@ -16,7 +16,7 @@ export const getExpectedResultsWithBehaveIni = (): TestResult[] => {
 
     new TestResult({
       scenario_featureFileRelativePath: 'proj.root.feature',
-      scenario_featureName: 'Root feature added via .. in paths',
+      scenario_featureName: 'Root feature added (can be added to test explorer via .. in behave config paths)',
       scenario_getLabel: 'run a successful test',
       scenario_isOutline: false,
       scenario_result: 'passed',

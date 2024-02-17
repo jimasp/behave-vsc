@@ -122,7 +122,7 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
   const queueItems: QueueItem[] = [];
   for (const expResult of filteredExpectedResults) {
     const qi = {
-      test: undefined,
+      test: {},
       scenario: { featureFileProjectRelativePath: expResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
     queueItems.push(qi);

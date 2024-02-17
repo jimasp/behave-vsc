@@ -60,7 +60,7 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
       }
     }
     if (allMatched) {
-      filteredScenarioQueueItems = scenarioQueueItems.filter(x => siblingIds.includes(x.test.id));
+      filteredScenarioQueueItems = filteredScenarioQueueItems.filter(q => !siblingIds.some(s => q.test.id.startsWith(s)));
       selectedFolderIds.push(parentFolder.id);
     }
   }

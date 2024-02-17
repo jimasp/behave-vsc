@@ -4,12 +4,11 @@ import * as path from 'path';
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../../common/helpers';
 import { services } from '../../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions, TestResult } from "../common";
+import { checkExtensionIsReady, getExpectedEnvVarsString, getTestProjectUri } from "./helpers";
+import { Expectations, TestResult } from "../common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
-import { IntegrationTestAPI, QueueItem } from '../../../../extension';
+import { IntegrationTestAPI } from '../../../../extension';
 import { logStore } from '../../../runner';
-import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
 
 
 
