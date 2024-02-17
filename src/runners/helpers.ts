@@ -66,26 +66,26 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
   }
 
   // convert folder ids to relative paths
-  const selectedFolderPaths = [...selectedFolderIds.map(id => vscode.workspace.asRelativePath(vscode.Uri.parse(id), false) + "/")];
+  let selectedFolderPaths = [...selectedFolderIds.map(id => vscode.workspace.asRelativePath(vscode.Uri.parse(id), false) + "/")];
 
   // keep only the top level folder paths (i.e. if we have a/b/c and a/b, remove a/b/c)
-  selectedFolderPaths.sort((a, b) => a.localeCompare(b));
-  for (let i = selectedFolderPaths.length - 1; i > 0; i--) {
-    if (selectedFolderPaths[i].startsWith(selectedFolderPaths[i - 1]))
-      selectedFolderPaths.splice(i, 1);
-  }
+  selectedFolderPaths = selectedFolderPaths.filter(x => !selectedFolderPaths.some(y => x !== y && x.startsWith(y)));
 
   // get the feature paths and remove duplicates
   const distinctFeaturePaths = [...new Set(filteredScenarioQueueItems.map(qi => qi.scenario.featureFileProjectRelativePath))];
 
-  // sort the feature paths for consistency (testability)
-  const orderedFeaturePaths = [...distinctFeaturePaths].sort((a, b) => a.localeCompare(b));
+  // sort the paths for consistency (testability)
+  distinctFeaturePaths.sort((a, b) => a.localeCompare(b));
+  selectedFolderPaths.sort((a, b) => a.localeCompare(b));
 
   // concatenate the folder and feature paths
-  return selectedFolderPaths.map(x => x)
-    .concat(...orderedFeaturePaths.map(getRegEx))
+  const result = selectedFolderPaths.map(x => x)
+    .concat(...distinctFeaturePaths.map(getRegEx))
     .join('|')
     .replaceAll("\\", "/");
+
+  console.log(result);
+  return result;
 }
 
 
