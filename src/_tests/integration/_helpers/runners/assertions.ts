@@ -168,7 +168,9 @@ export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projU
 }
 
 
-export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) {
+export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[], testTitle?: string) {
+  const hint = testTitle ? `(test:${testTitle}) ` : "";
+
   let closestMatch = { log: '', failedOnInclude: '', highestIndex: 0, mismatchIndex: 0 };
   const projLogs = logStore.get().filter(x => x[0] === projUri.path).map(x => x[1]);
 
@@ -198,12 +200,12 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[]) 
   });
 
   if (matchingLogs.length > 1)
-    throw new Error("more than one matching log");
+    throw new Error(`more than one matching log ${hint}`);
 
   if (matchingLogs.length === 0) {
     // throw here rather than assert so we can examine projLogs if we are debugging integration tests
     debugger; // eslint-disable-line no-debugger
-    throw new Error(`logStore did not contain expected log for project: "${projUri.path}"\n` +
+    throw new Error(`logStore did not contain expected log for project: "${projUri.path}"\n${hint}\n` +
       `closest matched log was: "${closestMatch.log}"\n` +
       `which failed on include string: "${closestMatch.failedOnInclude}"\n` +
       `include strings list was:"${orderedIncludes}"`);
@@ -225,20 +227,30 @@ function findMismatchIndex(str1: string, str2: string): number {
 
 
 export function assertExpectedResults(projName: string, results: QueueItem[] | undefined, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, expectedTestRunSize?: number) {
+  testExtConfig: TestWorkspaceConfig, expectedTestRunSize?: number, testTitle?: string) {
 
-  assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+  const hint = testTitle ? `(test:${testTitle}) ` : "";
 
-  results.forEach(result => {
-    const scenResult = ScenarioResult(result);
-    assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-    assertTestResultMatchesExpectedResult(projName, expectedResults, scenResult, testExtConfig);
-  });
+  try {
+    assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
 
-  // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
-  if (!expectedTestRunSize)
-    expectedTestRunSize = expectedResults.length;
-  assert.equal(results.length, expectedTestRunSize, "results.length !== resultsLengthExpected");
+    results.forEach(result => {
+      const scenResult = ScenarioResult(result);
+      assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
+      assertTestResultMatchesExpectedResult(projName, expectedResults, scenResult, testExtConfig);
+    });
+
+    // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
+    if (!expectedTestRunSize)
+      expectedTestRunSize = expectedResults.length;
+
+    assert.equal(results.length, expectedTestRunSize, `${hint}results.length !== resultsLengthExpected`);
+  }
+  catch (assertErr: unknown) {
+    debugger; // eslint-disable-line no-debugger      
+
+    throw new Error(`assertExpectedResults failed for ${projName} project: ${hint}\n${assertErr}`);
+  }
 }
 
 
