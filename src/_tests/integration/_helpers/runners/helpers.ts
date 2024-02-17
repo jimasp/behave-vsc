@@ -131,12 +131,12 @@ export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOpt
 	return tagsString;
 }
 
-export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions) {
 
 	const env: object = testExtConfig.get("env");
 
 	let rpEnv: object | undefined = {};
-	if (runOptions.selectedRunProfile) {
+	if (runOptions && runOptions.selectedRunProfile) {
 		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
 		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
 		rpEnv = selectedRunProfile.env;
