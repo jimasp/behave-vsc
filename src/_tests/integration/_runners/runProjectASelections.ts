@@ -195,11 +195,30 @@ export async function runProjectASelections(
       expectedScenarioRegEx: "",
     },
     {
-      title: 'regex chars 1',
+      title: 'special chars 1',
       selection: ['example-projects/project A/behave tests/some tests/special_characters.feature/run a successful rx scenario = "'],
       expectedFeatureRegEx: 'behave tests/some tests/special_characters.feature$',
       expectedScenarioRegEx: '^run a successful rx scenario = \\"\\$',
     },
+    {
+      title: 'special chars 2',
+      selection: ["example-projects/project A/behave tests/some tests/special_characters.feature/run a successful rx scenario = '"],
+      expectedFeatureRegEx: 'behave tests/some tests/special_characters.feature$',
+      expectedScenarioRegEx: "^run a successful rx scenario = '\\$",
+    },
+    {
+      title: 'special chars 3',
+      selection: ['example-projects/project A/behave tests/some tests/special_characters.feature/run a successful rx scenario = `'],
+      expectedFeatureRegEx: 'behave tests/some tests/special_characters.feature$',
+      expectedScenarioRegEx: "^run a successful rx scenario = \\`\\$",
+    },
+    {
+      title: 'special chars 4',
+      selection: ['example-projects/project A/behave tests/some tests/special_characters.feature/run a successful rx scenario = \\'],
+      expectedFeatureRegEx: 'behave tests/some tests/special_characters.feature$',
+      expectedScenarioRegEx: "^run a successful rx scenario = \\\\\\\\\\$",
+    },
+
   ];
 
   for (const params of parameters) {
@@ -217,8 +236,15 @@ async function runSelection(params: Params, consoleName: string, projUri: vscode
   const requestItems: vscode.TestItem[] = [];
   logStore.clearProjLogs(projUri);
 
-  const selectedTestIds = params.selection.map(x => {
-    const split = x.split(".feature");
+  const selectedTestIds = params.selection.map(id => {
+    if (!id.includes(".feature")) {
+      // folder
+      const absPath = path.join(__dirname, "../../../..", id).replace("/out/", "/");
+      return uriId(vscode.Uri.file(absPath));
+    }
+
+    // feature or scenario
+    const split = id.split(".feature");
     const featurePath = split[0] + ".feature";
     const slashScenarioName = split[1];
     const absPath = path.join(__dirname, "../../../..", featurePath).replace("/out/", "/");
@@ -227,9 +253,27 @@ async function runSelection(params: Params, consoleName: string, projUri: vscode
 
   requestItems.push(...allTestItems.filter(item => selectedTestIds.includes(item.id)));
 
+  const expResults = expectedResults.filter(expResult => {
+    const expId = expResult.test_id;
+    if (!expId)
+      return false;
+    let res = false;
+    for (const sel of params.selection) {
+      const stdPath = standardisePath(sel) ?? "undef";
+      if (sel.includes(".feature/")) {
+        if (expId === stdPath)
+          res = true;
+      }
+      else if (expId.startsWith(stdPath)) {
+        res = true;
+      }
+    }
+    return res;
+  });
+
   // ACT AND ASSERT
 
-  await actAndAssert(params, consoleName, requestItems, api, expectedResults, projName, testExtConfig, projUri);
+  await actAndAssert(params, consoleName, requestItems, api, expResults, projName, testExtConfig, projUri);
 }
 
 
@@ -244,9 +288,8 @@ async function actAndAssert(params: Params, consoleName: string, requestItems: v
   const results = await api.runHandler(false, request, runProfile);
 
   // ASSERT  
-  const expResults = expectedResults.filter(x => params.selection.some(r => x.test_id && x.test_id.startsWith(standardisePath(r) ?? "undef")));
 
-  assertExpectedResults(projName, results, expResults, testExtConfig, undefined, params.title);
+  assertExpectedResults(projName, results, expectedResults, testExtConfig, undefined, params.title);
   assertExpectedFriendlyCmd(params, projUri, projName, testExtConfig);
 }
 
