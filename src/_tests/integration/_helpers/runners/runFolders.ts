@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import { RunProfilesSetting } from "../../../../config/settings";
 import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { uriId } from '../../../../common/helpers';
+import { getTestItems, uriId } from '../../../../common/helpers';
 import { services } from '../../../../common/services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
 import { Expectations, RunOptions, TestResult } from "../common";
@@ -36,7 +36,7 @@ export async function runFolders(projName: string, isDebugRun: boolean,
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-  const folderItems = getFolderItems(api.ctrl.items, projId);
+  const folderItems = getFolderItemsWithDescendents(api.ctrl.items, projId);
 
   // ACT
 
@@ -62,12 +62,12 @@ export async function runFolders(projName: string, isDebugRun: boolean,
     return;
   }
 
-  assertFriendlyCmdsForTogether(request, scenarios, expectedResults, projUri, projName, testExtConfig, runOptions);
-
+  const allTestItems = getTestItems(projId, api.ctrl.items);
+  assertExpectedFriendlyCmdsForTogether(request, allTestItems, projUri, projName, scenarios, testExtConfig, runOptions, expectedResults);
 }
 
 
-function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folderItem: FolderItem, expectedResults: TestResult[],
+function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folderItem: FolderItemWithDescedents, expectedResults: TestResult[],
   projUri: vscode.Uri, projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
@@ -87,7 +87,7 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
   expectedResultsFeaturesInFolder.forEach(expectedResult => {
 
     const qi = {
-      test: undefined,
+      test: {},
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
@@ -109,8 +109,10 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
 }
 
 
-function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios: vscode.TestItem[], expectedResults: TestResult[],
-  projUri: vscode.Uri, projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, allTestItems: vscode.TestItem[],
+  projUri: vscode.Uri, projName: string, scenarios: vscode.TestItem[],
+  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectedResults: TestResult[]) {
+
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
@@ -119,15 +121,15 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
 
   const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id, true) === exp.test_id));
 
+  // (use our expected results, not the request)
   const queueItems: QueueItem[] = [];
   for (const expResult of filteredExpectedResults) {
     const qi = {
-      test: {},
+      test: allTestItems.find(x => standardisePath(x.id) === expResult.test_id),
       scenario: { featureFileProjectRelativePath: expResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
     queueItems.push(qi);
   }
-
   const pipedWorkDirRelFolderPaths = getOptimisedFeaturePathsRegEx(pr, queueItems);
 
   const expectCmdOrderedIncludes = [
@@ -146,14 +148,14 @@ function assertFriendlyCmdsForTogether(request: vscode.TestRunRequest, scenarios
 }
 
 
-type FolderItem = {
+type FolderItemWithDescedents = {
   item: vscode.TestItem,
   descendents: vscode.TestItem[];
 }
 
-function getFolderItems(items: vscode.TestItemCollection, projId: string) {
+function getFolderItemsWithDescendents(items: vscode.TestItemCollection, projId: string) {
 
-  const folderItems: FolderItem[] = [];
+  const folderItems: FolderItemWithDescedents[] = [];
 
   items.forEach((item) => {
     if (item.id.startsWith(projId) && !item.id.endsWith(".feature")) {
@@ -161,13 +163,13 @@ function getFolderItems(items: vscode.TestItemCollection, projId: string) {
       if (item.children) {
         item.children.forEach(child => {
           descendents.push(child);
-          const childDescendents = getFolderItems(child.children, projId);
+          const childDescendents = getFolderItemsWithDescendents(child.children, projId);
           descendents.push(...childDescendents.map(x => x.item));
         });
       }
       folderItems.push({ item, descendents });
       if (item.children) {
-        const childFolderItems = getFolderItems(item.children, projId);
+        const childFolderItems = getFolderItemsWithDescendents(item.children, projId);
         folderItems.push(...childFolderItems);
       }
     }

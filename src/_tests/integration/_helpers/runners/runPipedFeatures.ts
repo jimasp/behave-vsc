@@ -96,6 +96,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
   const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
+  // (use our expected results, not the request)
   const queueItems: QueueItem[] = [];
   for (const expResult of expectedResults) {
     const qi = {
