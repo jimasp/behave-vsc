@@ -1,4 +1,4 @@
-Feature: f-basic
+Feature: f-basic2
 
    Scenario: run a successful test
       Given we have behave installed
