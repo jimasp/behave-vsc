@@ -38,14 +38,14 @@ suite(`project B suite`, () => {
     await testProjectRunner.runFeatureSet(noConfig, noRunOptions, expectations, true));
 
   test("runAllFolders (execFriendlyCmd)", async () =>
-    await testProjectRunner.runAllFolders(parallelConfig, noRunOptions, expectations, true));
-
-  test("runAllFolders (execFriendlyCmd)", async () =>
     await testProjectRunner.runAllFolders(noConfig, noRunOptions, expectations, true));
+
+  test("runAllFolders - parallel (execFriendlyCmd)", async () =>
+    await testProjectRunner.runAllFolders(parallelConfig, noRunOptions, expectations, true));
 
   // same tests run in multi.test.ts but with execFriendlyCmd=true:
 
-  test("runAl (execFriendlyCmd)", async () =>
+  test("runAll (execFriendlyCmd)", async () =>
     await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
   test("runAll - with behave.ini (execFriendlyCmd)", async () =>

@@ -75,12 +75,17 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
   const distinctFeaturePaths = [...new Set(filteredScenarioQueueItems.map(qi => qi.scenario.featureFileProjectRelativePath))];
 
   // sort the paths for consistency (testability)
-  distinctFeaturePaths.sort((a, b) => a.localeCompare(b));
-  selectedFolderPaths.sort((a, b) => a.localeCompare(b));
+  let featurePaths = distinctFeaturePaths.sort((a, b) => a.localeCompare(b));
+  let folderPaths = selectedFolderPaths.sort((a, b) => a.localeCompare(b));
+
+  if (pr.projSettings.projRelativeBehaveWorkingDirPath) {
+    featurePaths = featurePaths.map(x => projDirRelativePathToWorkDirRelativePath(pr, x));
+    folderPaths = folderPaths.map(x => projDirRelativePathToWorkDirRelativePath(pr, x));
+  }
 
   // concatenate the folder and feature paths
-  const result = selectedFolderPaths.map(x => x)
-    .concat(...distinctFeaturePaths.map(getRegEx))
+  const result = folderPaths.map(x => x)
+    .concat(...featurePaths.map(getRegEx))
     .join('|')
     .replaceAll("\\", "/");
 

@@ -307,7 +307,7 @@ function assertExpectedFriendlyCmd(params: Params, projUri: vscode.Uri, projName
   const expectCmdOrderedIncludes = [
     `cd `,
     `example-projects`,
-    `${projName}"`,
+    `${projName}`,
     `${workingFolder}`,
     `${envVarsString}`,
     `python`,

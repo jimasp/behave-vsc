@@ -135,7 +135,7 @@ function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, a
   const expectCmdOrderedIncludes = [
     `cd `,
     `example-projects`,
-    `${projName}"`,
+    `${projName}`,
     `${workingFolder}`,
     `${envVarsString}`,
     `python`,

@@ -120,7 +120,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
   const expectCmdOrderedIncludes = [
     `cd `,
     `example-projects`,
-    `${projName}"`,
+    `${projName}`,
     `${workingFolder}`,
     `${envVarsString}`,
     `python`,
