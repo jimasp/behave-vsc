@@ -1,16 +1,16 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { Configuration } from "../../../../config/configuration";
-import { IntegrationTestAPI, QueueItem } from "../../../../extension";
-import { ProjParseCounts } from "../../../../parsers/fileParser";
-import { TestWorkspaceConfig } from "../testWorkspaceConfig";
-import { Expectations, TestBehaveIni, TestResult, testGlobals } from "../common";
-import { services } from "../../../../common/services";
-import { ProjectSettings } from "../../../../config/settings";
-import { getLines, isFeatureFile, isStepsFile } from "../../../../common/helpers";
-import { featureFileStepRe } from "../../../../parsers/featureParser";
-import { funcRe } from "../../../../parsers/stepsParser";
-import { logStore } from "../../../runner";
+import { Configuration } from "../../../config/configuration";
+import { IntegrationTestAPI, QueueItem } from "../../../extension";
+import { ProjParseCounts } from "../../../parsers/fileParser";
+import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
+import { Expectations, TestBehaveIni, TestResult, testGlobals } from "../_helpers/common";
+import { services } from "../../../common/services";
+import { ProjectSettings } from "../../../config/settings";
+import { getLines, isFeatureFile, isStepsFile } from "../../../common/helpers";
+import { featureFileStepRe } from "../../../parsers/featureParser";
+import { funcRe } from "../../../parsers/stepsParser";
+import { logStore } from "../../runner";
 
 
 

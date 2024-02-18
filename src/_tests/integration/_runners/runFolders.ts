@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
-import { RunProfilesSetting } from "../../../../config/settings";
-import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { getTestItems, uriId } from '../../../../common/helpers';
-import { services } from '../../../../common/services';
+import { RunProfilesSetting } from "../../../config/settings";
+import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { getTestItems, uriId } from '../../../common/helpers';
+import { services } from '../../../common/services';
 import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions, TestResult } from "../common";
+import { Expectations, RunOptions, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
-import { logStore } from '../../../runner';
-import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
-import { QueueItem } from '../../../../extension';
+import { logStore } from '../../runner';
+import { getOptimisedFeaturePathsRegEx } from '../../../runners/helpers';
+import { QueueItem } from '../../../extension';
 
 
 

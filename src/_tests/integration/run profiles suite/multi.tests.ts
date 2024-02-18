@@ -3,7 +3,7 @@ import {
 	getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile,
 	getExpectedResultsForTag2RunProfile
 } from "./expectedResults";
-import { TestProjectRunner } from "../_helpers/runners/projectRunner";
+import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni } from "../_helpers/common";
 import { runOptions, wsConfig, expectations } from "./defaults";
 

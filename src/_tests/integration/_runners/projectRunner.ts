@@ -1,7 +1,7 @@
 import { runProject } from './runProject';
-import { TestWorkspaceConfig } from '../testWorkspaceConfig';
+import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { runScenarios } from './runScenarios';
-import { TestBehaveIni, Expectations, RunOptions } from '../common';
+import { TestBehaveIni, Expectations, RunOptions } from '../_helpers/common';
 import { runPipedFeatures } from './runPipedFeatures';
 import { runFolders } from './runFolders';
 import { runProjectASelections } from './runProjectASelections';

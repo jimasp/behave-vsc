@@ -4,15 +4,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
-import { IntegrationTestAPI } from '../../../../extension';
-import {
-	getUrisOfWkspFoldersWithFeatures,
-} from '../../../../common/helpers';
-import { RunOptions, testGlobals } from '../common';
-import { ProjectSettings, RunProfilesSetting } from '../../../../config/settings';
-import { TestWorkspaceConfig } from '../testWorkspaceConfig';
-import { getFriendlyEnvVars } from '../../../../runners/helpers';
-import { ProjRun } from '../../../../runners/testRunHandler';
+import { IntegrationTestAPI } from '../../../extension';
+import { getUrisOfWkspFoldersWithFeatures } from '../../../common/helpers';
+import { RunOptions, testGlobals } from '../_helpers/common';
+import { ProjectSettings, RunProfilesSetting } from '../../../config/settings';
+import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { getFriendlyEnvVars } from '../../../runners/helpers';
+import { ProjRun } from '../../../runners/testRunHandler';
 
 
 
