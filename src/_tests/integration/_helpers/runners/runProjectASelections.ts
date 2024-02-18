@@ -14,7 +14,12 @@ import { logStore } from '../../../runner';
 
 // SIMULATES: A USER CLICKING SELECTING VARIOUS LEVELS OF FOLDERS, FEATURES AND SCENARIOS IN THE TEST EXPLORER,
 // THEN CLICKING THE RUN/DEBUG BUTTON.
-// PURPOSE: more specific project A tests checking that the various regex patterns produced work with behave.
+// PURPOSE: more specific project A tests checking that the various regex patterns produced are:
+// (a) correct for the given selection, and 
+// (b) work with behave.
+// This is different from the other tests of this type because the expected log output is pre-determined in Params rather than 
+// created using the helper functions in the code under test, (i.e. it ALSO checks the produced regexs are correct, not just 
+// that they work with behave and produce the expected results.)
 export async function runProjectASelections(
   testExtConfig: TestWorkspaceConfig, expectations: Expectations): Promise<void> {
 

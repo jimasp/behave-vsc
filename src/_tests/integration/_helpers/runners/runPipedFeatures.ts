@@ -13,8 +13,9 @@ import { getOptimisedFeaturePathsRegEx } from '../../../../runners/helpers';
 
 
 
-// SIMULATES: A USER CLICKING SELECTING A SUBSET OF FEATURES IN THE TEST EXPLORER THEN CLICKING THE RUN/DEBUG BUTTON.
-// PURPOSE: to test that the piped features regex pattern works with behave.
+// SIMULATES: A USER CLICKING SELECTING A SUBSET OF FEATURES FROM EACH FOLDER IN THE TEST EXPLORER 
+// THEN CLICKING THE RUN/DEBUG BUTTON.
+// PURPOSE: to test that the piped features regex pattern cmd works with behave.
 export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
@@ -44,22 +45,30 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
   const allProjTestItems = getTestItems(projId, api.ctrl.items);
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
-  // skip one feature so we don't run the whole project
-  const skipFeature = allProjTestItems.find(item => item.id.endsWith(".feature"));
-  if (!skipFeature)
-    throw new Error("firstFeature not found");
-
-  const skippedFeatureId = skipFeature.id;
-  const skippedFeatureRelPath = standardisePath(skipFeature.id, true);
-  if (!skippedFeatureRelPath)
-    throw new Error("skippedFeatureRelPath was undefined");
-
+  // get any features that are not the sole feature in a folder
+  // (we don't want to run folders in this test)
+  const features = allProjTestItems.filter(item => item.id.endsWith(".feature")) ?? [];
+  const foldersIdsProcessed: string[] = [];
   const requestItems: vscode.TestItem[] = [];
-  for (const item of allProjTestItems) {
-    if (item.id.endsWith(".feature") && item.id !== skippedFeatureId)
-      requestItems.push(item);
+  for (const feat of features) {
+    if (feat.parent?.id === projId || feat.parent?.id === undefined) {
+      requestItems.push(feat);
+      continue;
+    }
+    const featSiblings = feat.parent.children;
+    if (featSiblings.size < 2)
+      continue;
+    if (foldersIdsProcessed.includes(feat.parent.id))
+      continue;
+    foldersIdsProcessed.push(feat.parent.id);
+    let i = 0;
+    for (const sib of featSiblings) {
+      if (i++ === 0) // skip the first feature so we don't run the whole folder
+        continue;
+      if (sib[0].endsWith(".feature"))
+        requestItems.push(sib[1]);
+    }
   }
-
 
   // ACT
 
@@ -71,24 +80,24 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
 
   const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
   assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunSize);
-  if (!isDebugRun)
-    assertExpectedFriendlyCmd(request, skippedFeatureRelPath, projUri, projName, expectedResults, testExtConfig, runOptions);
+
+  if (!isDebugRun) {
+    const expResults = expectedResults.filter(x => requestItems.find(r => x.test_id?.startsWith(standardisePath(r.id) ?? "undef")));
+    assertExpectedFriendlyCmd(request, projUri, projName, expResults, testExtConfig, runOptions);
+  }
 
 }
 
 
-function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, skippedFeatureRelPath: string,
-  projUri: vscode.Uri, projName: string, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
+  expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
   const tagsString = getExpectedTagsString(testExtConfig, runOptions);
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
   const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
-  const filteredExpectedResults = expectedResults.filter(x => !skippedFeatureRelPath.endsWith(x.scenario_featureFileRelativePath));
-
   const queueItems: QueueItem[] = [];
-  for (const expResult of filteredExpectedResults) {
+  for (const expResult of expectedResults) {
     const qi = {
       test: {},
       scenario: { featureFileProjectRelativePath: expResult.scenario_featureFileRelativePath }
