@@ -174,9 +174,10 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[], 
   let closestMatch = { log: '', failedOnInclude: '', highestIndex: 0, mismatchIndex: 0 };
   const projLogs = logStore.get().filter(x => x[0] === projUri.path).map(x => x[1]);
 
-  // we use an ordered includes array here rather than a regex, so that:
+  // we use an ordered includes array here rather than a regex, this is so that:
   // a) we can do a a direct string comparison vs getting caught up in regex escaping issues
-  // b) we have an easy way to get the closest match for the error message if there is no match
+  // b) we can easily see which portion (i.e. orderedInclude) it failed to match
+  // c) we have an easy way to get the closest matched log for the error message if there is no match
   const matchingLogs = projLogs.filter(x => {
     let lastIndex = -1;
     let includesIndex = 0;

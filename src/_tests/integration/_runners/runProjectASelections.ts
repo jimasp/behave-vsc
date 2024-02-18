@@ -44,7 +44,22 @@ export async function runProjectASelections(
 
   const parameters: Params[] = [
     {
-      title: '1 feature, should return 1 feature',
+      title: '1 scenario, should execute cmd with 1 scenario',
+      selection: ['example-projects/project A/behave tests/some tests/group1_features/basic.feature/run a successful test'],
+      expectedFeatureRegEx: 'behave tests/some tests/group1_features/basic.feature$',
+      expectedScenarioRegEx: '^run a successful test\\$',
+    },
+    {
+      title: '2 scenarios, should execute cmd with 2 scenarios',
+      selection: [
+        'example-projects/project A/behave tests/some tests/group1_features/basic.feature/run a successful test',
+        'example-projects/project A/behave tests/some tests/group1_features/basic.feature/run a failing test'
+      ],
+      expectedFeatureRegEx: 'behave tests/some tests/group1_features/basic.feature$',
+      expectedScenarioRegEx: '^run a failing test\\$|^run a successful test\\$',
+    },
+    {
+      title: '1 feature, should execute cmd with 1 feature',
       selection: ['example-projects/project A/behave tests/some tests/nested1/nested2/nested3/nested3.1.feature'],
       expectedFeatureRegEx: 'behave tests/some tests/nested1/nested2/nested3/nested3.1.feature$',
       expectedScenarioRegEx: '',
@@ -56,6 +71,16 @@ export async function runProjectASelections(
         'example-projects/project A/behave tests/some tests/nested1/nested2/nested3/nested3.2.feature'
       ],
       expectedFeatureRegEx: 'behave tests/some tests/nested1/nested2/nested3/nested3.1.feature$|behave tests/some tests/nested1/nested2/nested3/nested3.2.feature$',
+      expectedScenarioRegEx: "",
+    },
+    {
+      title: 'all features selected in top-level folder, should execute cmd with features (because nested folders are not selected)',
+      selection: [
+        'example-projects/project A/behave tests/some tests/nested1/nested1.1.feature',
+        'example-projects/project A/behave tests/some tests/nested1/nested1.2.feature',
+        'example-projects/project A/behave tests/some tests/nested1/nested1.3.feature',
+      ],
+      expectedFeatureRegEx: 'behave tests/some tests/nested1/nested1.1.feature$|behave tests/some tests/nested1/nested1.2.feature$|behave tests/some tests/nested1/nested1.3.feature$',
       expectedScenarioRegEx: "",
     },
     {
@@ -169,7 +194,12 @@ export async function runProjectASelections(
       expectedFeatureRegEx: 'behave tests/some tests/nested1/',
       expectedScenarioRegEx: "",
     },
-
+    {
+      title: 'regex chars 1',
+      selection: ['example-projects/project A/behave tests/some tests/special_characters.feature/run a successful rx scenario = "'],
+      expectedFeatureRegEx: 'behave tests/some tests/special_characters.feature$',
+      expectedScenarioRegEx: '^run a successful rx scenario = \\"\\$',
+    },
   ];
 
   for (const params of parameters) {
@@ -187,11 +217,15 @@ async function runSelection(params: Params, consoleName: string, projUri: vscode
   const requestItems: vscode.TestItem[] = [];
   logStore.clearProjLogs(projUri);
 
-  const absPaths = params.selection.map(x => path.join(__dirname, "../../../..", x).replace("/out/", "/"));
-  for (const ap of absPaths) {
-    const id = uriId(vscode.Uri.file(ap));
-    requestItems.push(...allTestItems.filter(item => item.id === id));
-  }
+  const selectedTestIds = params.selection.map(x => {
+    const split = x.split(".feature");
+    const featurePath = split[0] + ".feature";
+    const slashScenarioName = split[1];
+    const absPath = path.join(__dirname, "../../../..", featurePath).replace("/out/", "/");
+    return uriId(vscode.Uri.file(absPath)) + slashScenarioName;
+  });
+
+  requestItems.push(...allTestItems.filter(item => selectedTestIds.includes(item.id)));
 
   // ACT AND ASSERT
 
@@ -225,7 +259,7 @@ function assertExpectedFriendlyCmd(params: Params, projUri: vscode.Uri, projName
 
   let expScenarioRegExWithOptionChar = "";
   if (params.expectedScenarioRegEx !== "")
-    expScenarioRegExWithOptionChar = `-n ${params.expectedScenarioRegEx}`;
+    expScenarioRegExWithOptionChar = `-n "${params.expectedScenarioRegEx}"`;
 
   const expectCmdOrderedIncludes = [
     `cd `,
