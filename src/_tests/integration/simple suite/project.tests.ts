@@ -3,7 +3,7 @@ import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers
 import { behaveIni, expectations } from "./defaults";
 
 
-suite(`simple suite: nonMulti`, () => {
+suite(`simple suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("simple");
 
   test("debugAll", async () =>

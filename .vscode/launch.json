@@ -233,7 +233,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/simple suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/simple suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -263,7 +263,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/working dir",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -278,7 +278,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/run profiles",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -293,7 +293,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 1",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 1 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 1 suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -308,7 +308,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 2",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 2 suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 2 suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -323,7 +323,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/higher steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/higher steps folder suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/higher steps folder suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -338,7 +338,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project A",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project A suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project A suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -353,7 +353,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project B suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project B suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -368,7 +368,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/multiple top-level features folders",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiple top-level features folders suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiple top-level features folders suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -383,7 +383,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/imported steps",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/imported steps suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/imported steps suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -398,7 +398,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/handle bad import",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/handle bad import suite/index"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/handle bad import suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

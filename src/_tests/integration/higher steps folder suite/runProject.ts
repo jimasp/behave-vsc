@@ -1,5 +1,6 @@
 import { runner } from "../../runner";
 
 export function run(): Promise<void> {
-	return runner("**/imported steps suite/*.tests.js");
+  return runner("**/higher steps folder suite/*.tests.js");
 }
+

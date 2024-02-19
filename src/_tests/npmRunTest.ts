@@ -48,6 +48,8 @@ async function npmRunTest() {
     let launchArgs = [""];
     let extensionTestsPath = "";
 
+    // RATHER THAN RUNNING IN ALPHABETICAL ORDER, WE'LL TRY TO RUN IN A FAIL-FAST ORDER
+
     launchArgs = ["unit tests (no workspace)"]
     extensionTestsPath = path.resolve(__dirname, './unit/index');
     await runTests({
@@ -58,7 +60,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/simple"]
-    extensionTestsPath = path.resolve(__dirname, './integration/simple suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/simple suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -67,7 +69,16 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/project A"]
-    extensionTestsPath = path.resolve(__dirname, './integration/project A suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/project A suite/runProject');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
+    launchArgs = ["example-projects/working dir"]
+    extensionTestsPath = path.resolve(__dirname, './integration/working dir suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -85,7 +96,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/sibling steps folder 1"];
-    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 1 suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 1 suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -94,7 +105,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/sibling steps folder 2"];
-    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 2 suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 2 suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -103,7 +114,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/higher steps folder"];
-    extensionTestsPath = path.resolve(__dirname, './integration/higher steps folder suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/higher steps folder suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -112,7 +123,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/imported steps"];
-    extensionTestsPath = path.resolve(__dirname, './integration/imported steps suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/imported steps suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -121,7 +132,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/run profiles"];
-    extensionTestsPath = path.resolve(__dirname, './integration/run profiles suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/run profiles suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -130,7 +141,7 @@ async function npmRunTest() {
     });
 
     launchArgs = ["example-projects/project B"]
-    extensionTestsPath = path.resolve(__dirname, './integration/project B suite/index');
+    extensionTestsPath = path.resolve(__dirname, './integration/project B suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,

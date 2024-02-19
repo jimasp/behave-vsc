@@ -3,9 +3,6 @@ import { noBehaveIni, noRunOptions } from "../_helpers/common";
 import { behaveIniFullPathsSetting, behaveIniWithRelPathsSetting, expectationsWithBehaveIni, expectationsWithoutBehaveIni, wsConfig, wsParallelConfig } from "./defaults";
 
 
-// THIS FILE CONTAINS TESTS THAT WE WANT TO RUN FROM THE MULTIROOT SUITE ../multi-root suite/index.ts (as well as from ./index.ts)
-// i.e. these are tests we want to run in parallel with other projects in the multiroot workspace
-
 
 suite(`working dir suite`, function () {
 
