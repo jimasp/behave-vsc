@@ -528,12 +528,8 @@ export class FileParser {
         if (parent)
           current = parent.children.get(folderTestItemId);
 
-        if (!current) {
-          // TODO: remove after testing
-          // const allTestItems = getTestItems(ps.id, controller.items);
-          // current = allTestItems.find(item => item.id === folderTestItemId);
+        if (!current)
           current = controller.items.get(folderTestItemId);
-        }
 
         if (!current) {
           current = controller.createTestItem(folderTestItemId, folderName);

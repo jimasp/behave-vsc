@@ -1,6 +1,6 @@
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noConfig, parallelConfig, noRunOptions } from "../_helpers/common";
-import { behaveIni, expectations } from "./defaults";
+import { behaveIni, expectations } from "./config";
 
 
 suite(`sibling steps folder 2 suite`, () => {

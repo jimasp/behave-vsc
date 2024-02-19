@@ -1,7 +1,7 @@
 import { getExpectedResultsForTag1RunProfile } from "./expectedResults";
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni } from "../_helpers/common";
-import { wsConfig, expectations, runOptions, } from "./defaults";
+import { wsConfig, expectations, runOptions, } from "./config";
 
 
 

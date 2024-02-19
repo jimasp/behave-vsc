@@ -5,7 +5,7 @@ import {
 } from "./expectedResults";
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni } from "../_helpers/common";
-import { runOptions, wsConfig, expectations } from "./defaults";
+import { runOptions, wsConfig, expectations } from "./config";
 
 
 suite(`run profiles suite`, () => {

@@ -1,6 +1,6 @@
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni, noConfig, noRunOptions } from "../_helpers/common";
-import { behaveIni, expectations } from "./defaults";
+import { behaveIni, expectations } from "./config";
 
 suite(`higher steps folder suite`, () => {
 	const testProjectRunner = new TestProjectRunner("higher steps folder");

@@ -1,6 +1,6 @@
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni, noRunOptions } from "../_helpers/common";
-import { wsConfig, expectations, behaveIni } from "./defaults";
+import { wsConfig, expectations, behaveIni } from "./config";
 
 suite(`imported steps suite`, () => {
 	const testProjectRunner = new TestProjectRunner("imported steps");
