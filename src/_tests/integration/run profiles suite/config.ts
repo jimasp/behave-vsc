@@ -54,6 +54,8 @@ export const expectations: Expectations = {
   expectedProjRelativeFeatureFolders: ["features"],
   expectedProjRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
   getExpectedCountsFunc: getExpectedCounts,
+  // default, replaced in tests as needed to vary results as per different tag combos 
+  // (there are several expectedResults functions in expectedResults.ts)
   getExpectedResultsFunc: getExpectedResultsForAProfileWithoutTags,
 }
 

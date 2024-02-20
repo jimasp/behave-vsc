@@ -38,6 +38,9 @@ export async function runFolders(projName: string, isDebugRun: boolean,
   const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
   const folderItems = getFolderItemsWithDescendents(api.ctrl.items, projId);
 
+  if (folderItems.length === 0)
+    throw new Error(`No folders found in test nodes for project "${projName}"`);
+
   // ACT
 
   console.log(`${consoleName}: calling runHandler to run folders...`);

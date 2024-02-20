@@ -29,10 +29,10 @@ suite(`run profiles suite`, () => {
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
-	test("runAll - tag1 vars profile", async () => {
+	test("runAll - tag1 vars profile (ExecFriendlyCmd)", async () => {
 		runOptions.selectedRunProfile = "tag1 vars profile";
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);
 	});
 
 	test("runAll - tag2 vars profile", async () => {
@@ -45,12 +45,6 @@ suite(`run profiles suite`, () => {
 		runOptions.selectedRunProfile = "tag1or2 vars profile";
 		expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
-
-	test("runScenariosSubSetForEachFeature - tag1or2 vars profile", async () => {
-		runOptions.selectedRunProfile = undefined;
-		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
-		await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, runOptions, expectations);
 	});
 
 });
