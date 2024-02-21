@@ -1,5 +1,11 @@
 Feature: Tags and Vars
 
+   @tag1 @tag2 @qu'oted"tag
+   Scenario: @tag1 or @tag2 or @qu'oted"tag - success - match check
+      Given we have run profiles
+      Then envvars are as expected
+      And tags are as expected
+
    @tag1 @tag2
    Scenario: @tag1 or @tag2 - success - stage check
       Given we have behave installed
@@ -79,6 +85,4 @@ Feature: Tags and Vars
       When envvar var1 is set to 'ENV-var1'
       And envvar var3 is set to 'ENV-var3'
       Then we will see the result   
-
-
 

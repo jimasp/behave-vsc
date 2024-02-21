@@ -2,6 +2,97 @@ import os
 
 from behave import *
 
+@given("we have run profiles")
+def installed(context):
+    pass
+   
+@then("envvars are as expected")
+def profile_vs_envvar_check(context):
+    profile = os.environ.get("profile")
+
+    assert os.environ.get("var3") == "ENV-var3"
+    
+    def get_expected_env_vars(value):
+        return {
+            None: {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None
+            },
+            "stage2_profile":  {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": "stage2",
+                "qu'oted\"env": None
+            },
+            "tag1_profile": {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None         
+            },
+            "tag1_vars_profile": {
+                "var1": "TAG1-var1",
+                "var2": "TAG1-var2",
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None         
+            },
+            "tag2_vars_profile": {
+                "var1": "TAG2-var1",
+                "var2": "TAG2-var2",
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None         
+            },
+            "tag1or2_vars_profile": {
+                "var1": "TAG1_OR_2-var1",
+                "var2": "TAG1_OR_2-var2",
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None       
+            },
+            "qu'oted\"tag_profile": {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None
+            },
+            "qu'oted\"env_profile": {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": "v'al\"ue"
+            }
+               
+        }.get(value, "default")        
+
+    assert get_expected_env_vars(profile) == {
+        "var1": os.environ.get("var1"),
+        "var2": os.environ.get("var2"),
+        "BEHAVE_STAGE": os.environ.get("BEHAVE_STAGE"),
+        "qu'oted\"env": os.environ.get("qu'oted\"env")
+    }
+    
+
+@then("tags are as expected")
+def profile_vs_tags_check(context):
+    profile = os.environ.get("profile")
+    tags = context._config.tags.ands
+    
+    def get_expected_tags(value):
+        return {
+            None: [],
+            "stage2_profile": [],
+            "tag1_profile": [["tag1"]],
+            "tag1_vars_profile": [["tag1"]],
+            "tag2_vars_profile": [["tag2"]],
+            "tag1or2_vars_profile": [["tag1", "tag2"]],
+            "qu'oted\"env_profile": [],
+            "qu'oted\"tag_profile": [["qu'oted\"tag"]],
+        }.get(value, "default")    
+       
+    assert tags == get_expected_tags(profile)
+
+
 @given("we have behave installed")
 def installed(context):
     pass
