@@ -4,9 +4,9 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResultsForTag1RunProfile().length;
   return {
-    tests: { nodeCount: 14, testCount: testCount },
+    tests: { nodeCount: 15, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 3,
-    stepFileStepsExceptCommentedOut: 8, featureFileStepsExceptCommentedOut: 44, stepMappings: 44
+    stepFileStepsExceptCommentedOut: 11, featureFileStepsExceptCommentedOut: 47, stepMappings: 47
   };
 }
 
@@ -222,6 +222,22 @@ export const getExpectedResultsForAProfileWithoutTags = (): TestResult[] => {
       test_label: 'untagged - success - envvar checks',
       test_parent: '.../run profiles/features/tags_and_vars.feature',
       test_uri: '.../run profiles/features/tags_and_vars.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/features/tags_and_vars.feature/@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_label: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_parent: '.../run profiles/features/tags_and_vars.feature',
+      test_uri: '.../run profiles/features/tags_and_vars.feature',
     }),
 
   ];
@@ -444,6 +460,22 @@ export const getExpectedResultsForTag1RunProfile = (): TestResult[] => {
       test_uri: '.../run profiles/features/tags_and_vars.feature'
     }),
 
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/features/tags_and_vars.feature/@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_label: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_parent: '.../run profiles/features/tags_and_vars.feature',
+      test_uri: '.../run profiles/features/tags_and_vars.feature',
+    }),
+
   ];
 
 
@@ -664,6 +696,22 @@ export const getExpectedResultsForTag2RunProfile = (): TestResult[] => {
       test_uri: '.../run profiles/features/tags_and_vars.feature'
     }),
 
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/features/tags_and_vars.feature/@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_label: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_parent: '.../run profiles/features/tags_and_vars.feature',
+      test_uri: '.../run profiles/features/tags_and_vars.feature',
+    }),
+
   ];
 
 
@@ -882,6 +930,22 @@ export const getExpectedResultsForTag1Or2RunProfile = (): TestResult[] => {
       test_label: 'untagged - success - envvar checks',
       test_parent: '.../run profiles/features/tags_and_vars.feature',
       test_uri: '.../run profiles/features/tags_and_vars.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/tags_and_vars.feature',
+      scenario_featureName: 'Tags and Vars',
+      scenario_getLabel: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../run profiles/features/tags_and_vars.feature/@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_label: '@tag1 or @tag2 or @qu\'oted"tag - success - match check',
+      test_parent: '.../run profiles/features/tags_and_vars.feature',
+      test_uri: '.../run profiles/features/tags_and_vars.feature',
     }),
 
   ];

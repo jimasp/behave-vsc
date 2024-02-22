@@ -14,14 +14,19 @@ export const wsConfig = new TestWorkspaceConfig({
   runProfiles: {
     "stage2 profile": {
       "env": {
+        "profile": "stage2_profile",
         "BEHAVE_STAGE": "stage2"
       },
     },
     "tag1 profile": {
+      "env": {
+        "profile": "tag1_profile",
+      },
       "tagExpression": "@tag1",
     },
     "tag1 vars profile": {
       "env": {
+        "profile": "tag1_vars_profile",
         "var1": "TAG1-var1",
         "var2": "TAG1-var2"
       },
@@ -29,6 +34,7 @@ export const wsConfig = new TestWorkspaceConfig({
     },
     "tag2 vars profile": {
       "env": {
+        "profile": "tag2_vars_profile",
         "var1": "TAG2-var1",
         "var2": "TAG2-var2"
       },
@@ -36,13 +42,27 @@ export const wsConfig = new TestWorkspaceConfig({
     },
     "tag1or2 vars profile": {
       "env": {
+        "profile": "tag1or2_vars_profile",
         "var1": "TAG1_OR_2-var1",
         "var2": "TAG1_OR_2-var2"
       },
       "tagExpression": "@tag1,@tag2",
     },
+    "qu'oted\"tag profile": {
+      "env": {
+        "profile": "qu'oted\"tag_profile",
+      },
+      "tagExpression": "@qu'oted\"tag",
+    },
+    "qu'oted\"env profile": {
+      "env": {
+        "profile": "qu'oted\"env_profile",
+        "qu'oted\"env": "v'al\"ue"
+      },
+    },
   }
 });
+
 
 export const runOptions: RunOptions = {
   selectedRunProfile: undefined
