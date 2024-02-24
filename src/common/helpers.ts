@@ -214,19 +214,7 @@ export const isFeatureFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
 export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
-  if (fileUri.scheme !== "file")
-    return false;
-
-  const lcPath = fileUri.path.toLowerCase();
-  if (!lcPath.endsWith(".py"))
-    return false;
-
-  // as per behave, ignore .py files that are not in in known steps folder locations
-  const ps = await getProjectSettingsForFile(fileUri);
-  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}`)))
-    return false;
-
-  // check if the path matches a step library setting path AND regex string
+  // function to get the matching steps library dictionary entry for the given relative path
   const getStepLibraryMatch = (ps: ProjectSettings, relPath: string) => {
     let stepLibMatch: StepImport | null = null;
     let currentMatchLen = 0, lenPath = 0;
@@ -241,13 +229,34 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
     return stepLibMatch;
   }
 
-  if (!/.*\/steps\/.*/.test(lcPath)) {
-    const projSettings = await getProjectSettingsForFile(fileUri);
-    const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
-    const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
-    if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
-      return false;
-  }
+  if (fileUri.scheme !== "file")
+    return false;
+
+  const lcPath = fileUri.path.toLowerCase();
+  if (!lcPath.endsWith(".py"))
+    return false;
+
+  // as per behave, ignore .py files that are not in in known steps folder locations
+  const ps = await getProjectSettingsForFile(fileUri);
+
+  // if the file path is not within any of the projRelativeStepsFolders then it's not a steps file
+  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}/`)))
+    return false;
+
+  // standard "/steps/" folder match
+  if (/.*\/steps\/.*/.test(lcPath))
+    return true;
+
+  // if the file path does is not contain "/steps/" and we got this far, 
+  // then this must be a steps library folder,
+  // (steps library folders are always included in projRelativeStepsFolders)
+  const projSettings = await getProjectSettingsForFile(fileUri);
+  const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
+  const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
+
+  // check if it matches the regex
+  if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
+    return false;
 
   return true;
 }

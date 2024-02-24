@@ -133,28 +133,28 @@ export class Logger {
     }
 
 
-    let winText = text;
+    let windowText = text;
     if (projUri) {
-      // note - don't use config.projectSettings here (can be an infinite loop as projectSettings is a get() which can itself log)
+      // NOTE: don't use services.config.projectSettings here (infinite loop as projectSettings calls this function during construction)
       const wskpFolder = vscode.workspace.getWorkspaceFolder(projUri);
       if (wskpFolder) {
         const projName = wskpFolder?.name;
-        winText = `${projName} project: ${text}`;
+        windowText = `${projName} project: ${text}`;
       }
     }
 
-    if (winText.length > 512)
-      winText = text.substring(0, 512) + "...";
+    if (windowText.length > 512)
+      windowText = text.substring(0, 512) + "...";
 
     switch (logType) {
       case LogType.info:
-        vscode.window.showInformationMessage(winText);
+        vscode.window.showInformationMessage(windowText);
         break;
       case LogType.warn:
-        vscode.window.showWarningMessage(winText, "OK");
+        vscode.window.showWarningMessage(windowText, "OK");
         break;
       case LogType.error:
-        vscode.window.showErrorMessage(winText, "OK");
+        vscode.window.showErrorMessage(windowText, "OK");
         break;
     }
 

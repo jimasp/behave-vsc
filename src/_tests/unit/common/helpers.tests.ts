@@ -3,10 +3,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
+import * as helpers from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath, getOptimisedFeatureParsingPaths, isExcludedPath } from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
 import { TestWorkspaceConfig } from '../../integration/_helpers/testWorkspaceConfig';
+import {
+  findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath,
+  getOptimisedFeatureParsingPaths, isExcludedPath, isStepsFile
+} from '../../../common/helpers';
 
 
 suite("isExcludedPath", () => {
@@ -401,6 +405,82 @@ suite("getFeatureNodePath", () => {
       assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
     });
   }
+
+
+});
+
+
+
+suite('isStepsFile', () => {
+  test('should return false for non-file URIs', async () => {
+    const uri = vscode.Uri.parse('http://example.com');
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, false);
+  });
+
+  test('should return false for non-Python files', async () => {
+    const uri = vscode.Uri.file('/path/to/file.feature');
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, false);
+  });
+
+  test('should return false for files outside of projRelativeStepsFolders', async () => {
+    const uri = vscode.Uri.file('/path/to/project/steps/step_file.py');
+    const getProjectSettingsForFileStub = sinon.stub(helpers, 'getProjectSettingsForFile').resolves({
+      uri: vscode.Uri.file('/path/to/project'),
+      projRelativeStepsFolders: ['notsteps'],
+      importedSteps: [],
+    } as unknown as ProjectSettings);
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, false);
+    getProjectSettingsForFileStub.restore();
+  });
+
+  test('should return false for python files not in "steps" and matching importedSteps setting folder but not regex', async () => {
+    const uri = vscode.Uri.file('/path/to/project/my_steps_lib/step_file.py');
+    const getProjectSettingsForFileStub = sinon.stub(helpers, 'getProjectSettingsForFile').resolves({
+      uri: vscode.Uri.file('/path/to/project'),
+      projRelativeStepsFolders: ['steps', 'my_steps_lib'], // (importedSteps folders are always included in projRelativeStepsFolders)
+      importedSteps: [
+        {
+          relativePath: 'my_steps_lib',
+          stepFilesRx: 'step_filex\\.py',
+        },
+      ],
+    } as unknown as ProjectSettings);
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, false);
+    getProjectSettingsForFileStub.restore();
+  });
+
+  test('should return true for python files in a "steps" folder', async () => {
+    const uri = vscode.Uri.file('/path/to/project/steps/step_file.py');
+    const getProjectSettingsForFileStub = sinon.stub(helpers, 'getProjectSettingsForFile').resolves({
+      uri: vscode.Uri.file('/path/to/project'),
+      projRelativeStepsFolders: ['steps'],
+      importedSteps: [],
+    } as unknown as ProjectSettings);
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, true);
+    getProjectSettingsForFileStub.restore();
+  });
+
+  test('should return true for python files not in "steps" but matches step library settings regex', async () => {
+    const uri = vscode.Uri.file('/path/to/project/my_steps_lib/step_file.py');
+    const getProjectSettingsForFileStub = sinon.stub(helpers, 'getProjectSettingsForFile').resolves({
+      uri: vscode.Uri.file('/path/to/project'),
+      projRelativeStepsFolders: ['steps', 'my_steps_lib'], // (importedSteps folders are always included in projRelativeStepsFolders)
+      importedSteps: [
+        {
+          relativePath: 'my_steps_lib',
+          stepFilesRx: 'step_file\\.py',
+        },
+      ],
+    } as unknown as ProjectSettings);
+    const result = await isStepsFile(uri);
+    assert.strictEqual(result, true);
+    getProjectSettingsForFileStub.restore();
+  });
 
 
 });

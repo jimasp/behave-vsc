@@ -111,9 +111,10 @@ export class ProjectSettings {
   public static async create(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings):
     Promise<ProjectSettings> {
 
+    // lightweight construction and settings.json validation
     const ps = new ProjectSettings(projUri, projConfig);
 
-    // do "real work" on filesystem
+    // now do "real work" on filesystem to get path properties
     const paths = await getPaths(ps);
     if (!paths) {
       // most likely behave config "paths" is misconfigured, 
