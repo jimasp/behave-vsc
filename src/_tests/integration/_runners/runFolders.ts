@@ -4,7 +4,7 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../runner';
@@ -27,9 +27,6 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
 
-  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
@@ -37,40 +34,49 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
-  console.log(`${consoleName}: calling configurationChangedHandler`);
-  await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-  const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-  const folderItems = getFolderItemsWithDescendents(api.ctrl.items, projId);
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
-  if (folderItems.length === 0)
-    throw new Error(`No folders found in test nodes for project "${projName}"`);
+  try {
 
-  // ACT
+    console.log(`${consoleName}: calling configurationChangedHandler`);
+    await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
+    const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
+    const folderItems = getFolderItemsWithDescendents(api.ctrl.items, projId);
 
-  console.log(`${consoleName}: calling runHandler to run folders...`);
-  const requestItems = folderItems.map(x => x.item);
-  const request = new vscode.TestRunRequest(requestItems);
-  const results = await api.runHandler(isDebugRun, request, runProfile);
+    if (folderItems.length === 0)
+      throw new Error(`No folders found in test nodes for project "${projName}"`);
 
-  // ASSERT
+    // ACT
 
-  const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
-  const expectedTestRunCount = scenarios.length;
-  assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunCount);
+    console.log(`${consoleName}: calling runHandler to run folders...`);
+    const requestItems = folderItems.map(x => x.item);
+    const request = new vscode.TestRunRequest(requestItems);
+    const results = await api.runHandler(isDebugRun, request, runProfile);
 
-  if (isDebugRun)
-    return;
+    // ASSERT
 
-  if (testExtConfig.runParallel) {
-    // run parallel will always run features in parallel (not folders)
-    for (const folder of folderItems) {
-      assertExpectedFriendlyCmdsForParallel(request, folder, expectedResults, projUri, projName, testExtConfig, runOptions);
+    const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
+    const expectedTestRunCount = scenarios.length;
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunCount);
+
+    if (isDebugRun)
+      return;
+
+    if (testExtConfig.runParallel) {
+      // run parallel will always run features in parallel (not folders)
+      for (const folder of folderItems) {
+        assertExpectedFriendlyCmdsForParallel(request, folder, expectedResults, projUri, projName, testExtConfig, runOptions);
+      }
+      return;
     }
-    return;
-  }
 
-  const allTestItems = getTestItems(projId, api.ctrl.items);
-  assertExpectedFriendlyCmdsForTogether(request, allTestItems, projUri, projName, scenarios, testExtConfig, runOptions, expectedResults);
+    const allTestItems = getTestItems(projId, api.ctrl.items);
+    assertExpectedFriendlyCmdsForTogether(request, allTestItems, projUri, projName, scenarios, testExtConfig, runOptions, expectedResults);
+  }
+  finally {
+    await restoreBehaveIni(consoleName, workDirUri);
+  }
 }
 
 

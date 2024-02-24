@@ -4,7 +4,7 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
@@ -32,9 +32,6 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
 
-  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
@@ -42,48 +39,58 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
-  console.log(`${consoleName}: calling configurationChangedHandler`);
-  await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-  const allProjTestItems = getTestItems(projId, api.ctrl.items);
-  const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
-  const featureTests = allProjTestItems.filter((item) => {
-    return item.id.endsWith(".feature");
-  });
+  try {
 
-  console.log(`${consoleName}: calling runHandler to run piped scenarios...`);
-  const requestItems: vscode.TestItem[] = [];
-  const featureTestsInRequest: vscode.TestItem[] = [];
-  for (const featureTest of featureTests) {
-    // we're only interested in features with more than 1 scenario in this function
-    if (featureTest.children.size < 2)
-      continue;
+    console.log(`${consoleName}: calling configurationChangedHandler`);
+    await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
+    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
-    let i = 0;
-    const scenarios = [...featureTest.children].sort((a, b) => a[0].localeCompare(b[0]));
-    for (const scenarioTest of scenarios) {
-      // skip the first scenario, so that we get a piped list of scenario 
-      // names (a feature with a single scenario would just run the whole feature)
-      if (i++ === 0)
+    const featureTests = allProjTestItems.filter((item) => {
+      return item.id.endsWith(".feature");
+    });
+
+    console.log(`${consoleName}: calling runHandler to run piped scenarios...`);
+    const requestItems: vscode.TestItem[] = [];
+    const featureTestsInRequest: vscode.TestItem[] = [];
+    for (const featureTest of featureTests) {
+      // we're only interested in features with more than 1 scenario in this function
+      if (featureTest.children.size < 2)
         continue;
-      requestItems.push(scenarioTest[1]);
-      featureTestsInRequest.push(featureTest);
+
+      let i = 0;
+      const scenarios = [...featureTest.children].sort((a, b) => a[0].localeCompare(b[0]));
+      for (const scenarioTest of scenarios) {
+        // skip the first scenario, so that we get a piped list of scenario 
+        // names (a feature with a single scenario would just run the whole feature)
+        if (i++ === 0)
+          continue;
+        requestItems.push(scenarioTest[1]);
+        featureTestsInRequest.push(featureTest);
+      }
     }
+
+
+    // ACT
+
+    const request = new vscode.TestRunRequest(requestItems);
+    const results = await api.runHandler(isDebugRun, request, runProfile);
+
+    // ASSERT  
+
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, requestItems.length);
+    if (!isDebugRun) {
+      for (const featureTest of featureTestsInRequest) {
+        assertExpectedFriendlyCmd(request, projUri, projName, featureTest, expectedResults, testExtConfig, runOptions);
+      }
+    }
+
   }
-
-
-  // ACT
-
-  const request = new vscode.TestRunRequest(requestItems);
-  const results = await api.runHandler(isDebugRun, request, runProfile);
-
-  // ASSERT  
-
-  assertExpectedResults(projName, results, expectedResults, testExtConfig, requestItems.length);
-  if (!isDebugRun) {
-    for (const featureTest of featureTestsInRequest) {
-      assertExpectedFriendlyCmd(request, projUri, projName, featureTest, expectedResults, testExtConfig, runOptions);
-    }
+  finally {
+    await restoreBehaveIni(consoleName, workDirUri);
   }
 }
 

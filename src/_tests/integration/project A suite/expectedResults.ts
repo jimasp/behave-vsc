@@ -5,10 +5,10 @@ import { TestResult } from "../_helpers/common"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 93, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 27, stepFilesExceptEmptyOrCommentedOut: 5,
+    tests: { nodeCount: 91, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 26, stepFilesExceptEmptyOrCommentedOut: 5,
     stepFileStepsExceptCommentedOut: 16,
-    featureFileStepsExceptCommentedOut: 170, stepMappings: 169 // (1 diff = "When we have a missing step")
+    featureFileStepsExceptCommentedOut: 167, stepMappings: 166 // (1 diff = "When we have a missing step")
   };
 }
 
@@ -174,22 +174,6 @@ export function getExpectedResults(): TestResult[] {
       test_label: 'scenario that will be skipped',
       test_parent: '.../project A/behave tests/some tests/group2_features/skipped.feature',
       test_uri: '.../project A/behave tests/some tests/group2_features/skipped.feature'
-    }),
-
-    new TestResult({
-      scenario_featureName: 'Containing /[.*+?^${}()|[\\]\\ regex chars',
-      scenario_featureFileRelativePath: 'behave tests/some tests/group2_features/contains_regexchars.feature',
-      scenario_getLabel: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../project A/behave tests/some tests/group2_features/contains_regexchars.feature/run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_label: 'run a successful scenario containing a characters test /[.*+?^${}()|[\\]\\',
-      test_parent: '.../project A/behave tests/some tests/group2_features/contains_regexchars.feature',
-      test_uri: '.../project A/behave tests/some tests/group2_features/contains_regexchars.feature'
     }),
 
     new TestResult({

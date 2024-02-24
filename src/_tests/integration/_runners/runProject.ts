@@ -60,9 +60,6 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   // get the extension api
   const api = await checkExtensionIsReady();
 
-  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
   // if execFriendlyCmd=true, then in runBehaveInstance() in the code under test, we will use
   // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
   // (outside of integration tests, cp.spawn is always used)
@@ -72,6 +69,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   let runProfile = undefined;
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   try {
 

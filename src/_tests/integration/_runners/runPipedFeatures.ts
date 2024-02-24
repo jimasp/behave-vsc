@@ -4,7 +4,7 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
@@ -34,9 +34,6 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
 
-  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
@@ -44,50 +41,59 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
-  console.log(`${consoleName}: calling configurationChangedHandler`);
-  await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-  const allProjTestItems = getTestItems(projId, api.ctrl.items);
-  const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
-  // get any features that are not the sole feature in a folder
-  // (we don't want to run folders in this test)
-  const features = allProjTestItems.filter(item => item.id.endsWith(".feature")) ?? [];
-  const foldersIdsProcessed: string[] = [];
-  const requestItems: vscode.TestItem[] = [];
-  for (const feat of features) {
-    if (feat.parent?.id === projId || feat.parent?.id === undefined) {
-      requestItems.push(feat);
-      continue;
-    }
-    const featSiblings = feat.parent.children;
-    if (featSiblings.size < 2)
-      continue;
-    if (foldersIdsProcessed.includes(feat.parent.id))
-      continue;
-    foldersIdsProcessed.push(feat.parent.id);
-    let i = 0;
-    for (const sib of featSiblings) {
-      if (i++ === 0) // skip the first feature so we don't run the whole folder
+  try {
+
+    console.log(`${consoleName}: calling configurationChangedHandler`);
+    await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
+    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
+
+    // get any features that are not the sole feature in a folder
+    // (we don't want to run folders in this test)
+    const features = allProjTestItems.filter(item => item.id.endsWith(".feature")) ?? [];
+    const foldersIdsProcessed: string[] = [];
+    const requestItems: vscode.TestItem[] = [];
+    for (const feat of features) {
+      if (feat.parent?.id === projId || feat.parent?.id === undefined) {
+        requestItems.push(feat);
         continue;
-      if (sib[0].endsWith(".feature"))
-        requestItems.push(sib[1]);
+      }
+      const featSiblings = feat.parent.children;
+      if (featSiblings.size < 2)
+        continue;
+      if (foldersIdsProcessed.includes(feat.parent.id))
+        continue;
+      foldersIdsProcessed.push(feat.parent.id);
+      let i = 0;
+      for (const sib of featSiblings) {
+        if (i++ === 0) // skip the first feature so we don't run the whole folder
+          continue;
+        if (sib[0].endsWith(".feature"))
+          requestItems.push(sib[1]);
+      }
+    }
+
+    // ACT
+
+    console.log(`${consoleName}: calling runHandler to run piped features...`);
+    const request = new vscode.TestRunRequest(requestItems);
+    const results = await api.runHandler(isDebugRun, request, runProfile);
+
+    // ASSERT  
+
+    const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunSize);
+
+    if (!isDebugRun) {
+      const expResults = expectedResults.filter(x => requestItems.find(r => x.test_id?.startsWith(standardisePath(r.id) ?? "undef")));
+      assertExpectedFriendlyCmd(request, projUri, projName, expResults, testExtConfig, runOptions);
     }
   }
-
-  // ACT
-
-  console.log(`${consoleName}: calling runHandler to run piped features...`);
-  const request = new vscode.TestRunRequest(requestItems);
-  const results = await api.runHandler(isDebugRun, request, runProfile);
-
-  // ASSERT  
-
-  const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
-  assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunSize);
-
-  if (!isDebugRun) {
-    const expResults = expectedResults.filter(x => requestItems.find(r => x.test_id?.startsWith(standardisePath(r.id) ?? "undef")));
-    assertExpectedFriendlyCmd(request, projUri, projName, expResults, testExtConfig, runOptions);
+  finally {
+    await restoreBehaveIni(consoleName, workDirUri);
   }
 
 }
