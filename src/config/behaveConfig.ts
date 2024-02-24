@@ -32,9 +32,8 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
     if (biniPath.endsWith(".feature"))
       biniPath = path.dirname(biniPath);
 
-    // convert any absolute paths to relative paths
-    const rx = new RegExp(`^${ps.behaveWorkingDirUri.fsPath}/?`);
-    let behaveWrkRelPath = biniPath.replace(rx, "");
+    // first, convert any absolute paths to relative paths
+    let behaveWrkRelPath = path.isAbsolute(biniPath) ? path.relative(ps.behaveWorkingDirUri.fsPath, biniPath) : biniPath;
 
     const projectRelPath = path.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
@@ -60,8 +59,9 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
     }
   }
 
-  // NOTE - do not sort these. behave will use the first path in the config file 
-  // for finding the steps folder, so preserve the order for when we do the same ourselves later
+  // NOTE: do NOT sort either rawBehaveConfigPaths or behaveWrkDirRelBehaveConfigPaths paths. We must PRESERVE the order for 
+  // when we use rawBehaveConfigPaths in getJunitFeatureName and behaveWrkDirRelativeConfigPaths in getBaseDirPath 
+  // such that our logic does not differ from behave's in those functions, i.e. behaveWrkDirRelativeConfigPaths[0] and any looping order.
   relPaths = [...new Set(relPaths)];
 
   const projRelPaths = relPaths.map(p => path.join(ps.projRelativeBehaveWorkingDirPath, p).replace(/^\.$/g, ""));

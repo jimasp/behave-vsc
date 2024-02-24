@@ -17,19 +17,19 @@ suite(`run profiles suite test debug run`, () => {
   test("runScenariosSubSetForEachFeature - no selected runProfile", async () => {
     runOptions.selectedRunProfile = undefined;
     expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
-    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, runOptions, expectations);
+    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
   test("runScenariosSubSetForEachFeature - tag1or2 vars profile (ExecFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = "tag1or2 vars profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
-    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, runOptions, expectations, true);
+    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
   test("runFeatureSet - tag1or2 vars profile (ExecFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = "tag1or2 vars profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
-    await testProjectRunner.runFeatureSet(wsConfig, runOptions, expectations, true);
+    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
 });

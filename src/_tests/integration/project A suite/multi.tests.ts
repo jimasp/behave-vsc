@@ -13,7 +13,7 @@ suite(`project A suite`, () => {
 		await testProjectRunner.runAll(wsConfigParallel, behaveIni, noRunOptions, expectations));
 
 	test("runScenariosSubSetForEachFeature", async () =>
-		await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noRunOptions, expectations));
+		await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, behaveIni, noRunOptions, expectations));
 
 });
 

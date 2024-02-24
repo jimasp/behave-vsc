@@ -2,13 +2,14 @@ import * as vscode from "vscode";
 import * as os from "os";
 import { ProjRun } from "./testRunHandler";
 import { QueueItem } from "../extension";
+import { ProjectSettings } from "../config/settings";
 
 
 
 export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: QueueItem[]) {
 
   function getRegEx(featureFileProjectRelativePath: string) {
-    const workDirRelFeaturePath = projDirRelativePathToWorkDirRelativePath(pr, featureFileProjectRelativePath);
+    const workDirRelFeaturePath = projDirRelativePathToWorkDirRelativePath(pr.projSettings, featureFileProjectRelativePath);
 
     // NOTE: be careful changing this regex:
 
@@ -79,8 +80,8 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
   let folderPaths = selectedFolderPaths.sort((a, b) => a.localeCompare(b));
 
   if (pr.projSettings.projRelativeBehaveWorkingDirPath) {
-    featurePaths = featurePaths.map(x => projDirRelativePathToWorkDirRelativePath(pr, x));
-    folderPaths = folderPaths.map(x => projDirRelativePathToWorkDirRelativePath(pr, x));
+    featurePaths = featurePaths.map(x => projDirRelativePathToWorkDirRelativePath(pr.projSettings, x));
+    folderPaths = folderPaths.map(x => projDirRelativePathToWorkDirRelativePath(pr.projSettings, x));
   }
 
   // concatenate the folder and feature paths
@@ -175,8 +176,15 @@ export function addTags(pr: ProjRun, args: string[], scenariosOnly: boolean, fri
 }
 
 
-export function projDirRelativePathToWorkDirRelativePath(pr: ProjRun, projectRelativePath: string) {
-  return pr.projSettings.projRelativeBehaveWorkingDirPath
-    ? projectRelativePath.replace(pr.projSettings.projRelativeBehaveWorkingDirPath + "/", "")
+export function projDirRelativePathToWorkDirRelativePath(ps: ProjectSettings, projectRelativePath: string) {
+  return ps.projRelativeBehaveWorkingDirPath
+    ? projectRelativePath.replace(ps.projRelativeBehaveWorkingDirPath + "/", "")
     : projectRelativePath;
 }
+
+export function workDirRelativePathToProjDirRelativePath(ps: ProjectSettings, workDirRelativePath: string) {
+  return ps.projRelativeBehaveWorkingDirPath
+    ? ps.projRelativeBehaveWorkingDirPath + "/" + workDirRelativePath
+    : workDirRelativePath;
+}
+

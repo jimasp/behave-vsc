@@ -220,15 +220,16 @@ suite("getBehaveConfigPaths - basic paths checks 2", () => {
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
     });
 
-    test(`should return project-relative feature path when behave.ini paths is full path and workingDirUri is "${workDirUri}`, () => {
+    test(`should return project-relative paths when behave.ini paths are full abs paths and workingDirUri is "${workDirUri}`, () => {
       // [behave]
       // paths=/home/me/project/working/features
-      const fileContent = `[behave]\npaths=${workDirUri.fsPath}/features\n`;
+      //       /home/me/project
+      const fileContent = `[behave]\npaths=${workDirUri.fsPath}/features\n\t${projUri.fsPath}\n`;
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
       const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       const projectSettings = { uri: projUri, behaveWorkingDirUri: workDirUri, projRelativeBehaveWorkingDirPath: workDirRelPath } as ProjectSettings;
       const result = getBehaveConfigPaths(projectSettings);
-      const resPaths = [path.join(workDirRelPath, "features")];
+      const resPaths = [path.join(workDirRelPath, "features"), ""];
       const resPathsText = `"${resPaths.join('", "')}"`;
       assert.deepStrictEqual(result.projRelBehaveConfigPaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));

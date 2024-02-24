@@ -24,33 +24,33 @@ export class TestProjectRunner {
     await runProject(this.projName, true, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runFeatureSet = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
+  runFeatureSet = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`runFeatureSet ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runPipedFeatures(this.projName, false, twConfig, runOptions, expectations, execFriendlyCmd);
+    await runPipedFeatures(this.projName, false, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runAllFolders = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
+  runAllFolders = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
     console.log(`runAllFolders ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runFolders(this.projName, false, twConfig, runOptions, expectations, execFriendlyCmd);
+    await runFolders(this.projName, false, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runSubsetOfScenariosForEachFeature = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
-    execFriendlyCmd = false) => {
+  runSubsetOfScenariosForEachFeature = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+    runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false) => {
     console.log(`runSubsetOfScenariosForEachFeature ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runScenarios(this.projName, false, twConfig, runOptions, expectations, execFriendlyCmd);
+    await runScenarios(this.projName, false, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  debugSubsetOfScenariosForEachFeature = async (twConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations,
-    execFriendlyCmd = false) => {
+  debugSubsetOfScenariosForEachFeature = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions,
+    expectations: Expectations, execFriendlyCmd = false) => {
     console.log(`debugSubsetOfScenariosForEachFeature ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runScenarios(this.projName, true, twConfig, runOptions, expectations, execFriendlyCmd);
+    await runScenarios(this.projName, true, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runProjectASelectionSubSets = async (twConfig: TestWorkspaceConfig, expectations: Expectations) => {
+  runProjectASelectionSubSets = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, expectations: Expectations) => {
     console.log(`runProjectASelectionSubSets ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runProjectASelections(twConfig, expectations);
+    await runProjectASelections(twConfig, behaveIni, expectations);
   }
 }
 

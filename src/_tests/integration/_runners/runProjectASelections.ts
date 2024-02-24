@@ -4,8 +4,8 @@ import * as path from 'path';
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, getExpectedEnvVarsString, getTestProjectUri } from "./helpers";
-import { Expectations, TestResult } from "../_helpers/common";
+import { checkExtensionIsReady, getExpectedEnvVarsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { Expectations, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
 import { logStore } from '../../runner';
@@ -20,8 +20,8 @@ import { logStore } from '../../runner';
 // This is different from the other tests of this type because the expected log output is pre-determined in Params rather than 
 // created using the helper functions in the code under test, (i.e. it ALSO checks the produced regexs are correct, not just 
 // that they work with behave and produce the expected results.)
-export async function runProjectASelections(
-  testExtConfig: TestWorkspaceConfig, expectations: Expectations): Promise<void> {
+export async function runProjectASelections(testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+  expectations: Expectations): Promise<void> {
 
   // sanity check
   if (testExtConfig.runParallel) {
@@ -30,10 +30,14 @@ export async function runProjectASelections(
   }
 
   const projName = "project A";
+  const consoleName = `runProjectASelections ${projName}`;
   const projUri = getTestProjectUri(projName);
+  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
-  const consoleName = `runProjectASelections`;
+
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   testExtConfig.integrationTestRunUseCpExec = true;
 

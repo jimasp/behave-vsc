@@ -4,7 +4,7 @@ import { Configuration } from "../../../config/configuration";
 import { IntegrationTestAPI, QueueItem } from "../../../extension";
 import { ProjParseCounts } from "../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
-import { Expectations, TestBehaveIni, TestResult, testGlobals } from "../_helpers/common";
+import { Expectations, TestResult, testGlobals } from "../_helpers/common";
 import { services } from "../../../common/services";
 import { ProjectSettings } from "../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../common/helpers";
@@ -15,37 +15,50 @@ import { logStore } from "../../runner";
 
 
 
-export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, behaveIni: TestBehaveIni,
-  testConfig: TestWorkspaceConfig, config: Configuration, expectations: Expectations) {
+export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, projName: string, testConfig: TestWorkspaceConfig,
+  actualConfig: Configuration, expectations: Expectations) {
 
-  // multiroot will read window settings from multiroot.code-workspace file, not config
-  if (!testGlobals.multiRootTest) {
-    const instanceSettings = config.instanceSettings;
-    assert.strictEqual(instanceSettings.runMultiRootProjectsInParallel, testConfig.getExpected("runMultiRootProjectsInParallel"),
-      `${projName} project: runMultiRootProjectsInParallel`);
-    assert.strictEqual(instanceSettings.xRay, testConfig.getExpected("xRay"),
-      `${projName} project: xRay`);
-    assert.deepStrictEqual(instanceSettings.runProfiles, testConfig.getExpected("runProfiles"),
-      `${projName} project: runProfiles`);
+  try {
+    // multiroot will read window settings from multiroot.code-workspace file, not config
+    if (!testGlobals.multiRootTest) {
+      const instanceSettings = actualConfig.instanceSettings;
+      assert.strictEqual(instanceSettings.runMultiRootProjectsInParallel, testConfig.getExpected("runMultiRootProjectsInParallel"),
+        `${projName} project: runMultiRootProjectsInParallel`);
+      assert.strictEqual(instanceSettings.xRay, testConfig.getExpected("xRay"),
+        `${projName} project: xRay`);
+      assert.deepStrictEqual(instanceSettings.runProfiles, testConfig.getExpected("runProfiles"),
+        `${projName} project: runProfiles`);
+    }
+
+    const projSettings = await actualConfig.getProjectSettings(projUri.path);
+    assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
+      `${projName} project: env`);
+    assert.deepStrictEqual(projSettings.rawBehaveConfigPaths, expectations.expectedRawBehaveConfigPaths,
+      `${projName} project: rawBehaveConfigPaths`);
+    assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjRelativeFeatureFolders,
+      `${projName} project: projRelativeFeatureFolders`);
+    assert.deepStrictEqual(projSettings.projRelativeStepsFolders, expectations.expectedProjRelativeStepsFolders,
+      `${projName} project: projRelativeStepsFolders`);
+    assert.strictEqual(projSettings.baseDirPath, expectations.expectedBaseDirPath,
+      `${projName} project: baseDirPath`);
+    assert.strictEqual(projSettings.projRelativeBehaveWorkingDirPath, expectations.expectedProjRelativeBehaveWorkingDirPath,
+      `${projName} project: projRelativeWorkingDirPath`);
+    const behaveWorkDirUri = vscode.Uri.joinPath(projUri, expectations.expectedProjRelativeBehaveWorkingDirPath);
+    const populateLazy_fsPath = behaveWorkDirUri.fsPath; // eslint-disable-line @typescript-eslint/no-unused-vars
+    assert.deepStrictEqual(projSettings.behaveWorkingDirUri, behaveWorkDirUri,
+      `${projName} project: behaveWorkingDirUri`);
+    assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
+      `${projName} project: justMyCode`);
+    assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"),
+      `${projName} project: runParallel`);
+    assert.deepStrictEqual(projSettings.importedSteps, testConfig.getExpected("importedSteps"),
+      `${projName} project: importedSteps`);
   }
+  catch (assertErr: unknown) {
+    debugger; // eslint-disable-line no-debugger      
 
-  const projSettings = await config.getProjectSettings(projUri.path);
-  assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
-    `${projName} project: env`);
-  assert.deepStrictEqual(projSettings.projRelativeFeatureFolders, expectations.expectedProjRelativeFeatureFolders,
-    `${projName} project: projRelativeFeatureFolders`);
-  assert.deepStrictEqual(projSettings.projRelativeStepsFolders, expectations.expectedProjRelativeStepsFolders,
-    `${projName} project: projRelativeStepsFolders`);
-  assert.strictEqual(projSettings.baseDirPath, expectations.expectedBaseDirPath,
-    `${projName} project: baseDirPath`);
-  assert.strictEqual(projSettings.projRelativeBehaveWorkingDirPath, expectations.expectedProjRelativeBehaveWorkingDirPath,
-    `${projName} project: projRelativeWorkingDirPath`);
-  assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
-    `${projName} project: justMyCode`);
-  assert.strictEqual(projSettings.runParallel, testConfig.getExpected("runParallel"),
-    `${projName} project: runParallel`);
-  assert.deepStrictEqual(projSettings.importedSteps, testConfig.getExpected("importedSteps"),
-    `${projName} project: importedSteps`);
+    throw new Error(`assertWorkspaceSettingsAsExpected failed for ${projName} project:\n${assertErr}`);
+  }
 }
 
 
@@ -323,9 +336,9 @@ export function standardisePath(path: string | undefined, isId = false): string 
     return path;
   try {
     if (isId) {
-      // special chars in scenario names would break decodeURI, and may include "/", so we'll split on .feature
-      const split = path.split(".feature");
-      const folderPath = split[0] + ".feature";
+      // special chars in scenario names would break decodeURI, and may include "/", so we'll split on .feature/
+      const split = path.split(".feature/");
+      const folderPath = split[0] + ".feature/";
       path = decodeURI(folderPath) + split[1];
     }
     else {

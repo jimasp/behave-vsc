@@ -289,20 +289,15 @@ async function getPaths(ps: ProjectSettings) {
 async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativeBehaveConfigPaths: string[]): Promise<string[]> {
   const start = performance.now();
 
-  // if paths specifically set in behave.ini, AND one of the relative paths is not "", 
-  // then SKIP gathering feature paths and just use those
-  if (projRelativeBehaveConfigPaths.length > 0 && !projRelativeBehaveConfigPaths.includes(""))
-    return projRelativeBehaveConfigPaths;
-
-  // no config paths set, so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(false, ps, ps.behaveWorkingDirUri.fsPath);
-
-  // behave would ignore a feature file in the root if not set in the behave config paths, and therefore so must we
-  if (!projRelativeBehaveConfigPaths.includes("")) {
-    const workRootIndex = foldersContainingFeatureFiles.findIndex(fld => fld === ps.uri.fsPath);
-    if (workRootIndex !== -1)
-      foldersContainingFeatureFiles.splice(workRootIndex, 1);
+  // if paths specifically set in behave.ini, AND one of the relative paths is not the working dir root,
+  // then SKIP gathering feature paths and just use the supplied paths
+  if (projRelativeBehaveConfigPaths.length > 0 && !projRelativeBehaveConfigPaths.includes(ps.projRelativeBehaveWorkingDirPath)) {
+    const optimisedPaths = getOptimisedFeatureParsingPaths(projRelativeBehaveConfigPaths);
+    return optimisedPaths;
   }
+
+  // no behave config paths set (or working dir is one of them) so we'll gather feature paths from disk
+  const foldersContainingFeatureFiles = await findFeatureFolders(ps, ps.behaveWorkingDirUri.fsPath);
 
   let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
 

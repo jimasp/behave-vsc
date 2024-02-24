@@ -8,7 +8,8 @@ export type RunOptions = {
 }
 
 export type Expectations = {
-  expectedProjRelativeBehaveWorkingDirPath?: string;
+  expectedRawBehaveConfigPaths: string[];
+  expectedProjRelativeBehaveWorkingDirPath: string;
   expectedBaseDirPath: string;
   expectedProjRelativeFeatureFolders: string[];
   expectedProjRelativeStepsFolders: string[];

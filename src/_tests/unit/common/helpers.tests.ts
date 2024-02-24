@@ -43,6 +43,7 @@ suite("findFeatureFolders", () => {
   const projSettings = {
     uri: projUri,
     excludedPathPatterns: getExcludedPathPatterns(new TestWorkspaceConfig()),
+    behaveWorkingDirUri: projUri,
   } as ProjectSettings;
 
   setup(() => {
@@ -72,7 +73,7 @@ suite("findFeatureFolders", () => {
       .withArgs(ignoredFolder)
       .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(false, projSettings, ignoredFolder);
+    const result = await findFeatureFolders(projSettings, ignoredFolder);
     const expected: string[] = [];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
   });
@@ -87,20 +88,22 @@ suite("findFeatureFolders", () => {
       .withArgs(ignoredFolder)
       .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(false, projSettings, ignoredFolder);
+    const result = await findFeatureFolders(projSettings, ignoredFolder);
     const expected: string[] = [];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
   });
 
-  test(`should return proj root path for root "my.feature"`, async () => {
+  test(`should NOT return work dir root path for "root.feature"`, async () => {
     // proj/
     // ├── root.feature    
+    // └── some_features/
+    //     └── a.feature
     sandbox.stub(fs.promises, 'readdir')
-      .withArgs(projUri.fsPath)
-      .returns(Promise.resolve(["root.feature"]) as unknown as Promise<fs.Dirent[]>);
+      .withArgs(projUri.fsPath).returns(Promise.resolve(["root.feature", "some_features"]) as unknown as Promise<fs.Dirent[]>)
+      .withArgs(projUri.fsPath + "/some_features").returns(Promise.resolve(["a.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(false, projSettings, projUri.fsPath);
-    const expected = [projUri.fsPath];
+    const result = await findFeatureFolders(projSettings, projUri.fsPath);
+    const expected = [path.join(projUri.fsPath, "some_features")];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
 
@@ -153,8 +156,8 @@ suite("findFeatureFolders", () => {
       .withArgs(projUri.fsPath + "/f/1").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
       .withArgs(projUri.fsPath + "/f/1/1").returns(Promise.resolve(["f111.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(false, projSettings, projUri.fsPath);
-    const expected = ["", "a", "b", "c/1", "c/2", "d/1", "e/1/1", "e/1/2", "f/1/1"].map(rel => path.join(projUri.fsPath, rel));
+    const result = await findFeatureFolders(projSettings, projUri.fsPath);
+    const expected = ["a", "b", "c/1", "c/2", "d/1", "e/1/1", "e/1/2", "f/1/1"].map(rel => path.join(projUri.fsPath, rel));
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
 

@@ -1,6 +1,6 @@
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common";
-import { behaveIni, expectations } from "./config";
+import { behaveIni, expectations, expectationsWithBehaveIni } from "./config";
 
 
 suite(`multiple top-level features folders suite: multi.tests`, () => {
@@ -13,7 +13,7 @@ suite(`multiple top-level features folders suite: multi.tests`, () => {
 		await testProjectRunner.runAll(noConfig, noBehaveIni, noRunOptions, expectations));
 
 	test("runAll - with behave.ini", async () =>
-		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectations));
+		await testProjectRunner.runAll(noConfig, behaveIni, noRunOptions, expectationsWithBehaveIni));
 
 	test("runAll - parallel", async () =>
 		await testProjectRunner.runAll(parallelConfig, noBehaveIni, noRunOptions, expectations));

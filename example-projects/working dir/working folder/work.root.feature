@@ -1,4 +1,4 @@
-Feature: Project root feature
+Feature: Work root feature
 
    Scenario: run a successful test
       Given we have behave installed

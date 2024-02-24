@@ -356,15 +356,14 @@ export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
 
 
 
-export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectSettings, absolutePath: string):
+export async function findFeatureFolders(ps: ProjectSettings, absolutePath: string):
   Promise<string[]> {
 
   // THIS IS CALLED TO SEARCH FOR FEATURE FOLDERS ONLY WHEN THERE ARE NO BEHAVE CONFIG PATHS SET 
-  // (or behave config paths is set to "." or "")
+  // (note that behave will ignore the root of the working dir when no config paths is set, so we will do the same)
 
-  // find feature folders, perform an early exit where possible:
-  // immediately return on first path if stopOnFirstMatch is true, or
-  // if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
+  // find feature folders, perform an early exit where possible, 
+  // i.e. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
 
   const start = performance.now();
   const entries = await fs.promises.readdir(absolutePath);
@@ -385,17 +384,17 @@ export async function findFeatureFolders(stopOnFirstMatch: boolean, ps: ProjectS
     }
     else {
       if (entry.endsWith(".feature")) {
+        if (absolutePath === ps.behaveWorkingDirUri.fsPath)
+          continue;
         results.push(absolutePath);
-        // if it's the project root, keep going and find subfolers
-        if (stopOnFirstMatch || absolutePath !== ps.uri.path)
-          return results;
+        return results;
       }
     }
   }
 
   // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
   for (const absFolderPath of childFolders) {
-    const subDirResults = await findFeatureFolders(stopOnFirstMatch, ps, absFolderPath);
+    const subDirResults = await findFeatureFolders(ps, absFolderPath);
     results.push(...subDirResults);
   }
 
@@ -445,11 +444,10 @@ export function getExcludedPathPatterns(projConfig: vscode.WorkspaceConfiguratio
 
 export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string[] {
   /* 
-  get the smallest set of longest paths that contain all feature folder paths
-  these will be used as the search paths for parsing feature files
-  (see unit tests for examples)  
-
-  e.g. for this structure:
+  get the smallest set of longest paths that contain all feature folder paths,
+  i.e. return the most efficient paths to be used as the search paths for parsing feature files
+    
+  See unit tests for examples, but for a quick example here, given this structure:
 
   my_project
   ├── my.feature
@@ -461,21 +459,26 @@ export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string
       │   └── web
       │       └── a.feature
       └── features2
-          └── a.feature 
+          ├── a.feature 
+          └── b.feature  
+      └── features3
+          └── a.feature           
 
-  we would be passed in all folder paths containing the feature files, i.e.:
+  and assuming no behave.ini file paths, then we would be called with all folder paths containing the feature files, i.e.:
   [
     "",
     "tests/features",
     "tests/features/web"
     "tests/features2",
+    "tests/features3",
   ]
 
-  and we will return:
+  and this function should return:
     [
-      "", 
-      "tests/features",  
-      "tests/features2"   
+      "",  <-- project root (special case)
+      "tests/features",  <-- longest common path containing both "tests/features" and "tests/features/web"
+      "tests/features2"  <-- other path containing features
+      "tests/features3"  <-- other path containing features
     ]
 
   (note that the project-root "" is a special case (non-recursive) in _parseFeatureFiles in fileParser.ts)

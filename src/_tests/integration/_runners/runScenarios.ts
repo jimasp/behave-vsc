@@ -4,8 +4,8 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions, TestResult } from "../_helpers/common";
+import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
@@ -20,23 +20,27 @@ import path = require('path');
 // PURPOSE: to test the piped scenarios regex pattern works with behave
 // NOTE: this should act much the same whether runParallel is set or not, because either way, each feature will be 
 // run individually if only a subset of scenarios are selected due to the way the behave commands are constructed.
-export async function runScenarios(projName: string, isDebugRun: boolean,
-  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
+export async function runScenarios(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+  runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // ARRANGE
 
+  const consoleName = `runScenarios ${projName}`;
   const projUri = getTestProjectUri(projName);
+  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
-  const consoleName = `runFeaturesScenariosSubset ${projName}`;
+
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
+
+  if (execFriendlyCmd)
+    testExtConfig.integrationTestRunUseCpExec = true;
 
   let runProfile = undefined;
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-
-  if (execFriendlyCmd)
-    testExtConfig.integrationTestRunUseCpExec = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);

@@ -4,8 +4,8 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri } from "./helpers";
-import { Expectations, RunOptions, TestResult } from "../_helpers/common";
+import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni } from "./helpers";
+import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
@@ -16,8 +16,8 @@ import { getOptimisedFeaturePathsRegEx } from '../../../runners/helpers';
 // SIMULATES: A USER CLICKING SELECTING A SUBSET OF FEATURES FROM EACH FOLDER IN THE TEST EXPLORER 
 // THEN CLICKING THE RUN/DEBUG BUTTON.
 // PURPOSE: to test that the piped features regex pattern cmd works with behave.
-export async function runPipedFeatures(projName: string, isDebugRun: boolean,
-  testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
+export async function runPipedFeatures(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+  runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // sanity check
   if (testExtConfig.runParallel) {
@@ -27,18 +27,22 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean,
 
   // ARRANGE
 
+  const consoleName = `runPipedFeatures ${projName}`;
   const projUri = getTestProjectUri(projName);
+  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);
   const projId = uriId(projUri);
   const api = await checkExtensionIsReady();
-  const consoleName = `runFeaturesScenariosSubset ${projName}`;
+
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
+
+  if (execFriendlyCmd)
+    testExtConfig.integrationTestRunUseCpExec = true;
 
   let runProfile = undefined;
   if (runOptions.selectedRunProfile)
     runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-
-  if (execFriendlyCmd)
-    testExtConfig.integrationTestRunUseCpExec = true;
 
   console.log(`${consoleName}: calling configurationChangedHandler`);
   await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);

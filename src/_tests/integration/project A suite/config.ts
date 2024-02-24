@@ -4,8 +4,8 @@ import { Expectations, TestBehaveIni } from "../_helpers/common";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults";
 
 const env: EnvSetting = {
-  "some_var": "double qu\"oted",
-  "some_var2": "single qu'oted",
+  "some_var": "double=qu\"oted",
+  "some_var2": "single=qu'oted",
   "space_var": " ",
   "USERNAME": "bob-163487"
 }
@@ -19,6 +19,7 @@ export const wsConfigParallel = new TestWorkspaceConfig({
 });
 
 export const expectations: Expectations = {
+  expectedRawBehaveConfigPaths: ["behave tests/some tests"],
   expectedProjRelativeBehaveWorkingDirPath: "",
   expectedBaseDirPath: "behave tests/some tests",
   expectedProjRelativeFeatureFolders: ["behave tests/some tests"],

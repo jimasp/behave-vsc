@@ -20,17 +20,6 @@ import {
 
 
 
-// for integration test assertions      
-export type ProjParseCounts = {
-  tests: TestCounts,
-  featureFilesExceptEmptyOrCommentedOut: number,
-  stepFilesExceptEmptyOrCommentedOut: number,
-  stepFileStepsExceptCommentedOut: number
-  featureFileStepsExceptCommentedOut: number,
-  stepMappings: number
-};
-
-
 export class FileParser {
 
   private _cancelTokenSources: { [parseId: string]: vscode.CancellationTokenSource } = {};
@@ -167,11 +156,6 @@ export class FileParser {
       this._finishedStepsParseForProject[projPath] = true;
       xRayLog(`${callName}: steps loaded`);
 
-      const updateMappingsStart = performance.now();
-      const mappingsCount = rebuildStepMappings(ps.uri);
-      const buildMappingsTime = performance.now() - updateMappingsStart;
-      xRayLog(`${callName}: stepmappings built`);
-
       const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
       if (projectsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllProjects = true;
@@ -185,6 +169,13 @@ export class FileParser {
         xRayLog(`${callName}: cancellation complete`);
         return;
       }
+
+      // REBUILD STEP MAPPINGS
+
+      const updateMappingsStart = performance.now();
+      const mappingsCount = rebuildStepMappings(ps.uri);
+      const buildMappingsTime = performance.now() - updateMappingsStart;
+      xRayLog(`${callName}: stepmappings built`);
 
 
       // LOG STATS
@@ -587,3 +578,12 @@ export class FileParser {
 }
 
 
+// for integration test assertions      
+export type ProjParseCounts = {
+  tests: TestCounts,
+  featureFilesExceptEmptyOrCommentedOut: number,
+  stepFilesExceptEmptyOrCommentedOut: number,
+  stepFileStepsExceptCommentedOut: number
+  featureFileStepsExceptCommentedOut: number,
+  stepMappings: number
+};

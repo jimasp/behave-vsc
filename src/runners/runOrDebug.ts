@@ -93,7 +93,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
-    const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(pr, featureFileProjectRelativePath);
+    const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(pr.projSettings, featureFileProjectRelativePath);
 
     let friendlyArgs = [
       "-i", `"${featureFileWorkRelPath}$"`,

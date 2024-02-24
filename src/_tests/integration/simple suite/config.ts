@@ -3,6 +3,7 @@ import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
 export const expectations: Expectations = {
+  expectedRawBehaveConfigPaths: [],
   expectedProjRelativeBehaveWorkingDirPath: "",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["features"],
@@ -11,6 +12,10 @@ export const expectations: Expectations = {
   getExpectedResultsFunc: getExpectedResults,
 }
 
+export const expectationsWithBehaveIni = {
+  ...expectations,
+  expectedRawBehaveConfigPaths: ["features"]
+}
 
 export const behaveIni: TestBehaveIni = {
   content: `[behave]\npaths=features`

@@ -12,12 +12,18 @@ export const wsConfig = new TestWorkspaceConfig({
 
 
 export const expectations: Expectations = {
+  expectedRawBehaveConfigPaths: [],
   expectedProjRelativeBehaveWorkingDirPath: "",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["features"],
   expectedProjRelativeStepsFolders: ["folder1/steps_lib_1", "folder2/steps_lib_2", "features/steps"], // order is important
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
+}
+
+export const expectationsWithBehaveIni = {
+  ...expectations,
+  expectedRawBehaveConfigPaths: ["features"]
 }
 
 export const behaveIni: TestBehaveIni = {

@@ -1,18 +1,50 @@
 import { ProjParseCounts } from "../../../parsers/fileParser";
 import { TestResult } from "../_helpers/common";
 
-export function getExpectedCountsWithoutBehaveIni(): ProjParseCounts {
-  const testCount = getExpectedResultsWithoutBehaveIni().length;
+export function getExpectedCountsWith3PathBehaveIni(): ProjParseCounts {
+  const testCount = getExpectedResultsWith3PathBehaveIni().length;
   return {
-    tests: { nodeCount: 10, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 1,
-    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 13, stepMappings: 13
+    tests: { nodeCount: 16, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 5, stepFilesExceptEmptyOrCommentedOut: 1,
+    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 19, stepMappings: 19
   };
 }
 
-export const getExpectedResultsWithoutBehaveIni = (): TestResult[] => {
+export const getExpectedResultsWith3PathBehaveIni = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'proj.root.feature',
+      scenario_featureName: 'Project root feature',
+      scenario_getLabel: 'run a successful test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../working dir/proj.root.feature/run a successful test',
+      test_label: 'run a successful test',
+      test_parent: '.../working dir/proj.root.feature',
+      test_uri: '.../working dir/proj.root.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'working folder/work.root.feature',
+      scenario_featureName: 'Work root feature',
+      scenario_getLabel: 'run a successful test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a successful test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../working dir/working folder/work.root.feature/run a successful test',
+      test_label: 'run a successful test',
+      test_parent: '.../working dir/working folder/work.root.feature',
+      test_uri: '.../working dir/working folder/work.root.feature',
+    }),
 
     new TestResult({
       scenario_featureFileRelativePath: 'working folder/features/work.features.feature',

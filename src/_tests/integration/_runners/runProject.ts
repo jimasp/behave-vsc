@@ -6,7 +6,10 @@ import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../_helpers/common';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE, RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun } from "./helpers";
+import {
+  checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE,
+  RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun
+} from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
   assertAllFeatureFileStepsHaveAStepFileStepMatch,
@@ -44,22 +47,21 @@ import { QueueItem } from '../../../extension';
 // Because this function is re-entrant, locks are used to ensure that parsing is only happening 
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
-export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig,
-  behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
-
-  const projUri = getTestProjectUri(projName);
-  logStore.clearProjLogs(projUri);
-  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
-
+export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+  runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
 
   // ARRANGE
 
-  const projId = uriId(projUri);
   const consoleName = `runProject ${projName}`;
+  const projUri = getTestProjectUri(projName);
+  const projId = uriId(projUri);
+  const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
+  logStore.clearProjLogs(projUri);
+  // get the extension api
+  const api = await checkExtensionIsReady();
 
-  let runProfile = undefined;
-  if (runOptions.selectedRunProfile)
-    runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+  // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   // if execFriendlyCmd=true, then in runBehaveInstance() in the code under test, we will use
   // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
@@ -67,12 +69,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  // replace behave.ini if required
-  // note that we cannot inject this like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
-  // get the extension api
-  const api = await checkExtensionIsReady();
+  let runProfile = undefined;
+  if (runOptions.selectedRunProfile)
+    runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
 
   try {
 
@@ -97,7 +96,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // intentionally ignored by projectWatcher while running integration tests to stop unnecessary reparses.)
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-    await assertWorkspaceSettingsAsExpected(projUri, projName, behaveIni, testExtConfig, services.config, expectations);
+    await assertWorkspaceSettingsAsExpected(projUri, projName, testExtConfig, services.config, expectations);
 
 
     // ACT 1
