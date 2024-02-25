@@ -71,12 +71,14 @@
 						"properties": {
 							"isDefault": {
 								"type": "boolean",
-								"default": false
+								"default": false,
+								"markdownDescription": "If true, this profile will be added to the default profile(s) and runFeatures will be removed from the default profile"
 							},
 							"env": {
 								"type": "object",
 								"additionalProperties": {
-									"type": "string"
+									"type": "string",
+									"markdownDescription": "Key-value pairs of environment variable overrides (or additions) when this run profile is executed"
 								}
 							},
 							"tagExpression": {
