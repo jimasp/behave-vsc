@@ -139,15 +139,15 @@ For simple setups, the extension should work "out of the box", but there is plen
       ```
 
   - Notes:
-    - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` and it would run all tests with tags A, B and C by default.
+    - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` profiles and it would run all tests with tags A, B and C by default.
     - Regarding environment variables in runProfiles:
       - The `env` property in a runProfile will (while running) override any `behave-vsc.env` setting that has the same key.
       - You can use an environment variable for a high level of customisation:
         - in your `environment.py` (or `mystage_environment.py`) file:
           - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
           - to control `scenario.skip()`
-          - which `before_all` will use to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-          - which `before_all` will use to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+          - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+          - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
         - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
 
 ---
