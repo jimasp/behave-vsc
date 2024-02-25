@@ -1,6 +1,6 @@
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig"
 import { Expectations, RunOptions } from "../_helpers/common"
-import { getExpectedCounts, getExpectedResultsForNoProfile } from "./expectedResults"
+import { getExpectedCounts } from "./expectedResults"
 
 
 export const wsConfig = new TestWorkspaceConfig({
