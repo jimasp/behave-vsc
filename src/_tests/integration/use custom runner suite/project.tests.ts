@@ -12,6 +12,7 @@ suite(`use custom runner suite: project.tests`, () => {
 
   test("debugAll - no selected runProfile", async () => {
     runOptions.selectedRunProfile = undefined;
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoProfile;
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 

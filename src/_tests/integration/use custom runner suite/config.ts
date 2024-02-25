@@ -43,9 +43,9 @@ export const expectations: Expectations = {
   expectedProjRelativeFeatureFolders: ["django/mysite/features"],
   expectedProjRelativeStepsFolders: ["django/mysite/features/steps"],
   getExpectedCountsFunc: getExpectedCounts,
-  // default, replaced in test suite as needed to vary results as per different profiles
+  // getExpectedResultsFunc is replaced in test suite as needed to vary results as per different profiles
   // (there are several expectedResults functions in expectedResults.ts)  
-  getExpectedResultsFunc: getExpectedResultsForNoProfile,
+  getExpectedResultsFunc: () => [],
 }
 
 
