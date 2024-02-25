@@ -1,19 +1,28 @@
 {
+    "python.defaultInterpreterPath": ".venv/bin/python",
     "behave-vsc.xRay": true,
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
     "behave-vsc.runProfiles": {
-        "run script": {
+        "behave-django runner profile - wait for results": {
             "isDefault": true,
             "env": {
                 "var1": "var1 value",
             },
-            "tagExpression": "@auth",
             "customRunner": {
                 "script": "manage.py",
                 "args": [
                     "--simple"
                 ],
-                "waitForResults": false
+                "waitForJUnitResults": true
+            },
+        },
+        "behave-django runner profile - do not wait for results": {
+            "env": {
+                "var1": "var1 value",
+            },
+            "customRunner": {
+                "script": "manage.py",
+                "waitForJUnitResults": false
             },
         },
     },

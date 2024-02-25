@@ -20,28 +20,40 @@ import { getBaseDirPath } from '../behaveLogic';
 
 
 export type EnvSetting = { [key: string]: string };
-export type customRunner = {
-  script: string,
-  args: string[],
-  waitForResults: boolean;
+
+export class CustomRunner {
+  public readonly script: string;
+  public readonly args?: string[];
+  public readonly waitForJUnitResults?: boolean;
+
+  constructor(
+    script: string,
+    args?: string[],
+    waitForJUnitResults?: boolean
+  ) {
+    this.script = script;
+    this.args = args ?? [];
+    this.waitForJUnitResults = waitForJUnitResults ?? false;
+  }
 }
+
 export type RunProfilesSetting = { [key: string]: RunProfile };
 
 export class RunProfile {
-  tagExpression? = "";
-  env?: { [key: string]: string } = {};
-  isDefault?: boolean = false;
-  customRunner?: customRunner = undefined
+  public readonly tagExpression?: string;
+  public readonly env?: { [key: string]: string };
+  public readonly isDefault?: boolean;
+  public readonly customRunner?: CustomRunner
 
   constructor(
-    tagExpression = "",
-    env: { [key: string]: string } = {},
-    isDefault: boolean = false,
-    customRunner: customRunner | undefined = undefined
+    tagExpression?: string,
+    env?: EnvSetting | undefined,
+    isDefault?: boolean,
+    customRunner?: CustomRunner
   ) {
-    this.tagExpression = tagExpression;
-    this.env = env;
-    this.isDefault = isDefault;
+    this.tagExpression = tagExpression ?? "";
+    this.env = env ?? {};
+    this.isDefault = isDefault ?? false;
     this.customRunner = customRunner;
   }
 }

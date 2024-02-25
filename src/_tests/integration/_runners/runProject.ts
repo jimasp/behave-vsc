@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { RunProfilesSetting } from "../../../config/settings";
+import { CustomRunner, RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../_helpers/common';
@@ -157,7 +157,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
     // ASSERT 2 (post-run asserts)
 
-    assertExpectedResults(projName, results, expectedResults, testExtConfig);
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, execFriendlyCmd);
     if (!isDebugRun)
       assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
@@ -174,20 +174,31 @@ function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vsc
   const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
   const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
+  let customRunner: CustomRunner | undefined = undefined;
+  if (runOptions.selectedRunProfile) {
+    const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
+    const runProfile = runProfiles[runOptions.selectedRunProfile];
+    customRunner = runProfile.customRunner;
+  }
+
+  const scriptOrMod = customRunner ? customRunner.script : "-m";
+  const scriptArgs = customRunner?.args ? customRunner.args.join(" ") : "";
+
   if (!testExtConfig.runParallel) {
 
-    const expectCmdIncludes = [
+    const expectCmdOrderedIncludes = [
       `cd `,
       `example-projects`,
       `${projName}`,
       `${workingFolder}`,
       `${envVarsString}`,
       `python`,
-      ` -m behave ${tagsString}--show-skipped --junit --junit-directory "`,
-      `${projName}"`
+      ` ${scriptOrMod} behave ${tagsString}--show-skipped --junit --junit-directory "`,
+      `${projName}"`,
+      `${scriptArgs}`
     ];
 
-    assertLogExists(projUri, expectCmdIncludes);
+    assertLogExists(projUri, expectCmdOrderedIncludes);
     return;
   }
 

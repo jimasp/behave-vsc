@@ -2,7 +2,7 @@ import { ProjParseCounts } from "../../../parsers/fileParser";
 import { TestResult } from "../_helpers/common"
 
 export function getExpectedCounts(): ProjParseCounts {
-  const testCount = getExpectedResultsForTag1RunProfile().length;
+  const testCount = getExpectedResultsForNoTagsSpecified().length;
   return {
     tests: { nodeCount: 15, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 3,
@@ -12,7 +12,7 @@ export function getExpectedCounts(): ProjParseCounts {
 
 
 
-export const getExpectedResultsForAProfileWithoutTags = (): TestResult[] => {
+export const getExpectedResultsForNoTagsSpecified = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
 

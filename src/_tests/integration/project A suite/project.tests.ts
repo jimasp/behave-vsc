@@ -4,7 +4,7 @@ import { behaveIni, expectations, wsConfig } from "./config";
 
 
 
-suite(`higher steps folder suite test debug run`, () => {
+suite(`higher steps folder suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("project A");
 
   test("runProjectASelections", async () =>

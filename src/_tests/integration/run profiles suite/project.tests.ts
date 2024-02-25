@@ -1,11 +1,11 @@
-import { getExpectedResultsForAProfileWithoutTags, getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile } from "./expectedResults";
+import { getExpectedResultsForNoTagsSpecified, getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile } from "./expectedResults";
 import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni } from "../_helpers/common";
 import { wsConfig, expectations, runOptions, } from "./config";
 
 
 
-suite(`run profiles suite test debug run`, () => {
+suite(`run profiles suite test: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("run profiles");
 
   test("debugAll - tag1 profile", async () => {
@@ -16,7 +16,7 @@ suite(`run profiles suite test debug run`, () => {
 
   test("runScenariosSubSetForEachFeature - no selected runProfile", async () => {
     runOptions.selectedRunProfile = undefined;
-    expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations);
   });
 

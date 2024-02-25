@@ -3,7 +3,7 @@ import { noBehaveIni, noConfig, parallelConfig, noRunOptions } from "../_helpers
 import { behaveIni, expectations, expectationsWithBehaveIni } from "./config";
 
 
-suite(`sibling steps folder 1 suite`, () => {
+suite(`sibling steps folder 1 suite: multi.tests`, () => {
 	const testProjectRunner = new TestProjectRunner("sibling steps folder 1");
 
 	test("runAll", async () =>

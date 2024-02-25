@@ -1,5 +1,5 @@
 import {
-	getExpectedResultsForAProfileWithoutTags,
+	getExpectedResultsForNoTagsSpecified,
 	getExpectedResultsForTag1Or2RunProfile, getExpectedResultsForTag1RunProfile,
 	getExpectedResultsForTag2RunProfile
 } from "./expectedResults";
@@ -8,18 +8,18 @@ import { noBehaveIni } from "../_helpers/common";
 import { runOptions, wsConfig, expectations } from "./config";
 
 
-suite(`run profiles suite`, () => {
+suite(`run profiles suite: multi.tests`, () => {
 	const testProjectRunner = new TestProjectRunner("run profiles");
 
 	test("runAll - no selected runProfile", async () => {
 		runOptions.selectedRunProfile = undefined;
-		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
+		expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
 	test("runAll - stage2 profile", async () => {
 		runOptions.selectedRunProfile = "stage2 profile";
-		expectations.getExpectedResultsFunc = getExpectedResultsForAProfileWithoutTags;
+		expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 

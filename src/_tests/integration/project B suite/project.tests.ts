@@ -4,7 +4,7 @@ import { expectations, behaveIni, expectationsWithBehaveIni } from "./config";
 
 
 
-suite(`project B suite`, () => {
+suite(`project B suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("project B");
 
   test("debugAll", async () =>

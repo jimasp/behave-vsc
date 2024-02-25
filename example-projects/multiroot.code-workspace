@@ -41,6 +41,10 @@
 			"name": "handle bad import"
 		},
 		{
+			"path": "./use custom runner",
+			"name": "use custom runner"
+		},
+		{
 			"path": "./handle empty folder",
 			"name": "handle empty folder (ignore)"
 		},

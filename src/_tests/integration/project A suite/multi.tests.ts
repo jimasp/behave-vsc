@@ -3,7 +3,7 @@ import { TestProjectRunner } from "../_runners/projectRunner";
 import { wsConfig, expectations, wsConfigParallel, behaveIni } from "./config";
 
 
-suite(`project A suite`, () => {
+suite(`project A suite: multi.tests`, () => {
 	const testProjectRunner = new TestProjectRunner("project A");
 
 	test("runAll", async () =>

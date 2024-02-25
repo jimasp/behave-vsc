@@ -85,7 +85,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
     // ASSERT  
 
     const expectedTestRunSize = requestItems.map(x => x.children.size).reduce((a, b) => a + b, 0);
-    assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunSize);
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, execFriendlyCmd, expectedTestRunSize);
 
     if (!isDebugRun) {
       const expResults = expectedResults.filter(x => requestItems.find(r => x.test_id?.startsWith(standardisePath(r.id) ?? "undef")));

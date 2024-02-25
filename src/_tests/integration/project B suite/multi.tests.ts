@@ -2,7 +2,7 @@ import { TestProjectRunner } from "../_runners/projectRunner";
 import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_helpers/common";
 import { behaveIni, expectations, expectationsWithBehaveIni } from "./config";
 
-suite(`multi project B suite`, () => {
+suite(`multi project B suite: multi.tests`, () => {
 	const testProjectRunner = new TestProjectRunner("project B");
 
 	test("runAll", async () =>

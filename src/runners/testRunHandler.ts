@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { services } from "../common/services";
-import { RunProfile, ProjectSettings, customRunner } from "../config/settings";
+import { RunProfile, ProjectSettings, CustomRunner } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
@@ -28,7 +28,7 @@ export class ProjRun {
     public readonly junitRunDirUri: vscode.Uri,
     public readonly env: { [key: string]: string; },
     public readonly tagExpression: string,
-    public readonly customRunner?: customRunner
+    public readonly customRunner?: CustomRunner
   ) { }
 }
 
@@ -141,7 +141,8 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
 
   // WAIT for the junit watcher to be ready
-  await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
+  if (!runProfile.customRunner || runProfile.customRunner.waitForJUnitResults)
+    await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
 
   // run each project queue  
   for (const projSettings of allProjectsSettings) {
@@ -166,8 +167,12 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
   }
 
+  // wait for all project runs to complete
   await Promise.all(projRunPromises);
-  await junitWatcher.stopWatchingRun(run);
+
+  // stop the junitwatcher
+  if (!runProfile.customRunner || runProfile.customRunner.waitForJUnitResults)
+    await junitWatcher.stopWatchingRun(run);
 
   xRayLog(`runTestQueue: completed for run ${run.name}`);
 }
@@ -185,8 +190,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const allTestsForThisProjIncluded = allTestsForThisProjAreIncluded(request, ps, ctrl, testData);
     const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
     const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
-    const sortedQueue = projQueue;
-    sortedQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
+    projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run, ps.name);
 
     // note that runProfile.env will (and should) override 
@@ -194,23 +198,26 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const allenv = { ...ps.env, ...runProfile.env };
 
     pr = new ProjRun(
-      ps, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
+      ps, run, request, debug, ctrl, testData, projQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       allenv,
       runProfile.tagExpression ?? "",
       runProfile.customRunner
     )
 
-    if (pr.customRunner && !pr.customRunner.waitForResults) {
-      sortedQueue.forEach(x => run.skipped(x.test));
-      pr.run.appendOutput("customRunner.waitForResults=false");
-      pr.run.end();
-    }
+    if (pr.customRunner && !pr.customRunner.waitForJUnitResults)
+      pr.run.appendOutput("customRunner.waitForJUnitResults=false");
 
     const start = performance.now();
     logProjRunStarted(pr);
     await doRunType(pr);
     logProjRunComplete(pr, start);
+
+    if (pr.customRunner && !pr.customRunner.waitForJUnitResults) {
+      projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
+      pr.run.appendOutput("customRunner completed");
+      pr.run.end();
+    }
 
   }
   catch (e: unknown) {

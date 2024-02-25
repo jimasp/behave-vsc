@@ -4,7 +4,7 @@ import { expectations } from "./config";
 
 
 
-suite(`higher steps folder suite test debug run`, () => {
+suite(`higher steps folder suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("higher steps folder");
 
   test("debugAll", async () =>

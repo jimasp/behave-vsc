@@ -58,7 +58,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
 
     const scenarios = folderItems.flatMap(folder => folder.descendents.filter(x => x.id.includes(".feature/")));
     const expectedTestRunCount = scenarios.length;
-    assertExpectedResults(projName, results, expectedResults, testExtConfig, expectedTestRunCount);
+    assertExpectedResults(projName, results, expectedResults, testExtConfig, execFriendlyCmd, expectedTestRunCount);
 
     if (isDebugRun)
       return;

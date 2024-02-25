@@ -440,5 +440,20 @@
 			],
 			"preLaunchTask": "tasks: watch-tests",
 		},
+		{
+			"name": "Integration Tests: use custom runner",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/use custom runner",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/use custom runner suite/runAll"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
 	]
 }

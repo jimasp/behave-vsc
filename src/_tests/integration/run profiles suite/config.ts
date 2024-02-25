@@ -1,6 +1,6 @@
 import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig"
 import { Expectations, RunOptions, TestBehaveIni } from "../_helpers/common"
-import { getExpectedCounts, getExpectedResultsForAProfileWithoutTags } from "./expectedResults"
+import { getExpectedCounts, getExpectedResultsForNoTagsSpecified } from "./expectedResults"
 
 
 export const wsConfig = new TestWorkspaceConfig({
@@ -75,9 +75,9 @@ export const expectations: Expectations = {
   expectedProjRelativeFeatureFolders: ["features"],
   expectedProjRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
   getExpectedCountsFunc: getExpectedCounts,
-  // default, replaced in tests as needed to vary results as per different tag combos 
+  // default, replaced in test suite as needed to vary results as per different tag combos 
   // (there are several expectedResults functions in expectedResults.ts)
-  getExpectedResultsFunc: getExpectedResultsForAProfileWithoutTags,
+  getExpectedResultsFunc: getExpectedResultsForNoTagsSpecified,
 }
 
 export const behaveIni: TestBehaveIni = {

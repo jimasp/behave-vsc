@@ -13,9 +13,9 @@ def step_impl(context):
     context.response = context.test.client.get("/admin")
 
 
-@then("the status code is 301")
-def step_impl(context):
+@then("the status code is {status:d}")
+def step_impl(context, status):
     print(context.response.status_code)
-    assert context.response.status_code == 301
+    assert context.response.status_code == status
     
 

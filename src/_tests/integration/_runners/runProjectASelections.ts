@@ -120,7 +120,7 @@ async function actAndAssert(params: Params, consoleName: string, requestItems: v
 
   // ASSERT  
 
-  assertExpectedResults(projName, results, expectedResults, testExtConfig, undefined, params.title);
+  assertExpectedResults(projName, results, expectedResults, testExtConfig, true, undefined, params.title);
   assertExpectedFriendlyCmd(params, projUri, projName, testExtConfig);
 }
 

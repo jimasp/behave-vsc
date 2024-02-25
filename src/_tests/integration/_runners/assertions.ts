@@ -63,11 +63,11 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
 
 
 export function assertTestResultMatchesExpectedResult(projName: string, expectedResults: TestResult[], actualResult: TestResult,
-  testConfig: TestWorkspaceConfig): TestResult[] {
+  testConfig: TestWorkspaceConfig, execFriendlyCmd: boolean): TestResult[] {
 
   const match = expectedResults.filter((expectedResult: TestResult) => {
     if (expectedResult.test_id === actualResult.test_id) {
-      checkPropertiesMatchOrThrow(projName, expectedResult, actualResult, testConfig);
+      checkPropertiesMatchOrThrow(projName, expectedResult, actualResult, testConfig, execFriendlyCmd);
       return true;
     }
     return false;
@@ -87,7 +87,7 @@ export function assertTestResultMatchesExpectedResult(projName: string, expected
 
 
 function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResult, actualResult: TestResult,
-  testConfig: TestWorkspaceConfig): boolean {
+  testConfig: TestWorkspaceConfig, execFriendlyCmd: boolean): boolean {
 
   const differentProperties = [];
   for (const key in expectedResult) {
@@ -104,6 +104,7 @@ function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResul
   console.error(`test ids matched but properties were different from expected:\n` +
     `project: ${projName}\n` +
     `testConfig: ${JSON.stringify(testConfig)}\n` +
+    `execFriendlyCmd: ${execFriendlyCmd}\n` +
     `differing properties: ${differentProperties.join(", ")}\n` +
     `expectedResult: ${formatResult(expectedResult)}` +
     `actualResult: ${formatResult(actualResult)}`);
@@ -241,17 +242,17 @@ function findMismatchIndex(str1: string, str2: string): number {
 
 
 export function assertExpectedResults(projName: string, results: QueueItem[] | undefined, expectedResults: TestResult[],
-  testExtConfig: TestWorkspaceConfig, expectedTestRunSize?: number, testTitle?: string) {
+  testExtConfig: TestWorkspaceConfig, execFriendlyCmd: boolean, expectedTestRunSize?: number, testTitle?: string) {
 
   const hint = testTitle ? `(test:${testTitle}) ` : "";
 
   try {
-    assert(results && results.length !== 0, "runHandler returned an empty queue, check for previous errors in the debug console");
+    assert(results && (results.length !== 0 || expectedResults.length === 0), "runHandler returned an empty queue, check for previous errors in the debug console");
 
     results.forEach(result => {
       const scenResult = ScenarioResult(result);
       assert(JSON.stringify(result.test.range).includes("line"), 'JSON.stringify(result.test.range).includes("line")');
-      assertTestResultMatchesExpectedResult(projName, expectedResults, scenResult, testExtConfig);
+      assertTestResultMatchesExpectedResult(projName, expectedResults, scenResult, testExtConfig, execFriendlyCmd);
     });
 
     // (keep this assert below results.forEach, as individual match asserts are more useful to fail out first)
