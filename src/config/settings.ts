@@ -20,18 +20,29 @@ import { getBaseDirPath } from '../behaveLogic';
 
 
 export type EnvSetting = { [key: string]: string };
-
+export type customRunner = {
+  script: string,
+  args: string[],
+  waitForResults: boolean;
+}
 export type RunProfilesSetting = { [key: string]: RunProfile };
+
 export class RunProfile {
-  env?: { [key: string]: string } = {};
   tagExpression? = "";
+  env?: { [key: string]: string } = {};
+  isDefault?: boolean = false;
+  customRunner?: customRunner = undefined
 
   constructor(
+    tagExpression = "",
     env: { [key: string]: string } = {},
-    tagExpression = ""
+    isDefault: boolean = false,
+    customRunner: customRunner | undefined = undefined
   ) {
-    this.env = env;
     this.tagExpression = tagExpression;
+    this.env = env;
+    this.isDefault = isDefault;
+    this.customRunner = customRunner;
   }
 }
 

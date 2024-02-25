@@ -11,10 +11,15 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
   let cp: ChildProcess;
   const cancellationHandler = pr.run.token.onCancellationRequested(() => cp?.kill());
   const projUri = pr.projSettings.uri;
+  const local_args = [...args];
 
   try {
-    const local_args = [...args];
-    local_args.unshift("-m", "behave");
+
+    if (pr.customRunner)
+      local_args.unshift(pr.customRunner.script, "behave");
+    else
+      local_args.unshift("-m", "behave");
+
     xRayLog(`${pr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };

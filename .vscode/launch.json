@@ -227,6 +227,23 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
+			"name": "Debug: run custom",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/run custom script",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Integration Tests: simple",
 			"type": "extensionHost",
 			"request": "launch",

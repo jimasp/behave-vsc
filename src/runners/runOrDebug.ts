@@ -26,12 +26,14 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const friendlyEnvVars = getFriendlyEnvVars(pr);
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
 
-  let friendlyArgs = [...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
+  let friendlyArgs = [...pr.customRunner?.args ?? [], ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
   const args = addTags(pr, friendlyArgs, false, false);
   friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
+  const friendlyBehaveCmd = pr.customRunner ? pr.customRunner.script + " behave" : "-m behave";
+
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
+    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${friendlyBehaveCmd} ${friendlyArgs.join(" ")}`;
 
   if (pr.debug) {
     await debugBehaveInstance(pr, args, friendlyCmd);
@@ -55,12 +57,14 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    let friendlyArgs = ["-i", `"${featurePathsPattern}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
+    let friendlyArgs = [...pr.customRunner?.args ?? [], "-i", `"${featurePathsPattern}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`];
     const args = addTags(pr, friendlyArgs, false, false);
     friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
+    const friendlyBehaveCmd = pr.customRunner ? pr.customRunner.script + " behave" : "-m behave";
+
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${friendlyBehaveCmd} ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);
@@ -96,6 +100,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(pr.projSettings, featureFileProjectRelativePath);
 
     let friendlyArgs = [
+      ...pr.customRunner?.args ?? [],
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${friendlyPipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`,
@@ -103,14 +108,17 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     friendlyArgs = addTags(pr, friendlyArgs, true, true);
 
     let args = [
+      ...pr.customRunner?.args ?? [],
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${pipedScenarioNames}"`,
       ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`,
     ];
     args = addTags(pr, args, true, false);
 
+    const friendlyBehaveCmd = pr.customRunner ? pr.customRunner.script + " behave" : "-m behave";
+
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" -m behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${friendlyBehaveCmd} ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);

@@ -69,6 +69,10 @@
 					"additionalProperties": {
 						"type": "object",
 						"properties": {
+							"isDefault": {
+								"type": "boolean",
+								"default": false
+							},
 							"env": {
 								"type": "object",
 								"additionalProperties": {
@@ -77,6 +81,25 @@
 							},
 							"tagExpression": {
 								"type": "string"
+							}
+						},
+						"customRunner": {
+							"type": "object",
+							"description": "Custom script to invoke instead of the default behave command, e.g. for running behave with a different runner. This becomes: `python <script> behave <args> ...`",
+							"properties": {
+								"script": {
+									"type": "string"
+								},
+								"args": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									}
+								},
+								"waitForJunitFiles": {
+									"default": true,
+									"type": "boolean"
+								}
 							}
 						}
 					}

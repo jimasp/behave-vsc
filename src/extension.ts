@@ -24,7 +24,8 @@ import { ProjParseCounts } from './parsers/fileParser';
 const config = services.config;
 const logger = services.logger;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
-const userDefinedTestRunProfiles: vscode.TestRunProfile[] = [];
+const standardRunProfiles: vscode.TestRunProfile[] = [];
+const userDefinedRunProfiles: vscode.TestRunProfile[] = [];
 const projWatchers = new Map<vscode.Uri, ProjectWatcher>();
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
@@ -72,6 +73,8 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     context.subscriptions.push(
       services,
       ctrl,
+      ...userDefinedRunProfiles,
+      ...standardRunProfiles,
       treeView,
       cleanExtensionTempDirectoryCancelSource,
       junitWatcher,
@@ -275,51 +278,67 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     configChanged = false) {
 
     if (configChanged) {
-      for (const profile of userDefinedTestRunProfiles) {
+      for (const profile of userDefinedRunProfiles) {
         profile.dispose();
       }
     }
     else {
 
-      ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
+      standardRunProfiles.push(ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           await runHandler(false, request);
-        },
-        true);
+        }));
 
-      ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
+      standardRunProfiles.push(ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           await runHandler(true, request);
-        },
-        true);
+        }));
 
-      ctrl.createRunProfile('Run Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Run,
+      standardRunProfiles.push(ctrl.createRunProfile('Run Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           const tagExpression = await vscode.window.showInputBox(
             { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
           );
-          await runHandler(false, request, new RunProfile(undefined, tagExpression));
-        });
+          await runHandler(false, request, new RunProfile(tagExpression));
+        }));
 
-      ctrl.createRunProfile('Debug Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Debug,
+      standardRunProfiles.push(ctrl.createRunProfile('Debug Features with Tags (ad-hoc)', vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           const tagExpression = await vscode.window.showInputBox(
             { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
           );
-          await runHandler(true, request, new RunProfile(undefined, tagExpression));
-        });
+          await runHandler(true, request, new RunProfile(tagExpression));
+        }));
     }
 
+    let defaultsAreSet = false;
     for (const name in config.instanceSettings.runProfiles) {
       const runProfile = config.instanceSettings.runProfiles[name];
-      userDefinedTestRunProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
+      userDefinedRunProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
         async (request: vscode.TestRunRequest) => {
           await runHandler(false, request, runProfile);
-        }));
-      userDefinedTestRunProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
+        }, runProfile.isDefault));
+      userDefinedRunProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
         async (request: vscode.TestRunRequest) => {
           await runHandler(true, request, runProfile);
-        }));
+        }, runProfile.isDefault));
+      if (runProfile.isDefault)
+        defaultsAreSet = true;
+    }
+
+    if (!defaultsAreSet) {
+      for (const profile of standardRunProfiles) {
+        if (profile.label === "Run Features") {
+          profile.isDefault = true;
+          continue;
+        }
+        if (profile.label === "Debug Features") {
+          profile.isDefault = true;
+          continue;
+        }
+        profile.isDefault = false;
+      }
+
     }
   }
 

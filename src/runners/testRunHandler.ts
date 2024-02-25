@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { performance } from 'perf_hooks';
 import { services } from "../common/services";
-import { RunProfile, ProjectSettings } from "../config/settings";
+import { RunProfile, ProjectSettings, customRunner } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
@@ -26,8 +26,9 @@ export class ProjRun {
     public readonly allTestsForThisProjIncluded: boolean,
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
+    public readonly env: { [key: string]: string; },
     public readonly tagExpression: string,
-    public readonly env: { [key: string]: string; }
+    public readonly customRunner?: customRunner
   ) { }
 }
 
@@ -195,8 +196,16 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     pr = new ProjRun(
       ps, run, request, debug, ctrl, testData, sortedQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
-      runProfile.tagExpression ?? "", allenv
+      allenv,
+      runProfile.tagExpression ?? "",
+      runProfile.customRunner
     )
+
+    if (pr.customRunner && !pr.customRunner.waitForResults) {
+      sortedQueue.forEach(x => run.skipped(x.test));
+      pr.run.appendOutput("customRunner.waitForResults=false");
+      pr.run.end();
+    }
 
     const start = performance.now();
     logProjRunStarted(pr);

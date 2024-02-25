@@ -189,7 +189,7 @@ export const getWorkspaceFolder = (wskpUri: vscode.Uri): vscode.WorkspaceFolder 
 export const getContentFromFilesystem = async (uri: vscode.Uri | undefined): Promise<string> => {
   if (!uri) // handling this here for caller convenience
     throw new Error("uri is undefined");
-  const data = await vwfs.readFile(uri);
+  const data = await fs.promises.readFile(uri.fsPath);
   return Buffer.from(data).toString('utf8');
 };
 
