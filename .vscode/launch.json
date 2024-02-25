@@ -227,11 +227,11 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
-			"name": "Debug: run custom",
+			"name": "Debug: use custom runner",
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/example-projects/run custom script",
+				"${workspaceFolder}/example-projects/use custom runner",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [
@@ -242,6 +242,23 @@
 				"**/app/out/vs/**"
 			],
 			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
+			"name": "Unit Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				// vscode object requires a vscode instance	(would be nice if this was headless)
+				"${workspaceFolder}/src/_tests/unit/no",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/unit/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+			"internalConsoleOptions": "openOnSessionStart"
 		},
 		{
 			"name": "Integration Tests: simple",
