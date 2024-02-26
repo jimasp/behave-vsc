@@ -22,21 +22,21 @@ suite(`use custom runner suite: project.tests`, () => {
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  // below are same as multi.tests but with execFriendlyCmd = true
+  // below are same as multi.tests but no run parallel and with execFriendlyCmd = true
 
-  test("runAll - no selected runProfile ", async () => {
+  test("runAll - no selected runProfile (execFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = undefined;
     expectations.getExpectedResultsFunc = getExpectedResultsForNoProfile;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
-  test("runAll - custom runner profile", async () => {
+  test("runAll - custom runner profile  (execFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
-  test("runAll - custom runner profile", async () => {
+  test("runAll - custom runner profile  (execFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);

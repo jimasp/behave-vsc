@@ -4,12 +4,11 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
-import { getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { Scenario } from '../../../parsers/testFile';
 import path = require('path');
 
@@ -99,12 +98,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
   projName: string, featureTest: vscode.TestItem, expectedResults: TestResult[],
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
-
-  // while it's tempting to just reuse requestItems from the caller here, 
-  // we must use expectedResults to validate (belt and braces)
+  // use expectedResults (not RequestItems) to validate cmd
   const stdPath = standardisePath(featureTest.id);
   const expSiblings = expectedResults.filter(er2 => er2.test_parent === stdPath)
     .sort((a, b) => a.scenario_scenarioName.localeCompare(b.scenario_scenarioName));
@@ -124,21 +118,6 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
     });
   }
 
-  const pr = createFakeProjRun(testExtConfig, request);
-  const featurePathRx = getOptimisedFeaturePathsRegEx(pr, queueItems);
-  const pipedScenariosRx = getPipedScenarioNamesRegex(queueItems, true);
-
-  const expectCmdOrderedIncludes = [
-    `cd `,
-    `example-projects`,
-    `${projName}`,
-    `${workingFolder}`,
-    `${envVarsString}`,
-    `python`,
-    ` -m behave ${tagsString}-i "${featurePathRx}" `,
-    `-n "${pipedScenariosRx}" --show-skipped --junit --junit-directory "`,
-    `${projName}"`
-  ];
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems, true);
   assertLogExists(projUri, expectCmdOrderedIncludes);
-
 }

@@ -4,12 +4,12 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
-import { IntegrationTestAPI } from '../../../extension';
+import { IntegrationTestAPI, QueueItem } from '../../../extension';
 import { getUrisOfWkspFoldersWithFeatures } from '../../../common/helpers';
 import { RunOptions, testGlobals } from '../_helpers/common';
-import { ProjectSettings, RunProfilesSetting } from '../../../config/settings';
+import { CustomRunner, ProjectSettings, RunProfilesSetting } from '../../../config/settings';
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
-import { getFriendlyEnvVars } from '../../../runners/helpers';
+import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { ProjRun } from '../../../runners/testRunHandler';
 
 
@@ -124,7 +124,7 @@ export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOpt
 		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
 		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
 		if (selectedRunProfile.tagExpression)
-			tagsString = `--tags="${selectedRunProfile.tagExpression}" `;
+			tagsString = `--tags="${selectedRunProfile.tagExpression}"`;
 	}
 	return tagsString;
 }
@@ -153,12 +153,58 @@ export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, request: v
 	const projSettings = {
 		runParallel: testExtConfig.get("runParallel"),
 		projRelativeBehaveWorkingDirPath: testExtConfig.get("behaveWorkingDirectory"),
+
 	} as ProjectSettings;
 
 	return {
 		projSettings: projSettings,
-		request: request
+		request: request,
 	} as ProjRun;
+}
+
+export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions,
+	request: vscode.TestRunRequest, projName: string, queueItems?: QueueItem[], includeScenariosRx = false) {
+
+	const tagsString = getExpectedTagsString(testExtConfig, runOptions);
+	const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+	const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
+
+	let customRunner: CustomRunner | undefined = undefined;
+	if (runOptions.selectedRunProfile) {
+		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
+		const runProfile = runProfiles[runOptions.selectedRunProfile];
+		customRunner = runProfile.customRunner;
+	}
+
+	const pr = createFakeProjRun(testExtConfig, request);
+
+	let argPipedFeaturePathsRx = "", argPipedScenariosRx = "";
+	if (queueItems) {
+		const pipedFeaturePathsRx = getOptimisedFeaturePathsRegEx(pr, queueItems);
+		argPipedFeaturePathsRx = pipedFeaturePathsRx ? `-i "${pipedFeaturePathsRx}"` : "";
+		if (includeScenariosRx) {
+			const pipedScenariosRx = getPipedScenarioNamesRegex(queueItems, true);
+			argPipedScenariosRx = pipedScenariosRx ? `-n "${pipedScenariosRx}"` : "";
+		}
+	}
+
+	const scriptOrModule = customRunner ? customRunner.script : "-m";
+	const scriptArgs = customRunner?.args ? customRunner.args.join(" ") : "";
+
+	const expectCmdOrderedIncludes = [
+		`cd `, `example-projects`, projName, workingFolder, `\n`,
+		envVarsString,
+		`python`,
+		scriptOrModule,
+		`behave`,
+		tagsString,
+		argPipedFeaturePathsRx,
+		argPipedScenariosRx,
+		`--show-skipped --junit --junit-directory`,
+		projName,
+		scriptArgs
+	];
+	return expectCmdOrderedIncludes;
 }
 
 

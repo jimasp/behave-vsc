@@ -30,10 +30,10 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const args = addTags(pr, friendlyArgs, false, false);
   friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
-  const scriptOrMod = pr.customRunner ? pr.customRunner.script : "-m";
+  const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
 
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrMod} behave ${friendlyArgs.join(" ")}`;
+    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
   if (pr.debug) {
     await debugBehaveInstance(pr, args, friendlyCmd);
@@ -61,10 +61,10 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const args = addTags(pr, friendlyArgs, false, false);
     friendlyArgs = addTags(pr, friendlyArgs, false, true);
 
-    const scriptOrMod = pr.customRunner ? pr.customRunner.script : "-m";
+    const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
 
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrMod} behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);
@@ -115,10 +115,10 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     ];
     args = addTags(pr, args, true, false);
 
-    const scriptOrMod = pr.customRunner ? pr.customRunner.script : "-m";
+    const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
 
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrMod} behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);

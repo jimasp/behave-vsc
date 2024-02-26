@@ -4,11 +4,10 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../runner';
-import { getOptimisedFeaturePathsRegEx } from '../../../runners/helpers';
 import { QueueItem } from '../../../extension';
 
 
@@ -83,11 +82,6 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
 function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, folderItem: FolderItemWithDescedents, expectedResults: TestResult[],
   projUri: vscode.Uri, projName: string, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
-  const pr = createFakeProjRun(testExtConfig, request);
-
   const featuresInFolder = folderItem.descendents.filter(x => x.id.endsWith(".feature"));
   const expectedResultsFeaturesInFolder = expectedResults.filter(exp =>
     featuresInFolder.find(f => {
@@ -99,23 +93,12 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
   // runParallel runs each feature separately in its own behave instance
   expectedResultsFeaturesInFolder.forEach(expectedResult => {
 
-    const qi = {
+    const queueItem = {
       test: {},
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
-    const featurePathRx = getOptimisedFeaturePathsRegEx(pr, [qi]);
-
-    const expectCmdOrderedIncludes = [
-      `cd `,
-      `example-projects`,
-      `${projName}`,
-      `${workingFolder}`,
-      `${envVarsString}`,
-      `python`,
-      ` -m behave ${tagsString}-i "${featurePathRx}" --show-skipped --junit --junit-directory "`,
-      `${projName}"`
-    ];
+    const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, [queueItem]);
     assertLogExists(projUri, expectCmdOrderedIncludes);
   });
 
@@ -126,15 +109,9 @@ function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, a
   projUri: vscode.Uri, projName: string, scenarios: vscode.TestItem[],
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectedResults: TestResult[]) {
 
-
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
-  const pr = createFakeProjRun(testExtConfig, request);
-
   const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id, true) === exp.test_id));
 
-  // (use our expected results, not the request)
+  // (use our expected results, NOT the request)
   const queueItems: QueueItem[] = [];
   for (const expResult of filteredExpectedResults) {
     const qi = {
@@ -143,21 +120,9 @@ function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, a
     } as unknown as QueueItem;
     queueItems.push(qi);
   }
-  const pipedWorkDirRelFolderPaths = getOptimisedFeaturePathsRegEx(pr, queueItems);
 
-  const expectCmdOrderedIncludes = [
-    `cd `,
-    `example-projects`,
-    `${projName}`,
-    `${workingFolder}`,
-    `${envVarsString}`,
-    `python`,
-    ` -m behave ${tagsString}-i "${pipedWorkDirRelFolderPaths}" `,
-    ` --show-skipped --junit --junit-directory "`,
-    `${projName}"`
-  ];
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems);
   assertLogExists(projUri, expectCmdOrderedIncludes);
-
 }
 
 

@@ -4,12 +4,11 @@ import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, createFakeProjRun, getExpectedEnvVarsString, getExpectedTagsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
-import { getOptimisedFeaturePathsRegEx } from '../../../runners/helpers';
 
 
 
@@ -102,10 +101,6 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
-
   // (use our expected results, not the request)
   const queueItems: QueueItem[] = [];
   for (const expResult of expectedResults) {
@@ -116,20 +111,8 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
     queueItems.push(qi);
   }
 
-  const pr = createFakeProjRun(testExtConfig, request);
-  const pipedFeaturePathsRx = getOptimisedFeaturePathsRegEx(pr, queueItems);
-
-  const expectCmdOrderedIncludes = [
-    `cd `,
-    `example-projects`,
-    `${projName}`,
-    `${workingFolder}`,
-    `${envVarsString}`,
-    `python`,
-    ` -m behave ${tagsString}-i "${pipedFeaturePathsRx}" `,
-    ` --show-skipped --junit --junit-directory "`,
-    `${projName}"`
-  ];
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems);
   assertLogExists(projUri, expectCmdOrderedIncludes);
-
 }
+
+

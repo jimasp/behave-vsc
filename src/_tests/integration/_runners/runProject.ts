@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { CustomRunner, RunProfilesSetting } from "../../../config/settings";
+import { RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../_helpers/common';
 import { services } from '../../../common/services';
 import {
   checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE,
-  RELEASE, getExpectedTagsString, getExpectedEnvVarsString, createFakeProjRun
+  RELEASE, buildExpectedFriendlyCmdOrderedIncludes
 } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
@@ -19,14 +19,13 @@ import {
   assertExpectedResults
 } from "./assertions";
 import { logStore } from '../../runner';
-import { getOptimisedFeaturePathsRegEx } from '../../../runners/helpers';
 import { QueueItem } from '../../../extension';
 
 
 
 // SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER.
 // PURPOSE: tests that behave runs all tests when run/debug all is clicked.
-// Also provides additional assertions about stepnavigation objects, project settings, etc.
+// ALSO: provides additional assertions about stepnavigation objects, project settings, etc. that are not included in other runners.
 //
 // NOTE THAT:
 // 1. if runParallel=true, then this function will run every feature in its own behave 
@@ -170,63 +169,23 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 function assertExpectedFriendlyCmds(request: vscode.TestRunRequest, projUri: vscode.Uri, projName: string,
   expectedResults: TestResult[], testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 
-  const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-  const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
-  const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
-
-  let customRunner: CustomRunner | undefined = undefined;
-  if (runOptions.selectedRunProfile) {
-    const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
-    const runProfile = runProfiles[runOptions.selectedRunProfile];
-    customRunner = runProfile.customRunner;
-  }
-
-  const scriptOrMod = customRunner ? customRunner.script : "-m";
-  const scriptArgs = customRunner?.args ? customRunner.args.join(" ") : "";
-
   if (!testExtConfig.runParallel) {
-
-    const expectCmdOrderedIncludes = [
-      `cd `,
-      `example-projects`,
-      `${projName}`,
-      `${workingFolder}`,
-      `${envVarsString}`,
-      `python`,
-      ` ${scriptOrMod} behave ${tagsString}--show-skipped --junit --junit-directory "`,
-      `${projName}"`,
-      `${scriptArgs}`
-    ];
-
-    assertLogExists(projUri, expectCmdOrderedIncludes);
+    const expectedCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName);
+    assertLogExists(projUri, expectedCmdOrderedIncludes);
     return;
   }
-
-
-  const pr = createFakeProjRun(testExtConfig, request);
 
   // if we got here, then runParallel is set:
   // runParallel runs each feature separately in its own behave instance  
   expectedResults.forEach(expectedResult => {
 
-    const qi = {
+    const queueItem = {
       test: undefined,
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
-    const featurePathRx = getOptimisedFeaturePathsRegEx(pr, [qi]);
-
-    const expectCmdOrderedIncludes = [
-      `cd `,
-      `example-projects`,
-      `${projName}`,
-      `${workingFolder}`,
-      `${envVarsString}`,
-      `python`,
-      ` -m behave ${tagsString}-i "${featurePathRx}" --show-skipped --junit --junit-directory "`,
-      `${projName}"`
-    ];
-    assertLogExists(projUri, expectCmdOrderedIncludes);
+    const expectedCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, [queueItem]);
+    assertLogExists(projUri, expectedCmdOrderedIncludes);
   });
 
 }

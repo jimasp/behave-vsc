@@ -15,6 +15,7 @@ export const wsConfig = new TestWorkspaceConfig({
 });
 
 export const wsConfigParallel = new TestWorkspaceConfig({
+  runParallel: true,
   envVarOverrides: env
 });
 

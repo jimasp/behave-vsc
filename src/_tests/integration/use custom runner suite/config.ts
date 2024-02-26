@@ -31,6 +31,11 @@ export const wsConfig = new TestWorkspaceConfig({
   },
 });
 
+export const wsConfigParallel = new TestWorkspaceConfig({
+  ...wsConfig,
+  runParallel: true
+});
+
 
 export const runOptions: RunOptions = {
   selectedRunProfile: undefined
