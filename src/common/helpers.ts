@@ -84,31 +84,23 @@ export function uriStartsWith(uriToCheck: vscode.Uri, checkIfStartsWithUri: vsco
 
 export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
 
-  const dirUri = services.config.extensionTempFilesUri;
   const junitDirUri = getJunitDirUri();
 
   // note - this function runs asynchronously, and we do not wait for it to complete before we start 
-  // the junitWatcher, this is why we don't want to delete the (watched) junit directory itself (only its contents)
-
+  // the junitWatcher, so we do NOT want to delete the (watched) junit directory ITSELF (only its contents)
   try {
-    const children = await vwfs.readDirectory(dirUri);
+    await fs.promises.stat(junitDirUri.fsPath);
+    const children = await vwfs.readDirectory(junitDirUri);
 
     for (const [name,] of children) {
-      if (!cancelToken.isCancellationRequested) {
-        const curUri = vscode.Uri.joinPath(dirUri, name);
-        if (urisMatch(curUri, junitDirUri)) {
-          const jChildren = await vwfs.readDirectory(curUri);
-          for (const [jName,] of jChildren) {
-            await vwfs.delete(vscode.Uri.joinPath(curUri, jName), { recursive: true, useTrash: true });
-          }
-          continue;
-        }
-        await vwfs.delete(curUri, { recursive: true, useTrash: true });
-      }
+      if (cancelToken.isCancellationRequested)
+        return;
+      await vwfs.delete(vscode.Uri.joinPath(junitDirUri, name), { recursive: true, useTrash: true });
+      continue;
     }
   }
   catch (e: unknown) {
-    // we will get here if (a) the folder doesn't exist, or (b) the user has the folder open, e.g. in windows explorer
+    // we might get here if e.g. the user has the file/folder open in windows explorer
   }
 }
 

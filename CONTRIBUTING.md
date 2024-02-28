@@ -47,14 +47,18 @@
     - `code --install-extension ms-python.python` (if not already installed)
     - `code --install-extension dbaeumer.vscode-eslint`
     - `code --install-extension amodio.tsl-problem-matcher`
-9. Install behave 1.2.6 globally (for simplicity, no venv is used in the example projects):
-    - `pip install behave==1.2.6`
+9. Install dependencies for the `use custom runner` example project venv:
+    - `cd "example-projects/use custom runner"`
+    - `python3 -m venv .venv`
+    - `pip install -r requirements.txt`
+10. Install behave 1.2.6 globally (most example projects do not have a venv):
     - Change to the root directory: `cd /` (or `cd \` on Windows)
+    - `pip install behave==1.2.6`
     - Ensure that this global command works from the root directory: `"python" -m behave --version` (include the quotes)
-10. Change back to the cloned directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
+11. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
     - `cd <mysourcedir>/behave-vsc`
     - `npm run test`
-11. If any of the tests fail, then double-check the steps above. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests) further down.
+    - If any of the tests fail, double-check the steps above and look for red text in the output starting from the top and working down. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
 12. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 
 ---
