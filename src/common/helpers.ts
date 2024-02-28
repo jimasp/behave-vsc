@@ -89,7 +89,10 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
   // note - this function runs asynchronously, and we do not wait for it to complete before we start 
   // the junitWatcher, so we do NOT want to delete the (watched) junit directory ITSELF (only its contents)
   try {
+
+    // stat will throw if the directory doesn't exist, but unlike vwfs.readDirectory it won't log a console.error
     await fs.promises.stat(junitDirUri.fsPath);
+
     const children = await vwfs.readDirectory(junitDirUri);
 
     for (const [name,] of children) {
@@ -100,7 +103,7 @@ export async function cleanExtensionTempDirectory(cancelToken: vscode.Cancellati
     }
   }
   catch (e: unknown) {
-    // we might get here if e.g. the user has the file/folder open in windows explorer
+    // we can get here if the folder doesn't exist yet (first run) or the user has the file/folder open in windows explorer
   }
 }
 
