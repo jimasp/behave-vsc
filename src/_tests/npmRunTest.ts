@@ -150,7 +150,7 @@ async function npmRunTest() {
     });
 
 
-    console.log("Test run complete!\n");
+    console.log("*** Test run complete! ***\n");
 
   } catch (err) {
     console.error('Failed to run tests, ', err);

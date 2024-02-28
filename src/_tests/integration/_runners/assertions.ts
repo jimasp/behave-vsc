@@ -197,7 +197,7 @@ export function assertLogExists(projUri: vscode.Uri, orderedIncludes: string[], 
     let includesIndex = 0;
     for (const include of orderedIncludes) {
       const currentIndex = x.indexOf(include, lastIndex + 1);
-      if (currentIndex === -1) {
+      if (include !== "" && currentIndex === -1) {
         if (includesIndex > closestMatch.highestIndex)
           closestMatch = { log: x, failedOnInclude: include, highestIndex: includesIndex, mismatchIndex: 0 };
         if (includesIndex === closestMatch.highestIndex) {

@@ -4,7 +4,7 @@ import { QueueItem } from '../extension';
 import { projError } from '../common/helpers';
 import { ProjRun } from './testRunHandler';
 import {
-  addTags, getFriendlyEnvVars, getPSCmdModifyIfWindows, getOptimisedFeaturePathsRegEx,
+  getFriendlyEnvVars, getPSCmdModifyIfWindows, getOptimisedFeaturePathsRegEx,
   getPipedScenarioNamesRegex, projDirRelativePathToWorkDirRelativePath
 } from './helpers';
 
@@ -13,7 +13,7 @@ import {
 // hard-code any settings we MUST have (i.e. override user behave.ini file only where absolutely necessary)
 // NOTE: show-skipped is always required, otherwise skipped tests would not produce junit output and we would not be able to 
 // update them in the test explorer tree (this is particularly important for tagged runs where we don't know what ran)
-const OVERRIDE_ARGS = [
+const CONFIG_OVERRIDE_ARGS = [
   "--show-skipped",
   "--junit",
   "--junit-directory"
@@ -25,13 +25,15 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
 
   const friendlyEnvVars = getFriendlyEnvVars(pr);
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
-
-  let friendlyArgs = [...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`, ...pr.customRunner?.args ?? [],];
-  const args = addTags(pr, friendlyArgs, false, false);
-  friendlyArgs = addTags(pr, friendlyArgs, false, true);
+  let friendlyArgs = [
+    ...CONFIG_OVERRIDE_ARGS,
+    `"${pr.junitRunDirUri.fsPath}"`,
+    ...pr.customRunner?.args ?? []
+  ];
+  const args = formatArgsAndAddTags(pr, false, false, friendlyArgs);
+  friendlyArgs = formatArgsAndAddTags(pr, true, false, friendlyArgs);
 
   const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
-
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
@@ -57,12 +59,16 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    let friendlyArgs = ["-i", `"${featurePathsPattern}"`, ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`, ...pr.customRunner?.args ?? []];
-    const args = addTags(pr, friendlyArgs, false, false);
-    friendlyArgs = addTags(pr, friendlyArgs, false, true);
+    let friendlyArgs = [
+      "-i", `"${featurePathsPattern}"`,
+      ...CONFIG_OVERRIDE_ARGS,
+      `"${pr.junitRunDirUri.fsPath}"`,
+      ...pr.customRunner?.args ?? []
+    ];
+    const args = formatArgsAndAddTags(pr, false, false, friendlyArgs);
+    friendlyArgs = formatArgsAndAddTags(pr, true, false, friendlyArgs);
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
-
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
@@ -92,31 +98,32 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     if (pr.projSettings.runParallel && pr.debug)
       throw new Error("running parallel debug is not supported");
 
-    const friendlyPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, true);
-    const pipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, false);
+    const friendlyArgsPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, true);
+    const argsPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, false);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
     const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(pr.projSettings, featureFileProjectRelativePath);
 
     let friendlyArgs = [
-      ...pr.customRunner?.args ?? [],
       "-i", `"${featureFileWorkRelPath}$"`,
-      "-n", `"${friendlyPipedScenarioNames}"`,
-      ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`,
+      "-n", `"${friendlyArgsPipedScenarioNames}"`,
+      ...CONFIG_OVERRIDE_ARGS,
+      `"${pr.junitRunDirUri.fsPath}"`,
+      ...pr.customRunner?.args ?? [],
     ];
-    friendlyArgs = addTags(pr, friendlyArgs, true, true);
+    friendlyArgs = formatArgsAndAddTags(pr, true, true, friendlyArgs);
 
     let args = [
-      ...pr.customRunner?.args ?? [],
       "-i", `"${featureFileWorkRelPath}$"`,
-      "-n", `"${pipedScenarioNames}"`,
-      ...OVERRIDE_ARGS, `"${pr.junitRunDirUri.fsPath}"`,
+      "-n", `"${argsPipedScenarioNames}"`,
+      ...CONFIG_OVERRIDE_ARGS,
+      `"${pr.junitRunDirUri.fsPath}"`,
+      ...pr.customRunner?.args ?? [],
     ];
-    args = addTags(pr, args, true, false);
+    args = formatArgsAndAddTags(pr, false, true, args);
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
-
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
 
@@ -135,3 +142,25 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
 }
 
+
+function formatArgsAndAddTags(pr: ProjRun, friendly: boolean, scenariosOnly: boolean, args: string[]) {
+  let argsOut: string[] = [];
+
+  if (friendly) {
+    argsOut = args;
+  }
+  else {
+    if (scenariosOnly)
+      argsOut = args.map(x => x.replace(/^"(.*)"$/, '$1'));
+    else
+      argsOut = args.map(x => x.replaceAll('"', ""));
+  }
+
+  if (pr.tagExpression) {
+    if (friendly)
+      argsOut.unshift(`--tags="${pr.tagExpression}"`);
+    else
+      argsOut.unshift(`--tags=${pr.tagExpression}`);
+  }
+  return argsOut;
+}

@@ -7,10 +7,10 @@ export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "django/mysite",
   runProfiles: {
     "behave-django runner profile: wait for test results": {
-      "isDefault": true,
       "env": {
         "var1": "var1 value",
       },
+      "tagExpression": "~@skip",
       "customRunner": {
         "script": "manage.py",
         "args": [
@@ -23,6 +23,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "var1": "var1 value",
       },
+      "tagExpression": "~@skip",
       "customRunner": {
         "script": "manage.py",
         "waitForJUnitResults": false

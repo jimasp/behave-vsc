@@ -20,33 +20,22 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
 
     let debugLaunchConfig: vscode.DebugConfiguration;
 
+    const launchConfig = {
+      name: `Behave VSC`,
+      console: "internalConsole",
+      type: "python",
+      cwd: pr.projSettings.behaveWorkingDirUri.fsPath,
+      request: 'launch',
+      env: env,
+      justMyCode: pr.projSettings.justMyCode
+    };
+
     if (pr.customRunner) {
       args.unshift("behave");
-
-      debugLaunchConfig = {
-        name: `behave-vsc-debug-script`,
-        console: "internalConsole",
-        type: "python",
-        cwd: pr.projSettings.behaveWorkingDirUri.fsPath,
-        request: 'launch',
-        program: pr.customRunner.script,
-        args: args,
-        env: env,
-        justMyCode: pr.projSettings.justMyCode
-      };
+      debugLaunchConfig = { ...launchConfig, program: pr.customRunner.script, args: args };
     }
     else {
-      debugLaunchConfig = {
-        name: `behave-vsc-debug`,
-        console: "internalConsole",
-        type: "python",
-        cwd: pr.projSettings.behaveWorkingDirUri.fsPath,
-        request: 'launch',
-        module: "behave",
-        args: args,
-        env: env,
-        justMyCode: pr.projSettings.justMyCode
-      };
+      debugLaunchConfig = { ...launchConfig, module: "behave", args: args };
     }
 
     const projFolder = vscode.workspace.getWorkspaceFolder(pr.projSettings.uri);

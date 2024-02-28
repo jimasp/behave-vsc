@@ -153,29 +153,6 @@ export function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
 }
 
 
-export function addTags(pr: ProjRun, args: string[], scenariosOnly: boolean, friendly: boolean) {
-  let argsOut: string[] = [];
-
-  if (friendly) {
-    argsOut = args;
-  }
-  else {
-    if (scenariosOnly)
-      argsOut = args.map(x => x.replace(/^"(.*)"$/, '$1'));
-    else
-      argsOut = args.map(x => x.replaceAll('"', ""));
-  }
-
-  if (pr.tagExpression) {
-    if (friendly)
-      argsOut.unshift(`--tags="${pr.tagExpression}"`);
-    else
-      argsOut.unshift(`--tags=${pr.tagExpression}`);
-  }
-  return argsOut;
-}
-
-
 export function projDirRelativePathToWorkDirRelativePath(ps: ProjectSettings, projectRelativePath: string) {
   return ps.projRelativeBehaveWorkingDirPath
     ? projectRelativePath.replace(ps.projRelativeBehaveWorkingDirPath + "/", "")

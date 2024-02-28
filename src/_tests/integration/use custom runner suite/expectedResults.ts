@@ -15,10 +15,9 @@ export const getExpectedResultsForNoProfile = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
 
-    // NONE of this group of expected results are expected to have a scenario_result of "success"
-    // this is because our integration tests directly execute testRunHandler,
-    // (i.e. ignoring any default profile) and we're not specifying a profile in this test case,
-    // so they will all fail unless they are skipped tests.
+    // all of this group of expected results are expected to have a scenario_result of "failed"
+    // this is because our integration tests directly execute testRunHandler, 
+    // i.e. we are specifically running with no profile (ignoring runProfile's "isDefault" even if set) 
 
     new TestResult({
       scenario_featureFileRelativePath: 'django/mysite/features/mixed.feature',
@@ -57,7 +56,7 @@ export const getExpectedResultsForNoProfile = (): TestResult[] => {
       scenario_featureName: 'Mixed results',
       scenario_getLabel: 'test skipped',
       scenario_isOutline: false,
-      scenario_result: 'skipped',
+      scenario_result: 'failed',
       scenario_scenarioName: 'test skipped',
       test_children: undefined,
       test_description: undefined,
@@ -168,7 +167,7 @@ export const getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults = (): T
 
 export const getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults = (): TestResult[] => {
 
-  // because we don't wait for the result, all the scenario_results will be undefined
+  // because the runProfile "waitForJUnitResults" is false, all the scenario_results will be undefined
 
   const expectedResults: TestResult[] = [
 

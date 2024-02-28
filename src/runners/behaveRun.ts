@@ -28,7 +28,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     // instead of cp.spawn, so that we can test the generated friendlyCmd executes correctly
     if (services.config.isIntegrationTestRun && pr.projSettings.integrationTestRunUseCpExec) {
       xRayLog("--- integration test running in exec mode ---")
-      cp = exec(`${friendlyCmd}`);
+      cp = exec(friendlyCmd);
     }
     else {
       cp = spawn(pr.pythonExec, local_args, options);
