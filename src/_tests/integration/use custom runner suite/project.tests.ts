@@ -34,10 +34,10 @@ suite(`use custom runner suite: project.tests`, () => {
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfigParallel, noBehaveIni, runOptions, expectations)
   });
 
-  test("runFeatureSet", async () => {
+  test("runSubsetOfFeaturesForEachFolder", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, runOptions, expectations)
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, noBehaveIni, runOptions, expectations)
   });
 
   test("runAllFolders", async () => {
@@ -47,12 +47,6 @@ suite(`use custom runner suite: project.tests`, () => {
   });
 
   // same tests run above (except debug) but with execFriendlyCmd=true:
-
-  test("debugFeaturesScenariosSubSets", async () => {
-    runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
-    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-    await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations, true)
-  });
 
   test("runSubsetOfScenariosForEachFeature", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
@@ -66,10 +60,10 @@ suite(`use custom runner suite: project.tests`, () => {
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfigParallel, noBehaveIni, runOptions, expectations, true)
   });
 
-  test("runFeatureSet", async () => {
+  test("runSubsetOfFeaturesForEachFolder", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, runOptions, expectations, true)
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, noBehaveIni, runOptions, expectations, true)
   });
 
   test("runAllFolders", async () => {

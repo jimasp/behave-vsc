@@ -24,9 +24,9 @@ export class TestProjectRunner {
     await runProject(this.projName, true, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runFeatureSet = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
+  runSubsetOfFeaturesForEachFolder = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, runOptions: RunOptions, expectations: Expectations,
     execFriendlyCmd = false) => {
-    console.log(`runFeatureSet ${this.projName}: ${JSON.stringify(twConfig)}`);
+    console.log(`runSubsetOfFeaturesForEachFolder ${this.projName}: ${JSON.stringify(twConfig)}`);
     await runPipedFeatures(this.projName, false, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 

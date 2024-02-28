@@ -20,8 +20,8 @@ suite(`working dir suite test debug run`, () => {
   test("runSubsetOfScenariosForEachFeature", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, noRunOptions, expectations));
 
-  test("runFeatureSet", async () =>
-    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, noRunOptions, expectations));
+  test("runSubsetOfFeaturesForEachFolder", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, noBehaveIni, noRunOptions, expectations));
 
   test("runAllFolders", async () =>
     await testProjectRunner.runAllFolders(wsConfig, noBehaveIni, noRunOptions, expectations));
@@ -31,8 +31,8 @@ suite(`working dir suite test debug run`, () => {
   test("runScenariosSubSetForEachFeature (execFriendlyCmd)", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, noRunOptions, expectations, true));
 
-  test("runFeatureSet (execFriendlyCmd)", async () =>
-    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, noRunOptions, expectations, true));
+  test("runSubsetOfFeaturesForEachFolder (execFriendlyCmd)", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, noBehaveIni, noRunOptions, expectations, true));
 
   test("runAllFolders (execFriendlyCmd)", async () =>
     await testProjectRunner.runAllFolders(wsConfig, noBehaveIni, noRunOptions, expectations, true));

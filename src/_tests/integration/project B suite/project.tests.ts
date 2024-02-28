@@ -19,8 +19,8 @@ suite(`project B suite: project.tests`, () => {
   test("runSubsetOfScenariosForEachFeature - parallel", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, behaveIni, noRunOptions, expectationsWithBehaveIni));
 
-  test("runFeatureSet", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations));
+  test("runSubsetOfFeaturesForEachFolder", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations));
 
   test("runAllFolders", async () =>
     await testProjectRunner.runAllFolders(parallelConfig, noBehaveIni, noRunOptions, expectations));
@@ -36,8 +36,8 @@ suite(`project B suite: project.tests`, () => {
   test("runScenariosSubSetForEachFeature - parallel (execFriendlyCmd)", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noBehaveIni, noRunOptions, expectations, true));
 
-  test("runFeatureSet (execFriendlyCmd)", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations, true));
+  test("runSubsetOfFeaturesForEachFolder (execFriendlyCmd)", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
   test("runAllFolders (execFriendlyCmd)", async () =>
     await testProjectRunner.runAllFolders(noConfig, noBehaveIni, noRunOptions, expectations, true));

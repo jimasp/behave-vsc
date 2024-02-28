@@ -7,20 +7,16 @@ import { behaveIni, expectations, wsConfig } from "./config";
 suite(`higher steps folder suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("project A");
 
-  test("runProjectASelections", async () =>
-    await testProjectRunner.runProjectASelectionSubSets(wsConfig, behaveIni, expectations));
-
   test("debugAll", async () =>
     await testProjectRunner.debugAll(wsConfig, behaveIni, noRunOptions, expectations));
 
-  test("debugFeaturesScenariosSubSets", async () =>
-    await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, behaveIni, noRunOptions, expectations));
+  test("runProjectASelections", async () =>
+    await testProjectRunner.runProjectASelectionSubSets(wsConfig, behaveIni, expectations));
 
-  test("runAll - execFriendlyCmd", async () =>
-    await testProjectRunner.runAll(wsConfig, behaveIni, noRunOptions, expectations, true));
+  test("runAllFolders", async () =>
+    await testProjectRunner.runAllFolders(wsConfig, behaveIni, noRunOptions, expectations));
 
-  test("runScenariosSubSetForEachFeature - execFriendlyCmd", async () =>
-    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, behaveIni, noRunOptions, expectations, true));
-
+  test("runSubsetOfFeaturesForEachFolder", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, behaveIni, noRunOptions, expectations, true));
 });
 

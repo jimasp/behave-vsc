@@ -16,8 +16,8 @@ suite(`multiple top-level features folders suite: project.tests`, () => {
   test("runSubsetOfScenariosForEachFeature", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, behaveIni, noRunOptions, expectationsWithBehaveIni));
 
-  test("runFeatureSet", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations));
+  test("runSubsetOfFeaturesForEachFolder", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations));
 
   test("runAllFolders", async () =>
     await testProjectRunner.runAllFolders(noConfig, noBehaveIni, noRunOptions, expectations));
@@ -27,8 +27,8 @@ suite(`multiple top-level features folders suite: project.tests`, () => {
   test("runScenariosSubSetForEachFeature (execFriendlyCmd)", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
-  test("runFeatureSet (execFriendlyCmd)", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations, true));
+  test("runSubsetOfFeaturesForEachFolder (execFriendlyCmd)", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
   test("runAllFolders (execFriendlyCmd)", async () =>
     await testProjectRunner.runAllFolders(noConfig, noBehaveIni, noRunOptions, expectations, true));

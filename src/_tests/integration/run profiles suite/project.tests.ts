@@ -26,10 +26,10 @@ suite(`run profiles suite test: project.tests`, () => {
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
-  test("runFeatureSet - tag1or2 vars profile (ExecFriendlyCmd)", async () => {
+  test("runSubsetOfFeaturesForEachFolder - tag1or2 vars profile (ExecFriendlyCmd)", async () => {
     runOptions.selectedRunProfile = "tag1or2 vars profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1Or2RunProfile;
-    await testProjectRunner.runFeatureSet(wsConfig, noBehaveIni, runOptions, expectations, true);
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
 });

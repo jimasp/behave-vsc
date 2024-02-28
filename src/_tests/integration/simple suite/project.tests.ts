@@ -18,8 +18,8 @@ suite(`simple suite: project.tests`, () => {
   test("runSubsetOfScenariosForEachFeature - parallel", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noBehaveIni, noRunOptions, expectations));
 
-  test("runFeatureSet", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations));
+  test("runSubsetOfFeaturesForEachFolder", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations));
 
 
   // same tests run above (except debug) but with execFriendlyCmd=true:
@@ -30,8 +30,8 @@ suite(`simple suite: project.tests`, () => {
   test("runScenariosSubSetForEachFeature - parallel (execFriendlyCmd)", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(parallelConfig, noBehaveIni, noRunOptions, expectations, true));
 
-  test("runFeatureSet (execFriendlyCmd)", async () =>
-    await testProjectRunner.runFeatureSet(noConfig, noBehaveIni, noRunOptions, expectations, true));
+  test("runSubsetOfFeaturesForEachFolder (execFriendlyCmd)", async () =>
+    await testProjectRunner.runSubsetOfFeaturesForEachFolder(noConfig, noBehaveIni, noRunOptions, expectations, true));
 
   // same tests run in multi.test.ts but with execFriendlyCmd=true:
 
