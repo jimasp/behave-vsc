@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as inspector from 'inspector';
 import { globSync } from 'glob';
 import { services } from '../common/services';
-import { testGlobals } from './integration/_helpers/common';
+import { testGlobals } from './integration/_common/types';
 
 
 export function runner(globStr: string, ignore?: string[]): Promise<void> {

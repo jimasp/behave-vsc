@@ -1,5 +1,5 @@
-import { TestProjectRunner } from "../_runners/projectRunner";
-import { noBehaveIni, noRunOptions } from "../_helpers/common";
+import { TestProjectRunner } from "../_common/projectRunner";
+import { noBehaveIni, noRunOptions } from "../_common/types";
 import { wsConfig, expectations, behaveIni, expectationsWithBehaveIni } from "./config";
 
 suite(`imported steps suite: multi.tests`, () => {

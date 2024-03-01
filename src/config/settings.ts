@@ -97,7 +97,22 @@ export class InstanceSettings {
       const runProfilesCfg: RunProfilesSetting | undefined = wsConfig.get("runProfiles");
       if (runProfilesCfg === undefined)
         throw new Error("runProfiles is undefined");
-      this.runProfiles = runProfilesCfg;
+      let validRunProfiles = true;
+      for (const [, profile] of Object.entries(runProfilesCfg)) {
+        const script = profile.customRunner?.script;
+        if (script) {
+          if (!script.endsWith(".py")) {
+            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.script" must end in ".py".', "OK");
+            validRunProfiles = false;
+          }
+          if (script.includes("/") || script.includes("\\")) {
+            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.script" cannot contain a path, only a filename.', "OK");
+            validRunProfiles = false;
+          }
+        }
+      }
+      if (validRunProfiles)
+        this.runProfiles = runProfilesCfg;
     }
     catch {
       vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");

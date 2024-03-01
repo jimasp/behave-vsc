@@ -1,5 +1,5 @@
 import { ProjParseCounts } from "../../../parsers/fileParser";
-import { TestResult } from "../_helpers/common";
+import { TestResult } from "../_common/types";
 
 export function getExpectedCountsWith2PathBehaveIni(): ProjParseCounts {
   const testCount = getExpectedResultsWith2PathBehaveIni().length;

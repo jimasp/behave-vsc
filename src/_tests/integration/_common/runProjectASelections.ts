@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
 import { checkExtensionIsReady, getExpectedEnvVarsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
-import { Expectations, TestBehaveIni, TestResult } from "../_helpers/common";
+import { Expectations, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
 import { logStore } from '../../runner';

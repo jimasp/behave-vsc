@@ -2,9 +2,9 @@
 import * as vscode from 'vscode';
 import * as assert from 'assert';
 import { RunProfilesSetting } from "../../../config/settings";
-import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
-import { Expectations, RunOptions, TestBehaveIni, TestResult } from '../_helpers/common';
+import { Expectations, RunOptions, TestBehaveIni, TestResult } from './types';
 import { services } from '../../../common/services';
 import {
   checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE,

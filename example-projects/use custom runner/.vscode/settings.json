@@ -8,7 +8,7 @@
             "customRunner": {
                 "script": "manage.py",
                 "args": [
-                    "--simple"
+                    "--keepdb"
                 ],
                 "waitForJUnitResults": true
             },

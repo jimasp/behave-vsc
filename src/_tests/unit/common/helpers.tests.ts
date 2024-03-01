@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import * as helpers from '../../../common/helpers';
 import { services } from '../../../common/services';
 import { ProjectSettings } from '../../../config/settings';
-import { TestWorkspaceConfig } from '../../integration/_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfig } from '../../integration/_common/testWorkspaceConfig';
 import {
   findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath,
   getOptimisedFeatureParsingPaths, isExcludedPath, isStepsFile

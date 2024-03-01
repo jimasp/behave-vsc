@@ -1,4 +1,4 @@
-import { Expectations, TestBehaveIni } from "../_helpers/common";
+import { Expectations, TestBehaveIni } from "../_common/types";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 

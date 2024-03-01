@@ -1,5 +1,5 @@
-import { TestProjectRunner } from "../_runners/projectRunner";
-import { noBehaveIni } from "../_helpers/common";
+import { TestProjectRunner } from "../_common/projectRunner";
+import { noBehaveIni } from "../_common/types";
 import { wsConfig, expectations, runOptions, wsConfigParallel, } from "./config";
 import {
   getExpectedResultsForNoProfile, getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults,
@@ -16,12 +16,6 @@ suite(`use custom runner suite: project.tests`, () => {
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("debugFeaturesScenariosSubSets", async () => {
-    runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
-    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-    await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations)
-  });
-
   test("runSubsetOfScenariosForEachFeature", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
@@ -32,6 +26,12 @@ suite(`use custom runner suite: project.tests`, () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfigParallel, noBehaveIni, runOptions, expectations)
+  });
+
+  test("debugFeaturesScenariosSubSets", async () => {
+    runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
+    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
+    await testProjectRunner.debugSubsetOfScenariosForEachFeature(wsConfig, noBehaveIni, runOptions, expectations)
   });
 
   test("runSubsetOfFeaturesForEachFolder", async () => {

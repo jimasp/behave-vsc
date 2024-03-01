@@ -6,9 +6,9 @@ import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
 import { getUrisOfWkspFoldersWithFeatures } from '../../../common/helpers';
-import { RunOptions, testGlobals } from '../_helpers/common';
+import { RunOptions, testGlobals } from './types';
 import { CustomRunner, ProjectSettings, RunProfilesSetting } from '../../../config/settings';
-import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { ProjRun } from '../../../runners/testRunHandler';
 
@@ -197,12 +197,12 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 		`python`,
 		scriptOrModule,
 		`behave`,
+		scriptArgs,
 		tagsString,
 		argPipedFeaturePathsRx,
 		argPipedScenariosRx,
 		`--show-skipped --junit --junit-directory`,
-		projName,
-		scriptArgs
+		projName
 	];
 	return expectCmdOrderedIncludes;
 }

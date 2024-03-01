@@ -87,7 +87,7 @@
 						},
 						"customRunner": {
 							"type": "object",
-							"description": "Custom script to invoke instead of the default behave command, e.g. for running behave with a different runner. This becomes: `python <script> behave <args> ...`",
+							"description": "Custom Python script to invoke instead of the default behave command. The script must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
 							"properties": {
 								"script": {
 									"type": "string"

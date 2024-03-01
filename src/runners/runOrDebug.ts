@@ -25,13 +25,13 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
 
   const friendlyEnvVars = getFriendlyEnvVars(pr);
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
-  let friendlyArgs = [
+  const friendlyArgs = [
+    ...pr.customRunner?.args ?? [],
+    ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
     ...CONFIG_OVERRIDE_ARGS,
     `"${pr.junitRunDirUri.fsPath}"`,
-    ...pr.customRunner?.args ?? []
   ];
-  const args = formatArgsAndAddTags(pr, false, false, friendlyArgs);
-  friendlyArgs = formatArgsAndAddTags(pr, true, false, friendlyArgs);
+  const args = unquoteArgs(friendlyArgs);
 
   const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
@@ -59,14 +59,14 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
-    let friendlyArgs = [
+    const friendlyArgs = [
+      ...pr.customRunner?.args ?? [],
+      ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
       "-i", `"${featurePathsPattern}"`,
       ...CONFIG_OVERRIDE_ARGS,
       `"${pr.junitRunDirUri.fsPath}"`,
-      ...pr.customRunner?.args ?? []
     ];
-    const args = formatArgsAndAddTags(pr, false, false, friendlyArgs);
-    friendlyArgs = formatArgsAndAddTags(pr, true, false, friendlyArgs);
+    const args = unquoteArgs(friendlyArgs);
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
@@ -105,23 +105,17 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     const featureFileProjectRelativePath = selectedScenarioQueueItems[0].scenario.featureFileProjectRelativePath;
     const featureFileWorkRelPath = projDirRelativePathToWorkDirRelativePath(pr.projSettings, featureFileProjectRelativePath);
 
-    let friendlyArgs = [
+
+    const friendlyArgs = [
+      ...pr.customRunner?.args ?? [],
+      ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${friendlyArgsPipedScenarioNames}"`,
       ...CONFIG_OVERRIDE_ARGS,
       `"${pr.junitRunDirUri.fsPath}"`,
-      ...pr.customRunner?.args ?? [],
     ];
-    friendlyArgs = formatArgsAndAddTags(pr, true, true, friendlyArgs);
-
-    let args = [
-      "-i", `"${featureFileWorkRelPath}$"`,
-      "-n", `"${argsPipedScenarioNames}"`,
-      ...CONFIG_OVERRIDE_ARGS,
-      `"${pr.junitRunDirUri.fsPath}"`,
-      ...pr.customRunner?.args ?? [],
-    ];
-    args = formatArgsAndAddTags(pr, false, true, args);
+    const args = unquoteArgs(friendlyArgs);
+    args.splice(args.findIndex(item => item === `-n`) + 1, 1, argsPipedScenarioNames);
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
@@ -143,24 +137,9 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 }
 
 
-function formatArgsAndAddTags(pr: ProjRun, friendly: boolean, scenariosOnly: boolean, args: string[]) {
-  let argsOut: string[] = [];
-
-  if (friendly) {
-    argsOut = args;
-  }
-  else {
-    if (scenariosOnly)
-      argsOut = args.map(x => x.replace(/^"(.*)"$/, '$1'));
-    else
-      argsOut = args.map(x => x.replaceAll('"', ""));
-  }
-
-  if (pr.tagExpression) {
-    if (friendly)
-      argsOut.unshift(`--tags="${pr.tagExpression}"`);
-    else
-      argsOut.unshift(`--tags=${pr.tagExpression}`);
-  }
-  return argsOut;
+function unquoteArgs(args: string[]) {
+  args = args.map(x => x.replace(/^"(.*)"$/, '$1'));
+  args = args.map(x => x.replace(/^(--.+=)"(.*)"$/, '$1$2'));
+  return args;
 }
+

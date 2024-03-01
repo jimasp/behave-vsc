@@ -1,6 +1,6 @@
 import path = require("path");
-import { Expectations, TestBehaveIni } from "../_helpers/common";
-import { TestWorkspaceConfig } from "../_helpers/testWorkspaceConfig";
+import { Expectations, TestBehaveIni } from "../_common/types";
+import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig";
 import { getExpectedCountsWithoutBehaveIni, getExpectedResultsWithoutBehaveIni } from "./expectedResultsWithoutBehaveIni";
 import { getExpectedCountsWith2PathBehaveIni, getExpectedResultsWith2PathBehaveIni } from "./expectedResultsWith2PathBehaveIni"
 import { getExpectedCountsWith3PathBehaveIni, getExpectedResultsWith3PathBehaveIni } from "./expectedResultsWith3PathBehaveIni";

@@ -1,5 +1,5 @@
-import { TestProjectRunner } from "../_runners/projectRunner";
-import { noBehaveIni } from "../_helpers/common";
+import { TestProjectRunner } from "../_common/projectRunner";
+import { noBehaveIni } from "../_common/types";
 import { runOptions, wsConfig, expectations, wsConfigParallel } from "./config";
 import {
 	getExpectedResultsForNoProfile, getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults,

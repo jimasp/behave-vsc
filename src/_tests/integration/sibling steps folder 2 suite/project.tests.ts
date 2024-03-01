@@ -1,5 +1,5 @@
-import { TestProjectRunner } from "../_runners/projectRunner";
-import { noConfig, noRunOptions } from "../_helpers/common";
+import { TestProjectRunner } from "../_common/projectRunner";
+import { noConfig, noRunOptions } from "../_common/types";
 import { behaveIni, expectations } from "./config";
 
 

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import { RunProfilesSetting } from "../../../config/settings";
-import { TestWorkspaceConfig } from '../_helpers/testWorkspaceConfig';
+import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
 import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
-import { Expectations, RunOptions, TestBehaveIni, TestResult } from "../_helpers/common";
+import { Expectations, RunOptions, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../runner';
 import { QueueItem } from '../../../extension';
