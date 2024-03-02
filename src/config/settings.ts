@@ -183,13 +183,6 @@ export class ProjectSettings {
     this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
     this.excludedPathPatterns = getExcludedPathPatterns(projConfig);
 
-    const featuresPath = getActualWorkspaceSetting(projConfig, "featuresPath");
-    if (featuresPath !== undefined) {
-      services.logger.showWarn(`"behave-vsc.featuresPath" is an ignored legacy setting. Please remove it from your settings.json. 
-        (Feature paths are now auto-discovered and controlled by the the "behave-vsc.behaveWorkingDirectory" setting and/or the 
-        behave config file "paths" setting.)`, projUri);
-    }
-
     // For all settings read from settings.json (derived from package.json), projConfig.get() should never return
     // undefined (unless package.json is wrong), as get() will always return a default value for any packages.json setting.
     // Separately, in cases where we want the actual settings.json setting (not default) then use getActualWorkspaceSetting().
