@@ -27,7 +27,7 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
   const friendlyArgs = [
     ...pr.customRunner?.args ?? [],
-    ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
+    pr.tagExpression,
     ...CONFIG_OVERRIDE_ARGS,
     `"${pr.junitRunDirUri.fsPath}"`,
   ];
@@ -35,7 +35,8 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
 
   const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
+    `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
+    `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;
 
   if (pr.debug) {
     await debugBehaveInstance(pr, args, friendlyCmd);
@@ -61,7 +62,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const friendlyArgs = [
       ...pr.customRunner?.args ?? [],
-      ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
+      pr.tagExpression,
       "-i", `"${featurePathsPattern}"`,
       ...CONFIG_OVERRIDE_ARGS,
       `"${pr.junitRunDirUri.fsPath}"`,
@@ -70,7 +71,8 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
+      `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);
@@ -108,7 +110,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
     const friendlyArgs = [
       ...pr.customRunner?.args ?? [],
-      ...(pr.tagExpression ? [`--tags="${pr.tagExpression}"`] : []),
+      pr.tagExpression,
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${friendlyArgsPipedScenarioNames}"`,
       ...CONFIG_OVERRIDE_ARGS,
@@ -119,7 +121,8 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
     const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
-      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ${friendlyArgs.join(" ")}`;
+      `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
+      `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;
 
     if (pr.debug) {
       await debugBehaveInstance(pr, args, friendlyCmd);
@@ -139,7 +142,8 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
 function unquoteArgs(args: string[]) {
   args = args.map(x => x.replace(/^"(.*)"$/, '$1'));
-  args = args.map(x => x.replace(/^(--.+=)"(.*)"$/, '$1$2'));
+  //args = args.map(x => x.replace(/^(--.+=)"(.*)"$/, '$1$2'));
+  args = args.filter(x => x !== '');
   return args;
 }
 

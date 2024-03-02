@@ -94,7 +94,7 @@ export class Logger {
   };
 
 
-  showWarn = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+  showWarn = (text: string, projUri?: vscode.Uri, run?: vscode.TestRun) => {
     this._show(text, projUri, run, LogType.warn);
   }
 

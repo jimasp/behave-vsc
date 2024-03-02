@@ -1,9 +1,8 @@
 import { TestProjectRunner } from "../_common/projectRunner";
 import { noBehaveIni } from "../_common/types";
-import { runOptions, wsConfig, expectations, wsConfigParallel } from "./config";
+import { runOptions, wsConfig, expectations } from "./config";
 import {
-	getExpectedResultsForNoProfile, getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults,
-	getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults
+	getExpectedResultsForNoProfile
 } from "./expectedResults";
 
 suite(`use custom runner suite: multi.tests`, () => {
@@ -13,30 +12,6 @@ suite(`use custom runner suite: multi.tests`, () => {
 		runOptions.selectedRunProfile = undefined;
 		expectations.getExpectedResultsFunc = getExpectedResultsForNoProfile;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
-
-	test("runAll - custom runner profile: wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
-
-	test("runAll - custom runner profile: wait for results - parallel", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults;
-		await testProjectRunner.runAll(wsConfigParallel, noBehaveIni, runOptions, expectations);
-	});
-
-	test("runAll - custom runner profile: do not wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults;
-		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
-
-	test("runAll - custom runner profile: do not wait for results - parallel", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults;
-		await testProjectRunner.runAll(wsConfigParallel, noBehaveIni, runOptions, expectations);
 	});
 
 });

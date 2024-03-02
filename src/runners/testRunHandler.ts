@@ -32,14 +32,59 @@ export class ProjRun {
   ) { }
 }
 
+export type RunProfileWithName = {
+  name: string;
+  runProfile: RunProfile;
+}
+
+export interface ITestRunHandler {
+  (debug: boolean, request: vscode.TestRunRequest, runProfileWithName: RunProfileWithName): Promise<QueueItem[] | undefined>;
+}
 
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher,
   removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
 
-  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile = new RunProfile()):
-    Promise<QueueItem[] | undefined> => {
+  return async (debug: boolean, request: vscode.TestRunRequest, runProfileWithName: RunProfileWithName): Promise<QueueItem[] | undefined> => {
 
     xRayLog(`testRunHandler: invoked`);
+
+    const runProfile = runProfileWithName?.runProfile;
+    const runProfileTags = getTagsFromTagExpression(runProfile.tagExpression);
+    let tagLockAlreadyExistedForThisProfile = false;
+
+    // provide basic protection against the user selecting default profiles with the same tags (or no tags)
+    // running multiple runProfiles at the same time with 
+    // the same tags (or no tags), we don't want this to happen because:
+    /// a. we don't want the test running in parallel with itself (side-effects)
+    //  b. we don't want the same test having its results overwritten
+    for (const tagsLock of runProfileTagsLock) {
+
+      if (tagsLock.runProfileName === runProfileWithName.name) {
+        tagLockAlreadyExistedForThisProfile = true;
+        continue; // skip if profile exists, i.e. multiroot running the same profile against multiple projects
+      }
+
+      if (runProfileTags[0] === "") {
+        services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
+          `Request to run runProfile "${runProfileWithName.name}"  with no tags is blocked due to another running runProfile.`);
+        return;
+      }
+      if (tagsLock.tags[0] === "") {
+        services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
+          `Request to run runProfile "${runProfileWithName.name}" is blocked by currently running runProfile "${tagsLock.runProfileName}" ` +
+          `that has no tags.`);
+        return;
+      }
+      if (tagsLock.tags.some(x => getTagsFromTagExpression(runProfile.tagExpression).includes(x))) {
+        services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
+          `Request to run runProfile "${runProfileWithName.name}"  tags "${runProfileTags.join(", ")}" is blocked by ` +
+          `currently running run profile "${tagsLock.runProfileName}".`);
+        return;
+      }
+    }
+
+    if (!tagLockAlreadyExistedForThisProfile)
+      runProfileTagsLock.push({ runProfileName: runProfileWithName.name, tags: runProfileTags });
 
     // the test tree is built as a background process which is called from a few places
     // (and it will be slow during vscode startup due to contention), 
@@ -76,6 +121,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       services.logger.showError(e);
     }
     finally {
+      if (!tagLockAlreadyExistedForThisProfile)
+        runProfileTagsLock = runProfileTagsLock.filter(x => x.runProfileName !== runProfileWithName?.name);
       run.end();
     }
 
@@ -464,3 +511,29 @@ function convertToTestItemArray(collection: vscode.TestItemCollection) {
   collection.forEach((item: vscode.TestItem) => items.push(item));
   return items;
 }
+
+
+function getTagsFromTagExpression(tagExpression?: string) {
+
+  if (!tagExpression)
+    return [""];
+
+  const regex = /--tags=(~?@?\w+)/g;
+  let match;
+  const tags = [];
+
+  while ((match = regex.exec(tagExpression)) !== null) {
+    if (match[1] !== "")
+      tags.push(match[1]);
+  }
+
+  return tags;
+}
+
+
+type tagsLock = {
+  runProfileName: string;
+  tags: string[];
+}
+
+let runProfileTagsLock: tagsLock[] = [];

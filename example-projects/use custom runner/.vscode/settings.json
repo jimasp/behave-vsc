@@ -4,7 +4,7 @@
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
     "behave-vsc.runProfiles": {
         "behave-django runner profile - wait for results": {
-            "isDefault": true,
+            //"isDefault": true,
             "customRunner": {
                 "script": "manage.py",
                 "args": [

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
 import * as assert from 'assert';
-import { RunProfilesSetting } from "../../../config/settings";
+import { RunProfile, RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from './types';
@@ -20,6 +20,7 @@ import {
 } from "./assertions";
 import { logStore } from '../../runner';
 import { QueueItem } from '../../../extension';
+import { RunProfileWithName } from '../../../runners/testRunHandler';
 
 
 
@@ -65,9 +66,11 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  let runProfile = undefined;
-  if (runOptions.selectedRunProfile)
-    runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+  const runProfileWithName: RunProfileWithName = { name: "test", runProfile: new RunProfile() };
+  if (runOptions.selectedRunProfile) {
+    runProfileWithName.name = runOptions.selectedRunProfile;
+    runProfileWithName.runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+  }
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -131,7 +134,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ACT 2
 
     // kick off the run, do NOT await (see comment above)
-    const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
+    const resultsPromise = api.runHandler(isDebugRun, request, runProfileWithName);
 
 
     // release lock: 

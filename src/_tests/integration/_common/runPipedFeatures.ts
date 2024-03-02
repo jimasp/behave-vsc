@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
-import { RunProfilesSetting } from "../../../config/settings";
+import { RunProfile, RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
@@ -9,6 +9,7 @@ import { Expectations, RunOptions, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
+import { RunProfileWithName } from '../../../runners/testRunHandler';
 
 
 
@@ -36,9 +37,11 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  let runProfile = undefined;
-  if (runOptions.selectedRunProfile)
-    runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+  const runProfileWithName: RunProfileWithName = { name: "test", runProfile: new RunProfile() };
+  if (runOptions.selectedRunProfile) {
+    runProfileWithName.name = runOptions.selectedRunProfile;
+    runProfileWithName.runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
+  }
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -79,7 +82,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
     console.log(`${consoleName}: calling runHandler to run piped features...`);
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+    const results = await api.runHandler(isDebugRun, request, runProfileWithName);
 
     // ASSERT  
 

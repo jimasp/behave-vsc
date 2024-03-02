@@ -124,7 +124,7 @@ export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOpt
 		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
 		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
 		if (selectedRunProfile.tagExpression)
-			tagsString = `--tags="${selectedRunProfile.tagExpression}"`;
+			tagsString = selectedRunProfile.tagExpression;
 	}
 	return tagsString;
 }
