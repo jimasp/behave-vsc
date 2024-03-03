@@ -6,17 +6,13 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, rndNumeric
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
-import { getTagsFromTagExpression } from './helpers';
 
-
-
-let runProfileTagsLock: tagsLock[] = [];
 
 
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher,
@@ -31,49 +27,6 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         services.logger.showWarn(`Invalid tag expression: ${runProfile.tagExpression}`);
         return;
       }
-
-      const runProfileTags = getTagsFromTagExpression(false, runProfile.tagExpression);
-      let tagLockAlreadyExistedForThisProfile = false;
-
-      let clearLogs = true;
-      if (runProfileTagsLock.length === 0)
-        clearLogs = false;
-
-      // Provide very basic protection against the user setting default profiles with the same tags (or no tags) and then running them,
-      // because default profiles run in parallel.
-      // We don't want this to happen because:
-      /// a. we don't want the test running in parallel with itself (side-effects),
-      //  b. we don't want the same test having its results overwritten.
-      // This does not account for all tagExpressions/combinations e.g. negated tags like ~@tag are not accounted for, but at least
-      // the user is likely to be made aware of the issue of overlapping tags the very first time they see the message.
-      for (const tagsLock of runProfileTagsLock) {
-
-        if (tagsLock.runProfileName === runProfile.name) {
-          tagLockAlreadyExistedForThisProfile = true;
-          continue; // skip if profile exists, i.e. multiroot running the same profile against multiple projects
-        }
-
-        if (runProfileTags[0] === "") {
-          services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
-            `Request to run runProfile "${runProfile.name}"  with no tags is blocked due to another running runProfile.`);
-          return;
-        }
-        if (tagsLock.tags[0] === "") {
-          services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
-            `Request to run runProfile "${runProfile.name}" is blocked by currently running runProfile "${tagsLock.runProfileName}" ` +
-            `that has no tags.`);
-          return;
-        }
-        if (tagsLock.tags.some(x => getTagsFromTagExpression(false, runProfile.tagExpression).includes(x))) {
-          services.logger.showWarn(`Cannot run multiple runProfiles at the same time with overlapping tags (or no tags). ` +
-            `Request to run runProfile "${runProfile.name}"  tags "${runProfileTags.join(", ")}" is blocked by ` +
-            `currently running run profile "${tagsLock.runProfileName}".`);
-          return;
-        }
-      }
-
-      if (!tagLockAlreadyExistedForThisProfile)
-        runProfileTagsLock.push({ runProfileName: runProfile.name!, tags: runProfileTags });
 
       // the test tree is built as a background process which is called from a few places
       // (and it will be slow during vscode startup due to contention), 
@@ -92,7 +45,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       // stop the temp directory removal function if it is still running
       removeTempDirectoryCancelSource.cancel();
 
-      const run = ctrl.createTestRun(request, rndNumeric(), false);
+      const run = ctrl.createTestRun(request, runProfile.name, false);
 
       xRayLog(`testRunHandler: starting run ${run.name}`);
 
@@ -102,7 +55,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         xRayLog(`testRunHandler: tests length = ${tests.length}`);
         await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
         xRayLog(`testRunHandler: queue length = ${queue.length}`);
-        await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile, clearLogs);
+        await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
         return queue;
       }
       catch (e: unknown) {
@@ -110,8 +63,6 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         services.logger.showError(e);
       }
       finally {
-        if (!tagLockAlreadyExistedForThisProfile)
-          runProfileTagsLock = runProfileTagsLock.filter(x => x.runProfileName !== runProfile.name);
         run.end();
       }
 
@@ -158,13 +109,14 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
 
 async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile, clearLogs: boolean) {
+  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
 
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
   if (queue.length === 0)
     throw new Error("empty queue - nothing to do");
 
+  const runId = new Date().toISOString().replace(/:/g, "-").replace(/\..+/, "");
   const projRunPromises: Promise<void>[] = [];
   const winSettings = services.config.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
@@ -196,17 +148,17 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     if (projQueue.length === 0)
       continue;
 
-    if (!debug && clearLogs)
+    if (!debug)
       services.logger.clear(projSettings.uri);
 
     // run projects sequentially
     if (!winSettings.runMultiRootProjectsInParallel || debug) {
-      await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
+      await runProjectQueue(projSettings, ctrl, run, runId, request, testData, debug, projQueue, runProfile);
       continue;
     }
 
     // run projects in parallel
-    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
+    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, runId, request, testData, debug, projQueue, runProfile));
   }
 
   // wait for all project runs to complete
@@ -220,7 +172,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 }
 
 
-async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
+async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, runId: string,
   request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
 
   let pr: ProjRun | undefined = undefined;
@@ -519,11 +471,6 @@ function isValidTagExpression(tagExpression: string | undefined): boolean {
   return true;
 }
 
-
-type tagsLock = {
-  runProfileName: string;
-  tags: string[];
-}
 
 export class ProjRun {
   constructor(

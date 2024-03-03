@@ -167,19 +167,3 @@ export function workDirRelativePathToProjDirRelativePath(ps: ProjectSettings, wo
 }
 
 
-export function getTagsFromTagExpression(includeNegativeTags: boolean, tagExpression: string | undefined) {
-
-  if (!tagExpression)
-    return [""];
-
-  const regex = includeNegativeTags ? /--tags=(~?@?\w+)/g : /--tags=(@?\w+)/g;
-  let match;
-  const tags = [];
-
-  while ((match = regex.exec(tagExpression)) !== null) {
-    if (match[1] !== "")
-      tags.push(match[1]);
-  }
-
-  return tags;
-}
