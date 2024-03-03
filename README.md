@@ -114,20 +114,24 @@ For simple setups, the extension should work "out of the box", but there is plen
           "BEHAVE_STAGE": "Local",
           "ENDPOINT": "http://localhost:4566"
       },
-      "behave-vsc.runProfiles": {
-        "Tags: A": {
+      "behave-vsc.runProfiles": [
+        {
+          "name": "Tags: A",
           "tagExpression": "@tagA",
         },   
-        "Tags: B,C": {
+        {
+          "name": "Tags: B,C",
           "tagExpression": "@tagB, @tagC",
         },                
-        "System": {
+        {
+          "name": "System",
           "env": {
             // override ONE of the default env vars
             "BEHAVE_STAGE": "System"           
           }
         },          
-        "Staging: Tag B": {         
+        {         
+          "name": "Staging: Tag B",
           "env": {
             // override BOTH of the default env vars
             "BEHAVE_STAGE": "Staging",
@@ -135,7 +139,7 @@ For simple setups, the extension should work "out of the box", but there is plen
           },
           "tagExpression": "@tagB"
         }
-      }
+      ]
       ```
 
   - Notes:

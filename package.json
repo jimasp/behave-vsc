@@ -63,16 +63,18 @@
 					"default": false
 				},
 				"behave-vsc.runProfiles": {
-					"type": "object",
+					"type": "array",
 					"scope": "window",
-					"markdownDescription": "A dictionary of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to ALL projects in the workspace. See example in readme.",
-					"additionalProperties": {
+					"markdownDescription": "A list of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to ALL projects in the workspace. See example in readme.",
+					"items": {
 						"type": "object",
+						"required": [
+							"name"
+						],
 						"properties": {
-							"isDefault": {
-								"type": "boolean",
-								"default": false,
-								"markdownDescription": "If true, this profile will be added to the default profile(s) and runFeatures will be removed from the default profile"
+							"name": {
+								"type": "string",
+								"description": "The name of the run profile."
 							},
 							"env": {
 								"type": "object",
@@ -83,24 +85,23 @@
 							},
 							"tagExpression": {
 								"type": "string"
-							}
-						},
-						"customRunner": {
-							"type": "object",
-							"description": "Custom Python script to invoke instead of the default behave command. The script must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
-							"properties": {
-								"script": {
-									"type": "string"
-								},
-								"args": {
-									"type": "array",
-									"items": {
+							},
+							"customRunner": {
+								"type": "object",
+								"description": "Custom Python script to invoke instead of the default behave command. The script must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
+								"properties": {
+									"script": {
 										"type": "string"
+									},
+									"args": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										}
+									},
+									"waitForJunitFiles": {
+										"default": true
 									}
-								},
-								"waitForJunitFiles": {
-									"default": true,
-									"type": "boolean"
 								}
 							}
 						}

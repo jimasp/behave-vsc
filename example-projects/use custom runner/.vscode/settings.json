@@ -2,9 +2,9 @@
     "python.defaultInterpreterPath": ".venv/bin/python",
     "behave-vsc.xRay": true,
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
-    "behave-vsc.runProfiles": {
-        "behave-django runner profile - wait for results": {
-            //"isDefault": true,
+    "behave-vsc.runProfiles": [
+        {
+            "name:": "behave-django runner profile - wait for resultsx",
             "customRunner": {
                 "script": "manage.py",
                 "args": [
@@ -13,13 +13,14 @@
                 "waitForJUnitResults": true
             },
         },
-        "behave-django runner profile - do not wait for results": {
+        {
+            "name": "behave-django runner profile - do not wait for results",
             "customRunner": {
                 "script": "manage.py",
                 "waitForJUnitResults": false
             },
         },
-    },
+    ],
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ]

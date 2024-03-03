@@ -549,3 +549,7 @@ export function basename(uri: vscode.Uri) {
 export function getLines(text: string) {
   return text.split(/\r\n|\r|\n/);
 }
+
+export function isIterable(obj: unknown): boolean {
+  return obj != null && typeof (obj as Iterable<unknown>)[Symbol.iterator] === 'function';
+}

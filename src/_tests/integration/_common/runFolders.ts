@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as vscode from 'vscode';
-import { RunProfile, RunProfilesSetting } from "../../../config/settings";
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getRunProfile, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../runner';
 import { QueueItem } from '../../../extension';
-import { RunProfileWithName } from '../../../runners/testRunHandler';
 
 
 
@@ -30,11 +28,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  const runProfileWithName: RunProfileWithName = { name: "test", runProfile: new RunProfile() };
-  if (runOptions.selectedRunProfile) {
-    runProfileWithName.name = runOptions.selectedRunProfile;
-    runProfileWithName.runProfile = (testExtConfig.get("runProfiles") as RunProfilesSetting)[runOptions.selectedRunProfile];
-  }
+  const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -54,7 +48,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: calling runHandler to run folders...`);
     const requestItems = folderItems.map(x => x.item);
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfileWithName);
+    const results = await api.runHandler(isDebugRun, request, runProfile);
 
     // ASSERT
 

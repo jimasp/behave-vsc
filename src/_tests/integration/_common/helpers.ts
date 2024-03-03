@@ -7,7 +7,7 @@ import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
 import { getUrisOfWkspFoldersWithFeatures } from '../../../common/helpers';
 import { RunOptions, testGlobals } from './types';
-import { CustomRunner, ProjectSettings, RunProfilesSetting } from '../../../config/settings';
+import { CustomRunner, ProjectSettings, RunProfile, RunProfilesSetting } from '../../../config/settings';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { ProjRun } from '../../../runners/testRunHandler';
@@ -120,12 +120,9 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 
 export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 	let tagsString = "";
-	if (runOptions.selectedRunProfile) {
-		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
-		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
-		if (selectedRunProfile.tagExpression)
-			tagsString = selectedRunProfile.tagExpression;
-	}
+	const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+	if (runProfile.tagExpression)
+		tagsString = runProfile.tagExpression;
 	return tagsString;
 }
 
@@ -135,9 +132,8 @@ export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, run
 
 	let rpEnv: object | undefined = {};
 	if (runOptions && runOptions.selectedRunProfile) {
-		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
-		const selectedRunProfile = runProfiles[runOptions.selectedRunProfile];
-		rpEnv = selectedRunProfile.env;
+		const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+		rpEnv = runProfile.env;
 	}
 
 	const allenv = { ...env, ...rpEnv };
@@ -171,8 +167,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 
 	let customRunner: CustomRunner | undefined = undefined;
 	if (runOptions.selectedRunProfile) {
-		const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
-		const runProfile = runProfiles[runOptions.selectedRunProfile];
+		const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
 		customRunner = runProfile.customRunner;
 	}
 
@@ -205,6 +200,17 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 		projName
 	];
 	return expectCmdOrderedIncludes;
+}
+
+
+export function getRunProfile(testExtConfig: TestWorkspaceConfig, profileName: string | undefined): RunProfile {
+	if (!profileName)
+		return new RunProfile("int test profile");
+	const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
+	const runProfile = runProfiles.find(x => x.name === profileName);
+	if (!runProfile)
+		throw new Error(`selectedRunProfile "${profileName}" not found in runProfiles`);
+	return runProfile;
 }
 
 

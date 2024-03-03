@@ -17,15 +17,15 @@ import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 import { ProjectWatcher } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
-import { RunProfile } from './config/settings';
 import { ProjParseCounts } from './parsers/fileParser';
+import { createRunProfiles } from './profiles/runProfiles';
 
 
 const config = services.config;
 const logger = services.logger;
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
-const runProfiles: vscode.TestRunProfile[] = [];
 const projWatchers = new Map<vscode.Uri, ProjectWatcher>();
+let runProfiles: vscode.TestRunProfile[] = [];
 
 export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
 
@@ -63,6 +63,9 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     const junitWatcher = new JunitWatcher();
     junitWatcher.startWatchingJunitFolder();
 
+    const runHandler = testRunHandler(testData, ctrl, junitWatcher, cleanExtensionTempDirectoryCancelSource);
+    runProfiles = createRunProfiles(ctrl, runHandler);
+
 
     // any function contained in a context.subscriptions.push() will execute immediately, 
     // as well as registering the returned disposable object for a dispose() call on extension deactivation
@@ -85,9 +88,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
     );
 
-
-    const runHandler = testRunHandler(testData, ctrl, junitWatcher, cleanExtensionTempDirectoryCancelSource);
-    createRunProfiles(ctrl, runHandler);
 
 
     // TODO: remove? we probably don't need this handler, as we are watching/re-parsing files on any change
@@ -274,78 +274,18 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 } // end activate()
 
 
+function reloadRunProfiles(ctrl: vscode.TestController, runHandler: ITestRunHandler) {
+  runProfiles.forEach(p => p.dispose());
+  runProfiles = createRunProfiles(ctrl, runHandler);
+}
+
+
 async function createProjectWatchers(ctrl: vscode.TestController, testData: TestData) {
   for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
     const projWatcher = await ProjectWatcher.create(projUri, ctrl, testData);
     projWatchers.set(projUri, projWatcher);
   }
 }
-
-
-
-function createRunProfiles(ctrl: vscode.TestController,
-  runHandler: ITestRunHandler,
-  configChanged = false) {
-
-  if (configChanged) {
-    for (const profile of runProfiles) {
-      profile.dispose();
-    }
-  }
-
-
-  for (const name in config.instanceSettings.runProfiles) {
-    const runProfile = config.instanceSettings.runProfiles[name];
-    const runProfileWithName = { name: name, runProfile: runProfile };
-    runProfiles.push(ctrl.createRunProfile("Run Features: " + name, vscode.TestRunProfileKind.Run,
-      async (request: vscode.TestRunRequest) => {
-        await runHandler(false, request, runProfileWithName);
-      }));
-    runProfiles.push(ctrl.createRunProfile("Debug Features: " + name, vscode.TestRunProfileKind.Debug,
-      async (request: vscode.TestRunRequest) => {
-        await runHandler(true, request, runProfileWithName);
-      }));
-  }
-
-  runProfiles.push(ctrl.createRunProfile('Run Features', vscode.TestRunProfileKind.Run,
-    async (request: vscode.TestRunRequest) => {
-      await runHandler(false, request, { name: 'Run Features', runProfile: new RunProfile() });
-    }));
-
-  runProfiles.push(ctrl.createRunProfile('Debug Features', vscode.TestRunProfileKind.Debug,
-    async (request: vscode.TestRunRequest) => {
-      await runHandler(true, request, { name: 'Debug Features', runProfile: new RunProfile() });
-    }));
-
-  const runAdHocName = 'Run Features with Tags (ad-hoc)';
-  const adHocRunProfile = ctrl.createRunProfile(runAdHocName, vscode.TestRunProfileKind.Run,
-    async (request: vscode.TestRunRequest) => {
-      const tagExpression = await vscode.window.showInputBox({ prompt: "Enter tag expression, e.g. `mytag1, mytag2`" });
-      await runHandler(false, request, { name: runAdHocName, runProfile: new RunProfile(tagExpression) });
-    });
-  adHocRunProfile.isDefault = false;
-  adHocRunProfile.onDidChangeDefault(() => {
-    adHocRunProfile.isDefault = false;
-    services.logger.showWarn("Ad-hoc run profile cannot be set as a default.");
-  });
-  runProfiles.push(adHocRunProfile);
-
-  const debugAdHocName = 'Debug Features with Tags (ad-hoc)';
-  runProfiles.push(ctrl.createRunProfile(debugAdHocName, vscode.TestRunProfileKind.Debug,
-    async (request: vscode.TestRunRequest) => {
-      const tagExpression = await vscode.window.showInputBox(
-        { prompt: "Enter tag expression, e.g. `mytag1, mytag2`" }
-      );
-      await runHandler(true, request, { name: debugAdHocName, runProfile: new RunProfile(tagExpression) });
-    }));
-
-}
-
-function reloadRunProfiles(ctrl: vscode.TestController,
-  runHandler: ITestRunHandler) {
-  createRunProfiles(ctrl, runHandler, true);
-}
-
 
 
 // public API (i.e. the activate function return type) is normally there to be called from other 

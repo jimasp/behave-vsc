@@ -19,55 +19,6 @@ import { getBaseDirPath } from '../behaveLogic';
 
 
 
-export type EnvSetting = { [key: string]: string };
-
-export class CustomRunner {
-  public readonly script: string;
-  public readonly args?: string[];
-  public readonly waitForJUnitResults?: boolean;
-
-  constructor(
-    script: string,
-    args?: string[],
-    waitForJUnitResults?: boolean
-  ) {
-    this.script = script;
-    this.args = args ?? [];
-    this.waitForJUnitResults = waitForJUnitResults ?? false;
-  }
-}
-
-export type RunProfilesSetting = { [key: string]: RunProfile };
-
-export class RunProfile {
-  public readonly tagExpression?: string;
-  public readonly env?: { [key: string]: string };
-  public readonly isDefault?: boolean;
-  public readonly customRunner?: CustomRunner
-
-  constructor(
-    tagExpression?: string,
-    env?: EnvSetting | undefined,
-    isDefault?: boolean,
-    customRunner?: CustomRunner
-  ) {
-    this.tagExpression = tagExpression ?? "";
-    this.env = env ?? {};
-    this.isDefault = isDefault ?? false;
-    this.customRunner = customRunner;
-  }
-}
-
-export type ImportedStepsSetting = { [key: string]: string };
-export type StepImport = {
-  relativePath: string;
-  stepFilesRx: string;
-}
-export type ImportedSteps = StepImport[];
-
-
-
-
 export class InstanceSettings {
   // class for package.json scope:"window" settings 
   // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
@@ -98,7 +49,8 @@ export class InstanceSettings {
       if (runProfilesCfg === undefined)
         throw new Error("runProfiles is undefined");
       let validRunProfiles = true;
-      for (const [, profile] of Object.entries(runProfilesCfg)) {
+      const runProfiles: { [key: string]: RunProfile } = {};
+      for (const [key, profile] of Object.entries(runProfilesCfg)) {
         const script = profile.customRunner?.script;
         if (script) {
           if (!script.endsWith(".py")) {
@@ -110,6 +62,7 @@ export class InstanceSettings {
             validRunProfiles = false;
           }
         }
+        runProfiles[key] = new RunProfile(key, profile.tagExpression, profile.env, profile.customRunner);
       }
       if (validRunProfiles)
         this.runProfiles = runProfilesCfg;
@@ -416,4 +369,53 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
 
   services.logger.logInfo(`\nProject settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, ps.uri);
 }
+
+
+export type EnvSetting = { [key: string]: string };
+
+export type StepImport = {
+  relativePath: string;
+  stepFilesRx: string;
+}
+export type ImportedSteps = StepImport[];
+export type ImportedStepsSetting = { [key: string]: string };
+
+export class CustomRunner {
+  public readonly script: string;
+  public readonly args?: string[];
+  public readonly waitForJUnitResults?: boolean;
+
+  constructor(
+    script: string,
+    args?: string[],
+    waitForJUnitResults?: boolean
+  ) {
+    this.script = script;
+    this.args = args ?? [];
+    this.waitForJUnitResults = waitForJUnitResults ?? false;
+  }
+}
+
+export class RunProfile {
+  public readonly name: string;
+  public readonly tagExpression?: string;
+  public readonly env?: EnvSetting;
+  public readonly customRunner?: CustomRunner
+
+  constructor(
+    name: string,
+    tagExpression?: string,
+    env?: EnvSetting | undefined,
+    customRunner?: CustomRunner
+  ) {
+    this.name = name;
+    this.tagExpression = tagExpression ?? "";
+    this.env = env ?? {};
+    this.customRunner = customRunner;
+  }
+}
+
+export type RunProfilesSetting = RunProfile[];
+
+
 

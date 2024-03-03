@@ -9,7 +9,6 @@ import { Expectations, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
 import { logStore } from '../../runner';
-import { RunProfileWithName } from '../../../runners/testRunHandler';
 import { RunProfile } from '../../../config/settings';
 
 
@@ -296,8 +295,8 @@ async function actAndAssert(params: Params, consoleName: string, requestItems: v
 
   console.log(`${consoleName}: calling runHandler to run piped features...`);
   const request = new vscode.TestRunRequest(requestItems);
-  const runProfileWithName: RunProfileWithName = { name: "test", runProfile: new RunProfile() };
-  const results = await api.runHandler(false, request, runProfileWithName);
+  const runProfile = new RunProfile("int test profile");
+  const results = await api.runHandler(false, request, runProfile);
 
   // ASSERT  
 

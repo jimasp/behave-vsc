@@ -5,8 +5,9 @@ import { getExpectedCounts } from "./expectedResults"
 
 export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "django/mysite",
-  runProfiles: {
-    "behave-django runner profile: wait for test results": {
+  runProfiles: [
+    {
+      "name": "behave-django runner profile: wait for test results",
       "env": {
         "var1": "var1 value",
       },
@@ -19,7 +20,8 @@ export const wsConfig = new TestWorkspaceConfig({
         "waitForJUnitResults": true
       },
     },
-    "behave-django runner profile: do NOT wait for test results": {
+    {
+      "name": "behave-django runner profile: do NOT wait for test results",
       "env": {
         "var1": "var1 value",
       },
@@ -29,7 +31,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "waitForJUnitResults": false
       },
     },
-  },
+  ]
 });
 
 export const wsConfigParallel = new TestWorkspaceConfig({
