@@ -4,20 +4,23 @@
         "var1": "ENV-var1",
         "var3": "ENV-var3",
     },
-    "behave-vsc.runProfiles": {
-        "stage2 profile": {
+    "behave-vsc.runProfiles": [
+        {
+            "name": "stage2 profile",
             "env": {
                 "profile": "stage2_profile",
                 "BEHAVE_STAGE": "stage2"
             },
         },
-        "tag1 profile": {
+        {
+            "name": "tag1 profile",
             "env": {
                 "profile": "tag1_profile",
             },
             "tagExpression": "--tags=tag1",
         },
-        "tag1 vars profile": {
+        {
+            "name": "tag1 vars profile",
             "env": {
                 "profile": "tag1_vars_profile",
                 "var1": "TAG1-var1",
@@ -25,7 +28,8 @@
             },
             "tagExpression": "--tags=tag1",
         },
-        "tag2 vars profile": {
+        {
+            "name": "tag2 vars profile",
             "env": {
                 "profile": "tag2_vars_profile",
                 "var1": "TAG2-var1",
@@ -33,7 +37,8 @@
             },
             "tagExpression": "--tags=@tag2",
         },
-        "tag1or2 vars profile": {
+        {
+            "name": "tag1or2 vars profile",
             "env": {
                 "profile": "tag1or2_vars_profile",
                 "var1": "TAG1_OR_2-var1",
@@ -41,19 +46,21 @@
             },
             "tagExpression": "--tags=tag1,@tag2",
         },
-        "qu'oted\"tag profile": {
+        {
+            "name": "qu'oted\"tag profile",
             "env": {
                 "profile": "qu'oted\"tag_profile",
             },            
             "tagExpression": "--tags=@qu'oted\"tag",
         },
-        "qu'oted\"env profile": {
+        {
+            "name": "qu'oted\"env profile",
             "env": {
                 "profile": "qu'oted\"env_profile",
                 "qu'oted\"env": "v'al\"ue"
             },
         },             
-    },
+    ],
     "mypy-type-checker.ignorePatterns": [
         ".*"
     ],
