@@ -127,7 +127,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   for (const projSettings of allProjectsSettings) {
     const idMatch = uriId(projSettings.uri);
     const projQueue = queue.filter(item => item.test.id.includes(idMatch));
-    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, projQueue);
+    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, runId, projQueue);
     allProjectsQueueMap.push(...projQueueMap);
   }
 
@@ -136,7 +136,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
   // WAIT for the junit watcher to be ready
   if (!runProfile.customRunner || runProfile.customRunner.waitForJUnitResults)
-    await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
+    await junitWatcher.startWatchingRun(run, runId, debug, projNames, allProjectsQueueMap);
 
   // run each project queue  
   for (const projSettings of allProjectsSettings) {
@@ -185,7 +185,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
     const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
     projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitProjRunDirUri = getJunitProjRunDirUri(run, ps.name);
+    const junitProjRunDirUri = getJunitProjRunDirUri(run, runId, ps.name);
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
