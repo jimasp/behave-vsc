@@ -141,23 +141,40 @@ async function onlyOneDefault(isDefault: boolean, profileName: string, featurePr
   await new Promise(resolve => setTimeout(resolve, 100));
 
   let userSelectedTwo = false;
+  let selections = 0;
 
   for (const p of featureProfiles) {
-    if (p.label === `${DEBUG_PREFIX}: ${profileName}` || p.label === `${RUN_PREFIX}: ${profileName}`) {
+    if (p.label === profileName // Debug Features/Run Features
+      || p.label === `${DEBUG_PREFIX}: ${profileName}`
+      || p.label === `${RUN_PREFIX}: ${profileName}`) {
+
       p.isDefault = true; // sync debug and run profiles
       continue;
     }
 
-    if (p.isDefault)
-      userSelectedTwo = true;
+    if (p.isDefault) {
+      selections++;
+      if (selections > 1) {
+        userSelectedTwo = true;
+      }
+    }
 
     // only allow one default Features run profile (i.e. one for run + one for debug)          
     p.isDefault = false;
   }
 
   if (userSelectedTwo) {
-    // reset all Feature run profiles to non-default, so user has to choose the one they want
-    featureProfiles.map(x => x.isDefault = false);
+    // vscode requires one default (even if you can't see it in the UI)
+    // reset to "Run Features" (and "Debug Features")
+    for (const p of featureProfiles) {
+      if (p.label === DEBUG_PREFIX || p.label === RUN_PREFIX) {
+        p.isDefault = true;
+      }
+      else {
+        p.isDefault = false;
+      }
+    }
+
     services.logger.showWarn(`Only one default Features run profile is allowed.`);
   }
 
