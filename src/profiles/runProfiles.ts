@@ -9,7 +9,7 @@ const config = services.config;
 
 export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITestRunHandler): vscode.TestRunProfile[] {
 
-  const runProfiles = [];
+  const runProfiles: vscode.TestRunProfile[] = [];
 
   for (const debug of [false, true]) {
 

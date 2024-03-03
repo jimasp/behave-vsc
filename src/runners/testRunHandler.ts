@@ -35,6 +35,10 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       const runProfileTags = getTagsFromTagExpression(false, runProfile.tagExpression);
       let tagLockAlreadyExistedForThisProfile = false;
 
+      let clearLogs = true;
+      if (runProfileTagsLock.length === 0)
+        clearLogs = false;
+
       // Provide very basic protection against the user setting default profiles with the same tags (or no tags) and then running them,
       // because default profiles run in parallel.
       // We don't want this to happen because:
@@ -98,7 +102,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
         xRayLog(`testRunHandler: tests length = ${tests.length}`);
         await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
         xRayLog(`testRunHandler: queue length = ${queue.length}`);
-        await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
+        await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile, clearLogs);
         return queue;
       }
       catch (e: unknown) {
@@ -154,7 +158,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 
 
 async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
+  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile, clearLogs: boolean) {
 
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
@@ -192,7 +196,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     if (projQueue.length === 0)
       continue;
 
-    if (!debug)
+    if (!debug && clearLogs)
       services.logger.clear(projSettings.uri);
 
     // run projects sequentially
