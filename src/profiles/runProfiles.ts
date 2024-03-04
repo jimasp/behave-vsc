@@ -97,7 +97,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
       const profileName = "ad-hoc tags (Expression)";
       const profile = ctrl.createRunProfile(`${prefix}: ${profileName}`, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagExpression = await vscode.window.showInputBox({ placeHolder: "--tags=tag1 --tags=tag2" });
+          const tagExpression = await vscode.window.showInputBox({ placeHolder: "--tags=tag1 --tags=tag2", prompt: "Tag Expression. " });
           if (!tagExpression)
             return;
           if (!tagExpression?.startsWith("--tags=")) {
