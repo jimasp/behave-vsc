@@ -34,7 +34,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
               async (request: vscode.TestRunRequest) => {
                 await runHandler(debug, request, profileSetting);
               });
-            profile.onDidChangeDefault(isDefault => onlyOneDefault(isDefault, profileName, runProfiles));
+            profile.onDidChangeDefault(isDefault => onlyAllowOneDefault(isDefault, profileName, runProfiles));
             runProfiles.push(profile);
           })();
         }
@@ -50,7 +50,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
         });
-      profile.onDidChangeDefault(isDefault => onlyOneDefault(isDefault, profileName, runProfiles));
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefault(isDefault, profileName, runProfiles));
       runProfiles.push(profile);
     })();
 
@@ -59,7 +59,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
       const profileName = "ad-hoc tags ( OR )";
       const profile = ctrl.createRunProfile(`${prefix}: ${profileName}`, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2" });
+          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
           if (!tagString)
             return;
           if (tagString?.includes("--tags")) {
@@ -69,7 +69,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           const tagExpression = "--tags=" + tagString.split(",").map(x => x.trim());
           await runHandler(debug, request, new RunProfile(profileName, tagExpression));
         });
-      profile.onDidChangeDefault(isDefault => onlyOneDefault(isDefault, profileName, runProfiles));
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefault(isDefault, profileName, runProfiles));
       runProfiles.push(profile);
     })();
 
@@ -78,7 +78,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
       profileName = "ad-hoc tags (AND)";
       const profile = ctrl.createRunProfile(`${prefix}: ${profileName}`, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2`" });
+          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2", prompt: "Logical AND. " });
           if (!tagString)
             return;
           if (tagString?.includes("--tags")) {
@@ -88,7 +88,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           const tagExpression = "--tags=" + tagString.split(",").map(x => x.trim()).join(" --tags=");
           await runHandler(debug, request, new RunProfile(profileName, tagExpression));
         });
-      profile.onDidChangeDefault(isDefault => onlyOneDefault(isDefault, profileName, runProfiles));
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefault(isDefault, profileName, runProfiles));
       runProfiles.push(profile);
     })();
 
@@ -106,7 +106,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           }
           await runHandler(debug, request, new RunProfile(profileName, tagExpression));
         });
-      profile.onDidChangeDefault(isDefault => onlyOneDefault(isDefault, profileName, runProfiles));
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefault(isDefault, profileName, runProfiles));
       runProfiles.push(profile);
     })();
 
@@ -116,67 +116,52 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 }
 
 
-async function onlyOneDefault(isDefault: boolean, profileName: string, featureProfiles: vscode.TestRunProfile[]) {
+const defaultsTracker: string[] = [];
+
+async function onlyAllowOneDefault(isDefault: boolean, profileName: string, featureProfiles: vscode.TestRunProfile[]) {
   // This function ensures that only one default run profile is set for Features profiles.
-  // Default profiles run in parallel. This means that the same test can be hit twice with the same tags (or no tags). 
+  // This is because default profiles run in parallel. This means that the same test can be hit twice with the same tags (or no tags). 
   // Equally a feature itself can be hit for multiple tags (e.g. @tag1 and @tag2 on the same scenario for 2x run profiles).
-  // This would create various issues, including:
+  // This would create various problems, including:
   //   a. the test running in parallel with itself (side-effects),
   //   b. the same test having its results overwritten immediately by the next run.
 
-  if (!isDefault) {
-    // set isDefault to false NOW for deselected profiles, so that the runProfiles array is in sync 
-    // before the parallel call to this function by the new default profile completes the delay further down in this function
-    let profile = featureProfiles.find(x => x.label === `${DEBUG_PREFIX}: ${profileName}`);
-    if (profile)
-      profile.isDefault = false;
-    profile = featureProfiles.find(x => x.label === `${RUN_PREFIX}: ${profileName}`);
-    if (profile)
-      profile.isDefault = false;
 
-    return; // done
-  }
-
-  // add slight delay to allow for isDefault to be set to false above
+  // this function can get called multiple times (i.e. once for each selection), 
+  // so we'll track/update the current state in our own variable
+  if (isDefault)
+    defaultsTracker.push(profileName);
+  else
+    defaultsTracker.splice(defaultsTracker.indexOf(profileName), 1);
+  // add small delay to allow for defaultsTracker to be set on all calls
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  let userSelectedTwo = false;
-  let selections = 0;
-
-  for (const p of featureProfiles) {
-    if (p.label === profileName // Debug Features/Run Features
-      || p.label === `${DEBUG_PREFIX}: ${profileName}`
-      || p.label === `${RUN_PREFIX}: ${profileName}`) {
-
-      p.isDefault = true; // sync debug and run profiles
-      continue;
-    }
-
-    if (p.isDefault) {
-      selections++;
-      if (selections > 1) {
-        userSelectedTwo = true;
-      }
-    }
-
-    // only allow one default Features run profile (i.e. one for run + one for debug)          
-    p.isDefault = false;
-  }
-
-  if (userSelectedTwo) {
-    // vscode requires one default (even if you can't see it in the UI)
-    // reset to "Run Features" (and "Debug Features")
-    for (const p of featureProfiles) {
-      if (p.label === DEBUG_PREFIX || p.label === RUN_PREFIX) {
-        p.isDefault = true;
-      }
-      else {
-        p.isDefault = false;
-      }
-    }
-
+  if (defaultsTracker.length > 1) {
     services.logger.showWarn(`Only one default Features run profile is allowed.`);
+    defaultsTracker.length = 0;
   }
+
+  // TODO: add boolean param to this function and set (use prefix) accordingly
+  if (isDefault) {
+    // set all other profiles to false
+    for (const profile of featureProfiles) {
+      profile.isDefault = profile.label === profileName || profile.label === `${RUN_PREFIX}: ${profileName}`;
+      console.log(profile.label, profile.isDefault);
+    }
+  }
+
+  // vscode currently has a bug where it will automatically set the first profile as the default profile if there are none, 
+  // but it won't show in the UI, so we'll set it again here to update the UI
+  if (!isDefault) {
+    const haveDefault = featureProfiles.some(p => p.isDefault);
+    if (!haveDefault) {
+      const ootbDefault = featureProfiles.find(p => p.label === RUN_PREFIX);
+      if (!ootbDefault)
+        throw new Error(`${RUN_PREFIX} profile not found.`);
+      ootbDefault.isDefault = true;
+    }
+  }
+
 
 }
 
