@@ -119,12 +119,13 @@ export class Logger {
 
     xRayLog(text, projUri, logType);
 
+    const logText = (logType === LogType.error ? "ERROR: " : logType === LogType.warn ? "WARNING: " : "") + text;
     if (projUri) {
-      this.channels[projUri.path].appendLine(text);
+      this.channels[projUri.path].appendLine(logText);
     }
     else {
       for (const projPath in this.channels) {
-        this.channels[projPath].appendLine(text);
+        this.channels[projPath].appendLine(logText);
       }
     }
 
