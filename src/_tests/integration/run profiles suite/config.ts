@@ -24,7 +24,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "profile": "tag1_profile",
       },
-      "tagExpression": "--tags=tag1",
+      "tagsParameters": "--tags=tag1",
     },
     {
       "name": "tag1 vars profile",
@@ -33,7 +33,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG1-var1",
         "var2": "TAG1-var2"
       },
-      "tagExpression": "--tags=@tag1",
+      "tagsParameters": "--tags=@tag1",
     },
     {
       "name": "tag2 vars profile",
@@ -42,7 +42,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG2-var1",
         "var2": "TAG2-var2"
       },
-      "tagExpression": "--tags=@tag2",
+      "tagsParameters": "--tags=@tag2",
     },
     {
       "name": "tag1or2 vars profile",
@@ -51,14 +51,14 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG1_OR_2-var1",
         "var2": "TAG1_OR_2-var2"
       },
-      "tagExpression": "--tags=tag1,@tag2",
+      "tagsParameters": "--tags=tag1,@tag2",
     },
     {
       "name": "qu'oted\"tag profile",
       "env": {
         "profile": "qu'oted\"tag_profile",
       },
-      "tagExpression": "--tags=@qu'oted\"tag",
+      "tagsParameters": "--tags=@qu'oted\"tag",
     },
     {
       "name": "qu'oted\"env profile",

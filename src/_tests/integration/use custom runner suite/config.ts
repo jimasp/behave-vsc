@@ -11,7 +11,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "var1": "var1 value",
       },
-      "tagExpression": "--tags=~@skip",
+      "tagsParameters": "--tags=~@skip",
       "customRunner": {
         "script": "manage.py",
         "args": [
@@ -25,7 +25,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "var1": "var1 value",
       },
-      "tagExpression": "--tags=~@skip",
+      "tagsParameters": "--tags=~@skip",
       "customRunner": {
         "script": "manage.py",
         "waitForJUnitResults": false

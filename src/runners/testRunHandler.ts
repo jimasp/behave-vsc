@@ -23,8 +23,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
     try {
       xRayLog(`testRunHandler: invoked`);
 
-      if (!isValidTagExpression(runProfile.tagExpression)) {
-        services.logger.showWarn(`Invalid tag expression: ${runProfile.tagExpression}`);
+      if (!isValidTagsParameters(runProfile.tagsParameters)) {
+        services.logger.showWarn(`Invalid tag expression: ${runProfile.tagsParameters}`);
         return;
       }
 
@@ -195,7 +195,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
       ps, run, request, debug, ctrl, testData, projQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       allenv,
-      runProfile.tagExpression ?? "",
+      runProfile.tagsParameters ?? "",
       runProfile.customRunner
     )
 
@@ -460,12 +460,12 @@ function convertToTestItemArray(collection: vscode.TestItemCollection): vscode.T
 }
 
 
-function isValidTagExpression(tagExpression: string | undefined): boolean {
-  if (!tagExpression)
+function isValidTagsParameters(tagsParameters: string | undefined): boolean {
+  if (!tagsParameters)
     return true;
 
   const regex = /--(?!tags\b)\w+/;
-  if (regex.test(tagExpression))
+  if (regex.test(tagsParameters))
     return false;
 
   return true;
@@ -486,7 +486,7 @@ export class ProjRun {
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
     public readonly env: { [key: string]: string; },
-    public readonly tagExpression: string,
+    public readonly tagsParameters: string,
     public readonly customRunner?: CustomRunner
   ) { }
 }

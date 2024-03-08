@@ -121,8 +121,8 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 	let tagsString = "";
 	const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
-	if (runProfile.tagExpression)
-		tagsString = runProfile.tagExpression;
+	if (runProfile.tagsParameters)
+		tagsString = runProfile.tagsParameters;
 	return tagsString;
 }
 

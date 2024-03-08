@@ -83,7 +83,7 @@
 									"markdownDescription": "Key-value pairs of environment variable overrides (or additions) when this run profile is executed"
 								}
 							},
-							"tagExpression": {
+							"tagsParameters": {
 								"type": "string"
 							},
 							"customRunner": {

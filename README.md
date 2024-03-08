@@ -117,11 +117,11 @@ For simple setups, the extension should work "out of the box", but there is plen
       "behave-vsc.runProfiles": [
         {
           "name": "Tags: A",
-          "tagExpression": "@tagA",
+          "tagsParameters": "--tags=@tagA",
         },   
         {
           "name": "Tags: B,C",
-          "tagExpression": "@tagB, @tagC",
+          "tagsParameters": "--tags=@tagB, @tagC",
         },                
         {
           "name": "System",
@@ -137,7 +137,7 @@ For simple setups, the extension should work "out of the box", but there is plen
             "BEHAVE_STAGE": "Staging",
             "ENDPOINT": "http://123.456.789.012:4766"  
           },
-          "tagExpression": "@tagB"
+          "tagsParameters": "--tags=@tagB"
         }
       ]
       ```

@@ -59,15 +59,15 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
       const profileName = `${PREFIX}: ad-hoc tags ( OR )`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
-          if (!tagString)
+          const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
+          if (!tagsString)
             return;
-          if (tagString?.includes("--tags")) {
+          if (tagsString?.includes("--tags")) {
             services.logger.showWarn("Tags string should not include `--tags`.");
             return;
           }
-          const tagExpression = "--tags=" + tagString.split(",").map(x => x.trim());
-          await runHandler(debug, request, new RunProfile(profileName, tagExpression));
+          const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
+          await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
       profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
       featureRunProfiles.push(profile);
@@ -78,15 +78,15 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
       profileName = `${PREFIX}: ad-hoc tags (AND)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2,-tag3", prompt: "Logical AND. " });
-          if (!tagString)
+          const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2", prompt: "Logical AND. " });
+          if (!tagsString)
             return;
-          if (tagString?.includes("--tags")) {
+          if (tagsString?.includes("--tags")) {
             services.logger.showWarn("Tags string should not include `--tags`.");
             return;
           }
-          const tagExpression = "--tags=" + tagString.split(",").map(x => x.trim()).join(" --tags=");
-          await runHandler(debug, request, new RunProfile(profileName, tagExpression));
+          const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
+          await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
       profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
       featureRunProfiles.push(profile);
@@ -94,17 +94,19 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
 
     (() => {
-      const profileName = `${PREFIX}: ad-hoc tags (Expression)`;
+      const profileName = `${PREFIX}: ad-hoc tags (Params)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagExpression = await vscode.window.showInputBox({ placeHolder: "--tags=tag1 --tags=tag2", prompt: "Tag Expression. " });
-          if (!tagExpression)
+          const tagsParameters = await vscode.window.showInputBox({
+            placeHolder: "--tags=tag1,~tag2 --tags=tag3", prompt: "Specify full tags parameters."
+          });
+          if (!tagsParameters)
             return;
-          if (!tagExpression?.startsWith("--tags=")) {
-            services.logger.showWarn("Tag expression must start with `--tags=`.");
+          if (!tagsParameters?.startsWith("--tags=")) {
+            services.logger.showWarn("Parameters must start with `--tags=`.");
             return;
           }
-          await runHandler(debug, request, new RunProfile(profileName, tagExpression));
+          await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
       profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
       featureRunProfiles.push(profile);

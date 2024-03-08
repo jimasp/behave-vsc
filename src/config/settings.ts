@@ -62,7 +62,7 @@ export class InstanceSettings {
             validRunProfiles = false;
           }
         }
-        runProfiles[key] = new RunProfile(key, profile.tagExpression, profile.env, profile.customRunner);
+        runProfiles[key] = new RunProfile(key, profile.tagsParameters, profile.env, profile.customRunner);
       }
       if (validRunProfiles)
         this.runProfiles = runProfilesCfg;
@@ -398,18 +398,19 @@ export class CustomRunner {
 
 export class RunProfile {
   public readonly name: string;
-  public readonly tagExpression?: string;
+  public readonly tagsParameters?: string;
   public readonly env?: EnvSetting;
   public readonly customRunner?: CustomRunner
 
   constructor(
     name: string,
-    tagExpression?: string,
+    tagsParameters?: string,
     env?: EnvSetting | undefined,
     customRunner?: CustomRunner
   ) {
     this.name = name;
-    this.tagExpression = tagExpression ?? "";
+    // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
+    this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
     this.env = env ?? {};
     this.customRunner = customRunner;
   }

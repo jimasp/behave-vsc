@@ -27,7 +27,7 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
   const friendlyArgs = [
     ...pr.customRunner?.args ?? [],
-    ...splitTagExpression(pr.tagExpression),
+    ...splitTagsParameters(pr.tagsParameters),
     ...CONFIG_OVERRIDE_ARGS,
     `"${pr.junitRunDirUri.fsPath}"`,
   ];
@@ -62,7 +62,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const friendlyArgs = [
       ...pr.customRunner?.args ?? [],
-      ...splitTagExpression(pr.tagExpression),
+      ...splitTagsParameters(pr.tagsParameters),
       "-i", `"${featurePathsPattern}"`,
       ...CONFIG_OVERRIDE_ARGS,
       `"${pr.junitRunDirUri.fsPath}"`,
@@ -110,7 +110,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
     const friendlyArgs = [
       ...pr.customRunner?.args ?? [],
-      ...splitTagExpression(pr.tagExpression),
+      ...splitTagsParameters(pr.tagsParameters),
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${friendlyArgsPipedScenarioNames}"`,
       ...CONFIG_OVERRIDE_ARGS,
@@ -147,6 +147,6 @@ function unquoteArgs(args: string[]) {
 }
 
 
-function splitTagExpression(tagExpression: string): string[] {
-  return tagExpression.split(" ");
+function splitTagsParameters(tagsParameters: string): string[] {
+  return tagsParameters.split(" ");
 }
