@@ -125,7 +125,12 @@ function onlyAllowOneDefault(runOrDebugPrefix: string) {
   // Equally a scenario itself could have multiple tags (so we couldn't stop overlap via selected run profiles by just looking at their tags).
   // This would create various problems, including the same test having its results updated immediately by the next run.
 
-  // NOTE: if e.g. you select (or deselect) 3 profiles, this function will be called 3 times, once for each profile
+  // NOTES: 
+  // - if e.g. you select (or deselect) 3 profiles, this function will be called 3 times, once for each profile
+  // - as long as the profile names are the same for run and debug, vscode will set their defaults together
+
+  if (featureRunProfiles.length === 2)
+    return;
 
   // vscode currently seems to have a "hidden default" where it will automatically set the first profile as 
   // the default profile if there are none, but it won't show the profile as selected in the UI, so 
