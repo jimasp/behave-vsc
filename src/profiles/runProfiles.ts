@@ -127,11 +127,14 @@ function onlyAllowOneDefault(runOrDebugPrefix: string) {
 
   // NOTES: 
   // - if e.g. you select (or deselect) 3 profiles, this function will be called 3 times, once for each profile
-  // - as long as the profile names are the same for run and debug, vscode will set their defaults together
+  // - as long as the profile names are the same for run and debug (which they are), vscode will set their defaults together
 
   const noOfSelectedDefaults = featureRunProfiles.filter(p => p.isDefault).length;
-  if (featureRunProfiles.length === 2)
+  if (noOfSelectedDefaults === 2) {
+    // 1 default profile was set, i.e. 2 = 1 run default + 1 debug default 
+    // nothing to do
     return;
+  }
 
   // vscode currently seems to have a "hidden default" where it will automatically set the first profile as 
   // the default profile if there are none, but it won't show the profile as selected in the UI, so 
@@ -141,10 +144,10 @@ function onlyAllowOneDefault(runOrDebugPrefix: string) {
     return;
   }
 
-  // if more than one default profile was set, set them all false, and set the normal default ("Features")
-  if (noOfSelectedDefaults > 2) {
-    featureRunProfiles.forEach(p => p.isDefault = false);
-    featureRunProfiles.filter(x => x.label === PREFIX).forEach(x => x.isDefault = true);
-    services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${runOrDebugPrefix}".`);
-  }
+  // >2 = more than one default profile was set
+  // set them all false, and set the normal default ("Features")
+  featureRunProfiles.forEach(p => p.isDefault = false);
+  featureRunProfiles.filter(x => x.label === PREFIX).forEach(x => x.isDefault = true);
+  services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${runOrDebugPrefix}".`);
+
 }

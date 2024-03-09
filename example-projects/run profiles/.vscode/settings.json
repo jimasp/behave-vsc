@@ -4,25 +4,33 @@
         "var1": "ENV-var1",
         "var3": "ENV-var3",
     },
-    "behave-vsc.runProfiles": [
+    "behave-vsc.runProfiles": [      
+        {
+            "name": "qu'oted\"tag and qu'oted\"env profile",
+            "env": {
+                "profile": "qu'oted\"tag and qu'oted\"env profile",
+                "qu'oted\"env": "v'al\"ue"                
+            },
+            "tagsParameters": "--tags=@qu'oted\"tag",
+        },        
         {
             "name": "stage2 profile",
             "env": {
-                "profile": "stage2_profile",
+                "profile": "stage2 profile",
                 "BEHAVE_STAGE": "stage2"
             },
         },
         {
             "name": "tag1 profile",
             "env": {
-                "profile": "tag1_profile",
+                "profile": "tag1 profile",
             },
             "tagsParameters": "--tags=tag1",
         },
         {
             "name": "tag1 vars profile",
             "env": {
-                "profile": "tag1_vars_profile",
+                "profile": "tag1 vars profile",
                 "var1": "TAG1-var1",
                 "var2": "TAG1-var2"
             },
@@ -31,35 +39,42 @@
         {
             "name": "tag2 vars profile",
             "env": {
-                "profile": "tag2_vars_profile",
+                "profile": "tag2 vars profile",
                 "var1": "TAG2-var1",
                 "var2": "TAG2-var2"
             },
             "tagsParameters": "--tags=@tag2",
         },
         {
-            "name": "tag1or2 vars profile",
+            "name": "tag1ortag2 vars profile",
             "env": {
-                "profile": "tag1or2_vars_profile",
+                "profile": "tag1ortag2 vars profile",
                 "var1": "TAG1_OR_2-var1",
                 "var2": "TAG1_OR_2-var2"
             },
             "tagsParameters": "--tags=tag1,@tag2",
         },
         {
-            "name": "qu'oted\"tag profile",
+            "name": "tag1andtag2 profile",
             "env": {
-                "profile": "qu'oted\"tag_profile",
+                "profile": "tag1andtag2 profile",
             },
-            "tagsParameters": "--tags=@qu'oted\"tag",
-        },
+            "tagsParameters": "--tags=tag1 --tags=tag2",
+        },        
         {
-            "name": "qu'oted\"env profile",
+            "name": "tag1ortag2andtag3 profile",
             "env": {
-                "profile": "qu'oted\"env_profile",
-                "qu'oted\"env": "v'al\"ue"
+                "profile": "tag1ortag2andtag3 profile",
             },
-        },
+            "tagsParameters": "--tags=tag1,tag2 --tags=tag3",
+        },         
+        {
+            "name": "not tag1andtag2 profile",
+            "env": {
+                "profile": "not tag1andtag2 profile",
+            },
+            "tagsParameters": "--tags=~tag1 --tags=-tag2",
+        }
     ],
     "mypy-type-checker.ignorePatterns": [
         ".*"

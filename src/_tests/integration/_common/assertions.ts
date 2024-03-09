@@ -75,6 +75,7 @@ export function assertTestResultMatchesExpectedResult(projName: string, expected
 
 
   if (match.length !== 1) {
+    console.log("unmatched result:")
     console.log(formatResult(actualResult, true));
     // UHOH - did you add/modify a feature/scenario, that is not in an expectedResults? IF (and ONLY IF) you did add a 
     // new feature/scenario, then SEE THE "new TestResult" in the DEBUG CONSOLE and "copy all"/paste into xxx suite/expectedResults.ts)
