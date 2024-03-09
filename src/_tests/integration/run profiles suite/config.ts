@@ -76,9 +76,9 @@ export const wsConfig = new TestWorkspaceConfig({
       "tagsParameters": "--tags=tag1,tag2 --tags=tag3",
     },
     {
-      "name": "not tag1andtag2 profile",
+      "name": "nottag1andnottag2 profile",
       "env": {
-        "profile": "not tag1andtag2 profile",
+        "profile": "nottag1andnottag2 profile",
       },
       "tagsParameters": "--tags=~tag1 --tags=-tag2",
     },

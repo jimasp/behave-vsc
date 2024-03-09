@@ -4,15 +4,15 @@
         "var1": "ENV-var1",
         "var3": "ENV-var3",
     },
-    "behave-vsc.runProfiles": [      
+    "behave-vsc.runProfiles": [
         {
             "name": "qu'oted\"tag and qu'oted\"env profile",
             "env": {
                 "profile": "qu'oted\"tag and qu'oted\"env profile",
-                "qu'oted\"env": "v'al\"ue"                
+                "qu'oted\"env": "v'al\"ue"
             },
             "tagsParameters": "--tags=@qu'oted\"tag",
-        },        
+        },
         {
             "name": "stage2 profile",
             "env": {
@@ -60,18 +60,18 @@
                 "profile": "tag1andtag2 profile",
             },
             "tagsParameters": "--tags=tag1 --tags=tag2",
-        },        
+        },
         {
             "name": "tag1ortag2andtag3 profile",
             "env": {
                 "profile": "tag1ortag2andtag3 profile",
             },
             "tagsParameters": "--tags=tag1,tag2 --tags=tag3",
-        },         
+        },
         {
-            "name": "not tag1andtag2 profile",
+            "name": "nottag1andnottag2 profile",
             "env": {
-                "profile": "not tag1andtag2 profile",
+                "profile": "nottag1andnottag2 profile",
             },
             "tagsParameters": "--tags=~tag1 --tags=-tag2",
         }

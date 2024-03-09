@@ -68,7 +68,7 @@ def profile_vs_envvar_check(context):
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None       
             },     
-           "not tag1andtag2 profile": {
+           "nottag1andnottag2 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "BEHAVE_STAGE": None,
@@ -111,7 +111,7 @@ def profile_vs_tags_check(context):
             "tag1ortag2 vars profile": [["tag1", "tag2"]],
             "tag1andtag2 profile": [["tag1"], ["tag2"]],
             "tag1ortag2andtag3 profile": [["tag1", "tag2"], ["tag3"]],            
-            "not tag1andtag2 profile": [["-tag1"], ["-tag2"]],
+            "nottag1andnottag2 profile": [["-tag1"], ["-tag2"]],
             "qu'oted\"tag and env profile": [["qu'oted\"tag"]],
         }.get(value)    
         
