@@ -24,7 +24,7 @@ export class InstanceSettings {
   // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly runMultiRootProjectsInParallel: boolean;
-  public readonly runProfiles: RunProfilesSetting | undefined;
+  public readonly runProfiles: RunProfilesSetting = [];
   public readonly xRay: boolean;
 
   constructor(wsConfig: vscode.WorkspaceConfiguration) {
@@ -44,10 +44,12 @@ export class InstanceSettings {
       throw new Error("xRay is undefined");
     this.xRay = xRayCfg;
 
+
+    const runProfilesCfg: RunProfilesSetting | undefined = wsConfig.get("runProfiles");
+    if (runProfilesCfg === undefined)
+      throw new Error("runProfiles is undefined");
+
     try {
-      const runProfilesCfg: RunProfilesSetting | undefined = wsConfig.get("runProfiles");
-      if (runProfilesCfg === undefined)
-        throw new Error("runProfiles is undefined");
       let validRunProfiles = true;
       for (const profile of runProfilesCfg) {
         const script = profile.customRunner?.script;
@@ -390,7 +392,7 @@ export class CustomRunner {
   ) {
     this.script = script;
     this.args = args ?? [];
-    this.waitForJUnitFiles = waitForJUnitFiles ?? false;
+    this.waitForJUnitFiles = waitForJUnitFiles ?? true;
   }
 }
 

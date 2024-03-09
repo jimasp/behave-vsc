@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, fileExists
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, fileExists, getTimeString
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
@@ -45,7 +45,8 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       // stop the temp directory removal function if it is still running
       removeTempDirectoryCancelSource.cancel();
 
-      const run = ctrl.createTestRun(request, runProfile.name, false);
+      const runName = getTimeString();
+      const run = ctrl.createTestRun(request, runName, false);
 
       xRayLog(`testRunHandler: starting run ${run.name}`);
 
@@ -113,31 +114,54 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
-  if (queue.length === 0)
+  if (queue.length === 0) {
+    if (!services.config.isIntegrationTestRun)
+      debugger; // eslint-disable-line no-debugger
     throw new Error("empty queue - nothing to do");
+  }
 
-  const runId = new Date().toISOString().replace(/:/g, "-").replace(/\..+/, "");
   const projRunPromises: Promise<void>[] = [];
   const winSettings = services.config.instanceSettings;
-  const allProjectsQueueMap: QueueItemMapEntry[] = [];
+  let allProjectsQueueMap: QueueItemMapEntry[] = [];
+
   const allProjectsSettings = await Promise.all(getUrisOfWkspFoldersWithFeatures().map(async (projUri) =>
     await services.config.getProjectSettings(projUri.path)
   ));
+  const projNames = allProjectsSettings.map(x => x.name);
 
   for (const projSettings of allProjectsSettings) {
     const idMatch = uriId(projSettings.uri);
     const projQueue = queue.filter(item => item.test.id.includes(idMatch));
-    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, runId, projQueue);
+    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, projQueue);
     allProjectsQueueMap.push(...projQueueMap);
   }
 
-  const projNames = allProjectsSettings.map(x => x.name);
 
+  if (runProfile.customRunner) {
+    // if there is a customRunner, then before passing the queue to the watcher, filter the queue to 
+    // only include projects that contain the specified customRunner script,
+    // (i.e. because this is a window (instance) setting, multiroot projects may have some projects 
+    // where the customRunner script is not present)
+    for (const projSettings of allProjectsSettings) {
+      const scriptPath = vscode.Uri.joinPath(projSettings.behaveWorkingDirUri, runProfile.customRunner.script).fsPath;
+      const scriptExists = await fileExists(scriptPath);
+      if (!scriptExists) {
+        const projQueue = allProjectsQueueMap.filter(x => x.projSettings.id == projSettings.id).map(q => q.queueItem);
+        if (projQueue.length === 0)
+          continue;
+        run.appendOutput(`project "${projSettings.name}" skipped as customRunner script "${scriptPath}" was not found.\r\n\r\n`);
+        projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
+        allProjectsQueueMap = allProjectsQueueMap.filter(x => x.projSettings.id !== projSettings.id);
+        continue;
+      }
+    }
+  }
 
-  // WAIT for the junit watcher to be ready
+  // WAIT for the junit watcher to be ready on this folder before starting the run  
   const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
   if (waitForJUnitFiles)
-    await junitWatcher.startWatchingRun(run, runId, debug, projNames, allProjectsQueueMap);
+    await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
+
 
   // run each project queue  
   for (const projSettings of allProjectsSettings) {
@@ -154,18 +178,18 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
     // run projects sequentially
     if (!winSettings.runMultiRootProjectsInParallel || debug) {
-      await runProjectQueue(projSettings, ctrl, run, runId, request, testData, debug, projQueue, runProfile);
+      await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
       continue;
     }
 
     // run projects in parallel
-    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, runId, request, testData, debug, projQueue, runProfile));
+    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
   }
 
   // wait for all project runs to complete
   await Promise.all(projRunPromises);
 
-  // stop the junitwatcher
+  // stop the junitwatcher for this run folder
   if (waitForJUnitFiles)
     await junitWatcher.stopWatchingRun(run);
 
@@ -173,7 +197,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 }
 
 
-async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, runId: string,
+async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
 
   let pr: ProjRun | undefined = undefined;
@@ -186,7 +210,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
     const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
     projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitProjRunDirUri = getJunitProjRunDirUri(run, runId, ps.name);
+    const junitProjRunDirUri = getJunitProjRunDirUri(run, ps.name);
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
@@ -199,21 +223,6 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
       runProfile.tagsParameters ?? "",
       runProfile.customRunner
     )
-
-    if (pr.customRunner) {
-
-      if (!pr.customRunner.waitForJUnitFiles)
-        pr.run.appendOutput("customRunner.waitForJUnitFiles=false");
-
-      const scriptPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, pr.customRunner.script).fsPath;
-      const scriptExists = await fileExists(scriptPath);
-      if (!scriptExists) {
-        // this is not an error, because multiroot may have some projects where the customRunner script is not present        
-        pr.run.appendOutput(`project "${ps.name}" skipped as customRunner script "${scriptPath}" was not found`);
-        projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
-        return;
-      }
-    }
 
     const start = performance.now();
     logProjRunStarted(pr);
@@ -378,7 +387,7 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logProjRunStarted(pr: ProjRun) {
   if (!pr.debug) {
-    services.logger.logInfo(`--- ${pr.projSettings.name} tests started for run ${pr.run.name} @${new Date().toISOString()} ---\n`,
+    services.logger.logInfo(`--- Starting ${pr.projSettings.name} tests for run "${pr.run.name}" ---\n`,
       pr.projSettings.uri, pr.run);
   }
 }
@@ -387,8 +396,8 @@ function logProjRunStarted(pr: ProjRun) {
 function logProjRunComplete(pr: ProjRun, start: number) {
   const end = performance.now();
   if (!pr.debug) {
-    services.logger.logInfo(`\n--- ${pr.projSettings.name} tests completed for run ${pr.run.name} ` +
-      `@${new Date().toISOString()} (${(end - start) / 1000} secs)---`,
+    services.logger.logInfo(`\n--- Completed ${pr.projSettings.name} tests for run "${pr.run.name}" ` +
+      `(took ${(end - start) / 1000} secs)---`,
       pr.projSettings.uri, pr.run);
   }
   pr.run.appendOutput('\r\n');

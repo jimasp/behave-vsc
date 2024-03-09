@@ -66,25 +66,25 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// SO WE MUST MIRROR THAT BEHAVIOUR HERE
 		switch (section) {
 			case "envVarOverrides": // DEPRECATED
-				return <T><unknown>(this.envVarOverrides === undefined ? {} : this.envVarOverrides);
+				return <T><unknown>(this.envVarOverrides ?? {});
 			case "env":
-				return <T><unknown>(this.env === undefined ? {} : this.env);
+				return <T><unknown>(this.env ?? {});
 			case "runMultiRootProjectsInParallel":
-				return <T><unknown>(this.runMultiRootProjectsInParallel === undefined ? true : this.runMultiRootProjectsInParallel);
+				return <T><unknown>(this.runMultiRootProjectsInParallel ?? true);
 			case "justMyCode":
-				return <T><unknown>(this.justMyCode === undefined ? true : this.justMyCode);
+				return <T><unknown>(this.justMyCode ?? true);
 			case "runParallel":
-				return <T><unknown>(this.runParallel === undefined ? false : this.runParallel);
+				return <T><unknown>(this.runParallel ?? false);
 			case "importedSteps":
-				return <T><unknown>(this.importedSteps === undefined ? [] : this.importedSteps);
+				return <T><unknown>(this.importedSteps ?? []);
 			case "integrationTestRunUseCpExec":
 				return <T><unknown>(this.integrationTestRunUseCpExec);
 			case "runProfiles":
-				return <T><unknown>(this.runProfiles === undefined ? {} : this.runProfiles);
+				return <T><unknown>(this.runProfiles ?? []);
 			case "behaveWorkingDirectory":
-				return <T><unknown>(this.behaveWorkingDirectory === undefined ? "" : this.behaveWorkingDirectory);
+				return <T><unknown>(this.behaveWorkingDirectory ?? "");
 			case "xRay":
-				return <T><unknown>(this.xRay === undefined ? false : this.xRay);
+				return <T><unknown>(this.xRay ?? false);
 			case "files.exclude":
 				return <T><unknown>({ "**/.git": true });
 			case "files.watcherExclude":

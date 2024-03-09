@@ -19,8 +19,6 @@ export type TestCounts = { nodeCount: number, testCount: number };
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
 export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
 
-export const RUN_PROFILES_PREFIX = "Features";
-
 export const sepr = ":////:"; // separator that cannot exist in file paths, i.e. safe for splitting in a path context
 export const beforeFirstSepr = (str: string) => str.substring(0, str.indexOf(sepr));
 export const afterFirstSepr = (str: string) => str.substring(str.indexOf(sepr) + sepr.length, str.length);
@@ -553,4 +551,8 @@ export function getLines(text: string) {
 
 export function isIterable(obj: unknown): boolean {
   return obj != null && typeof (obj as Iterable<unknown>)[Symbol.iterator] === 'function';
+}
+
+export function getTimeString() {
+  return new Date().toISOString().replace(/:/g, "-").replace(/\..+/, "");
 }

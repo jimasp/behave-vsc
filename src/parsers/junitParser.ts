@@ -191,8 +191,8 @@ export class QueueItemMapEntry {
 }
 
 
-export function getProjQueueJunitFileMap(ps: ProjectSettings, run: vscode.TestRun, runId: string, projQueueItems: QueueItem[]) {
-  const projJunitRunDirUri = getJunitProjRunDirUri(run, runId, ps.name);
+export function getProjQueueJunitFileMap(ps: ProjectSettings, run: vscode.TestRun, projQueueItems: QueueItem[]) {
+  const projJunitRunDirUri = getJunitProjRunDirUri(run, ps.name);
   return projQueueItems.map(qi => {
     const junitFileUri = getJunitFileUri(ps, qi, projJunitRunDirUri);
     return new QueueItemMapEntry(qi, junitFileUri, ps);
