@@ -3,6 +3,8 @@
     "behave-vsc.xRay": true,
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
     "behave-vsc.runProfiles": [
+        // note - for multiroot, runProfiles will only be read from the workspace file 
+        // (do not create conflicting profile names between projects)
         {
             "name": "behave-django runner profile - wait for results",
             "customRunner": {
@@ -10,14 +12,14 @@
                 "args": [
                     "--keepdb"
                 ],
-                "waitForJUnitResults": true
+                "waitForJUnitFiles": true
             },
         },
         {
             "name": "behave-django runner profile - do not wait for results",
             "customRunner": {
                 "script": "manage.py",
-                "waitForJUnitResults": false
+                "waitForJUnitFiles": false
             },
         },
     ],

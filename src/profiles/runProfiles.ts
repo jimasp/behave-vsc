@@ -2,12 +2,10 @@ import * as vscode from 'vscode';
 import { services } from "../common/services";
 import { ITestRunHandler } from '../runners/testRunHandler';
 import { RunProfile } from '../config/settings';
-import { isIterable } from '../common/helpers';
-
+import { RUN_PROFILES_PREFIX, isIterable } from '../common/helpers';
 
 
 const config = services.config;
-const PREFIX = "Features";
 const featureRunProfiles: vscode.TestRunProfile[] = [];
 
 
@@ -29,12 +27,12 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
         for (const profileSetting of config.instanceSettings.runProfiles) {
           // IIFEs are here to bind scope of profile variable in onDidChangeDefault event               
           (() => {
-            const profileName = `${PREFIX}: ${profileSetting.name}`;
+            const profileName = `${RUN_PROFILES_PREFIX}: ${profileSetting.name}`;
             const profile = ctrl.createRunProfile(profileName, profileKind,
               async (request: vscode.TestRunRequest) => {
                 await runHandler(debug, request, profileSetting);
               });
-            profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+            profile.onDidChangeDefault(() => onlyAllowOneDefault(RUN_PROFILES_PREFIX));
             featureRunProfiles.push(profile);
           })();
         }
@@ -45,18 +43,18 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
     // STANDARD PROFILES
 
     (() => {
-      const profileName = PREFIX;
+      const profileName = RUN_PROFILES_PREFIX;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
         });
-      profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+      profile.onDidChangeDefault(() => onlyAllowOneDefault(RUN_PROFILES_PREFIX));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      const profileName = `${PREFIX}: ad-hoc tags ( OR )`;
+      const profileName = `${RUN_PROFILES_PREFIX}: ad-hoc tags ( OR )`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
@@ -69,13 +67,13 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+      profile.onDidChangeDefault(() => onlyAllowOneDefault(RUN_PROFILES_PREFIX));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      profileName = `${PREFIX}: ad-hoc tags (AND)`;
+      profileName = `${RUN_PROFILES_PREFIX}: ad-hoc tags (AND)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2", prompt: "Logical AND. " });
@@ -88,13 +86,13 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+      profile.onDidChangeDefault(() => onlyAllowOneDefault(RUN_PROFILES_PREFIX));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      const profileName = `${PREFIX}: ad-hoc tags (Params)`;
+      const profileName = `${RUN_PROFILES_PREFIX}: ad-hoc tags (Params)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsParameters = await vscode.window.showInputBox({
@@ -108,7 +106,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
           }
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+      profile.onDidChangeDefault(() => onlyAllowOneDefault(RUN_PROFILES_PREFIX));
       featureRunProfiles.push(profile);
     })();
 
@@ -136,18 +134,20 @@ function onlyAllowOneDefault(runOrDebugPrefix: string) {
     return;
   }
 
-  // vscode currently seems to have a "hidden default" where it will automatically set the first profile as 
-  // the default profile if there are none, but it won't show the profile as selected in the UI, so 
-  // we'll set it again here to update the UI
-  if (noOfSelectedDefaults < 2) {
-    featureRunProfiles.filter(x => x.label === PREFIX).forEach(x => x.isDefault = true);
+  // if more than one default profile was set, then set them all false, and set the normal default ("Features")
+  if (noOfSelectedDefaults > 2) {
+    featureRunProfiles.forEach(p => p.isDefault = false);
+    featureRunProfiles.filter(x => x.label === RUN_PROFILES_PREFIX).forEach(x => x.isDefault = true);
+    services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${runOrDebugPrefix}".`);
     return;
   }
 
-  // >2 = more than one default profile was set
-  // set them all false, and set the normal default ("Features")
-  featureRunProfiles.forEach(p => p.isDefault = false);
-  featureRunProfiles.filter(x => x.label === PREFIX).forEach(x => x.isDefault = true);
-  services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${runOrDebugPrefix}".`);
+  // noOfSelectedDefaults < 2 if we got here.
+  // vscode currently (March 2024) seems to have a "hidden default" bug where it will automatically set the first profile as 
+  // the default profile if there are none for ANY test extension (e.g. if no default selected for EITHER pytest or behave-vsc), 
+  // but it won't show the profile as selected in the UI, so we'll set it again here to update the UI to unhide the default
+  const normalDefaults = featureRunProfiles.filter(x => x.label === RUN_PROFILES_PREFIX);
+  if (normalDefaults.some(x => x.isDefault))
+    normalDefaults.forEach(x => x.isDefault = true);
 
 }

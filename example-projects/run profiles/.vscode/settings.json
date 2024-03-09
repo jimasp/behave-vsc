@@ -5,6 +5,8 @@
         "var3": "ENV-var3",
     },
     "behave-vsc.runProfiles": [
+        // note - for multiroot, runProfiles will only be read from the workspace file 
+        // (do not create conflicting profile names between projects)
         {
             "name": "qu'oted\"tag and qu'oted\"env profile",
             "env": {

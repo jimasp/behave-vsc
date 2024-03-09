@@ -99,7 +99,7 @@
 											"type": "string"
 										}
 									},
-									"waitForJunitFiles": {
+									"waitForJUnitFiles": {
 										"default": true
 									}
 								}

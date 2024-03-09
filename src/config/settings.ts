@@ -49,8 +49,7 @@ export class InstanceSettings {
       if (runProfilesCfg === undefined)
         throw new Error("runProfiles is undefined");
       let validRunProfiles = true;
-      const runProfiles: { [key: string]: RunProfile } = {};
-      for (const [key, profile] of Object.entries(runProfilesCfg)) {
+      for (const profile of runProfilesCfg) {
         const script = profile.customRunner?.script;
         if (script) {
           if (!script.endsWith(".py")) {
@@ -62,7 +61,6 @@ export class InstanceSettings {
             validRunProfiles = false;
           }
         }
-        runProfiles[key] = new RunProfile(key, profile.tagsParameters, profile.env, profile.customRunner);
       }
       if (validRunProfiles)
         this.runProfiles = runProfilesCfg;
@@ -383,16 +381,16 @@ export type ImportedStepsSetting = { [key: string]: string };
 export class CustomRunner {
   public readonly script: string;
   public readonly args?: string[];
-  public readonly waitForJUnitResults?: boolean;
+  public readonly waitForJUnitFiles?: boolean;
 
   constructor(
     script: string,
     args?: string[],
-    waitForJUnitResults?: boolean
+    waitForJUnitFiles?: boolean
   ) {
     this.script = script;
     this.args = args ?? [];
-    this.waitForJUnitResults = waitForJUnitResults ?? false;
+    this.waitForJUnitFiles = waitForJUnitFiles ?? false;
   }
 }
 

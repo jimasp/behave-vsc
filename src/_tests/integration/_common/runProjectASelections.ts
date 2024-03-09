@@ -295,7 +295,7 @@ async function actAndAssert(params: Params, consoleName: string, requestItems: v
 
   console.log(`${consoleName}: calling runHandler to run piped features...`);
   const request = new vscode.TestRunRequest(requestItems);
-  const runProfile = new RunProfile("int test profile");
+  const runProfile = new RunProfile("Features");
   const results = await api.runHandler(false, request, runProfile);
 
   // ASSERT  

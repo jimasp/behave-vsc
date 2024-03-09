@@ -90,7 +90,7 @@ export const getExpectedResultsForNoProfile = (): TestResult[] => {
 }
 
 
-export const getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults = (): TestResult[] => {
+export const getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles = (): TestResult[] => {
 
   const expectedResults: TestResult[] = [
 
@@ -165,9 +165,9 @@ export const getExpectedResultsForBehaveDjangoProfileWaitForJUnitResults = (): T
 }
 
 
-export const getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitResults = (): TestResult[] => {
+export const getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles = (): TestResult[] => {
 
-  // because the runProfile "waitForJUnitResults" is false, all the scenario_results will be undefined
+  // because the runProfile "waitForJUnitFiles" is false, all the scenario_results will be undefined
 
   const expectedResults: TestResult[] = [
 

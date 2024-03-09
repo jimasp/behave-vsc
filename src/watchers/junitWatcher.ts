@@ -1,6 +1,8 @@
+
+
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { uriId } from '../common/helpers';
+import { RUN_PROFILES_PREFIX, uriId } from '../common/helpers';
 import { services } from '../common/services';
 import { xRayLog, LogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
@@ -19,7 +21,8 @@ function getJunitRunDirUri(runId: string): vscode.Uri {
 export function getJunitProjRunDirUri(run: vscode.TestRun, runId: string, projName: string): vscode.Uri {
   if (!run.name)
     throw new Error("run.name is undefined");
-  return vscode.Uri.joinPath(getJunitRunDirUri(runId), projName, run.name);
+  const profile_name = run.name === RUN_PROFILES_PREFIX ? "" : run.name;
+  return vscode.Uri.joinPath(getJunitRunDirUri(runId), projName, profile_name);
 }
 
 

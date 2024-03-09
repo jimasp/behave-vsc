@@ -113,7 +113,7 @@ function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResul
   let error = "";
   if (differentProperties.length === 1 && expectedResult.scenario_result !== actualResult.scenario_result) {
     if (!actualResult.scenario_result) {
-      error = `scenario_result is undefined, was the test run cancelled?`;
+      error = `scenario_result is undefined, was the test run cancelled, or is there a previous error?`;
     }
     else {
       error = `scenario_result did not match expected scenario_result\n` +

@@ -197,7 +197,8 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 		argPipedFeaturePathsRx,
 		argPipedScenariosRx,
 		`--show-skipped --junit --junit-directory`,
-		projName
+		projName,
+		runOptions.selectedRunProfile ?? ""
 	];
 	return expectCmdOrderedIncludes;
 }
@@ -205,7 +206,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 
 export function getRunProfile(testExtConfig: TestWorkspaceConfig, profileName: string | undefined): RunProfile {
 	if (!profileName)
-		return new RunProfile("int test profile");
+		return new RunProfile("Features");
 	const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
 	const runProfile = runProfiles.find(x => x.name === profileName);
 	if (!runProfile)

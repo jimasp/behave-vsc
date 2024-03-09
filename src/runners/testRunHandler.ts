@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, fileExists
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
@@ -135,7 +135,8 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
 
   // WAIT for the junit watcher to be ready
-  if (!runProfile.customRunner || runProfile.customRunner.waitForJUnitResults)
+  const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
+  if (waitForJUnitFiles)
     await junitWatcher.startWatchingRun(run, runId, debug, projNames, allProjectsQueueMap);
 
   // run each project queue  
@@ -165,7 +166,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   await Promise.all(projRunPromises);
 
   // stop the junitwatcher
-  if (!runProfile.customRunner || runProfile.customRunner.waitForJUnitResults)
+  if (waitForJUnitFiles)
     await junitWatcher.stopWatchingRun(run);
 
   xRayLog(`runTestQueue: completed for run ${run.name}`);
@@ -199,19 +200,25 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
       runProfile.customRunner
     )
 
-    if (pr.customRunner && !pr.customRunner.waitForJUnitResults)
-      pr.run.appendOutput("customRunner.waitForJUnitResults=false");
+    if (pr.customRunner) {
+
+      if (!pr.customRunner.waitForJUnitFiles)
+        pr.run.appendOutput("customRunner.waitForJUnitFiles=false");
+
+      const scriptPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, pr.customRunner.script).fsPath;
+      const scriptExists = await fileExists(scriptPath);
+      if (!scriptExists) {
+        // this is not an error, because multiroot may have some projects where the customRunner script is not present        
+        pr.run.appendOutput(`project "${ps.name}" skipped as customRunner script "${scriptPath}" was not found`);
+        projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
+        return;
+      }
+    }
 
     const start = performance.now();
     logProjRunStarted(pr);
     await doRunType(pr);
     logProjRunComplete(pr, start);
-
-    if (pr.customRunner && !pr.customRunner.waitForJUnitResults) {
-      projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
-      pr.run.appendOutput("customRunner completed");
-      pr.run.end();
-    }
 
   }
   catch (e: unknown) {

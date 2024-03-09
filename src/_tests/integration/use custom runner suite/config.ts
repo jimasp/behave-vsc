@@ -17,7 +17,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "args": [
           "--simple"
         ],
-        "waitForJUnitResults": true
+        "waitForJUnitFiles": true
       },
     },
     {
@@ -28,7 +28,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "tagsParameters": "--tags=~@skip",
       "customRunner": {
         "script": "manage.py",
-        "waitForJUnitResults": false
+        "waitForJUnitFiles": false
       },
     },
   ]
