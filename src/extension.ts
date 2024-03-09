@@ -3,7 +3,7 @@ import { services } from './common/services';
 import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {
   getUrisOfWkspFoldersWithFeatures, isFeatureFile,
-  isStepsFile, logExtensionVersion, cleanExtensionTempDirectory, urisMatch
+  isStepsFile, logExtensionVersion, urisMatch
 } from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
@@ -55,15 +55,13 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     const ctrl = vscode.tests.createTestController(`behave-vsc.TestController`, 'Feature Tests');
     const parseAllPromise = services.parser.parseFilesForAllProjects(testData, ctrl, "activate", true);
 
-    const cleanExtensionTempDirectoryCancelSource = new vscode.CancellationTokenSource();
-    cleanExtensionTempDirectory(cleanExtensionTempDirectoryCancelSource.token);
 
     createProjectWatchers(ctrl, testData);
 
     const junitWatcher = new JunitWatcher();
     junitWatcher.startWatchingJunitFolder();
 
-    const runHandler = testRunHandler(testData, ctrl, junitWatcher, cleanExtensionTempDirectoryCancelSource);
+    const runHandler = testRunHandler(testData, ctrl, junitWatcher);
     runProfiles = createRunProfiles(ctrl, runHandler);
 
 
@@ -77,7 +75,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       ctrl,
       ...runProfiles,
       treeView,
-      cleanExtensionTempDirectoryCancelSource,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
       vscode.commands.registerTextEditorCommand(`behave-vsc.findStepReferences`, findStepReferencesHandler),

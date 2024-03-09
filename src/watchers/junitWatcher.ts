@@ -11,7 +11,7 @@ import { performance } from 'perf_hooks';
 
 
 export function getJunitDirUri(): vscode.Uri {
-  return vscode.Uri.joinPath(services.config.extensionTempFilesUri, "junit");
+  return services.config.extensionTempFilesUri;
 }
 
 function getJunitRunDirUri(run: vscode.TestRun): vscode.Uri {

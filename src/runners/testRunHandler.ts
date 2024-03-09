@@ -15,8 +15,7 @@ import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitPar
 
 
 
-export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher,
-  removeTempDirectoryCancelSource: vscode.CancellationTokenSource) {
+export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
 
@@ -41,9 +40,6 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
           throw msg;
         return;
       }
-
-      // stop the temp directory removal function if it is still running
-      removeTempDirectoryCancelSource.cancel();
 
       const runName = getTimeString();
       const run = ctrl.createTestRun(request, runName, false);

@@ -197,8 +197,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 		argPipedFeaturePathsRx,
 		argPipedScenariosRx,
 		`--show-skipped --junit --junit-directory`,
-		projName,
-		runOptions.selectedRunProfile ?? ""
+		projName
 	];
 	return expectCmdOrderedIncludes;
 }

@@ -9,7 +9,6 @@ import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
 import { ProjectSettings, StepImport } from '../config/settings';
 import { xRayLog } from './logger';
-import { getJunitDirUri } from '../watchers/junitWatcher';
 
 
 
@@ -81,30 +80,6 @@ export function uriStartsWith(uriToCheck: vscode.Uri, checkIfStartsWithUri: vsco
   return uriToCheck.toString().startsWith(checkIfStartsWithUri.toString());
 }
 
-export async function cleanExtensionTempDirectory(cancelToken: vscode.CancellationToken) {
-
-  const junitDirUri = getJunitDirUri();
-
-  // note - this function runs asynchronously, and we do not wait for it to complete before we start 
-  // the junitWatcher, so we do NOT want to delete the (watched) junit directory ITSELF (only its contents)
-  try {
-
-    // stat will throw if the directory doesn't exist, but unlike vwfs.readDirectory it won't log a console.error
-    await fs.promises.stat(junitDirUri.fsPath);
-
-    const children = await vwfs.readDirectory(junitDirUri);
-
-    for (const [name,] of children) {
-      if (cancelToken.isCancellationRequested)
-        return;
-      await vwfs.delete(vscode.Uri.joinPath(junitDirUri, name), { recursive: true, useTrash: true });
-      continue;
-    }
-  }
-  catch (e: unknown) {
-    // we can get here if the folder doesn't exist yet (first run) or the user has the file/folder open in windows explorer
-  }
-}
 
 
 
@@ -554,5 +529,5 @@ export function isIterable(obj: unknown): boolean {
 }
 
 export function getTimeString() {
-  return new Date().toISOString().replace(/:/g, "-").replace(/\..+/, "");
+  return new Date().toISOString().replace(/:/g, "-");
 }
