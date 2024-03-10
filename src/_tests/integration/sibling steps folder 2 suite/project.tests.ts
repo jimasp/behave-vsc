@@ -7,7 +7,8 @@ import { behaveIni, expectations } from "./config";
 suite(`sibling steps folder 2 suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("sibling steps folder 2");
 
-  test("debugAll", async () => await testProjectRunner.debugAll(noConfig, behaveIni, noRunOptions, expectations));
+  test("debugAll", async () =>
+    await testProjectRunner.debugAll(noConfig, behaveIni, noRunOptions, expectations));
 
 });
 

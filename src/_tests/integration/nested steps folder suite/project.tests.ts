@@ -4,11 +4,13 @@ import { expectations } from "./config";
 
 
 
-suite(`sibling steps folder 1 suite: project.tests`, () => {
-  const testProjectRunner = new TestProjectRunner("sibling steps folder 1");
+suite(`nested steps folder suite: project.tests`, function () {
+
+  const testProjectRunner = new TestProjectRunner("nested steps folder");
 
   test("debugAll", async () =>
     await testProjectRunner.debugAll(noConfig, noBehaveIni, noRunOptions, expectations));
+
 
 });
 

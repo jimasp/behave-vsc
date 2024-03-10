@@ -37,8 +37,7 @@ async function npmRunTest() {
     console.log("starting test run...");
 
 
-    // RATHER THAN RUNNING IN ALPHABETICAL ORDER, WE'LL TRY TO RUN IN A FAIL-FAST ORDER
-
+    // 1. run unit tests
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -46,6 +45,8 @@ async function npmRunTest() {
       launchArgs: ["unit tests (no workspace)"]
     });
 
+
+    // 2. start the multiroot project and run each multi.test.ts file
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
@@ -54,7 +55,7 @@ async function npmRunTest() {
     });
 
 
-    // loop through each suite and run runProject.ts
+    // 3. loop through each suite and run each runProject.ts file
     const integrationFolderPath = path.resolve(__dirname, './integration');
     const integrationFolders = await fs.promises.readdir(integrationFolderPath);
     for (const folder of integrationFolders) {

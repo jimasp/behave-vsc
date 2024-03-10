@@ -33,7 +33,7 @@
 				"behave-vsc.importedSteps": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Key-value pairs of additional imported steps (e.g. step libraries) to include for step navigation. Each pair has a key of a *project-relative* path to the imported steps inside the project, and a value of a regex (not glob) of step files to include. See the readme for an example.",
+					"markdownDescription": "Key-value pairs of additional imported steps to include for step navigation (e.g. step libraries that are not in your \"steps\" folder). Each pair has a key of a *project-relative* path to a folder inside the project, and a value of a regex (not glob) of step files to include. See the readme for an example.",
 					"additionalProperties": {
 						"type": "string"
 					}

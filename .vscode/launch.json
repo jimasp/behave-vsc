@@ -91,6 +91,23 @@
 			"preLaunchTask": "${defaultBuildTask}",
 		},
 		{
+			"name": "Debug: nested steps folder",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/nested steps folder",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/app/out/vs/**"
+			],
+			"preLaunchTask": "${defaultBuildTask}",
+		},
+		{
 			"name": "Debug: sibling steps folder 1",
 			"type": "extensionHost",
 			"request": "launch",
@@ -313,6 +330,21 @@
 				"${workspaceFolder}/example-projects/run profiles",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/runAll"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js",
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"preLaunchTask": "tasks: watch-tests",
+		},
+		{
+			"name": "Integration Tests: nested steps folder",
+			"type": "extensionHost",
+			"request": "launch",
+			"args": [
+				"${workspaceFolder}/example-projects/nested steps folder",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/nested steps folder suite/runAll"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
