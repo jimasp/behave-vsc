@@ -6,6 +6,7 @@ import { getExpectedCounts } from "./expectedResults"
 export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "django/mysite",
   runProfiles: [
+    // NOTE - these are also used in simple suite (see simple suite's multi.tests.ts)
     {
       "name": "behave-django runner profile: wait for test results",
       "env": {

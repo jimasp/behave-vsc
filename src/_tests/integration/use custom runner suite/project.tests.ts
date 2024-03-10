@@ -10,28 +10,22 @@ import {
 suite(`use custom runner suite: project.tests`, () => {
   const testProjectRunner = new TestProjectRunner("use custom runner");
 
-  test("debugAll - custom runner profile", async () => {
+  test("debugAll - custom runner profile: wait for results", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("runAll - custom runner profile: wait for results", async () => {
-    runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
-    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
-    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+  test("debugAll - custom runner profile: do not wait for results", async () => {
+    runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
+    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles;
+    await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
   test("runAll - custom runner profile: wait for results - parallel", async () => {
     runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
     expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
     await testProjectRunner.runAll(wsConfigParallel, noBehaveIni, runOptions, expectations);
-  });
-
-  test("runAll - custom runner profile: do not wait for results", async () => {
-    runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
-    expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles;
-    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
   test("runAll - custom runner profile: do not wait for results - parallel", async () => {

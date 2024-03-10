@@ -1,5 +1,6 @@
 import * as cp from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 import {
   downloadAndUnzipVSCode,
   resolveCliArgsFromVSCodeExecutablePath,
@@ -19,14 +20,6 @@ async function npmRunTest() {
 
     console.log("extensionDevelopmentPath", extensionDevelopmentPath);
 
-    // console.log("running pip...");
-    // const result = cp.spawnSync("pip", ["install", "-r", path.resolve(extensionDevelopmentPath + "/requirements.txt")], {
-    //   encoding: 'utf-8',
-    //   stdio: 'inherit',
-    // });
-    // if(result.error)
-    //   throw result.error;    
-
     console.log(`checking for latest ${version} vscode...`);
     const vscodeExecutablePath = await downloadAndUnzipVSCode(version);
 
@@ -44,111 +37,41 @@ async function npmRunTest() {
     console.log("starting test run...");
 
 
-
-    let launchArgs = [""];
-    let extensionTestsPath = "";
-
     // RATHER THAN RUNNING IN ALPHABETICAL ORDER, WE'LL TRY TO RUN IN A FAIL-FAST ORDER
 
-    launchArgs = ["unit tests (no workspace)"]
-    extensionTestsPath = path.resolve(__dirname, './unit/index');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
+      extensionTestsPath: path.resolve(__dirname, './unit/index'),
+      launchArgs: ["unit tests (no workspace)"]
     });
 
-    launchArgs = ["example-projects/simple"]
-    extensionTestsPath = path.resolve(__dirname, './integration/simple suite/runProject');
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
+      extensionTestsPath: path.resolve(__dirname, './integration/multiroot suite/index'),
+      launchArgs: ["example-projects/multiroot.code-workspace"]
     });
 
-    launchArgs = ["example-projects/project A"]
-    extensionTestsPath = path.resolve(__dirname, './integration/project A suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
 
-    launchArgs = ["example-projects/working dir"]
-    extensionTestsPath = path.resolve(__dirname, './integration/working dir suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/multiroot.code-workspace"];
-    extensionTestsPath = path.resolve(__dirname, './integration/multiroot suite/index');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/sibling steps folder 1"];
-    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 1 suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/sibling steps folder 2"];
-    extensionTestsPath = path.resolve(__dirname, './integration/sibling steps folder 2 suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/higher steps folder"];
-    extensionTestsPath = path.resolve(__dirname, './integration/higher steps folder suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/imported steps"];
-    extensionTestsPath = path.resolve(__dirname, './integration/imported steps suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/run profiles"];
-    extensionTestsPath = path.resolve(__dirname, './integration/run profiles suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
-    launchArgs = ["example-projects/project B"]
-    extensionTestsPath = path.resolve(__dirname, './integration/project B suite/runProject');
-    await runTests({
-      vscodeExecutablePath,
-      extensionDevelopmentPath,
-      extensionTestsPath,
-      launchArgs
-    });
-
+    // loop through each suite and run runProject.ts
+    const integrationFolderPath = path.resolve(__dirname, './integration');
+    const integrationFolders = await fs.promises.readdir(integrationFolderPath);
+    for (const folder of integrationFolders) {
+      const projectTests = path.resolve(integrationFolderPath, `${folder}/runProject.js`);
+      if (!folder.endsWith(" suite") || !fs.existsSync(projectTests)) {
+        console.log(`skipping ${projectTests}`);
+        continue;
+      }
+      const projFolderName = folder.replace(" suite", "");
+      const projectLaunchArgs = [`example-projects/${projFolderName}`];
+      await runTests({
+        vscodeExecutablePath,
+        extensionDevelopmentPath,
+        extensionTestsPath: projectTests,
+        launchArgs: projectLaunchArgs
+      });
+    }
 
     console.log("*** Test run complete! ***\n");
 

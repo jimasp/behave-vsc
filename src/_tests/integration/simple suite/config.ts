@@ -1,4 +1,4 @@
-import { Expectations, TestBehaveIni } from "../_common/types";
+import { Expectations, RunOptions, TestBehaveIni } from "../_common/types";
 import { getExpectedCounts, getExpectedResults } from "./expectedResults"
 
 
@@ -19,4 +19,8 @@ export const expectationsWithBehaveIni = {
 
 export const behaveIni: TestBehaveIni = {
   content: `[behave]\npaths=features`
+}
+
+export const runOptions: RunOptions = {
+  selectedRunProfile: undefined
 }

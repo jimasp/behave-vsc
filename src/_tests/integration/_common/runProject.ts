@@ -46,7 +46,7 @@ import { QueueItem } from '../../../extension';
 // for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
 // (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
 export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
-  runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false): Promise<void> {
+  runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false, checkFriendlyCmdLogs = true): Promise<void> {
 
   // ARRANGE
 
@@ -154,7 +154,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ASSERT 2 (post-run asserts)
 
     assertExpectedResults(projName, results, expectedResults, testExtConfig, execFriendlyCmd);
-    if (!isDebugRun)
+    if (!isDebugRun && checkFriendlyCmdLogs)
       assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
   finally {
