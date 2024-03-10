@@ -4,7 +4,7 @@ import { runScenarios } from './runScenarios';
 import { TestBehaveIni, Expectations, RunOptions } from './types';
 import { runPipedFeatures } from './runPipedFeatures';
 import { runFolders } from './runFolders';
-import { runProjectASelections } from './runProjectASelections';
+import { Selection, runSelections } from './runSelections';
 
 
 // just a convenience class to make the index.ts files a little cleaner
@@ -48,9 +48,9 @@ export class TestProjectRunner {
     await runScenarios(this.projName, true, twConfig, behaveIni, runOptions, expectations, execFriendlyCmd);
   }
 
-  runProjectASelectionSubSets = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, expectations: Expectations) => {
-    console.log(`runProjectASelectionSubSets ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runProjectASelections(twConfig, behaveIni, expectations);
+  runSelectionSets = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, expectations: Expectations, selections: Selection[]) => {
+    console.log(`runSelectionSets ${this.projName}: ${JSON.stringify(twConfig)}`);
+    await runSelections(twConfig, behaveIni, expectations, selections);
   }
 }
 
