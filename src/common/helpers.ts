@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { glob } from 'glob';
 import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 import { customAlphabet } from 'nanoid';
@@ -492,9 +491,18 @@ export function getFeatureNodePath(uri: vscode.Uri, ps: ProjectSettings) {
   return nodePath;
 }
 
-export async function fileExists(pattern: string): Promise<boolean> {
-  const files = await glob(pattern, {});
-  return files.length > 0;
+export async function pathExists(path: string): Promise<boolean> {
+  try {
+    await fs.promises.access(path);
+    return true;
+  }
+  catch {
+    return false;
+  }
+}
+
+export function pathExistsSync(pattern: string): boolean {
+  return fs.existsSync(pattern);
 }
 
 export function showDebugWindow() {

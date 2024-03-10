@@ -16,7 +16,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
   try {
 
     if (pr.customRunner)
-      local_args.unshift(pr.customRunner.script, "behave");
+      local_args.unshift(pr.customRunner.scriptFile, "behave");
     else
       local_args.unshift("-m", "behave");
 

@@ -32,7 +32,7 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
 
     if (pr.customRunner) {
       args.unshift("behave");
-      debugLaunchConfig = { ...launchConfig, program: pr.customRunner.script, args: args };
+      debugLaunchConfig = { ...launchConfig, program: pr.customRunner.scriptFile, args: args };
     }
     else {
       debugLaunchConfig = { ...launchConfig, module: "behave", args: args };

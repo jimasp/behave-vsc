@@ -14,7 +14,7 @@ export const wsConfig = new TestWorkspaceConfig({
       },
       "tagsParameters": "--tags=~@skip",
       "customRunner": {
-        "script": "manage.py",
+        "scriptFile": "manage.py",
         "args": [
           "--simple"
         ],
@@ -28,7 +28,7 @@ export const wsConfig = new TestWorkspaceConfig({
       },
       "tagsParameters": "--tags=~@skip",
       "customRunner": {
-        "script": "manage.py",
+        "scriptFile": "manage.py",
         "waitForJUnitFiles": false
       },
     },

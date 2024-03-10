@@ -32,7 +32,7 @@ suite(`simple suite: multi.tests`, function () {
 
 		// Run profiles are global for the vscode instance, i.e. apply to all projects in a multiroot workspace.
 		// These tests check that running a runprofile with a customRunner against a project (i.e. Simple in this case) 
-		// that does NOT contain the customRunner.script in its behave working directory will simply mark all tests as skipped.		
+		// that does NOT contain the customRunner.scriptFile in its behave working directory will simply mark all tests as skipped.		
 
 		const simpleGetExpectedResults = () => getExpectedResults().map(r => ({ ...r, scenario_result: "skipped" }));
 		const customRunnerExpectations = {

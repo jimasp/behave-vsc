@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { services } from './common/services';
 import { ProjectSettings } from './config/settings';
 import { Scenario } from './parsers/testFile';
-import { fileExists } from './common/helpers';
+import { pathExists } from './common/helpers';
 import { xRayLog } from './common/logger';
 
 
@@ -57,9 +57,9 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
   let new_base_dir = initial_base_dir;
 
   while (
-    !(await fileExists(path.join(new_base_dir, "steps")) ||
-      await fileExists(path.join(new_base_dir, "environment.py")) ||
-      await fileExists(path.join(new_base_dir, "*_environment.py")) ||
+    !(await pathExists(path.join(new_base_dir, "steps")) ||
+      await pathExists(path.join(new_base_dir, "environment.py")) ||
+      await pathExists(path.join(new_base_dir, "*_environment.py")) ||
       new_base_dir === project_parent_dir)
   ) {
     new_base_dir = path.dirname(new_base_dir);

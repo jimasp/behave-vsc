@@ -10,6 +10,7 @@ import {
   getActualWorkspaceSetting,
   getOptimisedFeatureParsingPaths,
   getExcludedPathPatterns,
+  pathExistsSync
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -52,14 +53,14 @@ export class InstanceSettings {
     try {
       let validRunProfiles = true;
       for (const profile of runProfilesCfg) {
-        const script = profile.customRunner?.script;
+        const script = profile.customRunner?.scriptFile;
         if (script) {
           if (!script.endsWith(".py")) {
-            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.script" must end in ".py".', "OK");
+            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', "OK");
             validRunProfiles = false;
           }
           if (script.includes("/") || script.includes("\\")) {
-            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.script" cannot contain a path, only a filename.', "OK");
+            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', "OK");
             validRunProfiles = false;
           }
         }
@@ -191,7 +192,7 @@ export class ProjectSettings {
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
       throw new Error("importedSteps is undefined");
-    this.importedSteps = convertImportedStepsToArray(projUri, importedStepsCfg);
+    this.importedSteps = getValidImportedSteps(projUri, importedStepsCfg);
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
 
@@ -200,7 +201,7 @@ export class ProjectSettings {
 }
 
 
-function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: ImportedStepsSetting): ImportedSteps {
+function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedStepsSetting): ImportedSteps {
   try {
 
     const importedSteps: ImportedSteps = [];
@@ -218,6 +219,11 @@ function convertImportedStepsToArray(projUri: vscode.Uri, importedStepsCfg: Impo
       }
       if (importedSteps.find(l => l.relativePath === tKey)) {
         services.logger.showWarn(`behave-vsc.importedSteps key ${stepLibrary[0]} is a duplicate and will be ignored`, projUri);
+        continue;
+      }
+      const keyFsPath = vscode.Uri.joinPath(projUri, tKey).fsPath;
+      if (!pathExistsSync(keyFsPath)) {
+        services.logger.showWarn(`behave-vsc.importedSteps path "${keyFsPath}" not found and will be ignored`, projUri);
         continue;
       }
 
@@ -381,7 +387,7 @@ export type ImportedSteps = StepImport[];
 export type ImportedStepsSetting = { [key: string]: string };
 
 export class CustomRunner {
-  public readonly script: string;
+  public readonly scriptFile: string;
   public readonly args?: string[];
   public readonly waitForJUnitFiles?: boolean;
 
@@ -390,7 +396,7 @@ export class CustomRunner {
     args?: string[],
     waitForJUnitFiles?: boolean
   ) {
-    this.script = script;
+    this.scriptFile = script;
     this.args = args ?? [];
     this.waitForJUnitFiles = waitForJUnitFiles ?? true;
   }

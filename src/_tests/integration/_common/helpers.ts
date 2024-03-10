@@ -183,7 +183,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 		}
 	}
 
-	const scriptOrModule = customRunner ? customRunner.script : "-m";
+	const scriptOrModule = customRunner ? customRunner.scriptFile : "-m";
 	const scriptArgs = customRunner?.args ? customRunner.args.join(" ") : "";
 
 	const expectCmdOrderedIncludes = [

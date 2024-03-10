@@ -74,7 +74,7 @@
 						"properties": {
 							"name": {
 								"type": "string",
-								"description": "The name of the run profile."
+								"markdownDescription": "The name of the run profile."
 							},
 							"env": {
 								"type": "object",
@@ -88,19 +88,26 @@
 							},
 							"customRunner": {
 								"type": "object",
-								"description": "Custom Python script to invoke instead of the default behave command. The script must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
+								"required": [
+									"scriptFile",
+									"waitForJUnitFiles"
+								],
+								"markdownDescription": "Custom Python script to invoke instead of the default behave command. The script file must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
 								"properties": {
-									"script": {
-										"type": "string"
+									"scriptFile": {
+										"type": "string",
+										"markdownDescription": "The name of the custom script file in the root of your behave working directory."
 									},
 									"args": {
 										"type": "array",
 										"items": {
 											"type": "string"
-										}
+										},
+										"markdownDescription": "Additional arguments to pass to the custom script. These are passed after the `behave` command and before the behave arguments."
 									},
 									"waitForJUnitFiles": {
-										"default": true
+										"type": "boolean",
+										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results."
 									}
 								}
 							}

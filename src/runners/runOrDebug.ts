@@ -33,7 +33,7 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   ];
   const args = unquoteArgs(friendlyArgs);
 
-  const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
+  const scriptOrModule = pr.customRunner ? pr.customRunner.scriptFile : "-m";
   const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
     `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
     `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;
@@ -69,7 +69,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     ];
     const args = unquoteArgs(friendlyArgs);
 
-    const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
+    const scriptOrModule = pr.customRunner ? pr.customRunner.scriptFile : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
       `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;
@@ -119,7 +119,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     const args = unquoteArgs(friendlyArgs);
     args.splice(args.findIndex(item => item === `-n`) + 1, 1, argsPipedScenarioNames);
 
-    const scriptOrModule = pr.customRunner ? pr.customRunner.script : "-m";
+    const scriptOrModule = pr.customRunner ? pr.customRunner.scriptFile : "-m";
     const friendlyCmd = `${ps1}cd "${pr.projSettings.behaveWorkingDirUri.fsPath}"\n` +
       `${friendlyEnvVars}${ps2}"${pr.pythonExec}" ${scriptOrModule} behave ` +
       `${friendlyArgs.filter(arg => arg !== '').join(" ")}`;

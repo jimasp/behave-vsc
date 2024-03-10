@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, fileExists, getTimeString
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, getTimeString, pathExists
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
@@ -139,8 +139,8 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     // (i.e. because this is a window (instance) setting, multiroot projects may have some projects 
     // where the customRunner script is not present)
     for (const projSettings of allProjectsSettings) {
-      const scriptPath = vscode.Uri.joinPath(projSettings.behaveWorkingDirUri, runProfile.customRunner.script).fsPath;
-      const scriptExists = await fileExists(scriptPath);
+      const scriptPath = vscode.Uri.joinPath(projSettings.behaveWorkingDirUri, runProfile.customRunner.scriptFile).fsPath;
+      const scriptExists = await pathExists(scriptPath);
       if (!scriptExists) {
         const projQueue = allProjectsQueueMap.filter(x => x.projSettings.id == projSettings.id).map(q => q.queueItem);
         if (projQueue.length === 0)
