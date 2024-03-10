@@ -17,6 +17,11 @@ suite(`higher steps folder suite: project.tests`, () => {
   test("runSubsetOfFeaturesForEachFolder", async () =>
     await testProjectRunner.runSubsetOfFeaturesForEachFolder(wsConfig, behaveIni, noRunOptions, expectations, true));
 
+  // scenarios subset test is useful in project A due to the special chars/piped special chars scenarios
+  test("runSubsetOfScenariosForEachFeature", async () =>
+    await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, behaveIni, noRunOptions, expectations, true));
+
+  // selection sets are currently only tested here (so don't delete this)
   test("runSelectionSets", async () =>
     await testProjectRunner.runSelectionSets(wsConfig, behaveIni, expectations, selections));
 });

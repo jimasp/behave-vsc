@@ -56,6 +56,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
       // we're only interested in features with more than 1 scenario in this function
       if (featureTest.children.size < 2)
         continue;
+      featureTestsInRequest.push(featureTest);
 
       let i = 0;
       const scenarios = [...featureTest.children].sort((a, b) => a[0].localeCompare(b[0]));
@@ -65,7 +66,6 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
         if (i++ === 0)
           continue;
         requestItems.push(scenarioTest[1]);
-        featureTestsInRequest.push(featureTest);
       }
     }
 
