@@ -316,7 +316,7 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
 
 export function ScenarioResult(result: QueueItem) {
   return new TestResult({
-    test_id: standardisePath(result.test.id, true),
+    test_id: standardisePath(result.test.id),
     test_uri: standardisePath(result.test.uri?.toString()),
     test_parent: standardisePath(result.test.parent?.id),
     test_children: getChildrenIds(result.test.children),
@@ -333,11 +333,11 @@ export function ScenarioResult(result: QueueItem) {
 }
 
 
-export function standardisePath(path: string | undefined, isId = false): string | undefined {
+export function standardisePath(path: string | undefined): string | undefined {
   if (!path)
     return path;
   try {
-    if (isId) {
+    if (path.includes(".feature/")) {
       // special chars in scenario names would break decodeURI, and may include "/", so we'll split on .feature/
       const split = path.split(".feature/");
       const folderPath = split[0] + ".feature/";

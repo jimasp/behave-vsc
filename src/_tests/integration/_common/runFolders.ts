@@ -82,7 +82,7 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
   const featuresInFolder = folderItem.descendents.filter(x => x.id.endsWith(".feature"));
   const expectedResultsFeaturesInFolder = expectedResults.filter(exp =>
     featuresInFolder.find(f => {
-      const stdPath = standardisePath(f.id, true);
+      const stdPath = standardisePath(f.id);
       return stdPath && exp.test_id && exp.test_id.startsWith(stdPath + "/");
     }));
 
@@ -106,7 +106,7 @@ function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, a
   projUri: vscode.Uri, projName: string, scenarios: vscode.TestItem[],
   testExtConfig: TestWorkspaceConfig, runOptions: RunOptions, expectedResults: TestResult[]) {
 
-  const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id, true) === exp.test_id));
+  const filteredExpectedResults = expectedResults.filter(exp => scenarios.find(r => standardisePath(r.id) === exp.test_id));
 
   // (use our expected results, NOT the request)
   const queueItems: QueueItem[] = [];
