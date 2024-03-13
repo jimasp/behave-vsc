@@ -76,6 +76,13 @@
 								"type": "string",
 								"markdownDescription": "The name of the run profile."
 							},
+							"projectScope": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"markdownDescription": "For multi-root workspaces. An array of projects (workspace folder names) that this run profile can run against. If not specified, the run profile can be run against all projects. This setting should be in your `*.code-workspace` file."
+							},
 							"env": {
 								"type": "object",
 								"additionalProperties": {

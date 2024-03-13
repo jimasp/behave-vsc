@@ -18,19 +18,19 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
     const profileKind = debug ? vscode.TestRunProfileKind.Debug : vscode.TestRunProfileKind.Run;
 
-    // CUSTOM SETTINGS.JSON RUN PROFILES
+    // USER'S CUSTOM SETTINGS.JSON RUN PROFILES
 
     if (!isIterable(config.instanceSettings.runProfiles)) {
       services.logger.showWarn(`"behave-vsc.runProfiles" must be an array of objects.`);
     }
     else {
-      for (const profileSetting of config.instanceSettings.runProfiles) {
-        // IIFEs are here to bind scope of profile variable in onDidChangeDefault event               
+      for (const runProfile of config.instanceSettings.runProfiles) {
+        // IIFEs are here to bind profile variable to onDidChangeDefault event
         (() => {
-          const profileName = `${PREFIX}: ${profileSetting.name}`;
+          const profileName = `${PREFIX}: ${runProfile.name}`;
           const profile = ctrl.createRunProfile(profileName, profileKind,
             async (request: vscode.TestRunRequest) => {
-              await runHandler(debug, request, profileSetting);
+              await runHandler(debug, request, runProfile);
             });
           profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
           featureRunProfiles.push(profile);
@@ -39,7 +39,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
     }
 
 
-    // STANDARD PROFILES
+    // OUT-OF-THE-BOX PROFILES
 
     (() => {
       const profileName = PREFIX;

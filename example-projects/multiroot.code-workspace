@@ -63,8 +63,11 @@
 		"behave-vsc.runProfiles": [
 			{
 				"name": "behave-django runner profile - wait for results",
+				"projectScope": [
+					"use custom runner"
+				],
 				"customRunner": {
-					"script": "manage.py",
+					"scriptFile": "manage.py",
 					"args": [
 						"--keepdb"
 					],
@@ -73,8 +76,11 @@
 			},
 			{
 				"name": "behave-django runner profile - do not wait for results",
+				"projectScope": [
+					"use custom runner"
+				],
 				"customRunner": {
-					"script": "manage.py",
+					"scriptFile": "manage.py",
 					"waitForJUnitFiles": false
 				},
 			},

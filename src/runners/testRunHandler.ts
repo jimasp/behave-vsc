@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, getTimeString, pathExists
+  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, getTimeString
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
@@ -18,6 +18,7 @@ import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitPar
 export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
+    let run: vscode.TestRun | undefined;
 
     try {
       xRayLog(`testRunHandler: invoked`);
@@ -29,7 +30,7 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
 
       // the test tree is built as a background process which is called from a few places
       // (and it will be slow during vscode startup due to contention), 
-      // so we DON'T want to await it except on user request (refresh click),
+      // so we DON'T want to await it except maybe on user request (refresh click),
       // BUT at the same time, we also don't want to allow test runs when the tests items are out of date vs the file system
       const ready = await services.parser.featureParseComplete(1000, "testRunHandler");
       if (!ready) {
@@ -42,43 +43,64 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       }
 
       const runName = getTimeString();
-      const run = ctrl.createTestRun(request, runName, false);
+      run = ctrl.createTestRun(request, runName, false);
 
+      const runProfileScopeProjectIds: string[] = [];
+      for (const wsFolder of runProfile.projectScope ?? []) {
+        const match = vscode.workspace.workspaceFolders?.find(x => x.name === wsFolder);
+        if (!match) {
+          run.appendOutput(`Test run aborted. Project (workspace folder) "${wsFolder}" in runProfile ` +
+            `"${runProfile.name}" was not found. Test run aborted.`);
+          return;
+        }
+        runProfileScopeProjectIds.push(uriId(match.uri));
+      }
+
+      const queue: QueueItem[] = [];
+      const tests = request.include ?? convertToTestItemArray(ctrl.items);
+      xRayLog(`testRunHandler: tests length = ${tests.length}`);
+      await queueSelectedTestItems(runProfileScopeProjectIds, ctrl, run, request, queue, tests, testData);
+
+      if (queue.length === 0) {
+        if (runProfile.projectScope && runProfile.projectScope.length > 0) {
+          run.appendOutput(`Test run aborted. No matching tests found. The selected runProfile was "${runProfile.name}". ` +
+            `Were the selected projects within the runProfile.projectScope "${runProfile.projectScope}"?\r\n\r\n`);
+          return;
+        }
+        if (services.config.isIntegrationTestRun)
+          debugger; // eslint-disable-line no-debugger
+        run.appendOutput("Test run aborted. No matching tests found.");
+        throw new Error("empty queue - nothing to do");
+      }
+
+      xRayLog(`testRunHandler: queue length = ${queue.length}`);
       xRayLog(`testRunHandler: starting run ${run.name}`);
-
-      try {
-        const queue: QueueItem[] = [];
-        const tests = request.include ?? convertToTestItemArray(ctrl.items);
-        xRayLog(`testRunHandler: tests length = ${tests.length}`);
-        await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
-        xRayLog(`testRunHandler: queue length = ${queue.length}`);
-        await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
-        return queue;
-      }
-      catch (e: unknown) {
-        // entry point (handler) - show error
-        services.logger.showError(e);
-      }
-      finally {
-        run.end();
-      }
-
-      xRayLog(`testRunHandler: completed run ${run.name}`);
+      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
+      return queue;
 
     }
     catch (e: unknown) {
       // entry point (handler) - show error
       services.logger.showError(e);
     }
-
+    finally {
+      if (run) {
+        xRayLog(`testRunHandler: completed run ${run.name}`);
+        run.end();
+      }
+    }
   }
 }
 
 
-async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest, queue: QueueItem[],
-  tests: Iterable<vscode.TestItem>, testData: TestData) {
+
+async function queueSelectedTestItems(runProfileScopeProjectIds: string[], ctrl: vscode.TestController, run: vscode.TestRun,
+  request: vscode.TestRunRequest, queue: QueueItem[], tests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of tests) {
+
+    if (runProfileScopeProjectIds.length > 0 && test.id && !runProfileScopeProjectIds.some(sfid => test.id.startsWith(sfid)))
+      continue;
 
     // find = don't add tests in nested folder nodes more than once
     if (request.exclude?.includes(test) || queue.find(x => x.test.id === test.id))
@@ -97,7 +119,7 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
         await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedTestItems");
       }
 
-      await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
+      await queueSelectedTestItems(runProfileScopeProjectIds, ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
     }
 
   }
@@ -110,15 +132,10 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
 
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
-  if (queue.length === 0) {
-    if (!services.config.isIntegrationTestRun)
-      debugger; // eslint-disable-line no-debugger
-    throw new Error("empty queue - nothing to do");
-  }
 
   const projRunPromises: Promise<void>[] = [];
   const winSettings = services.config.instanceSettings;
-  let allProjectsQueueMap: QueueItemMapEntry[] = [];
+  const allProjectsQueueMap: QueueItemMapEntry[] = [];
 
   const allProjectsSettings = await Promise.all(getUrisOfWkspFoldersWithFeatures().map(async (projUri) =>
     await services.config.getProjectSettings(projUri.path)
@@ -132,32 +149,14 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
     allProjectsQueueMap.push(...projQueueMap);
   }
 
-
-  if (runProfile.customRunner) {
-    // if there is a customRunner, then before passing the queue to the watcher, filter the queue to 
-    // only include projects that contain the specified customRunner script,
-    // (i.e. because this is a window (instance) setting, multiroot projects may have some projects 
-    // where the customRunner script is not present)
-    for (const projSettings of allProjectsSettings) {
-      const scriptPath = vscode.Uri.joinPath(projSettings.behaveWorkingDirUri, runProfile.customRunner.scriptFile).fsPath;
-      const scriptExists = await pathExists(scriptPath);
-      if (!scriptExists) {
-        const projQueue = allProjectsQueueMap.filter(x => x.projSettings.id == projSettings.id).map(q => q.queueItem);
-        if (projQueue.length === 0)
-          continue;
-        run.appendOutput(`project "${projSettings.name}" skipped as customRunner script "${scriptPath}" was not found.\r\n\r\n`);
-        projQueue.forEach(x => { run.skipped(x.test); x.scenario.result = "skipped"; });
-        allProjectsQueueMap = allProjectsQueueMap.filter(x => x.projSettings.id !== projSettings.id);
-        continue;
-      }
-    }
-  }
-
-  // WAIT for the junit watcher to be ready on this folder before starting the run  
   const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
-  if (waitForJUnitFiles)
+  if (!waitForJUnitFiles) {
+    allProjectsQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
+  }
+  else {
+    // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
     await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
-
+  }
 
   // run each project queue  
   for (const projSettings of allProjectsSettings) {
@@ -393,7 +392,7 @@ function logProjRunComplete(pr: ProjRun, start: number) {
   const end = performance.now();
   if (!pr.debug) {
     services.logger.logInfo(`\n--- Completed ${pr.projSettings.name} tests for run "${pr.run.name}" ` +
-      `(took ${(end - start) / 1000} secs)---`,
+      `(took ${((end - start) / 1000).toFixed(4)} secs)---`,
       pr.projSettings.uri, pr.run);
   }
   pr.run.appendOutput('\r\n');

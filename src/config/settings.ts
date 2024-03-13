@@ -65,8 +65,10 @@ export class InstanceSettings {
           }
         }
       }
-      if (validRunProfiles)
-        this.runProfiles = runProfilesCfg;
+      if (validRunProfiles) {
+        // call the RunProfile constructor for each run profile
+        this.runProfiles = runProfilesCfg.map(cfg => new RunProfile(cfg.name, cfg.tagsParameters, cfg.projectScope, cfg.env, cfg.customRunner));
+      }
     }
     catch {
       vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
@@ -405,18 +407,21 @@ export class CustomRunner {
 export class RunProfile {
   public readonly name: string;
   public readonly tagsParameters?: string;
+  public readonly projectScope?: string[];
   public readonly env?: EnvSetting;
   public readonly customRunner?: CustomRunner
 
   constructor(
     name: string,
     tagsParameters?: string,
-    env?: EnvSetting | undefined,
+    projectScope?: string[],
+    env?: EnvSetting,
     customRunner?: CustomRunner
   ) {
     this.name = name;
     // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
     this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
+    this.projectScope = projectScope ?? [];
     this.env = env ?? {};
     this.customRunner = customRunner;
   }

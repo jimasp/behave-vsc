@@ -30,10 +30,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Terminology used in this readme
 
-- "workspace": the root context of the development environment in the IDE. There is only one workspace per vscode instance.
-- "workspace folder" : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
-- "multi-root workspace": a workspace that contains multiple workspace folders.
-- "project": within this readme, this is shorthand for "a workspace folder that contains feature files".
+- `Workspace`: the root context of the development environment in the IDE. There is only one workspace per vscode instance.
+- `Workspace folder` : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
+- `Multi-root workspace`: a workspace that contains multiple workspace folders.
+- `Project`: within this readme, this is shorthand for "a workspace folder that contains feature files".
 
 ## Workspace/vscode requirements
 
@@ -46,14 +46,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ### Compatible project directory structures
 
-- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure:
+- A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure, which is as follows:
   - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
   - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
   - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
-  - (In the below example the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.)
+  - In the below example the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.
 
-  - Basic example (no configuration required):
+  - Basic example (no extension or behave configuration required):
 
     ```text
     my-project/
@@ -71,7 +71,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - The default working directory (and auto-discovery directory) is the project root. For very large projects, it is recommended to either:
   - a. use a `behave.ini` file in the project-root to specify the `paths` setting, or
-  - b. use a subfolder for behave tests, e.g. `mytests/features`, and set the `behaveWorkingDirectory` to e.g. `mytests`.
+  - b. use a subfolder for behave tests, e.g. `my_tests/behave`, and set the `behaveWorkingDirectory` setting to e.g. `my_tests/behave`.
   This will stop the extension from having to parse/watch your entire project folder looking for feature and steps files.
 
 - In most cases, auto-discovery (along with `behaveWorkingDirectory` if required) will "just work", but otherwise see [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
@@ -84,14 +84,16 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Extension settings
 
+Extension settings in this document should be prefixed with `behave-vsc.` in your `settings.json` file, e.g. `behave-vsc.behaveWorkingDirectory`.
+
 For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`:
 
+- For information on all available options, go to the extension settings in vscode and/or see examples in this readme, but a quick rundown is as follows:
 - Customise your test run via `settings.json`, e.g. `behaveWorkingDirectory`, `env`, etc.
 - Enable/disable `justMyCode` for debug (via `settings.json` not `launch.json`).
 - Import steps from step libraries via `importedSteps`.
-- Environment variables (and behave tags) can be set on a per run basis via custom `runProfiles` which then appear in the test explorer UI.
-- If you are using a multi-root workspace with multiple projects that contain feature files, you can set up default settings in your `*.code-workspace` file, then optionally override these as required in the `settings.json` in each workspace folder.
-- For information on all available options, go to the extension settings in vscode.
+- Environment variables, behave tags and even a custom runner script can be set on a per run basis via custom `runProfiles`. These then then appear in the test explorer UI.
+- If you are using a multi-root workspace, you can set some default settings such as `runProfiles` in your `*.code-workspace` file. You can determine which `settings.json` or `*.code-workspace` settings are active if they are greyed out or not.
 
 ---
 
