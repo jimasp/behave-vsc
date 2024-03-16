@@ -45,28 +45,12 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
       const runName = getTimeString();
       run = ctrl.createTestRun(request, runName, false);
 
-      const runProfileScopeProjectIds: string[] = [];
-      // for (const wsFolder of runProfile.projectScope ?? []) {
-      //   const match = vscode.workspace.workspaceFolders?.find(x => x.name === wsFolder);
-      //   if (!match) {
-      //     run.appendOutput(`Test run aborted. Project (workspace folder) "${wsFolder}" in runProfile ` +
-      //       `"${runProfile.name}" was not found. Test run aborted.`);
-      //     return;
-      //   }
-      //   runProfileScopeProjectIds.push(uriId(match.uri));
-      // }
-
       const queue: QueueItem[] = [];
       const tests = request.include ?? convertToTestItemArray(ctrl.items);
       xRayLog(`testRunHandler: tests length = ${tests.length}`);
-      await queueSelectedTestItems(runProfileScopeProjectIds, ctrl, run, request, queue, tests, testData);
+      await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
 
       if (queue.length === 0) {
-        if (runProfile.projectScope && runProfile.projectScope.length > 0) {
-          run.appendOutput(`Test run aborted. No matching tests found. The selected runProfile was "${runProfile.name}". ` +
-            `Were the selected projects within the runProfile.projectScope "${runProfile.projectScope}"?\r\n\r\n`);
-          return;
-        }
         if (services.config.isIntegrationTestRun)
           debugger; // eslint-disable-line no-debugger
         run.appendOutput("Test run aborted. No matching tests found.");
@@ -94,13 +78,10 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
 
 
 
-async function queueSelectedTestItems(runProfileScopeProjectIds: string[], ctrl: vscode.TestController, run: vscode.TestRun,
+async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, queue: QueueItem[], tests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of tests) {
-
-    if (runProfileScopeProjectIds.length > 0 && test.id && !runProfileScopeProjectIds.some(sfid => test.id.startsWith(sfid)))
-      continue;
 
     // find = don't add tests in nested folder nodes more than once
     if (request.exclude?.includes(test) || queue.find(x => x.test.id === test.id))
@@ -119,7 +100,7 @@ async function queueSelectedTestItems(runProfileScopeProjectIds: string[], ctrl:
         await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedTestItems");
       }
 
-      await queueSelectedTestItems(runProfileScopeProjectIds, ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
+      await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
     }
 
   }

@@ -64,7 +64,7 @@
 				},
 				"behave-vsc.runProfiles": {
 					"type": "array",
-					"scope": "window",
+					"scope": "resource",
 					"markdownDescription": "A list of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to ALL projects in the workspace. See example in readme.",
 					"items": {
 						"type": "object",
@@ -75,13 +75,6 @@
 							"name": {
 								"type": "string",
 								"markdownDescription": "The name of the run profile."
-							},
-							"projectScope": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								},
-								"markdownDescription": "For multi-root workspaces. An array of projects (workspace folder names) that this run profile can run against. If not specified, the run profile can be run against all projects. This setting should be in your `*.code-workspace` file."
 							},
 							"env": {
 								"type": "object",

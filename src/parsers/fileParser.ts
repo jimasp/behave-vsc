@@ -493,7 +493,7 @@ export class FileParser {
     //   }
     // }
 
-    let projGrandParent: vscode.TestItem | undefined;
+    //let projGrandParent: vscode.TestItem | undefined;
     // // if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
     // projGrandParent = controller.items.get(ps.id);
     // if (!projGrandParent) {
@@ -507,7 +507,7 @@ export class FileParser {
     // build top-down in case parent folder gets renamed/deleted etc.
     // note that the id is based on the file path so a new node is created if the folder is renamed
     // (old nodes are removed when required by _parseFeatureFiles())
-    let firstFolder: vscode.TestItem | undefined = undefined;
+    //let firstFolder: vscode.TestItem | undefined = undefined;
     let parent: vscode.TestItem | undefined = undefined;
     let current: vscode.TestItem | undefined;
 
@@ -525,8 +525,8 @@ export class FileParser {
         const folderTestItemId = uriId(vscode.Uri.file(basePath + folders.slice(0, folderNo + 1).join("/")));
         const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon        
 
-        if (folderNo === 0)
-          parent = projGrandParent;
+        // if (folderNo === 0)
+        //   parent = projGrandParent;
 
         if (parent)
           current = parent.children.get(folderTestItemId);
@@ -548,13 +548,13 @@ export class FileParser {
 
         parent = current;
 
-        if (folderNo === 0)
-          firstFolder = current;
+        // if (folderNo === 0)
+        //   firstFolder = current;
       }
     }
 
-    if (projGrandParent)
-      projGrandParent.children.add(firstFolder ? firstFolder : testItem);
+    // if (projGrandParent)
+    //   projGrandParent.children.add(firstFolder ? firstFolder : testItem);
 
     xRayLog(`${caller}: created test item for ${uri.path}`);
     return { testItem: testItem, testFile: testFile };
