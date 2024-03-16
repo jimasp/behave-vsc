@@ -25,7 +25,6 @@ export class InstanceSettings {
   // these apply to the whole vscode instance, but may be set in settings.json OR *.code-workspace 
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly runMultiRootProjectsInParallel: boolean;
-  public readonly runProfiles: RunProfilesSetting = [];
   public readonly xRay: boolean;
 
   constructor(wsConfig: vscode.WorkspaceConfiguration) {
@@ -44,35 +43,6 @@ export class InstanceSettings {
     if (xRayCfg === undefined)
       throw new Error("xRay is undefined");
     this.xRay = xRayCfg;
-
-
-    const runProfilesCfg: RunProfilesSetting | undefined = wsConfig.get("runProfiles");
-    if (runProfilesCfg === undefined)
-      throw new Error("runProfiles is undefined");
-
-    try {
-      let validRunProfiles = true;
-      for (const profile of runProfilesCfg) {
-        const script = profile.customRunner?.scriptFile;
-        if (script) {
-          if (!script.endsWith(".py")) {
-            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', "OK");
-            validRunProfiles = false;
-          }
-          if (script.includes("/") || script.includes("\\")) {
-            vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', "OK");
-            validRunProfiles = false;
-          }
-        }
-      }
-      if (validRunProfiles) {
-        // call the RunProfile constructor for each run profile
-        this.runProfiles = runProfilesCfg.map(cfg => new RunProfile(cfg.name, cfg.tagsParameters, cfg.projectScope, cfg.env, cfg.customRunner));
-      }
-    }
-    catch {
-      vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
-    }
 
   }
 }
@@ -200,6 +170,43 @@ export class ProjectSettings {
 
   }
 
+}
+
+
+export function getUserRunProfiles(projUri: vscode.Uri): RunProfile[] {
+
+  const projConfig = vscode.workspace.getConfiguration("behave-vsc", projUri);
+  let runProfiles: RunProfile[] = [];
+
+  const runProfilesCfg: RunProfilesSetting | undefined = projConfig.get("runProfiles");
+  if (runProfilesCfg === undefined)
+    throw new Error("runProfiles is undefined");
+
+  try {
+    let validRunProfiles = true;
+    for (const profile of runProfilesCfg) {
+      const script = profile.customRunner?.scriptFile;
+      if (script) {
+        if (!script.endsWith(".py")) {
+          vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', "OK");
+          validRunProfiles = false;
+        }
+        if (script.includes("/") || script.includes("\\")) {
+          vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', "OK");
+          validRunProfiles = false;
+        }
+      }
+    }
+    if (validRunProfiles) {
+      // call the RunProfile constructor for each run profile
+      runProfiles = runProfilesCfg.map(cfg => new RunProfile(cfg.name, cfg.tagsParameters, cfg.projectScope, cfg.env, cfg.customRunner));
+    }
+  }
+  catch {
+    vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
+  }
+
+  return runProfiles;
 }
 
 

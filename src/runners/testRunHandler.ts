@@ -15,7 +15,7 @@ import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitPar
 
 
 
-export function testRunHandler(testData: TestData, ctrl: vscode.TestController, junitWatcher: JunitWatcher) {
+export function testRunHandler(ctrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
     let run: vscode.TestRun | undefined;
@@ -46,15 +46,15 @@ export function testRunHandler(testData: TestData, ctrl: vscode.TestController, 
       run = ctrl.createTestRun(request, runName, false);
 
       const runProfileScopeProjectIds: string[] = [];
-      for (const wsFolder of runProfile.projectScope ?? []) {
-        const match = vscode.workspace.workspaceFolders?.find(x => x.name === wsFolder);
-        if (!match) {
-          run.appendOutput(`Test run aborted. Project (workspace folder) "${wsFolder}" in runProfile ` +
-            `"${runProfile.name}" was not found. Test run aborted.`);
-          return;
-        }
-        runProfileScopeProjectIds.push(uriId(match.uri));
-      }
+      // for (const wsFolder of runProfile.projectScope ?? []) {
+      //   const match = vscode.workspace.workspaceFolders?.find(x => x.name === wsFolder);
+      //   if (!match) {
+      //     run.appendOutput(`Test run aborted. Project (workspace folder) "${wsFolder}" in runProfile ` +
+      //       `"${runProfile.name}" was not found. Test run aborted.`);
+      //     return;
+      //   }
+      //   runProfileScopeProjectIds.push(uriId(match.uri));
+      // }
 
       const queue: QueueItem[] = [];
       const tests = request.include ?? convertToTestItemArray(ctrl.items);

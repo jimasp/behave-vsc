@@ -17,6 +17,7 @@ import {
   clearStepMappings, rebuildStepMappings, getStepMappings, deleteStepsAndStepMappingsForStepsFile,
   deleteStepsAndStepMappingsForFeatureFile
 } from './stepMappings';
+import { getProjMapEntry } from '../extension';
 
 
 
@@ -32,40 +33,40 @@ export class FileParser {
   private _errored = false;
   private _reparsingFile = false;
 
-  // NOTE: 
-  // This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
-  async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
-    intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken): Promise<(ProjParseCounts | undefined)[]> {
+  // // NOTE: 
+  // // This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
+  // async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
+  //   intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken): Promise<(ProjParseCounts | undefined)[]> {
 
-    try {
-      this._finishedFeaturesParseForAllProjects = false;
-      this._errored = false;
+  //   try {
+  //     this._finishedFeaturesParseForAllProjects = false;
+  //     this._errored = false;
 
-      // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
-      // clear everything up-front so that we rebuild the top level nodes
-      xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
-      deleteTestTreeNodes(null, testData, ctrl);
+  //     // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
+  //     // clear everything up-front so that we rebuild the top level nodes
+  //     xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
+  //     deleteTestTreeNodes(null, testData, ctrl);
 
-      const promises: Promise<ProjParseCounts | undefined>[] = [];
-      for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-        promises.push(this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
-          firstRun, cancelToken));
-      }
+  //     const promises: Promise<ProjParseCounts | undefined>[] = [];
+  //     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+  //       promises.push(this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
+  //         firstRun, cancelToken));
+  //     }
 
-      return Promise.all(promises);
-    }
-    catch (e: unknown) {
-      // unawaited async func, show error
-      services.logger.showError(e);
-      return [];
-    }
-  }
+  //     return Promise.all(promises);
+  //   }
+  //   catch (e: unknown) {
+  //     // unawaited async func, show error
+  //     services.logger.showError(e);
+  //     return [];
+  //   }
+  // }
 
 
   // NOTES:
   // - This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
   // - This is a self-cancelling RE-ENTRANT function, i.e. when called, any current parse for the same project will stop.   
-  async parseFilesForProject(projUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, intiator: string, firstRun: boolean,
+  async parseFilesForProject(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData, intiator: string, firstRun: boolean,
     callerCancelToken?: vscode.CancellationToken): Promise<ProjParseCounts | undefined> {
 
     const projPath = projUri.path;
@@ -289,7 +290,7 @@ export class FileParser {
   }
 
 
-  async reparseFile(fileUri: vscode.Uri, testData: TestData, ctrl: vscode.TestController, caller: string, content?: string) {
+  async reparseFile(fileUri: vscode.Uri, testData: TestData, caller: string, content?: string) {
 
     let ps: ProjectSettings | undefined;
 
@@ -308,6 +309,8 @@ export class FileParser {
 
       ps = await getProjectSettingsForFile(fileUri);
 
+      const ctrl = getProjMapEntry(ps.uri).ctrl;
+
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
         await parseStepsFileContent(ps.uri, content, fileUri, `reparseFile (${caller})`);
@@ -315,7 +318,7 @@ export class FileParser {
 
       if (isAFeatureFile) {
         deleteStepsAndStepMappingsForFeatureFile(fileUri);
-        await this._updateTestItemFromFeatureFileContent(ps, content, testData, ctrl, fileUri, `reparseFile (${caller})`, false);
+        await this._updateTestItemFromFeatureFileContent(ps, ctrl, testData, fileUri, content, `reparseFile (${caller})`, false);
       }
 
       rebuildStepMappings(ps.uri);
@@ -362,7 +365,7 @@ export class FileParser {
         if (cancelToken.isCancellationRequested)
           break;
         const content = await getContentFromFilesystem(uri);
-        await this._updateTestItemFromFeatureFileContent(ps, content, testData, ctrl, uri, caller, firstRun);
+        await this._updateTestItemFromFeatureFileContent(ps, ctrl, testData, uri, content, caller, firstRun);
         processed++;
       }
 
@@ -421,8 +424,8 @@ export class FileParser {
   }
 
 
-  private async _updateTestItemFromFeatureFileContent(ps: ProjectSettings, content: string, testData: TestData,
-    controller: vscode.TestController, uri: vscode.Uri, caller: string, firstRun: boolean) {
+  private async _updateTestItemFromFeatureFileContent(ps: ProjectSettings, controller: vscode.TestController, testData: TestData,
+    uri: vscode.Uri, content: string, caller: string, firstRun: boolean) {
 
     if (!await isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
@@ -478,18 +481,27 @@ export class FileParser {
     const testFile = new TestFile();
     testData.set(testItem, testFile);
 
-    // if it's a multi-root workspace, use project grandparent nodes, e.g. "project_1", "project_2"
-    let projGrandParent: vscode.TestItem | undefined;
-    if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-      projGrandParent = controller.items.get(ps.id);
-      if (!projGrandParent) {
-        const projName = ps.name;
-        projGrandParent = controller.createTestItem(ps.id, projName);
-        projGrandParent.canResolveChildren = true;
-        controller.items.add(projGrandParent);
-      }
-    }
+    // // if it's a multi-root workspace, use project grandparent nodes, e.g. "project_1", "project_2"
+    // let projGrandParent: vscode.TestItem | undefined;
+    // if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
+    //   projGrandParent = controller.items.get(ps.id);
+    //   if (!projGrandParent) {
+    //     const projName = ps.name;
+    //     projGrandParent = controller.createTestItem(ps.id, projName);
+    //     projGrandParent.canResolveChildren = true;
+    //     controller.items.add(projGrandParent);
+    //   }
+    // }
 
+    let projGrandParent: vscode.TestItem | undefined;
+    // // if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
+    // projGrandParent = controller.items.get(ps.id);
+    // if (!projGrandParent) {
+    //   projGrandParent = controller.createTestItem("blah", "Feature Tests");
+    //   projGrandParent.canResolveChildren = true;
+    //   controller.items.add(projGrandParent);
+    // }
+    // // }
 
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.

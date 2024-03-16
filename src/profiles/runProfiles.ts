@@ -1,18 +1,21 @@
 import * as vscode from 'vscode';
 import { services } from "../common/services";
-import { ITestRunHandler } from '../runners/testRunHandler';
-import { RunProfile } from '../config/settings';
-import { isIterable } from '../common/helpers';
+import { RunProfile, getUserRunProfiles } from '../config/settings';
+import { ProjMapEntry } from '../extension';
 
 
-const config = services.config;
 const featureRunProfiles: vscode.TestRunProfile[] = [];
 const PREFIX = "Features";
 
 
-export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITestRunHandler): vscode.TestRunProfile[] {
+export function createRunProfiles(projUri: vscode.Uri, projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
 
   let profileName: string;
+
+  // note: this will read from settings.json (i.e. reload latest changes)
+  const userProfiles = getUserRunProfiles(projUri);
+  const ctrl = projMapEntry.ctrl;
+  const runHandler = projMapEntry.runHandler;
 
   for (const debug of [false, true]) {
 
@@ -20,29 +23,24 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
     // USER'S CUSTOM SETTINGS.JSON RUN PROFILES
 
-    if (!isIterable(config.instanceSettings.runProfiles)) {
-      services.logger.showWarn(`"behave-vsc.runProfiles" must be an array of objects.`);
-    }
-    else {
-      for (const runProfile of config.instanceSettings.runProfiles) {
-        // IIFEs are here to bind profile variable to onDidChangeDefault event
-        (() => {
-          const profileName = `${PREFIX}: ${runProfile.name}`;
-          const profile = ctrl.createRunProfile(profileName, profileKind,
-            async (request: vscode.TestRunRequest) => {
-              await runHandler(debug, request, runProfile);
-            });
-          profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
-          featureRunProfiles.push(profile);
-        })();
-      }
+    for (const runProfile of userProfiles) {
+      // IIFEs are here to bind profile variable to onDidChangeDefault event
+      (() => {
+        const profileName = `${PREFIX}: ${runProfile.name}`;
+        const profile = ctrl.createRunProfile(profileName, profileKind,
+          async (request: vscode.TestRunRequest) => {
+            await runHandler(debug, request, runProfile);
+          }, undefined);
+        profile.onDidChangeDefault(() => onlyAllowOneDefault(PREFIX));
+        featureRunProfiles.push(profile);
+      })();
     }
 
 
     // OUT-OF-THE-BOX PROFILES
 
     (() => {
-      const profileName = PREFIX;
+      const profileName = PREFIX + projUri.fsPath.split("/").pop();
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
@@ -53,7 +51,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
 
     (() => {
-      const profileName = `${PREFIX}: ad-hoc tags ( OR )`;
+      const profileName = `${PREFIX}: ad-hoc tags ( OR )` + projUri.fsPath.split("/").pop();
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
@@ -72,7 +70,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
 
     (() => {
-      profileName = `${PREFIX}: ad-hoc tags (AND)`;
+      profileName = `${PREFIX}: ad-hoc tags (AND)` + projUri.fsPath.split("/").pop();
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2", prompt: "Logical AND. " });
@@ -91,7 +89,7 @@ export function createRunProfiles(ctrl: vscode.TestController, runHandler: ITest
 
 
     (() => {
-      const profileName = `${PREFIX}: ad-hoc tags (Params)`;
+      const profileName = `${PREFIX}: ad-hoc tags (Params)` + projUri.fsPath.split("/").pop();
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsParameters = await vscode.window.showInputBox({

@@ -27,16 +27,16 @@ export class ProjectWatcher {
     this.#watcher?.dispose();
   }
 
-  public static async create(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): Promise<ProjectWatcher> {
+  public static create(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): ProjectWatcher {
     const projectPattern = new vscode.RelativePattern(projUri, `**`);
     const watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
-    const watcherEvents = await ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);
+    const watcherEvents = ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);
     const projectWatcher = new ProjectWatcher(watcher, watcherEvents);
     return projectWatcher;
   }
 
-  static async setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
-    testData: TestData): Promise<vscode.Disposable[]> {
+  static setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
+    testData: TestData): vscode.Disposable[] {
 
     const events: vscode.Disposable[] = [];
 
@@ -110,7 +110,7 @@ export class ProjectWatcher {
         // deleted feature/steps file (or folder), reparse the entire project to rebuild the test tree
         //await services.config.reloadSettings(projUri);
         // no need to await the parse
-        services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidDelete", false);
+        services.parser.parseFilesForProject(projUri, ctrl, testData, "OnDidDelete", false);
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
@@ -150,7 +150,7 @@ export class ProjectWatcher {
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           await services.config.reloadSettings(projUri);
           // no need to await the parse
-          services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt", false);
           return false; // just handled it
         }
       }
@@ -159,7 +159,7 @@ export class ProjectWatcher {
       if (/(\/steps$|^environment\.py$|_environment\.py$)/.test(uri.path.toLowerCase())) {
         // environment.py affects the baseDir, so reload settings and reparse
         await services.config.reloadSettings(projUri);
-        services.parser.parseFilesForProject(projUri, testData, ctrl, "shouldHandleIt", false);
+        services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt", false);
         return false; // just handled it
       }
 
@@ -190,7 +190,7 @@ export class ProjectWatcher {
       if (uri.scheme !== "file")
         return;
       xRayLog(`reparsing file: ${uri.fsPath}`, projUri, LogType.info);
-      services.parser.reparseFile(uri, testData, ctrl, "watcher event > reparseTheFile");
+      services.parser.reparseFile(uri, testData, "watcher event > reparseTheFile");
     }
 
     return events;
