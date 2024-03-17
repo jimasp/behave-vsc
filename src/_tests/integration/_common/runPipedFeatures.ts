@@ -44,7 +44,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    const allProjTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
     // get any features that are not the sole feature in a folder
@@ -76,7 +76,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
     console.log(`${consoleName}: calling runHandler to run piped features...`);
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+    const results = await api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
 
     // ASSERT  
 

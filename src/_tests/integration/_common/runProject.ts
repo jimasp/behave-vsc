@@ -69,6 +69,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
+
   try {
 
     // ==================== START LOCK SECTION ====================
@@ -100,11 +101,11 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // call parse directly so we can check counts 
     // (also this means we don't have to check if the parse kicked off by 
     // configurationChangedHandler has completed before we check api.ctrl.items etc.)
-    const actualCounts = await services.parser.parseFilesForProject(projUri, api.testData, api.ctrl,
+    const actualCounts = await services.parser.parseFilesForProject(projUri, api.getProjMapEntry(projUri).ctrl, api.testData,
       "runAllProjectAndAssertTheResults", false);
     assert(actualCounts, "actualCounts was undefined");
 
-    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    const allProjTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
     console.log(`${consoleName}: workspace nodes:${allProjTestItems.length}`);
     const hasMultiRootWkspNode = allProjTestItems.find(item => item.id === uriId(projUri)) !== undefined;
     assertExpectedCounts(projUri, projName, services.config, expectations.getExpectedCountsFunc, actualCounts, hasMultiRootWkspNode);
@@ -128,7 +129,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ACT 2
 
     // kick off the run, do NOT await (see comment above)
-    const resultsPromise = api.runHandler(isDebugRun, request, runProfile);
+    const resultsPromise = api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
 
 
     // release lock: 

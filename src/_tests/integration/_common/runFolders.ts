@@ -38,7 +38,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-    const folderItems = getFolderItemsWithDescendents(api.ctrl.items, projId);
+    const folderItems = getFolderItemsWithDescendents(api.getProjMapEntry(projUri).ctrl.items, projId);
 
     if (folderItems.length === 0)
       throw new Error(`No folders found in test nodes for project "${projName}"`);
@@ -48,7 +48,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
     console.log(`${consoleName}: calling runHandler to run folders...`);
     const requestItems = folderItems.map(x => x.item);
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+    const results = await api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
 
     // ASSERT
 
@@ -67,7 +67,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
       return;
     }
 
-    const allTestItems = getTestItems(projId, api.ctrl.items);
+    const allTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
     assertExpectedFriendlyCmdsForTogether(request, allTestItems, projUri, projName, scenarios, testExtConfig, runOptions, expectedResults);
   }
   finally {

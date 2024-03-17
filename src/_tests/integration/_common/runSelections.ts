@@ -47,7 +47,7 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
-    const allTestItems = getTestItems(projId, api.ctrl.items);
+    const allTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
 
     for (const selection of selections) {
       await runSelection(selection, consoleName, projUri, api, allTestItems, expectedResults, projName, testExtConfig);
@@ -58,6 +58,8 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
   }
 
 }
+
+
 
 
 async function runSelection(params: Selection, consoleName: string, projUri: vscode.Uri,
@@ -118,7 +120,7 @@ async function actAndAssert(params: Selection, consoleName: string, requestItems
   console.log(`${consoleName}: calling runHandler to run piped features...`);
   const request = new vscode.TestRunRequest(requestItems);
   const runProfile = new RunProfile("Features");
-  const results = await api.runHandler(false, request, runProfile);
+  const results = await api.getProjMapEntry(projUri).runHandler(false, request, runProfile);
 
   // ASSERT  
 

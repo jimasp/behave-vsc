@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting } from '../../../config/settings';
+import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting, RunProfile } from '../../../config/settings';
 
 
 // used in extension code to allow us to dynamically inject a test workspace configuration
@@ -168,7 +168,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "importedSteps":
 				return <T><unknown>(this.get("importedSteps") === undefined ? [] : convertimportedStepsToExpectedArray(this.get("importedSteps")));
 			case "runProfiles":
-				return <T><unknown>(this.get("runProfiles"));
+				return <T><unknown>((this.get("runProfiles") as RunProfilesSetting).map(cfg =>
+					new RunProfile(cfg.name, cfg.tagsParameters, cfg.env, cfg.customRunner)));
 			case "behaveWorkingDirectory":
 				return <T><unknown>(this.get("behaveWorkingDirectory"));
 			case "xRay":

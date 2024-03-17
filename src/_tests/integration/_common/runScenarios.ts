@@ -42,7 +42,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
 
     console.log(`${consoleName}: calling configurationChangedHandler`);
     await api.configurationChangedHandler(false, undefined, testExtConfig, projUri);
-    const allProjTestItems = getTestItems(projId, api.ctrl.items);
+    const allProjTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
 
     const featureTests = allProjTestItems.filter((item) => {
@@ -73,7 +73,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
     // ACT
 
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.runHandler(isDebugRun, request, runProfile);
+    const results = await api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
 
     // ASSERT  
 

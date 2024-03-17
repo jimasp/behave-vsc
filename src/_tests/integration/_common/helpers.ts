@@ -113,7 +113,12 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	assertApiInstances(api);
 
 	await api.parseAllPromise;
+
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
+
+	// TODO: remove this
+	await new Promise(t => setTimeout(t, 100));
+
 	return api;
 }
 
@@ -216,10 +221,9 @@ export function getRunProfile(testExtConfig: TestWorkspaceConfig, profileName: s
 
 function assertApiInstances(api: IntegrationTestAPI) {
 	assert(api);
-	assert(api.ctrl);
+	assert(api.getProjMapEntry);
 	assert(api.getStepFileStepForFeatureFileStep);
 	assert(api.getStepMappingsForStepsFileFunction);
-	assert(api.runHandler);
 	assert(api.testData);
 	assert(api.configurationChangedHandler);
 	assert(api.parseAllPromise);

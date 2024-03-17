@@ -7,7 +7,7 @@ import { uriId } from '../common/helpers';
 
 const featureRunProfiles: vscode.TestRunProfile[] = [];
 
-export function createRunProfiles(multiProject: boolean, projUri: vscode.Uri, projName: string,
+export function createRunProfilesForProject(multiProject: boolean, projUri: vscode.Uri, projName: string,
   projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
 
   let profileName: string;
