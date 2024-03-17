@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { services } from "../common/services";
 import { RunProfile, getUserRunProfiles } from '../config/settings';
 import { ProjMapEntry } from '../extension';
-import { uriId } from '../common/helpers';
 
 
 const featureRunProfiles: vscode.TestRunProfile[] = [];
@@ -16,9 +15,8 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
   const userProfiles = getUserRunProfiles(projUri);
   const ctrl = projMapEntry.ctrl;
   const runHandler = projMapEntry.runHandler;
-  const projId = uriId(projUri);
 
-  const prefix = multiProject ? `${projName}: ` : "";
+  const projPrefix = multiProject ? `${projName}: ` : "";
   const standardProfile = multiProject ? `${projName}:  all features` : " all features"; // extra spaces are for alphabetical sorting
 
   for (const debug of [false, true]) {
@@ -30,13 +28,12 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
     for (const runProfile of userProfiles) {
       // IIFEs are here to bind profile variable to onDidChangeDefault event
       (() => {
-        const profileName = `${prefix}${runProfile.name}`;
+        const profileName = `${projPrefix}${runProfile.name}`;
         const profile = ctrl.createRunProfile(profileName, profileKind,
           async (request: vscode.TestRunRequest) => {
             await runHandler(debug, request, runProfile);
           });
-        profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projId, standardProfile));
-        profile.tag = new vscode.TestTag(projId);
+        profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
         featureRunProfiles.push(profile);
       })();
     }
@@ -50,14 +47,13 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projId, standardProfile));
-      profile.tag = new vscode.TestTag(projId);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      const profileName = `${prefix}ad-hoc tags ( OR )`;
+      const profileName = `${projPrefix}ad-hoc tags ( OR )`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,tag2", prompt: "Logical OR. " });
@@ -70,14 +66,13 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projId, standardProfile));
-      profile.tag = new vscode.TestTag(projId);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      profileName = `${prefix}ad-hoc tags (AND)`;
+      profileName = `${projPrefix}ad-hoc tags (AND)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsString = await vscode.window.showInputBox({ placeHolder: "tag1,~tag2", prompt: "Logical AND. " });
@@ -90,14 +85,13 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projId, standardProfile));
-      profile.tag = new vscode.TestTag(projId);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
       featureRunProfiles.push(profile);
     })();
 
 
     (() => {
-      const profileName = `${prefix}ad-hoc tags (Params)`;
+      const profileName = `${projPrefix}ad-hoc tags (Params)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           const tagsParameters = await vscode.window.showInputBox({
@@ -111,23 +105,22 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
           }
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projId, standardProfile));
-      profile.tag = new vscode.TestTag(projId);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
       featureRunProfiles.push(profile);
     })();
 
   }
 
-  // checkAtLeastOneDefaultSet(projId, standardProfile);
+  // checkAtLeastOneDefaultSet(projPrefix, standardProfile);
 
   return featureRunProfiles;
 }
 
-// async function checkAtLeastOneDefaultSet(projId: string, standardProfile: string) {
+// async function checkAtLeastOneDefaultSet(projPrefix: string, standardProfile: string) {
 
 //   await new Promise(resolve => setTimeout(resolve, 1000)); // wait for vscode
 
-//   const featureRunProfilesForProject = featureRunProfiles.filter(p => p.tag?.id === projId);
+//   const featureRunProfilesForProject = featureRunProfiles.filter(p => p.label.startsWith(projPrefix));
 //   const noOfSelectedDefaults = featureRunProfilesForProject.filter(p => p.isDefault).length;
 
 //   if (noOfSelectedDefaults === 0)
@@ -135,7 +128,7 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
 // }
 
 
-function onlyAllowOneDefaultPerProject(isDefault: boolean, projId: string, standardProfile: string) {
+function onlyAllowOneDefaultPerProject(isDefault: boolean, projPrefix: string, standardProfile: string) {
   // THIS FUNCTION ENSURES THAT ONLY ONE DEFAULT RUN PROFILE IS SET PER PROJECT FOR FEATURES PROFILES (ONE EACH FOR RUN AND DEBUG).
   // We don't want more than one default because default profiles run one after the other, so allowing multiple defaults 
   // would mean that the same test could be hit twice with the same behave tags (or no behave tags). 
@@ -145,7 +138,7 @@ function onlyAllowOneDefaultPerProject(isDefault: boolean, projId: string, stand
   if (!isDefault)
     return;
 
-  const featureRunProfilesForProject = featureRunProfiles.filter(p => p.tag?.id === projId);
+  const featureRunProfilesForProject = featureRunProfiles.filter(p => p.label.startsWith(projPrefix));
   const noOfSelectedDefaults = featureRunProfilesForProject.filter(p => p.isDefault).length;
 
   // if more than one default profile was set, then set them all false, and set the normal default ("Features")
