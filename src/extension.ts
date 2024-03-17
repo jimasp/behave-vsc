@@ -17,7 +17,6 @@ import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
 import { ProjectWatcher } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
-import { ProjParseCounts } from './parsers/fileParser';
 import { createRunProfilesForProject } from './profiles/runProfiles';
 
 
@@ -53,7 +52,8 @@ export function deactivate() {
 // - call anything that needs to be initialised/kicked off async on startup, and 
 // - set up all relevant event handlers/hooks/subscriptions to the vscode api
 // this function should only contain initialisation, registering event handlers, and unawaited async calls
-// DO NOT MAKE THIS FUNCTION ASYNC (we want to kick off async tasks and then return)
+//
+// ** DO NOT MAKE THIS FUNCTION ASYNC ** (we want to kick off async tasks and then return)
 export function activate(context: vscode.ExtensionContext): IntegrationTestAPI | undefined {
 
   try {
@@ -72,8 +72,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       throw new Error("No workspaces with features found in workspace");
     }
 
-    const parsePromisesMap = new Map<string, Promise<ProjParseCounts | undefined>>();
-    recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher, parsePromisesMap);
+    const parseAllPromise = recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher);
 
     // any function contained in a context.subscriptions.push() will execute immediately, 
     // as well as registering the returned disposable object for a dispose() call on extension deactivation
@@ -220,9 +219,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (testConfig) {
           if (!testProjUri)
             throw new Error("testProjUri must be supplied when testConfig is supplied");
-          recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher, parsePromisesMap, testProjUri);
-          await Promise.all(parsePromisesMap.values());
-          console.log("PARSEPROMISES2", parsePromisesMap.get(uriId(testProjUri)));
+          await recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher, testProjUri);
           // TODO: remove
           // await new Promise(resolve => setTimeout(resolve, 1000)); // give time for the test run profiles to be created
           console.log(1);
@@ -234,7 +231,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
         // to rebuild the top level nodes)
-        recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher, parsePromisesMap);
+        recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher);
         // for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
         //   const ctrl = getProjMapEntry(projUri).ctrl;
         //   services.parser.parseFilesForProject(projUri, ctrl, testData, `configurationChangedHandler`, false);
@@ -263,7 +260,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       getStepMappingsForStepsFileFunction: getStepMappingsForStepsFileFunction,
       getStepFileStepForFeatureFileStep: getStepFileStepForFeatureFileStep,
       configurationChangedHandler: configurationChangedHandler,
-      parseAllPromise: Promise.all(parsePromisesMap.values())
+      parseAllPromise: parseAllPromise
     }
 
   }
@@ -305,60 +302,64 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 // }
 
 
-function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: JunitWatcher,
-  parsePromises: Map<string, Promise<ProjParseCounts | undefined>>, projUri?: vscode.Uri) {
+async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: JunitWatcher, projUri?: vscode.Uri) {
 
-  // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project
+  try {
 
-  const allProjects = getUrisOfWkspFoldersWithFeatures(true);
-  const multiRoot = allProjects.length > 1 ? true : false;
-  const projects = allProjects.filter(x => !projUri || urisMatch(x, projUri));
+    // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project
+
+    const allProjects = getUrisOfWkspFoldersWithFeatures(true);
+    const multiRoot = allProjects.length > 1 ? true : false;
+    const projects = allProjects.filter(x => !projUri || urisMatch(x, projUri));
 
 
-  for (const projUri of projects) {
+    for (const projUri of projects) {
 
-    const projName = projUri.fsPath.split("/").pop() ?? "";
-    if (!projName)
-      throw new Error("Could not get project name from path");
+      const ps = await services.config.getProjectSettings(projUri.path);
+      const projName = ps.name;
 
-    const projId = uriId(projUri)
-    allRunProfiles.get(projId)?.forEach(testRunProfile => testRunProfile.dispose());
-    projMap.get(projId)?.ctrl.dispose();
-    projMap.delete(projId);
-    projWatchers.get(projId)?.dispose();
-    projWatchers.delete(projId);
-    parsePromises.set(projId, Promise.resolve(undefined));
-    parsePromises.delete(projId);
+      // const projName = projUri.fsPath.split("/").pop() ?? "";
+      // if (!projName)
+      //   throw new Error("Could not get project name from path");
 
-    const ctrl = vscode.tests.createTestController(`behave-vsc.${projName}`, multiRoot ? "Feature Tests: " + projName : "Feature Tests");
-    const runHandler = testRunHandler(ctrl, testData, junitWatcher);
-    const projMapEntry = { ctrl: ctrl, runHandler: runHandler };
-    projMap.set(projId, projMapEntry);
+      const projId = uriId(projUri)
+      allRunProfiles.get(projId)?.forEach(testRunProfile => testRunProfile.dispose());
+      projMap.get(projId)?.ctrl.dispose();
+      projMap.delete(projId);
+      projWatchers.get(projId)?.dispose();
+      projWatchers.delete(projId);
 
-    allRunProfiles.set(projId, createRunProfilesForProject(multiRoot, projUri, projName, projMapEntry));
-    console.log("PARSEPROMISES0", parsePromises.get(projId));
-    parsePromises.set(projId, services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true));
-    console.log("PARSEPROMISES1", parsePromises.get(projId));
+      const ctrl = vscode.tests.createTestController(`behave-vsc.${projName}`, multiRoot ? "Feature Tests: " + projName : "Feature Tests");
+      const runHandler = testRunHandler(ctrl, testData, junitWatcher);
+      const projMapEntry = { ctrl: ctrl, runHandler: runHandler };
+      projMap.set(projId, projMapEntry);
 
-    const projWatcher = ProjectWatcher.create(projUri, ctrl, testData);
-    projWatchers.set(projId, projWatcher);
+      allRunProfiles.set(projId, createRunProfilesForProject(ps, multiRoot, projMapEntry));
+      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
 
-    // called by manual refresh button in test explorer    
-    ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
-      try {
-        await services.config.reloadSettings(projUri);
-        const ctrl = getProjMapEntry(projUri).ctrl;
-        services.parser.parseFilesForProject(projUri, ctrl, testData, "refreshHandler", false, cancelToken);
-      }
-      catch (e: unknown) {
-        // entry point function (handler) - show error        
-        services.logger.showError(e);
-      }
-    };
+      const projWatcher = ProjectWatcher.create(projUri, ctrl, testData);
+      projWatchers.set(projId, projWatcher);
+
+      // called by manual refresh button in test explorer    
+      ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
+        try {
+          await services.config.reloadSettings(projUri);
+          const ctrl = getProjMapEntry(projUri).ctrl;
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "refreshHandler", false, cancelToken);
+        }
+        catch (e: unknown) {
+          // entry point function (handler) - show error        
+          services.logger.showError(e);
+        }
+      };
+    }
+
   }
-
+  catch (e: unknown) {
+    // unawaited (except for integration tests) async function - show error       
+    services.logger.showError(e);
+  }
 }
-
 
 
 
@@ -372,6 +373,6 @@ export type IntegrationTestAPI = {
   getStepFileStepForFeatureFileStep: (featureFileUri: vscode.Uri, line: number) => StepFileStep | undefined,
   configurationChangedHandler: (forceRefresh: boolean, event?: vscode.ConfigurationChangeEvent,
     testCfg?: vscode.WorkspaceConfiguration, testProjUri?: vscode.Uri) => Promise<void>,
-  parseAllPromise: Promise<(ProjParseCounts | undefined)[]>
+  parseAllPromise: Promise<void>
 };
 

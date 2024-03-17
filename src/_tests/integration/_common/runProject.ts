@@ -100,7 +100,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
     // call parse directly so we can check counts 
     // (also this means we don't have to check if the parse kicked off by 
-    // configurationChangedHandler has completed before we check api.ctrl.items etc.)
+    // configurationChangedHandler has completed before we check counts etc.)
     const actualCounts = await services.parser.parseFilesForProject(projUri, api.getProjMapEntry(projUri).ctrl, api.testData,
       "runAllProjectAndAssertTheResults", false);
     assert(actualCounts, "actualCounts was undefined");

@@ -115,6 +115,7 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	await api.parseAllPromise;
 
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
+	await vscode.commands.executeCommand("testing.collapseAll");
 
 	return api;
 }

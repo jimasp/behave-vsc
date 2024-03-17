@@ -55,7 +55,8 @@ export class ProjectSettings {
   public readonly env: EnvSetting = {};
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
-  public readonly importedSteps: ImportedSteps = [];
+  public readonly importedSteps: ImportedSteps;
+  public readonly userRunProfiles: RunProfile[];
   // calculated:
   public readonly id: string; // project id (unique)
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
@@ -123,6 +124,8 @@ export class ProjectSettings {
       throw new Error("runParallel is undefined");
     this.runParallel = runParallelCfg;
 
+    this.userRunProfiles = getValidUserRunProfiles(projUri);
+
     try {
       const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
       if (envCfg === undefined)
@@ -132,6 +135,7 @@ export class ProjectSettings {
     catch {
       services.logger.showWarn('Invalid "behave-vsc.env" setting was ignored.', projUri);
     }
+
 
     try {
       // DEPRECATED, so only used if env is not set in settings.json
@@ -161,6 +165,7 @@ export class ProjectSettings {
       this.projRelativeBehaveWorkingDirPath = behaveWorkingDirectoryCfg;
     }
 
+
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
       throw new Error("importedSteps is undefined");
@@ -173,7 +178,7 @@ export class ProjectSettings {
 }
 
 
-export function getUserRunProfiles(projUri: vscode.Uri): RunProfile[] {
+function getValidUserRunProfiles(projUri: vscode.Uri): RunProfile[] {
 
   const projConfig = vscode.workspace.getConfiguration("behave-vsc", projUri);
   let runProfiles: RunProfile[] = [];

@@ -1,18 +1,18 @@
 import * as vscode from 'vscode';
 import { services } from "../common/services";
-import { RunProfile, getUserRunProfiles } from '../config/settings';
+import { ProjectSettings, RunProfile } from '../config/settings';
 import { ProjMapEntry } from '../extension';
 
 
 const featureRunProfiles: vscode.TestRunProfile[] = [];
 
-export function createRunProfilesForProject(multiRoot: boolean, projUri: vscode.Uri, projName: string,
-  projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
+export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: boolean, projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
 
   let profileName: string;
 
   // note: this will read from settings.json (i.e. reload latest changes)
-  const userProfiles = getUserRunProfiles(projUri);
+  const userProfiles = ps.userRunProfiles;
+  const projName = ps.name;
   const ctrl = projMapEntry.ctrl;
   const runHandler = projMapEntry.runHandler;
 

@@ -6,7 +6,7 @@ import { ProjParseCounts } from "../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "./testWorkspaceConfig";
 import { Expectations, TestResult, testGlobals } from "./types";
 import { services } from "../../../common/services";
-import { ProjectSettings, getUserRunProfiles } from "../../../config/settings";
+import { ProjectSettings, RunProfile } from "../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../common/helpers";
 import { featureFileStepRe } from "../../../parsers/featureParser";
 import { funcRe } from "../../../parsers/stepsParser";
@@ -27,9 +27,6 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
       assert.strictEqual(instanceSettings.xRay, testConfig.getExpected("xRay"),
         `${projName} project: xRay`);
     }
-
-    assert.deepStrictEqual(getUserRunProfiles(projUri), testConfig.getExpected("runProfiles"),
-      `${projName} project: runProfiles`);
 
     const projSettings = await actualConfig.getProjectSettings(projUri.path);
     assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
@@ -54,6 +51,12 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
       `${projName} project: runParallel`);
     assert.deepStrictEqual(projSettings.importedSteps, testConfig.getExpected("importedSteps"),
       `${projName} project: importedSteps`);
+
+    // convert constructor names to plain objects for deepStrictEqual
+    const actualProfiles = projSettings.userRunProfiles.map(profile => ({ ...profile }));
+    const expectedProfiles = (testConfig.getExpected("runProfiles") as RunProfile[]).map(profile => ({ ...profile }));
+    assert.deepStrictEqual(actualProfiles, expectedProfiles,
+      `${projName} project: runProfiles`);
   }
   catch (assertErr: unknown) {
     debugger; // eslint-disable-line no-debugger      
