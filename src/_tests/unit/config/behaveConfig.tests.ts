@@ -5,18 +5,19 @@ import * as vscode from 'vscode';
 import * as sinon from 'sinon';
 import { getBehaveConfigPaths } from '../../../config/behaveConfig';
 import { services } from '../../../common/services';
-import { rndNumeric } from '../../../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../../../behaveLogic';
 import { ProjectSettings } from '../../../config/settings';
 
+
+const nowString = () => new Date().toISOString().replace(/:/g, "-").replace(/\./g, "-").replace('Z', '');
 
 
 suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
   let sandbox: sinon.SinonSandbox;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let logger: any;
-  const projUri = vscode.Uri.file(rndNumeric());
-  const workDirUri = vscode.Uri.file(projUri.fsPath + "/" + rndNumeric());
+  const projUri = vscode.Uri.file(nowString());
+  const workDirUri = vscode.Uri.file(projUri.fsPath + "/" + nowString());
   const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "");
   const fileContent = ' [behave]\n  paths =features';
   const expRawPaths = ["features"];
@@ -260,9 +261,9 @@ suite("getBehaveConfigPaths - more path checks", () => {
   const getParams = (): Params[] => {
     const params: Params[] = [];
     for (let i = 0; i < 2; i++) {
-      const projUri = vscode.Uri.file(rndNumeric());
+      const projUri = vscode.Uri.file(nowString());
       const workDirUri = i === 0
-        ? vscode.Uri.file(projUri.fsPath + "/" + rndNumeric())
+        ? vscode.Uri.file(projUri.fsPath + "/" + nowString())
         : vscode.Uri.file(projUri.fsPath);
       const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       params.push(new Params(projUri, workDirUri, workDirRelPath));

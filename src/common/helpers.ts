@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
-import { customAlphabet } from 'nanoid';
 import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
 import { ProjectSettings, StepImport } from '../config/settings';
@@ -507,16 +506,6 @@ export function pathExistsSync(pattern: string): boolean {
 
 export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
-}
-
-
-export function rndAlphaNumeric(size = 5) {
-  return customAlphabet("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")(size);
-}
-
-
-export function rndNumeric(size = 6) {
-  return customAlphabet("0123456789")(size);
 }
 
 
