@@ -19,7 +19,7 @@ suite(`use custom runner suite: multi.tests`, () => {
 	});
 
 	test("runAll - custom runner profile: wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: wait for test results";
+		runOptions.selectedRunProfile = "behave-django runner profile: WAIT for test results";
 		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});

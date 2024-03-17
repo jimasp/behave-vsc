@@ -8,7 +8,7 @@ export const wsConfig = new TestWorkspaceConfig({
   runProfiles: [
     // NOTE - these are also used in simple suite (see simple suite's multi.tests.ts)
     {
-      "name": "behave-django runner profile: wait for test results",
+      "name": "behave-django runner profile: WAIT for test results",
       "env": {
         "var1": "var1 value",
       },

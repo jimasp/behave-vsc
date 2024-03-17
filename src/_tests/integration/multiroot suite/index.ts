@@ -15,9 +15,9 @@ export async function run(): Promise<void[]> {
 	// we could include all these in a single glob and use a single runner, but keeping them separate 
 	// means we can comment them out individually as needed whenever required for debugging purposes.			
 	const multis = [
-		"../**/simple suite/multi.tests.js",
 		"../**/project A suite/multi.tests.js",
 		"../**/project B suite/multi.tests.js",
+		"../**/simple suite/multi.tests.js",
 		"../**/run profiles suite/multi.tests.js",
 		"../**/multiple top-level features folders suite/multi.tests.js",
 		"../**/imported steps suite/multi.tests.js",

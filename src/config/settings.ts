@@ -124,7 +124,7 @@ export class ProjectSettings {
       throw new Error("runParallel is undefined");
     this.runParallel = runParallelCfg;
 
-    this.userRunProfiles = getValidUserRunProfiles(projUri);
+    this.userRunProfiles = getValidUserRunProfiles(projConfig);
 
     try {
       const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
@@ -178,9 +178,8 @@ export class ProjectSettings {
 }
 
 
-function getValidUserRunProfiles(projUri: vscode.Uri): RunProfile[] {
+function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): RunProfile[] {
 
-  const projConfig = vscode.workspace.getConfiguration("behave-vsc", projUri);
   let runProfiles: RunProfile[] = [];
 
   const runProfilesCfg: RunProfilesSetting | undefined = projConfig.get("runProfiles");
