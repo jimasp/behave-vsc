@@ -1,9 +1,7 @@
 import { TestProjectRunner } from "../_common/projectRunner";
-import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig";
-import { noBehaveIni, noConfig, noRunOptions, parallelConfig, testGlobals } from "../_common/types"
-import { wsConfig as useCustomRunnerConfig } from "../use custom runner suite/config";
-import { behaveIni, expectations, expectationsWithBehaveIni, runOptions } from "./config";
-import { getExpectedResults } from "./expectedResults";
+import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_common/types"
+import { behaveIni, expectations, expectationsWithBehaveIni } from "./config";
+
 
 
 suite(`simple suite: multi.tests`, function () {
