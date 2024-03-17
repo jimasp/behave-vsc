@@ -311,8 +311,8 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: Junit
   // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project
 
   const allProjects = getUrisOfWkspFoldersWithFeatures(true);
+  const multiRoot = allProjects.length > 1 ? true : false;
   const projects = allProjects.filter(x => !projUri || urisMatch(x, projUri));
-  const multiProject = projects.length > 1 ? true : false;
 
 
   for (const projUri of projects) {
@@ -330,12 +330,12 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: Junit
     parsePromises.set(projId, Promise.resolve(undefined));
     parsePromises.delete(projId);
 
-    const ctrl = vscode.tests.createTestController(`behave-vsc.${projName}`, multiProject ? "Feature Tests: " + projName : "Feature Tests");
+    const ctrl = vscode.tests.createTestController(`behave-vsc.${projName}`, multiRoot ? "Feature Tests: " + projName : "Feature Tests");
     const runHandler = testRunHandler(ctrl, testData, junitWatcher);
     const projMapEntry = { ctrl: ctrl, runHandler: runHandler };
     projMap.set(projId, projMapEntry);
 
-    allRunProfiles.set(projId, createRunProfilesForProject(multiProject, projUri, projName, projMapEntry));
+    allRunProfiles.set(projId, createRunProfilesForProject(multiRoot, projUri, projName, projMapEntry));
     console.log("PARSEPROMISES0", parsePromises.get(projId));
     parsePromises.set(projId, services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true));
     console.log("PARSEPROMISES1", parsePromises.get(projId));

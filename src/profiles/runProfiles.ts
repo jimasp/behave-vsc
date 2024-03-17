@@ -6,7 +6,7 @@ import { ProjMapEntry } from '../extension';
 
 const featureRunProfiles: vscode.TestRunProfile[] = [];
 
-export function createRunProfilesForProject(multiProject: boolean, projUri: vscode.Uri, projName: string,
+export function createRunProfilesForProject(multiRoot: boolean, projUri: vscode.Uri, projName: string,
   projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
 
   let profileName: string;
@@ -16,8 +16,8 @@ export function createRunProfilesForProject(multiProject: boolean, projUri: vsco
   const ctrl = projMapEntry.ctrl;
   const runHandler = projMapEntry.runHandler;
 
-  const projPrefix = multiProject ? `${projName}: ` : "";
-  const standardProfile = multiProject ? `${projName}:  all features` : " all features"; // extra spaces are for alphabetical sorting
+  const projPrefix = multiRoot ? `${projName}: ` : "";
+  const standardProfile = multiRoot ? `${projName}:  all features` : " all features"; // extra spaces are for alphabetical sorting
 
   for (const debug of [false, true]) {
 
