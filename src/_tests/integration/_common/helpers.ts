@@ -116,9 +116,6 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 
-	// TODO: remove this
-	await new Promise(t => setTimeout(t, 100));
-
 	return api;
 }
 
