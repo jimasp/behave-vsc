@@ -6,7 +6,7 @@ import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
 import {
   countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getUrisOfWkspFoldersWithFeatures, getProjectSettingsForFile, getTimeString
+  getProjectUris, getProjectSettingsForFile, getTimeString
 } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
@@ -118,7 +118,7 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   const winSettings = services.config.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
 
-  const allProjectsSettings = await Promise.all(getUrisOfWkspFoldersWithFeatures().map(async (projUri) =>
+  const allProjectsSettings = await Promise.all(getProjectUris().map(async (projUri) =>
     await services.config.getProjectSettings(projUri.path)
   ));
   const projNames = allProjectsSettings.map(x => x.name);

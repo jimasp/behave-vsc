@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
-import { getUrisOfWkspFoldersWithFeatures } from '../../../common/helpers';
+import { getProjectUris } from '../../../common/helpers';
 import { RunOptions, testGlobals } from './types';
 import { CustomRunner, ProjectSettings, RunProfile, RunProfilesSetting } from '../../../config/settings';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
@@ -62,7 +62,7 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 
 
 export function getTestProjectUri(projName: string) {
-	const uris = getUrisOfWkspFoldersWithFeatures();
+	const uris = getProjectUris();
 	const projUri = uris.find(uri => uri.path.includes(projName));
 	assert(projUri, "projUri");
 	return projUri;

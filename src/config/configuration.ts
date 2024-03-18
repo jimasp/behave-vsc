@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getUrisOfWkspFoldersWithFeatures } from '../common/helpers';
+import { getProjectUris } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
 
 
@@ -45,6 +45,7 @@ export class Configuration {
 
     // This is a lazy async get that can be called multiple times in parallel, and 
     // we don't want it to do the same work multiple times if we can avoid it.
+    // (The create() method is a slow method because it reads the file system.)
     // If the timeout expires, then we will just carry on and do the work again 
     // in the hope it completes, as there's not much else we can do.
     let wait = 0;
@@ -56,7 +57,7 @@ export class Configuration {
 
     try {
       this.#processing = true;
-      for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
+      for (const projUri of getProjectUris()) {
         // only create the project settings if they are not already loaded
         if (!this.#resourceSettings[projUri.path]) {
           this.#resourceSettings[projUri.path] =

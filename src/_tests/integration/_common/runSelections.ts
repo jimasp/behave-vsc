@@ -28,15 +28,16 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
   // sanity check
   if (testExtConfig.runParallel) {
     throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them " +
-      "individually, and running features individually is already tested by runProject.ts");
+      "individually, and running features individually in parallel is already tested by runProject.ts");
   }
 
+  const api = await checkExtensionIsReady();
   const projName = "project A";
   const consoleName = `runProjectASelections ${projName}`;
   const projUri = getTestProjectUri(projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   const projId = uriId(projUri);
-  const api = await checkExtensionIsReady();
+
 
   testExtConfig.integrationTestRunUseCpExec = true;
 

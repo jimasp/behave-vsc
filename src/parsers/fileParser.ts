@@ -5,7 +5,7 @@ import { services } from "../common/services";
 import { ProjectSettings } from "../config/settings";
 import { deleteFeatureFilesStepsForProject, getFeatureFilesSteps, getFeatureNameFromContent } from './featureParser';
 import {
-  countTestItemsInCollection, uriId, getUrisOfWkspFoldersWithFeatures, isFeatureFile, isStepsFile,
+  countTestItemsInCollection, uriId, getProjectUris, isFeatureFile, isStepsFile,
   TestCounts, findFiles, getContentFromFilesystem, deleteTestTreeNodes,
   getProjectSettingsForFile,
   getFeatureNodePath,
@@ -134,7 +134,7 @@ export class FileParser {
       xRayLog(`${callName}: features loaded`);
 
       this._finishedFeaturesParseForProject[projPath] = true;
-      const projectsStillParsingFeatures = (getUrisOfWkspFoldersWithFeatures()).filter(uri =>
+      const projectsStillParsingFeatures = getProjectUris().filter(uri =>
         !this._finishedFeaturesParseForProject[uri.path]);
       if (projectsStillParsingFeatures.length === 0) {
         this._finishedFeaturesParseForAllProjects = true;
@@ -157,7 +157,7 @@ export class FileParser {
       this._finishedStepsParseForProject[projPath] = true;
       xRayLog(`${callName}: steps loaded`);
 
-      const projectsStillParsingSteps = (getUrisOfWkspFoldersWithFeatures()).filter(uri => !this._finishedStepsParseForProject[uri.path]);
+      const projectsStillParsingSteps = getProjectUris().filter(uri => !this._finishedStepsParseForProject[uri.path]);
       if (projectsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllProjects = true;
         xRayLog(`${callName}: steps loaded for all projects`);

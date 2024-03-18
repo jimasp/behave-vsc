@@ -25,12 +25,13 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
   // ARRANGE
 
+  const api = await checkExtensionIsReady();
   const consoleName = `runPipedFeatures ${projName}`;
   const projUri = getTestProjectUri(projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);
   const projId = uriId(projUri);
-  const api = await checkExtensionIsReady();
+
 
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;

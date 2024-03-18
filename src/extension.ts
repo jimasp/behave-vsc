@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { services } from './common/services';
 import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {
-  getUrisOfWkspFoldersWithFeatures, isFeatureFile,
+  getProjectUris, isFeatureFile,
   isStepsFile, logExtensionVersion, uriId, urisMatch
 } from './common/helpers';
 import { StepFileStep } from './parsers/stepsParser';
@@ -60,17 +60,19 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     const start = performance.now();
     xRayLog("activate called, node pid:" + process.pid);
 
-    services.logger.syncChannelsToWorkspaceFolders();
+    // get "project" uris, i.e. uris of workspace folders that contain .feature files
+    const projUris = getProjectUris(true);
+    if (projUris.length === 0) {
+      // this should never happen as the extension should not activate if there are no workspaces with features
+      throw new Error("No workspaces with features found in workspace");
+    }
+
+    services.logger.syncOutputChannelsToProjects(projUris);
     logExtensionVersion(context);
 
     const junitWatcher = new JunitWatcher();
     junitWatcher.startWatchingJunitFolder();
 
-    const projects = getUrisOfWkspFoldersWithFeatures(true);
-    if (projects.length === 0) {
-      // this should never happen as the extension should not activate if there are no workspaces with features
-      throw new Error("No workspaces with features found in workspace");
-    }
 
     const parseAllPromise = recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher);
 
@@ -163,7 +165,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // and onDidChangeWorkspaceFolders (also called by integration tests with a testCfg).
     // NOTE: in some circumstances this function can be called twice in quick succession when a multi-root workspace folder is added/removed/renamed 
     // (i.e. once by onDidChangeWorkspaceFolders and once by onDidChangeConfiguration), but parser methods will self-cancel as needed
-    const configurationChangedHandler = async (forceFullRefresh: boolean, event?: vscode.ConfigurationChangeEvent,
+    const configurationChangedHandler = async (wkspFoldersChanged: boolean, event?: vscode.ConfigurationChangeEvent,
       testConfig?: vscode.WorkspaceConfiguration, testProjUri?: vscode.Uri) => {
 
       if (testConfig && !testProjUri)
@@ -183,7 +185,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         // (Separately, just note that the settings change could be a global window setting 
         // from *.code-workspace file, rather than from settings.json)
         const affected = event?.affectsConfiguration("behave-vsc");
-        if (!affected && !forceFullRefresh && !testConfig)
+        if (!affected && !wkspFoldersChanged && !testConfig)
           return;
 
         if (!testConfig)
@@ -191,9 +193,12 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
         // adding/removing/renaming workspaces will not only change the 
         // set of workspaces we are watching, but also the output channels
-        services.logger.syncChannelsToWorkspaceFolders();
+        const projectUris = wkspFoldersChanged ? getProjectUris(true) : getProjectUris(false);
+        if (wkspFoldersChanged)
+          services.logger.syncOutputChannelsToProjects(projectUris);
 
-        for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
+
+        for (const projUri of projectUris) {
           if (testConfig) {
             if (urisMatch(testProjUri!, projUri))
               await services.config.reloadSettings(projUri, testConfig);
@@ -305,12 +310,14 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: JunitWatcher, projUri?: vscode.Uri) {
 
   try {
+    const start = performance.now();
 
     // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project
 
-    const allProjects = getUrisOfWkspFoldersWithFeatures(true);
+    const allProjects = getProjectUris();
     const multiRoot = allProjects.length > 1 ? true : false;
     const projects = allProjects.filter(x => !projUri || urisMatch(x, projUri));
+    console.log(projects);
 
 
     for (const projUri of projects) {
@@ -353,6 +360,8 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
         }
       };
     }
+
+    xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
 
   }
   catch (e: unknown) {

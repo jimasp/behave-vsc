@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-  getUrisOfWkspFoldersWithFeatures,
+  getProjectUris,
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
@@ -382,7 +382,7 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
 
   // output settings, and any warnings or errors for settings
 
-  const projUris = getUrisOfWkspFoldersWithFeatures();
+  const projUris = getProjectUris();
   if (projUris.length > 0 && ps.uri === projUris[0])
     services.logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 

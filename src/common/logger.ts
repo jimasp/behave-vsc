@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { services } from './services';
-import { getUrisOfWkspFoldersWithFeatures } from './helpers';
 
 
 export class Logger {
@@ -9,9 +8,7 @@ export class Logger {
   private channels: { [projUri: string]: vscode.OutputChannel } = {};
   public visible = false;
 
-  syncChannelsToWorkspaceFolders() {
-
-    const projUris = getUrisOfWkspFoldersWithFeatures(true);
+  syncOutputChannelsToProjects(projUris: vscode.Uri[]) {
 
     for (const projPath in this.channels) {
       this.channels[projPath].dispose();

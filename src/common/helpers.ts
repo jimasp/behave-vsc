@@ -96,34 +96,38 @@ export const normaliseUserSuppliedRelativePath = (path: string) => {
     .replace(/\/$/, "");
 }
 
-let workspaceFoldersWithFeatures: vscode.Uri[];
-export const getUrisOfWkspFoldersWithFeatures = (forceRefresh = false): vscode.Uri[] => {
+export const getProjectUris = (() => {
+  let projectUris: vscode.Uri[] = [];
 
-  // NOTE: THIS FUNCTION MUST BE FAST (IDEALLY < 1MS) 
-  // so we'll default to returning a cached result
-  if (!forceRefresh && workspaceFoldersWithFeatures)
-    return workspaceFoldersWithFeatures;
+  return (forceRefresh = false): vscode.Uri[] => {
 
-  const start = performance.now();
-  workspaceFoldersWithFeatures = [];
+    // get projects, i.e. workspace folders that contain .feature files
 
-  const folders = vscode.workspace.workspaceFolders;
-  if (!folders)
-    throw "No workspace folders found";
+    // NOTE: this function reads the file system (i.e. slow)
+    // so we'll default to returning a cached result unless forceRefresh is true
+    if (projectUris.length > 0 && !forceRefresh)
+      return projectUris;
 
-  if (folders.length === 1 && folders[0].name === "behave-vsc")
-    throw `Please disable the marketplace Behave VSC extension before beginning extension debugging!`;
+    const start = performance.now();
+    projectUris = [];
 
-  for (const folder of folders) {
-    if (projectContainsAFeatureFileSync(folder.uri))
-      workspaceFoldersWithFeatures.push(folder.uri);
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders)
+      throw "No workspace folders found";
+
+    if (folders.length === 1 && folders[0].name === "behave-vsc")
+      throw `Please disable the marketplace Behave VSC extension before beginning extension debugging!`;
+
+    for (const folder of folders) {
+      if (folderContainsAFeatureFileSync(folder.uri))
+        projectUris.push(folder.uri);
+    }
+
+    xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${projectUris.length}`);
+
+    return projectUris;
   }
-
-  xRayLog(`PERF: getUrisOfWkspFoldersWithFeatures took ${performance.now() - start} ms, ` +
-    `workspaceFoldersWithFeatures: ${workspaceFoldersWithFeatures.length}`);
-
-  return workspaceFoldersWithFeatures;
-}
+})();
 
 
 export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
@@ -317,14 +321,14 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 }
 
 
-export function projectContainsAFeatureFileSync(uri: vscode.Uri): boolean {
+export function folderContainsAFeatureFileSync(uri: vscode.Uri): boolean {
   // early exit sync function
   const entries = fs.readdirSync(uri.fsPath);
   for (const entry of entries) {
     if (entry.endsWith(".feature"))
       return true;
     const stat = fs.statSync(path.join(uri.fsPath, entry));
-    if (stat.isDirectory() && projectContainsAFeatureFileSync(vscode.Uri.file(path.join(uri.fsPath, entry))))
+    if (stat.isDirectory() && folderContainsAFeatureFileSync(vscode.Uri.file(path.join(uri.fsPath, entry))))
       return true;
   }
   return false;

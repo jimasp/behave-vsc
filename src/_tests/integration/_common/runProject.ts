@@ -22,7 +22,7 @@ import { QueueItem } from '../../../extension';
 
 
 
-// SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER.
+// SIMULATES: A USER CLICKING THE RUN/DEBUG ALL BUTTON IN THE TEST EXPLORER, AND ALSO PARALLEL PROJECT RUNS FOR MULTIROOT SUITE.
 // PURPOSE: tests that behave runs all tests when run/debug all is clicked.
 // ALSO: provides additional assertions about stepnavigation objects, project settings, etc. that are not included in other runners.
 //
@@ -36,7 +36,7 @@ import { QueueItem } from '../../../extension';
 // suite, this simulates a user quickly clicking the test explorer run button on each 
 // project node in the workspace. This is because a user can kick off one project and 
 // then another and then another, (i.e. staggered) - they do not have to wait for the first to complete. 
-// (More likely they will just click run all, but testing staggered will be enough to cover both anyway.)
+// (More likely they will just click run all, but testing staggered will be enough to cover both options anyway.)
 //
 // When the file multiroot suite/index.ts is run (which will test staggered/parallel project runs) this
 // function will run in parallel with ITSELF (but as per the promises in that file, only one at a time for 
@@ -50,13 +50,15 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
   // ARRANGE
 
+  // get the extension api
+  const api = await checkExtensionIsReady();
+
   const consoleName = `runProject ${projName}`;
   const projUri = getTestProjectUri(projName);
   const projId = uriId(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);
-  // get the extension api
-  const api = await checkExtensionIsReady();
+
 
   // if execFriendlyCmd=true, then in runBehaveInstance() in the code under test, we will use
   // use cp.exec to run the friendlyCmd (otherwise we use cp.spawn with args)
@@ -67,6 +69,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
+  // (shouldHandleIt doesn't reload when change the behave.ini file, if isIntegrationTestRun is set so we don't need this in the lock)
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
 
@@ -78,9 +81,11 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // 1. all (re)parses have completed for the project, and 
     // 2. the runHandler has been started.
     // once that has happened, we will release the lock for the next project.
-    // NOTE: any config change causes a reparse, so behave.ini and test config changes must also be inside 
-    // this lock (as well as parseFilesForProject and runHandler)
+    // NOTE: any config change causes a reparse, so test config changes 
+    // must be inside this lock (as well as parseFilesForProject and runHandler)
     await setLock(consoleName, ACQUIRE);
+    console.log(`${consoleName}: lock acquired`);
+    const start = performance.now();
 
 
     // NOTE: configuration settings are intially loaded from disk (settings.json and *.code-workspace) by extension.ts activate(),
@@ -134,9 +139,10 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
     // release lock: 
     // give run handler a chance to call the featureParseComplete() check, then 
-    // release the lock so (different) projects can run in parallel
+    // release the lock so other multi-root projects can run in parallel with this one
     await (new Promise(t => setTimeout(t, 50)));
     await setLock(consoleName, RELEASE);
+    console.log(`${consoleName}: lock released after ${performance.now() - start}ms`);
 
     // ==================== END LOCK SECTION ====================  
 
