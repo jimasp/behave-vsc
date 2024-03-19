@@ -23,13 +23,19 @@ import { createRunProfilesForProject } from './profiles/runProfiles';
 
 
 const testData: TestData = new WeakMap<vscode.TestItem, BehaveTestData>();
-const projWatchers = new Map<string, ProjectWatcher>();
 const projMap = new Map<string, ProjMapEntry>();
-const allRunProfiles = new Map<string, vscode.TestRunProfile[]>();
 
-export interface QueueItem { test: vscode.TestItem; scenario: Scenario; }
+export interface QueueItem {
+  test: vscode.TestItem;
+  scenario: Scenario;
+}
 
-export type ProjMapEntry = { ctrl: vscode.TestController, runHandler: ITestRunHandler };
+export type ProjMapEntry = {
+  ctrl: vscode.TestController,
+  runHandler: ITestRunHandler,
+  watcher: ProjectWatcher,
+  runProfiles: vscode.TestRunProfile[]
+};
 
 export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
   const entry = projMap.get(uriId(projUri));
@@ -41,8 +47,8 @@ export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
 
 export function deactivate() {
   // clean any disposable objects not handled by context.subscriptions (or any potentially large non-disposable objects)
-  projWatchers.forEach(w => w.dispose());
-  projWatchers.clear();
+  projMap.forEach(m => { m.ctrl.dispose(); m.watcher.dispose(); m.runProfiles.forEach(r => r.dispose()); });
+  projMap.clear();
   xRayLog("PERF: ignore all PERF times during vscode startup, as most functions are async and affected by startup contention, " +
     "(in most cases you can click refresh in test explorer for a more representative time)");
 }
@@ -83,8 +89,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.    
     context.subscriptions.push(
       services,
-      ...Array.from(projMap.values()).map(x => x.ctrl),
-      ...Array.from(allRunProfiles.values()).flat(),
       treeView,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -323,35 +327,26 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
     for (const projUri of projects) {
 
       const ps = await services.config.getProjectSettings(projUri.path);
-      const projName = ps.name;
 
-      // const projName = projUri.fsPath.split("/").pop() ?? "";
-      // if (!projName)
-      //   throw new Error("Could not get project name from path");
+      const map = projMap.get(ps.id);
+      if (map) {
+        map.ctrl.dispose();
+        map.watcher.dispose();
+        map.runProfiles.forEach(r => r.dispose());
+        projMap.delete(ps.id);
+      }
 
-      const projId = uriId(projUri)
-      allRunProfiles.get(projId)?.forEach(testRunProfile => testRunProfile.dispose());
-      projMap.get(projId)?.ctrl.dispose();
-      projMap.delete(projId);
-      projWatchers.get(projId)?.dispose();
-      projWatchers.delete(projId);
-
-      const ctrl = vscode.tests.createTestController(`behave-vsc.${projName}`, multiRoot ? "Feature Tests: " + projName : "Feature Tests");
-      const runHandler = testRunHandler(ctrl, testData, junitWatcher);
-      const projMapEntry = { ctrl: ctrl, runHandler: runHandler };
-      projMap.set(projId, projMapEntry);
-
-      allRunProfiles.set(projId, createRunProfilesForProject(ps, multiRoot, projMapEntry));
-      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
-
+      const ctrl = vscode.tests.createTestController(`behave-vsc.${ps.name}`, multiRoot ? "Feature Tests: " + ps.name : "Feature Tests");
+      const projRunHandler = testRunHandler(ctrl, testData, junitWatcher);
       const projWatcher = ProjectWatcher.create(projUri, ctrl, testData);
-      projWatchers.set(projId, projWatcher);
+      const projRunProfiles = createRunProfilesForProject(ps, multiRoot, ctrl, projRunHandler);
+      const projMapEntry = { ctrl: ctrl, runHandler: projRunHandler, watcher: projWatcher, runProfiles: projRunProfiles };
+      projMap.set(ps.id, projMapEntry);
 
       // called by manual refresh button in test explorer    
       ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
         try {
           await services.config.reloadSettings(projUri);
-          const ctrl = getProjMapEntry(projUri).ctrl;
           services.parser.parseFilesForProject(projUri, ctrl, testData, "refreshHandler", false, cancelToken);
         }
         catch (e: unknown) {
@@ -359,6 +354,9 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
           services.logger.showError(e);
         }
       };
+
+      // (recreateRunHandlersAndProfilesAndWatchersAndReparse is normally not awaited)
+      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
     }
 
     xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);

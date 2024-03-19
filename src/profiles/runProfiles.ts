@@ -1,20 +1,19 @@
 import * as vscode from 'vscode';
 import { services } from "../common/services";
 import { ProjectSettings, RunProfile } from '../config/settings';
-import { ProjMapEntry } from '../extension';
+import { ITestRunHandler } from '../runners/testRunHandler';
 
 
-const featureRunProfiles: vscode.TestRunProfile[] = [];
 
-export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: boolean, projMapEntry: ProjMapEntry): vscode.TestRunProfile[] {
+export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: boolean, ctrl: vscode.TestController,
+  runHandler: ITestRunHandler): vscode.TestRunProfile[] {
 
   let profileName: string;
+  const projRunProfiles: vscode.TestRunProfile[] = [];
 
   // note: this will read from settings.json (i.e. reload latest changes)
   const userProfiles = ps.userRunProfiles;
   const projName = ps.name;
-  const ctrl = projMapEntry.ctrl;
-  const runHandler = projMapEntry.runHandler;
 
   const projPrefix = multiRoot ? `${projName}: ` : "";
   const standardProfile = multiRoot ? `${projName}:  all features` : " all features"; // extra spaces are for alphabetical sorting
@@ -33,8 +32,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           async (request: vscode.TestRunRequest) => {
             await runHandler(debug, request, runProfile);
           });
-        profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
-        featureRunProfiles.push(profile);
+        profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
+        projRunProfiles.push(profile);
       })();
     }
 
@@ -47,8 +46,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
-      featureRunProfiles.push(profile);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
+      projRunProfiles.push(profile);
     })();
 
 
@@ -66,8 +65,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
-      featureRunProfiles.push(profile);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
+      projRunProfiles.push(profile);
     })();
 
 
@@ -85,8 +84,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
-      featureRunProfiles.push(profile);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
+      projRunProfiles.push(profile);
     })();
 
 
@@ -105,15 +104,15 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           }
           await runHandler(debug, request, new RunProfile(profileName, tagsParameters));
         });
-      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projPrefix, standardProfile));
-      featureRunProfiles.push(profile);
+      profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
+      projRunProfiles.push(profile);
     })();
 
   }
 
   // checkAtLeastOneDefaultSet(projPrefix, standardProfile);
 
-  return featureRunProfiles;
+  return projRunProfiles;
 }
 
 // async function checkAtLeastOneDefaultSet(projPrefix: string, standardProfile: string) {
@@ -128,7 +127,7 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
 // }
 
 
-function onlyAllowOneDefaultPerProject(isDefault: boolean, projPrefix: string, standardProfile: string) {
+function onlyAllowOneDefaultPerProject(isDefault: boolean, projRunProfiles: vscode.TestRunProfile[], standardProfile: string) {
   // THIS FUNCTION ENSURES THAT ONLY ONE DEFAULT RUN PROFILE IS SET PER PROJECT FOR FEATURES PROFILES (ONE EACH FOR RUN AND DEBUG).
   // We don't want more than one default because default profiles run one after the other, so allowing multiple defaults 
   // would mean that the same test could be hit twice with the same behave tags (or no behave tags). 
@@ -138,13 +137,12 @@ function onlyAllowOneDefaultPerProject(isDefault: boolean, projPrefix: string, s
   if (!isDefault)
     return;
 
-  const featureRunProfilesForProject = featureRunProfiles.filter(p => p.label.startsWith(projPrefix));
-  const noOfSelectedDefaults = featureRunProfilesForProject.filter(p => p.isDefault).length;
+  const noOfSelectedDefaults = projRunProfiles.filter(p => p.isDefault).length;
 
   // if more than one default profile was set, then set them all false, and set the normal default ("Features")
   if (noOfSelectedDefaults > 2) {
-    featureRunProfilesForProject.forEach(p => p.isDefault = false);
-    featureRunProfilesForProject.filter(x => x.label === standardProfile).forEach(x => x.isDefault = true);
+    projRunProfiles.forEach(p => p.isDefault = false);
+    projRunProfiles.filter(x => x.label === standardProfile).forEach(x => x.isDefault = true);
     services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${standardProfile}".`);
     return;
   }

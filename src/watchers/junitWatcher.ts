@@ -230,8 +230,10 @@ export class JunitWatcher {
       if (detected)
         return true;
 
-      const msg = `junitWatcher: waiting for path ${folderUri.fsPath} to be watched - timed out. ` +
-        `some or all test results may not be updated until the run has ended.`;
+      const msg = `junitWatcher: Waiting for path ${folderUri.fsPath} to be watched - timed out. ` +
+        `Some or all test results may not be updated until the run has ended. ` +
+        `(This is ok if: (i) it is occurring when tests are being run immediately after vscode instance startup, ` +
+        `and (ii) it should only occur once per vscode instance.)`;
       xRayLog(msg, undefined, LogType.warn);
 
       if (services.config.exampleProject) {
