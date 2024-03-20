@@ -362,7 +362,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
       };
 
       // (recreateRunHandlersAndProfilesAndWatchersAndReparse is normally not awaited)
-      services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
+      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
     }
 
     xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
