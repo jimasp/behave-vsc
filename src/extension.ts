@@ -328,11 +328,11 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
 
       const ps = await services.config.getProjectSettings(projUri.path);
 
-      if (ps.projRelativeStepsFolders.length === 0) {
-        // misconfigured project (e.g. the example multi-root projects "handle unconfigured paths" and "handle incorrect paths")
-        // (if we get here, then a warning should have been raised earlier when loading project settings)
-        continue;
-      }
+      // if (ps.projRelativeStepsFolders.length === 0) {
+      //   // misconfigured project (e.g. the example multi-root projects "handle unconfigured paths" and "handle incorrect paths")
+      //   // (if we get here, then a warning should have been raised earlier when loading project settings)
+      //   continue;
+      // }
 
       const map = projMap.get(ps.id);
       if (map) {
@@ -362,7 +362,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher:
       };
 
       // (recreateRunHandlersAndProfilesAndWatchersAndReparse is normally not awaited)
-      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
+      services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
     }
 
     xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
