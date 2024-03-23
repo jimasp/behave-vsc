@@ -134,6 +134,19 @@ export const getProjectUris = (() => {
 })();
 
 
+export const getValidProjectUris = async (projectUris: vscode.Uri[]): Promise<vscode.Uri[]> => {
+  const start = performance.now();
+  const validProjectUris: vscode.Uri[] = [];
+  for (const projUri of projectUris) {
+    const ps = await services.config.getProjectSettings(projUri);
+    if (ps.isValid)
+      validProjectUris.push(projUri);
+  }
+  xRayLog(`PERF: getValidProjectUris took ${performance.now() - start} ms, projects: ${projectUris.length}`);
+  return validProjectUris;
+}
+
+
 export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
   if (fileorFolderUri?.scheme !== "file")
     throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);

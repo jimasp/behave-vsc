@@ -9,6 +9,7 @@ import {
   TestCounts, findFiles, getContentFromFilesystem, deleteTestTreeNodes,
   getProjectSettingsForFile,
   getFeatureNodePath,
+  getValidProjectUris,
 } from '../common/helpers';
 import { parseStepsFileContent, getStepFilesSteps, deleteStepFileStepsForProject } from './stepsParser';
 import { TestData, TestFile } from './testFile';
@@ -107,7 +108,8 @@ export class FileParser {
       const ps: ProjectSettings = await services.config.getProjectSettings(projUri);
       const projName = ps.name;
       const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
-      const projectUris = await getProjectUris();
+      const projUris = await getProjectUris();
+      const projectUris = await getValidProjectUris(projUris);
 
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
       const callName = `parseFiles[${logId}] (${intiator})`;
@@ -248,9 +250,9 @@ export class FileParser {
       }
       else {
         timeout -= interval;
-        xRayLog(`featureParseComplete  (${caller}) waiting - ${timeout} left until timeout`);
+        xRayLog(`featureParseComplete (${caller}) - waiting, ${timeout}ms left until timeout`);
         if (timeout < interval) {
-          xRayLog(`featureParseComplete (${caller})  - timed out`);
+          xRayLog(`featureParseComplete (${caller}) - timed out`);
           return resolve(false);
         }
         setTimeout(() => check(resolve), interval);
