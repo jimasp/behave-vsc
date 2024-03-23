@@ -416,17 +416,21 @@ export function isExcludedPath(excludedPaths: ExcludedPatterns, path: string): b
 
 export type ExcludedPatterns = { [key: string]: boolean; };
 
-export function getExcludedPathPatterns(projUri?: vscode.Uri): ExcludedPatterns {
+export function getExcludedPathPatterns(projUri: vscode.Uri): ExcludedPatterns {
 
-  const projConfig = vscode.workspace.getConfiguration("behave-vsc", projUri);
+  const projConfig = vscode.workspace.getConfiguration(undefined, projUri);
 
   const excludePatterns: ExcludedPatterns = {
-    // these first 3 have both defaults provided by vscode and the user's own settings.json exclusions
-    ...projConfig.get<object>('files.exclude'),
-    ...projConfig.get<object>('files.watcherExclude'),
-    ...projConfig.get<object>('search.exclude'),
+    // these first 3 have BOTH defaults provided by vscode AND the user's own settings.json exclusions
+    ...projConfig.get<ExcludedPatterns>('files.exclude'),
+    ...projConfig.get<ExcludedPatterns>('files.watcherExclude'),
+    ...projConfig.get<ExcludedPatterns>('search.exclude'),
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules/**": true,
+    "**/bower_components": true,
+    "**/__pycache__": true,
     "**/.*_cache": true,
-    "**/node_modules": true,
     "**/.venv": true,
     "**/__venv__": true,
     "**/env": true,
@@ -442,6 +446,7 @@ export function getExcludedPathPatterns(projUri?: vscode.Uri): ExcludedPatterns 
       excludePatterns[pattern + "{,/**}"] = true;
   }
 
+  xRayLog(`excludePatterns for ${projUri}:\n${JSON.stringify(excludePatterns, null, 2)}`);
   return excludePatterns;
 }
 
