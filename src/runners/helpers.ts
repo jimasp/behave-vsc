@@ -90,7 +90,6 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
     .join('|')
     .replaceAll("\\", "/");
 
-  console.log(result);
   return result;
 }
 
