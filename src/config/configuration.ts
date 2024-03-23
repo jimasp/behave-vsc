@@ -11,6 +11,7 @@ export class Configuration {
   readonly extensionTempFilesUri; // e.g. /tmp/behave-vsc
   #windowSettings: InstanceSettings | undefined = undefined; // configuration settings for the whole vscode instance
   #resourceSettings: { [projId: string]: ProjectSettings } = {}; // configuration settings for a specific project
+  #processing = new Map<string, boolean>(); // used to prevent parallel async calls to getProjectSettings() for the same project
 
   constructor() {
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
@@ -20,13 +21,14 @@ export class Configuration {
 
   // called by onDidChangeConfiguration
   async reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
+    const projId = uriId(projUri);
     if (testConfig) {
       this.#windowSettings = new InstanceSettings(testConfig);
-      this.#resourceSettings[projUri.path] = await ProjectSettings.create(projUri, testConfig, this.#windowSettings);
+      this.#resourceSettings[projId] = await ProjectSettings.create(projUri, testConfig, this.#windowSettings);
     }
     else {
       this.#windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this.#resourceSettings[projUri.path] = await ProjectSettings.create(projUri,
+      this.#resourceSettings[projId] = await ProjectSettings.create(projUri,
         vscode.workspace.getConfiguration("behave-vsc", projUri), this.#windowSettings);
     }
   }
@@ -39,7 +41,7 @@ export class Configuration {
     return this.#windowSettings;
   }
 
-  #processing = new Map<string, boolean>();
+
   async getProjectSettings(projUri: vscode.Uri): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
     const projId = uriId(projUri);

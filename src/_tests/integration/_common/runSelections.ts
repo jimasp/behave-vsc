@@ -34,7 +34,7 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
   const api = await checkExtensionIsReady();
   const projName = "project A";
   const consoleName = `runProjectASelections ${projName}`;
-  const projUri = await getTestProjectUri(projName);
+  const projUri = await getTestProjectUri(api, projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   const projId = uriId(projUri);
 

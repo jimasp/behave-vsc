@@ -54,7 +54,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const api = await checkExtensionIsReady();
 
   const consoleName = `runProject ${projName}`;
-  const projUri = await getTestProjectUri(projName);
+  const projUri = await getTestProjectUri(api, projName);
   const projId = uriId(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);

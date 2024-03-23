@@ -100,12 +100,13 @@ export const normaliseUserSuppliedRelativePath = (path: string) => {
 export const getProjectUris = (() => {
   let projectUris: vscode.Uri[] = [];
 
+  // get projects, i.e. workspace folders that contain .feature files  
   return async (forceRefresh = false): Promise<vscode.Uri[]> => {
     const start = performance.now();
 
-    // get projects, i.e. workspace folders that contain .feature files
+    // NOTE: NOTHING THAT THIS FUNCTION CALLS CAN USE THE LOGGER, AS IT MAY NOT BE AVAILABLE YET
 
-    // NOTE: this function reads the file system (i.e. slow-ish)
+    // this function reads the file system (i.e. slow-ish)
     // so we'll default to returning a cached result unless forceRefresh is true
     if (projectUris.length > 0 && !forceRefresh)
       return projectUris;
@@ -120,8 +121,8 @@ export const getProjectUris = (() => {
 
     for (const folder of folders) {
       const start2 = performance.now();
-      const excludedPaths = getExcludedPathPatterns(folder.uri);
-      if (await folderContainsAFeatureFile(excludedPaths, folder.uri))
+      const excludedPathPatterns = getExcludedPathPatterns(folder.uri);
+      if (await folderContainsAFeatureFile(excludedPathPatterns, folder.uri))
         projectUris.push(folder.uri);
       xRayLog(`PERF: folderContainsAFeatureFileSync took ${performance.now() - start2} ms for ${folder.uri.fsPath}`);
     }
@@ -324,9 +325,9 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 }
 
 
-export async function folderContainsAFeatureFile(excludedPaths: ExcludedPatterns, uri: vscode.Uri): Promise<boolean> {
+export async function folderContainsAFeatureFile(excludedPathPatterns: ExcludedPatterns, uri: vscode.Uri): Promise<boolean> {
 
-  if (excludedPaths && isExcludedPath(excludedPaths, uri.fsPath))
+  if (excludedPathPatterns && isExcludedPath(excludedPathPatterns, uri.fsPath))
     return false;
 
   const entries = await fs.promises.readdir(uri.fsPath);
@@ -334,7 +335,7 @@ export async function folderContainsAFeatureFile(excludedPaths: ExcludedPatterns
     if (entry.endsWith(".feature"))
       return true;
     const stat = fs.statSync(path.join(uri.fsPath, entry));
-    if (stat.isDirectory() && await folderContainsAFeatureFile(excludedPaths, vscode.Uri.file(path.join(uri.fsPath, entry))))
+    if (stat.isDirectory() && await folderContainsAFeatureFile(excludedPathPatterns, vscode.Uri.file(path.join(uri.fsPath, entry))))
       return true;
   }
   return false;

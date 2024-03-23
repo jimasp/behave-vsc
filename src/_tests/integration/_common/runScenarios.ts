@@ -25,7 +25,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
 
   const api = await checkExtensionIsReady();
   const consoleName = `runScenarios ${projName}`;
-  const projUri = await getTestProjectUri(projName);
+  const projUri = await getTestProjectUri(api, projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
   logStore.clearProjLogs(projUri);
   const projId = uriId(projUri);

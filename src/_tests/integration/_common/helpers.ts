@@ -5,7 +5,6 @@ import * as fs from 'fs';
 import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
-import { getProjectUris } from '../../../common/helpers';
 import { RunOptions, testGlobals } from './types';
 import { CustomRunner, ProjectSettings, RunProfile, RunProfilesSetting } from '../../../config/settings';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
@@ -61,8 +60,8 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 }
 
 
-export async function getTestProjectUri(projName: string) {
-	const uris = await getProjectUris(false);
+export async function getTestProjectUri(api: IntegrationTestAPI, projName: string) {
+	const uris = await api.getProjectUris(false);
 	const projUri = uris.find(uri => uri.path.includes(projName));
 	assert(projUri, "projUri");
 	return projUri;
@@ -112,7 +111,7 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	assert(api);
 	assertApiInstances(api);
 
-	await api.parseAllPromise;
+	await api.startupPromise;
 
 	await vscode.commands.executeCommand("workbench.view.testing.focus");
 	await vscode.commands.executeCommand("testing.collapseAll");
@@ -224,5 +223,5 @@ function assertApiInstances(api: IntegrationTestAPI) {
 	assert(api.getStepMappingsForStepsFileFunction);
 	assert(api.testData);
 	assert(api.configurationChangedHandler);
-	assert(api.parseAllPromise);
+	assert(api.startupPromise);
 }
