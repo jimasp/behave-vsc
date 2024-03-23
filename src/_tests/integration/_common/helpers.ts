@@ -61,8 +61,8 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 }
 
 
-export function getTestProjectUri(projName: string) {
-	const uris = getProjectUris();
+export async function getTestProjectUri(projName: string) {
+	const uris = await getProjectUris(false);
 	const projUri = uris.find(uri => uri.path.includes(projName));
 	assert(projUri, "projUri");
 	return projUri;

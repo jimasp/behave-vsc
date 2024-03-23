@@ -118,8 +118,8 @@ async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, re
   const winSettings = services.config.instanceSettings;
   const allProjectsQueueMap: QueueItemMapEntry[] = [];
 
-  const allProjectsSettings = await Promise.all(getProjectUris().map(async (projUri) =>
-    await services.config.getProjectSettings(projUri.path)
+  const allProjectsSettings = await Promise.all((await getProjectUris()).map(async (projUri) =>
+    await services.config.getProjectSettings(projUri)
   ));
   const projNames = allProjectsSettings.map(x => x.name);
 

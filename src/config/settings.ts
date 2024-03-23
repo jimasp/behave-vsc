@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
-  getProjectUris,
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
@@ -10,7 +9,8 @@ import {
   getActualWorkspaceSetting,
   getOptimisedFeatureParsingPaths,
   getExcludedPathPatterns,
-  pathExistsSync
+  pathExistsSync,
+  getProjectUris
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -65,16 +65,18 @@ export class ProjectSettings {
   public readonly projRelativeBehaveWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
   public readonly behaveWorkingDirUri: vscode.Uri; // optional working directory (projRelativeBehaveWorkingDirPath in absolute uri form)
   // calculated after real work in create():
+  public isValid = true; // set to false if the project paths are invalid  
   public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in their original form
   public baseDirPath = ""; // behave-working-dir-relative-path to the parent directory of the "steps" folder/environment.py file 
   public projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
   public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)  
   // integration test only:
-  public readonly integrationTestRunUseCpExec;
+  public readonly integrationTestRunUseCpExec: boolean;
 
 
   public static async create(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration, winSettings: InstanceSettings):
     Promise<ProjectSettings> {
+    const start = performance.now();
 
     // lightweight construction and settings.json validation
     const ps = new ProjectSettings(projUri, projConfig);
@@ -84,6 +86,7 @@ export class ProjectSettings {
     if (!paths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
+      ps.isValid = false;
       return ps;
     }
 
@@ -94,21 +97,24 @@ export class ProjectSettings {
     ps.projRelativeStepsFolders = paths.projRelStepsFolders;
 
     // pass projRelBehaveConfigPaths separately, because is not a public property of ProjectSettings
-    logSettings(winSettings, ps, paths.projRelBehaveConfigPaths);
+    await logSettings(winSettings, ps, paths.projRelBehaveConfigPaths);
 
+    xRayLog(`PERF: ProjectSettings.create took ${performance.now() - start} ms for ${ps.id}`);
     return ps;
   }
 
 
   private constructor(projUri: vscode.Uri, projConfig: vscode.WorkspaceConfiguration) {
+    const start = performance.now();
     xRayLog("constructing ProjectSettings");
+
 
     this.id = uriId(projUri);
     this.name = getWorkspaceFolder(projUri).name;
     this.uri = projUri;
     this.behaveWorkingDirUri = projUri; // default
     this.integrationTestRunUseCpExec = projConfig.get("integrationTestRunUseCpExec") || false;
-    this.excludedPathPatterns = getExcludedPathPatterns(projConfig);
+    this.excludedPathPatterns = getExcludedPathPatterns(projUri);
 
     // For all settings read from settings.json (derived from package.json), projConfig.get() should never return
     // undefined (unless package.json is wrong), as get() will always return a default value for any packages.json setting.
@@ -173,6 +179,7 @@ export class ProjectSettings {
     // setContext vars are used in package.json
     vscode.commands.executeCommand('setContext', 'bvsc_StepLibsActive', this.importedSteps.length > 0);
 
+    xRayLog(`constructing ProjectSettings took ${performance.now() - start} ms for ${this.id}`);
   }
 
 }
@@ -255,6 +262,8 @@ function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedSt
 
 async function getPaths(ps: ProjectSettings) {
 
+  const start = performance.now();
+
   const { rawBehaveConfigPaths, behaveWrkDirRelBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
   // base dir is a concept borrowed from behave's source code
@@ -278,6 +287,8 @@ async function getPaths(ps: ProjectSettings) {
   }
 
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
+
+  xRayLog(`PERF: getPaths took ${performance.now() - start} ms for ${ps.id}`);
 
   return {
     rawBehaveConfigPaths,
@@ -352,7 +363,7 @@ function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
 }
 
 
-function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRelBehaveConfigPaths: string[]) {
+async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRelBehaveConfigPaths: string[]) {
 
   // build sorted output dict of window settings
   const windowSettingsDic: { [name: string]: string; } = {};
@@ -382,7 +393,7 @@ function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, projRel
 
   // output settings, and any warnings or errors for settings
 
-  const projUris = getProjectUris();
+  const projUris = await getProjectUris();
   if (projUris.length > 0 && ps.uri === projUris[0])
     services.logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 
@@ -439,3 +450,31 @@ export type RunProfilesSetting = RunProfile[];
 
 
 
+// export interface IProjectSettingsLight {
+//   id: string;
+//   name: string;
+//   uri: vscode.Uri;
+//   behaveWorkingDirUri: vscode.Uri;
+//   integrationTestRunUseCpExec: boolean;
+//   excludedPathPatterns: { [key: string]: boolean; };
+// }
+
+// export class ProjectSettingsLight implements IProjectSettingsLight {
+//   // lightweight construction and settings.json validation ONLY, for use during startup
+//   // i.e. not a fully populated ProjectSettings object
+//   id: string;
+//   name: string;
+//   uri: vscode.Uri;
+//   behaveWorkingDirUri: vscode.Uri;
+//   integrationTestRunUseCpExec: boolean;
+//   excludedPathPatterns: { [key: string]: boolean; };
+
+//   constructor(ps: ProjectSettings) {
+//     this.id = ps.id;
+//     this.name = ps.name;
+//     this.uri = ps.uri;
+//     this.behaveWorkingDirUri = ps.behaveWorkingDirUri;
+//     this.integrationTestRunUseCpExec = ps.integrationTestRunUseCpExec;
+//     this.excludedPathPatterns = ps.excludedPathPatterns;
+//   }
+// }

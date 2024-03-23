@@ -96,31 +96,34 @@ export const normaliseUserSuppliedRelativePath = (path: string) => {
     .replace(/\/$/, "");
 }
 
+
 export const getProjectUris = (() => {
   let projectUris: vscode.Uri[] = [];
 
-  return (forceRefresh = false): vscode.Uri[] => {
+  return async (forceRefresh = false): Promise<vscode.Uri[]> => {
+    const start = performance.now();
 
     // get projects, i.e. workspace folders that contain .feature files
 
-    // NOTE: this function reads the file system (i.e. slow)
+    // NOTE: this function reads the file system (i.e. slow-ish)
     // so we'll default to returning a cached result unless forceRefresh is true
     if (projectUris.length > 0 && !forceRefresh)
       return projectUris;
-
-    const start = performance.now();
     projectUris = [];
 
     const folders = vscode.workspace.workspaceFolders;
     if (!folders)
-      throw "No workspace folders found";
+      throw new Error("No workspace folders found");
 
     if (folders.length === 1 && folders[0].name === "behave-vsc")
-      throw `Please disable the marketplace Behave VSC extension before beginning extension debugging!`;
+      throw new Error(`Please disable the marketplace Behave VSC extension before beginning extension debugging!`);
 
     for (const folder of folders) {
-      if (folderContainsAFeatureFileSync(folder.uri))
+      const start2 = performance.now();
+      const excludedPaths = getExcludedPathPatterns(folder.uri);
+      if (await folderContainsAFeatureFile(excludedPaths, folder.uri))
         projectUris.push(folder.uri);
+      xRayLog(`PERF: folderContainsAFeatureFileSync took ${performance.now() - start2} ms for ${folder.uri.fsPath}`);
     }
 
     xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${projectUris.length}`);
@@ -145,7 +148,7 @@ export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): v
 
 export const getProjectSettingsForFile = async (fileorFolderUri: vscode.Uri | undefined): Promise<ProjectSettings> => {
   const projUri = getProjectUriForFile(fileorFolderUri);
-  return await services.config.getProjectSettings(projUri.path);
+  return await services.config.getProjectSettings(projUri);
 }
 
 
@@ -321,19 +324,21 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 }
 
 
-export function folderContainsAFeatureFileSync(uri: vscode.Uri): boolean {
-  // early exit sync function
-  const entries = fs.readdirSync(uri.fsPath);
+export async function folderContainsAFeatureFile(excludedPaths: ExcludedPatterns, uri: vscode.Uri): Promise<boolean> {
+
+  if (excludedPaths && isExcludedPath(excludedPaths, uri.fsPath))
+    return false;
+
+  const entries = await fs.promises.readdir(uri.fsPath);
   for (const entry of entries) {
     if (entry.endsWith(".feature"))
       return true;
     const stat = fs.statSync(path.join(uri.fsPath, entry));
-    if (stat.isDirectory() && folderContainsAFeatureFileSync(vscode.Uri.file(path.join(uri.fsPath, entry))))
+    if (stat.isDirectory() && await folderContainsAFeatureFile(excludedPaths, vscode.Uri.file(path.join(uri.fsPath, entry))))
       return true;
   }
   return false;
 }
-
 
 
 export async function findFeatureFolders(ps: ProjectSettings, absolutePath: string):
@@ -350,7 +355,7 @@ export async function findFeatureFolders(ps: ProjectSettings, absolutePath: stri
   const childFolders: string[] = [];
   const results: string[] = [];
 
-  if (isExcludedPath(ps, absolutePath)) {
+  if (isExcludedPath(ps.excludedPathPatterns, absolutePath)) {
     xRayLog(`findFeatureFolders: ignoring excluded path "${absolutePath}"`, ps.uri);
     return [];
   }
@@ -385,19 +390,22 @@ export async function findFeatureFolders(ps: ProjectSettings, absolutePath: stri
 }
 
 
-
-export function isExcludedPath(ps: ProjectSettings, wsRelPath: string): boolean {
-  for (const pattern of Object.keys(ps.excludedPathPatterns)) {
-    if (ps.excludedPathPatterns[pattern] && minimatch(wsRelPath, pattern))
+export function isExcludedPath(excludedPaths: ExcludedPatterns, path: string): boolean {
+  for (const pattern of Object.keys(excludedPaths)) {
+    if (excludedPaths[pattern] && minimatch(path, pattern))
       return true;
   }
   return false;
 }
 
+export type ExcludedPatterns = { [key: string]: boolean; };
 
-export function getExcludedPathPatterns(projConfig: vscode.WorkspaceConfiguration): { [key: string]: boolean; } {
+export function getExcludedPathPatterns(projUri?: vscode.Uri): ExcludedPatterns {
 
-  const excludePatterns: { [key: string]: boolean } = {
+  const projConfig = vscode.workspace.getConfiguration("behave-vsc", projUri);
+
+  const excludePatterns: ExcludedPatterns = {
+    // these first 3 have both defaults provided by vscode and the user's own settings.json exclusions
     ...projConfig.get<object>('files.exclude'),
     ...projConfig.get<object>('files.watcherExclude'),
     ...projConfig.get<object>('search.exclude'),

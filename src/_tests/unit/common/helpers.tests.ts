@@ -6,7 +6,6 @@ import * as vscode from 'vscode';
 import * as helpers from '../../../common/helpers';
 import { services } from '../../../common/services';
 import { ProjectSettings } from '../../../config/settings';
-import { TestWorkspaceConfig } from '../../integration/_common/testWorkspaceConfig';
 import {
   findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath,
   getOptimisedFeatureParsingPaths, isExcludedPath, isStepsFile
@@ -14,12 +13,7 @@ import {
 
 
 suite("isExcludedPath", () => {
-  const projUri = vscode.Uri.file("/home/me/src/myproj");
-
-  const projSettings = {
-    uri: projUri,
-    excludedPathPatterns: { "**/.venv{,/**}": true },
-  } as unknown as ProjectSettings;
+  const excludedPathPatterns = { "**/.venv{,/**}": true };
 
   test(`should return [] for excluded paths`, () => {
     const paths = [
@@ -30,7 +24,7 @@ suite("isExcludedPath", () => {
       'folder/folder/.venv/something/some.py'];
 
     for (const path of paths) {
-      const result = isExcludedPath(projSettings, path);
+      const result = isExcludedPath(excludedPathPatterns, path);
       const expected = true;
       assert.deepStrictEqual(result, expected, `path:"${path}", expected: ${expected}, got: ${result}`);
     }
@@ -46,7 +40,7 @@ suite("findFeatureFolders", () => {
 
   const projSettings = {
     uri: projUri,
-    excludedPathPatterns: getExcludedPathPatterns(new TestWorkspaceConfig()),
+    excludedPathPatterns: getExcludedPathPatterns(projUri),
     behaveWorkingDirUri: projUri,
   } as ProjectSettings;
 

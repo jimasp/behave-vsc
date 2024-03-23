@@ -28,7 +28,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
         `${projName} project: xRay`);
     }
 
-    const projSettings = await actualConfig.getProjectSettings(projUri.path);
+    const projSettings = await actualConfig.getProjectSettings(projUri);
     assert.deepStrictEqual(projSettings.env, testConfig.getExpected("env"),
       `${projName} project: env`);
     assert.deepStrictEqual(projSettings.rawBehaveConfigPaths, expectations.expectedRawBehaveConfigPaths,
@@ -136,7 +136,7 @@ function checkPropertiesMatchOrThrow(projName: string, expectedResult: TestResul
 
 export async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-  const projSettings = await services.config.getProjectSettings(projUri.path);
+  const projSettings = await services.config.getProjectSettings(projUri);
   const featureFileSteps = await getAllStepLinesFromFeatureFiles(projSettings);
 
   for (const [step, stepText] of featureFileSteps) {
@@ -161,7 +161,7 @@ export async function assertAllFeatureFileStepsHaveAStepFileStepMatch(projUri: v
 
 export async function assertAllStepFileStepsHaveAtLeastOneFeatureReference(projUri: vscode.Uri, instances: IntegrationTestAPI) {
 
-  const projSettings = await services.config.getProjectSettings(projUri.path);
+  const projSettings = await services.config.getProjectSettings(projUri);
   const stepFileSteps = await getAllStepFunctionLinesFromStepsFiles(projSettings);
 
   for (const [step, funcLine] of stepFileSteps) {

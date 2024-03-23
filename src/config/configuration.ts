@@ -1,6 +1,6 @@
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { getProjectUris } from '../common/helpers';
+import { uriId } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
 
 
@@ -10,7 +10,7 @@ export class Configuration {
   readonly exampleProject: boolean = false; // whether we're debugging an example project (we may/may not be running integration tests)
   readonly extensionTempFilesUri; // e.g. /tmp/behave-vsc
   #windowSettings: InstanceSettings | undefined = undefined; // configuration settings for the whole vscode instance
-  #resourceSettings: { [projUriPath: string]: ProjectSettings } = {}; // configuration settings for a specific project
+  #resourceSettings: { [projId: string]: ProjectSettings } = {}; // configuration settings for a specific project
 
   constructor() {
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
@@ -39,9 +39,14 @@ export class Configuration {
     return this.#windowSettings;
   }
 
-  #processing = false;
-  async getProjectSettings(projUriPath: string): Promise<ProjectSettings> {
+  #processing = new Map<string, boolean>();
+  async getProjectSettings(projUri: vscode.Uri): Promise<ProjectSettings> {
     const winSettings = this.instanceSettings;
+    const projId = uriId(projUri);
+
+    // already loaded
+    if (this.#resourceSettings[projId])
+      return this.#resourceSettings[projId];
 
     // This is a lazy async get that can be called multiple times in parallel, and 
     // we don't want it to do the same work multiple times if we can avoid it.
@@ -50,25 +55,24 @@ export class Configuration {
     // in the hope it completes, as there's not much else we can do.
     let wait = 0;
     const timeout = 10000;
-    while (this.#processing && wait < timeout) {
+    while (this.#processing.get(projId) && wait < timeout) {
       await new Promise(resolve => setTimeout(resolve, 20));
       wait += 20;
     }
 
     try {
-      this.#processing = true;
-      for (const projUri of getProjectUris()) {
-        // only create the project settings if they are not already loaded
-        if (!this.#resourceSettings[projUri.path]) {
-          this.#resourceSettings[projUri.path] =
-            await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
-        }
+      this.#processing.set(projId, true);
+      // create the project settings if it is not already loaded
+      if (!this.#resourceSettings[projId]) {
+        this.#resourceSettings[projId] =
+          await ProjectSettings.create(projUri, vscode.workspace.getConfiguration("behave-vsc", projUri), winSettings);
       }
+
     }
     finally {
-      this.#processing = false;
+      this.#processing.set(projId, false);
     }
-    return this.#resourceSettings[projUriPath];
+    return this.#resourceSettings[projId];
   }
 
   // note - python interpreter can be changed dynamically by the user, so don't store the result

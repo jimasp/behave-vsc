@@ -132,9 +132,9 @@ export class ProjectWatcher {
       // it is called for EVERY project file/folder change
 
       // get the latest project settings (this project watcher has a lifetime as long as the extension)
-      const projSettings = await services.config.getProjectSettings(projUri.path);
+      const projSettings = await services.config.getProjectSettings(projUri);
 
-      if (isExcludedPath(projSettings, uri.path)) {
+      if (isExcludedPath(projSettings.excludedPathPatterns, uri.path)) {
         xRayLog(`ignoring fie change to "${uri.path}" as it matches an excluded path `, projUri);
         return false;
       }

@@ -66,21 +66,9 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     const start = performance.now();
     xRayLog("activate called, node pid:" + process.pid);
 
-    // get "project" uris, i.e. uris of workspace folders that contain .feature files
-    const projUris = getProjectUris(true);
-    if (projUris.length === 0) {
-      // this should never happen as the extension should not activate if there are no workspaces with features
-      throw new Error("No workspaces with features found in workspace");
-    }
-
-    services.logger.syncOutputChannelsToProjects(projUris);
-    logExtensionVersion(context);
-
     const junitWatcher = new JunitWatcher();
-    junitWatcher.startWatchingJunitFolder();
+    const parseAllPromise = runStartupTasks(context, junitWatcher);
 
-
-    const parseAllPromise = recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher);
 
     // any function contained in a context.subscriptions.push() will execute immediately, 
     // as well as registering the returned disposable object for a dispose() call on extension deactivation
@@ -195,12 +183,12 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (!testConfig)
           services.logger.clearAllProjects();
 
+        const projectUris = wkspFoldersChanged ? await getProjectUris(true) : await getProjectUris();
+
         // adding/removing/renaming workspaces will not only change the 
-        // set of workspaces we are watching, but also the output channels
-        const projectUris = wkspFoldersChanged ? getProjectUris(true) : getProjectUris(false);
+        // set of workspaces we are watching, but also the output channels        
         if (wkspFoldersChanged)
           services.logger.syncOutputChannelsToProjects(projectUris);
-
 
         for (const projUri of projectUris) {
           if (testConfig) {
@@ -210,13 +198,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
           }
 
           await services.config.reloadSettings(projUri);
-          //const projMapEntry = getProjMapEntry(projUri);
-
-          // const oldProjWatcher = projWatchers.get(projUri);
-          // if (oldProjWatcher)
-          //   oldProjWatcher.dispose();
-          // const projWatcher = ProjectWatcher.create(projUri, projMapEntry.ctrl, testData);
-          // projWatchers.set(projUri, projWatcher);
         }
 
 
@@ -228,23 +209,14 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (testConfig) {
           if (!testProjUri)
             throw new Error("testProjUri must be supplied when testConfig is supplied");
-          await recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher, testProjUri);
-          // TODO: remove
-          // await new Promise(resolve => setTimeout(resolve, 1000)); // give time for the test run profiles to be created
-          console.log(1);
-          // const projMapEntry = getProjMapEntry(testProjUri);
-          // await services.parser.parseFilesForProject(testProjUri, projMapEntry.ctrl, testData, "configurationChangedHandler", false);
+          await recreateRunHandlersAndProfilesAndWatchersAndReparse(projectUris, junitWatcher, testProjUri);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
         // to rebuild the top level nodes)
-        recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher);
-        // for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-        //   const ctrl = getProjMapEntry(projUri).ctrl;
-        //   services.parser.parseFilesForProject(projUri, ctrl, testData, `configurationChangedHandler`, false);
-        // }
+        recreateRunHandlersAndProfilesAndWatchersAndReparse(projectUris, junitWatcher);
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -288,51 +260,52 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
 } // end activate()
 
+async function runStartupTasks(context: vscode.ExtensionContext, junitWatcher: JunitWatcher): Promise<void> {
 
-// function reloadRunProfilesForProject(projUri: vscode.Uri) {
-//   allRunProfiles.get(projUri)?.forEach(testRunProfile => testRunProfile.dispose());
-//   allRunProfiles.delete(projUri);
+  // INCREASE THIS TO 10000 IF YOU ARE LOOKING AT PERF TIMINGS
+  const contentionTimeout = services.config.isIntegrationTestRun ? 3000 : 3000;
 
-//   // for (const projUri of getUrisOfWkspFoldersWithFeatures(true)) {
-//   const projMapEntry = projMap.get(projUri);
-//   if (!projMapEntry)
-//     throw new Error("projControllerMap should have a controller for every project uri");
-//   allRunProfiles.set(projUri, createRunProfiles(projUri, projMapEntry));
-//   // }
-// }
+  // wait a little to avoid contention, i.e. vscode is busy on startup
+  await new Promise(resolve => setTimeout(resolve, contentionTimeout));
+
+  const start = performance.now();
+
+  // get "project" uris, i.e. uris of workspace folders that contain .feature files
+  const projUris = await getProjectUris(true);
+  if (projUris.length === 0) {
+    // this should never happen as the extension should not activate if there is no .feature file
+    throw new Error("No workspaces with features found in workspace");
+  }
+
+  services.logger.syncOutputChannelsToProjects(projUris);
+  logExtensionVersion(context);
+
+  junitWatcher.startWatchingJunitFolder();
+
+  const parseAllPromise = await recreateRunHandlersAndProfilesAndWatchersAndReparse(projUris, junitWatcher);
+
+  xRayLog(`PERF: async runStartupTasks took ${performance.now() - start} ms (if testing PERF timers, increase contentionTimeout)`);
+  return parseAllPromise;
+}
 
 
-
-// async function createProjectWatchers(ctrl: vscode.TestController, testData: TestData) {
-//   for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-//     const projWatcher = await ProjectWatcher.create(projUri, ctrl, testData);
-//     projWatchers.set(projUri, projWatcher);
-//   }
-// }
-
-
-async function recreateRunHandlersAndProfilesAndWatchersAndReparse(junitWatcher: JunitWatcher, projUri?: vscode.Uri) {
+async function recreateRunHandlersAndProfilesAndWatchersAndReparse(allProjectUris: vscode.Uri[], junitWatcher: JunitWatcher,
+  projUri?: vscode.Uri): Promise<void> {
 
   try {
     const start = performance.now();
 
-    // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project
-
-    const allProjects = getProjectUris();
-    const multiRoot = allProjects.length > 1 ? true : false;
-    const projects = allProjects.filter(x => !projUri || urisMatch(x, projUri));
-    console.log(projects);
+    const multiRoot = allProjectUris.length > 1 ? true : false;
+    // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project    
+    const projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
+    console.log(projectUris);
 
 
-    for (const projUri of projects) {
+    for (const projUri of projectUris) {
 
-      const ps = await services.config.getProjectSettings(projUri.path);
-
-      // if (ps.projRelativeStepsFolders.length === 0) {
-      //   // misconfigured project (e.g. the example multi-root projects "handle unconfigured paths" and "handle incorrect paths")
-      //   // (if we get here, then a warning should have been raised earlier when loading project settings)
-      //   continue;
-      // }
+      const ps = await services.config.getProjectSettings(projUri);
+      if (!ps.isValid)
+        continue;
 
       const map = projMap.get(ps.id);
       if (map) {

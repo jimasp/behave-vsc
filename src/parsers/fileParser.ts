@@ -104,9 +104,10 @@ export class FileParser {
 
     try {
 
-      const ps: ProjectSettings = await services.config.getProjectSettings(projPath);
+      const ps: ProjectSettings = await services.config.getProjectSettings(projUri);
       const projName = ps.name;
       const logId = `${projName}#${this._parseFilesCallCounts[projPath]}`;
+      const projectUris = await getProjectUris();
 
       let testCounts: TestCounts = { nodeCount: 0, testCount: 0 };
       const callName = `parseFiles[${logId}] (${intiator})`;
@@ -134,8 +135,7 @@ export class FileParser {
       xRayLog(`${callName}: features loaded`);
 
       this._finishedFeaturesParseForProject[projPath] = true;
-      const projectsStillParsingFeatures = getProjectUris().filter(uri =>
-        !this._finishedFeaturesParseForProject[uri.path]);
+      const projectsStillParsingFeatures = projectUris.filter(uri => !this._finishedFeaturesParseForProject[uri.path]);
       if (projectsStillParsingFeatures.length === 0) {
         this._finishedFeaturesParseForAllProjects = true;
         xRayLog(`${callName}: features loaded for all projects`);
@@ -157,7 +157,7 @@ export class FileParser {
       this._finishedStepsParseForProject[projPath] = true;
       xRayLog(`${callName}: steps loaded`);
 
-      const projectsStillParsingSteps = getProjectUris().filter(uri => !this._finishedStepsParseForProject[uri.path]);
+      const projectsStillParsingSteps = projectUris.filter(uri => !this._finishedStepsParseForProject[uri.path]);
       if (projectsStillParsingSteps.length === 0) {
         this._finishedStepsParseForAllProjects = true;
         xRayLog(`${callName}: steps loaded for all projects`);
