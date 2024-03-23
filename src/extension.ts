@@ -23,29 +23,9 @@ import { createRunProfilesForProject } from './profiles/runProfiles';
 
 const projMap = new Map<string, ProjMapEntry>();
 
-export interface QueueItem {
-  test: vscode.TestItem;
-  scenario: Scenario;
-}
-
-export type ProjMapEntry = {
-  ctrl: vscode.TestController,
-  runHandler: ITestRunHandler,
-  watcher: ProjectWatcher,
-  runProfiles: vscode.TestRunProfile[]
-};
-
-export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
-  const entry = projMap.get(uriId(projUri));
-  if (!entry)
-    throw new Error("projMap not found");
-  return entry;
-}
-
 
 export function deactivate() {
   // clean any disposable objects not handled by context.subscriptions (or any potentially large non-disposable objects)
-  projMap.forEach(m => { m.ctrl.dispose(); m.watcher.dispose(); m.runProfiles.forEach(r => r.dispose()); });
   projMap.clear();
   xRayLog("PERF: ignore all PERF times during vscode startup, as most functions are async and affected by startup contention, " +
     "(in most cases you can click refresh in test explorer for a more representative time)");
@@ -74,7 +54,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // to a register command, which returns a disposable so our custom command is deregistered when the extension is deactivated).
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.    
     context.subscriptions.push(
-      services,
+      ...Array.from(projMap.values()),
       treeView,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -260,8 +240,8 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
 
   try {
 
-    // INCREASE THIS TO 10000 IF YOU ARE LOOKING AT PERF TIMINGS
-    const contentionTimeout = services.config.isIntegrationTestRun ? 3000 : 3000;
+    // INCREASE THIS TO 10000 IF YOU ARE EXAMINING PERF TIMINGS
+    const contentionTimeout = services.config.isIntegrationTestRun ? 200 : 3000;
 
     // wait a little to avoid contention, i.e. vscode is busy on startup
     await new Promise(resolve => setTimeout(resolve, contentionTimeout));
@@ -303,6 +283,10 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
     const projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
     console.log(projectUris);
 
+    if (!projUri) {
+      projMap.forEach(m => { m.ctrl.dispose(); m.watcher.dispose(); m.runProfiles.forEach(r => r.dispose()); });
+      projMap.clear();
+    }
 
     for (const projUri of projectUris) {
 
@@ -322,7 +306,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
       const projRunHandler = testRunHandler(ctrl, testData, junitWatcher);
       const projWatcher = ProjectWatcher.create(projUri, ctrl, testData);
       const projRunProfiles = createRunProfilesForProject(ps, multiRoot, ctrl, projRunHandler);
-      const projMapEntry = { ctrl: ctrl, runHandler: projRunHandler, watcher: projWatcher, runProfiles: projRunProfiles };
+      const projMapEntry = new ProjMapEntry(ctrl, projRunHandler, projWatcher, projRunProfiles);
       projMap.set(ps.id, projMapEntry);
 
       // called by manual refresh button in test explorer
@@ -341,8 +325,10 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
       await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
     }
 
-    xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
+    setTimeout(() => vscode.commands.executeCommand("testing.collapseAll"), 500);
 
+
+    xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
   }
   catch (e: unknown) {
     // unawaited (except for integration tests) async function - show error       
@@ -350,6 +336,38 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
   }
 }
 
+
+export interface QueueItem {
+  test: vscode.TestItem;
+  scenario: Scenario;
+}
+
+export class ProjMapEntry {
+  ctrl: vscode.TestController;
+  runHandler: ITestRunHandler;
+  watcher: ProjectWatcher;
+  runProfiles: vscode.TestRunProfile[];
+
+  dispose() {
+    this.ctrl.dispose();
+    this.watcher.dispose();
+    this.runProfiles.forEach(r => r.dispose());
+  }
+
+  constructor(ctrl: vscode.TestController, runHandler: ITestRunHandler, watcher: ProjectWatcher, runProfiles: vscode.TestRunProfile[]) {
+    this.ctrl = ctrl;
+    this.runHandler = runHandler;
+    this.watcher = watcher;
+    this.runProfiles = runProfiles;
+  }
+}
+
+export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
+  const entry = projMap.get(uriId(projUri));
+  if (!entry)
+    throw new Error("projMap not found");
+  return entry;
+}
 
 
 // public API (i.e. the activate function return type) is normally there to be called from other 
@@ -365,4 +383,6 @@ export type IntegrationTestAPI = {
   getProjectUris: (forceRefresh: boolean) => Promise<vscode.Uri[]>,
   startupPromise: Promise<void>
 };
+
+
 
