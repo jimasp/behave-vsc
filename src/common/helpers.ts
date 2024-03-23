@@ -421,23 +421,28 @@ export function getExcludedPathPatterns(projUri: vscode.Uri): ExcludedPatterns {
   const projConfig = vscode.workspace.getConfiguration(undefined, projUri);
 
   const excludePatterns: ExcludedPatterns = {
-    // these first 3 have BOTH defaults provided by vscode AND the user's own settings.json exclusions
-    ...projConfig.get<ExcludedPatterns>('files.exclude'),
-    ...projConfig.get<ExcludedPatterns>('files.watcherExclude'),
-    ...projConfig.get<ExcludedPatterns>('search.exclude'),
     "**/.git": true,
     "**/.DS_Store": true,
-    "**/node_modules/**": true,
+    "**/node_modules": true,
     "**/bower_components": true,
     "**/__pycache__": true,
     "**/.*_cache": true,
     "**/.venv": true,
     "**/__venv__": true,
+    "**/venv": true,
     "**/env": true,
     "**/__env__": true,
     "**/.env": true,
     "**/__.env__": true,
     "**/.vscode": true,
+    "**/.vscode-test": true,
+    "**/out": true,
+    "**/dist": true,
+    "**/.github": true,
+    // these 3 have BOTH defaults provided by vscode AND the user's own settings.json exclusions
+    ...projConfig.get<ExcludedPatterns>('files.exclude'),
+    ...projConfig.get<ExcludedPatterns>('files.watcherExclude'),
+    ...projConfig.get<ExcludedPatterns>('search.exclude'),
   };
 
   // append {,/**}' to each pattern so we also match child files and folders
