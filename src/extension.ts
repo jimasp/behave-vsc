@@ -280,10 +280,11 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
 
     const multiRoot = allProjectUris.length > 1 ? true : false;
     // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project    
-    const projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
+    let projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
+    projectUris = projectUris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
 
     if (!projUri) {
-      projMap.forEach(m => { m.ctrl.dispose(); m.watcher.dispose(); m.runProfiles.forEach(r => r.dispose()); });
+      projMap.forEach(m => m.dispose());
       projMap.clear();
     }
 
