@@ -324,9 +324,6 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
       await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
     }
 
-    setTimeout(() => vscode.commands.executeCommand("testing.collapseAll"), 500);
-
-
     xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
   }
   catch (e: unknown) {

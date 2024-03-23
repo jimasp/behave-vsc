@@ -110,21 +110,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
 
   }
 
-  // checkAtLeastOneDefaultSet(projPrefix, standardProfile);
-
   return projRunProfiles;
 }
-
-// async function checkAtLeastOneDefaultSet(projPrefix: string, standardProfile: string) {
-
-//   await new Promise(resolve => setTimeout(resolve, 1000)); // wait for vscode
-
-//   const featureRunProfilesForProject = featureRunProfiles.filter(p => p.label.startsWith(projPrefix));
-//   const noOfSelectedDefaults = featureRunProfilesForProject.filter(p => p.isDefault).length;
-
-//   if (noOfSelectedDefaults === 0)
-//     featureRunProfilesForProject.filter(x => x.label === standardProfile).forEach(x => x.isDefault = true);
-// }
 
 
 function onlyAllowOneDefaultPerProject(isDefault: boolean, projRunProfiles: vscode.TestRunProfile[], standardProfile: string) {
@@ -137,10 +124,10 @@ function onlyAllowOneDefaultPerProject(isDefault: boolean, projRunProfiles: vsco
   if (!isDefault)
     return;
 
-  const noOfSelectedDefaults = projRunProfiles.filter(p => p.isDefault).length;
+  const selectedDefaultsForThisProject = projRunProfiles.filter(p => p.isDefault);
 
   // if more than one default profile was set, then set them all false, and set the normal default ("Features")
-  if (noOfSelectedDefaults > 2) {
+  if (selectedDefaultsForThisProject.length > 2) {
     projRunProfiles.forEach(p => p.isDefault = false);
     projRunProfiles.filter(x => x.label === standardProfile).forEach(x => x.isDefault = true);
     services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${standardProfile}".`);
