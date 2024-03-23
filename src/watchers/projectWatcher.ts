@@ -46,14 +46,12 @@ export class ProjectWatcher {
       try {
         if (!await shouldHandleIt(uri))
           return;
-        // const lcPath = uri.path.toLowerCase();
-        // const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
-        // if (isFolder || /(environment|_environment)\.py$/.test(lcPath)) {   
-        //   await services.config.reloadSettings(projSettings.uri);
-        //   // no need to await the parse
-        //   services.parser.parseFilesForProject(projUri, testData, ctrl, "OnDidCreate", false);
-        //   return;
-        // }
+
+        const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
+        if (isFolder) {
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "onDidCreate", false);
+          return;
+        }
 
         reparseTheFile(uri);
       }
@@ -150,16 +148,16 @@ export class ProjectWatcher {
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           await services.config.reloadSettings(projUri);
           // no need to await the parse
-          services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt", false);
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - configFile", false);
           return false; // just handled it
         }
       }
 
-      // // (*_environment = a stage environment file like stage1_environment.py etc.)
+      // (*_environment = a stage environment file like stage1_environment.py etc.)
       if (/(\/steps$|^environment\.py$|_environment\.py$)/.test(uri.path.toLowerCase())) {
         // environment.py affects the baseDir, so reload settings and reparse
         await services.config.reloadSettings(projUri);
-        services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt", false);
+        services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - environment", false);
         return false; // just handled it
       }
 
