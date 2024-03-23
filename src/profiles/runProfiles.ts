@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { services } from "../common/services";
 import { ProjectSettings, RunProfile } from '../config/settings';
 import { ITestRunHandler } from '../runners/testRunHandler';
+import { HAIR_SPACE, THIN_SPACE } from '../common/helpers';
 
 
 
@@ -16,7 +17,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
   const projName = ps.name;
 
   const projPrefix = multiRoot ? `${projName}: ` : "";
-  const standardProfile = multiRoot ? `${projName}:  all features` : " all features"; // extra spaces are for alphabetical sorting
+  // add low-order spaces for alpha ordering (so that "all features" is first when no default profile is set)
+  const standardProfile = multiRoot ? `${projName}:${THIN_SPACE}${HAIR_SPACE}all features` : `${HAIR_SPACE}all features`;
 
   for (const debug of [false, true]) {
 
@@ -45,7 +47,7 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
           await runHandler(debug, request, new RunProfile(profileName));
-        });
+        }, true);
       profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, standardProfile));
       projRunProfiles.push(profile);
     })();
