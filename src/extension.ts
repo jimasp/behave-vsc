@@ -73,7 +73,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // (a test node expansion can fire this even if not by user interaction, e.g. on startup if it was expanded previously) 
     // ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
     //   try {
-    //     // ignore undefined, we build in background at startup via parseFilesForAllProjects
+    //     // ignore undefined, we build in background at startup via recreateRunHandlersAndProfilesAndWatchersAndReparse
     //     // and we also rebuild via file watchers
     //     if (!item || !item.uri || item.uri?.scheme !== 'file')
     //       return;
@@ -281,7 +281,6 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
     const multiRoot = allProjectUris.length > 1 ? true : false;
     // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project    
     const projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
-    console.log(projectUris);
 
     if (!projUri) {
       projMap.forEach(m => { m.ctrl.dispose(); m.watcher.dispose(); m.runProfiles.forEach(r => r.dispose()); });

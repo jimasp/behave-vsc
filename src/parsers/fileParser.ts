@@ -34,35 +34,6 @@ export class FileParser {
   private _errored = false;
   private _reparsingFile = false;
 
-  // // NOTE: 
-  // // This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
-  // async parseFilesForAllProjects(testData: TestData, ctrl: vscode.TestController,
-  //   intiator: string, firstRun: boolean, cancelToken?: vscode.CancellationToken): Promise<(ProjParseCounts | undefined)[]> {
-
-  //   try {
-  //     this._finishedFeaturesParseForAllProjects = false;
-  //     this._errored = false;
-
-  //     // this function is called e.g. when a workspace folder (i.e. project) gets added/removed/renamed, so 
-  //     // clear everything up-front so that we rebuild the top level nodes
-  //     xRayLog("parseFilesForAllProjects - removing all test nodes/items for all projects");
-  //     deleteTestTreeNodes(null, testData, ctrl);
-
-  //     const promises: Promise<ProjParseCounts | undefined>[] = [];
-  //     for (const projUri of getUrisOfWkspFoldersWithFeatures()) {
-  //       promises.push(this.parseFilesForProject(projUri, testData, ctrl, `parseFilesForAllProjects from ${intiator}`,
-  //         firstRun, cancelToken));
-  //     }
-
-  //     return Promise.all(promises);
-  //   }
-  //   catch (e: unknown) {
-  //     // unawaited async func, show error
-  //     services.logger.showError(e);
-  //     return [];
-  //   }
-  // }
-
 
   // NOTES:
   // - This function is a BACKGROUND task. It should only ever be await-ed by integration tests.
@@ -483,27 +454,6 @@ export class FileParser {
     const testFile = new TestFile();
     testData.set(testItem, testFile);
 
-    // // if it's a multi-root workspace, use project grandparent nodes, e.g. "project_1", "project_2"
-    // let projGrandParent: vscode.TestItem | undefined;
-    // if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-    //   projGrandParent = controller.items.get(ps.id);
-    //   if (!projGrandParent) {
-    //     const projName = ps.name;
-    //     projGrandParent = controller.createTestItem(ps.id, projName);
-    //     projGrandParent.canResolveChildren = true;
-    //     controller.items.add(projGrandParent);
-    //   }
-    // }
-
-    //let projGrandParent: vscode.TestItem | undefined;
-    // // if ((getUrisOfWkspFoldersWithFeatures()).length > 1) {
-    // projGrandParent = controller.items.get(ps.id);
-    // if (!projGrandParent) {
-    //   projGrandParent = controller.createTestItem("blah", "Feature Tests");
-    //   projGrandParent.canResolveChildren = true;
-    //   controller.items.add(projGrandParent);
-    // }
-    // // }
 
     // build folder hierarchy above test item
     // build top-down in case parent folder gets renamed/deleted etc.
@@ -519,16 +469,12 @@ export class FileParser {
     if (nodePath.includes("/")) {
 
       const folders = nodePath.split("/").slice(0, -1);
-      console.log(uri.path);
       const basePath = uri.path.slice(0, -nodePath.length);
 
       for (let folderNo = 0; folderNo < folders.length; folderNo++) {
         // note that the uriId here is used in getFeaturePathsRegEx while optimising the behave command
         const folderTestItemId = uriId(vscode.Uri.file(basePath + folders.slice(0, folderNo + 1).join("/")));
         const folderName = "$(folder) " + folders[folderNo]; // $(folder) = folder icon        
-
-        // if (folderNo === 0)
-        //   parent = projGrandParent;
 
         if (parent)
           current = parent.children.get(folderTestItemId);
@@ -549,14 +495,8 @@ export class FileParser {
           parent.children.add(current);
 
         parent = current;
-
-        // if (folderNo === 0)
-        //   firstFolder = current;
       }
     }
-
-    // if (projGrandParent)
-    //   projGrandParent.children.add(firstFolder ? firstFolder : testItem);
 
     xRayLog(`${caller}: created test item for ${uri.path}`);
     return { testItem: testItem, testFile: testFile };
@@ -579,14 +519,6 @@ export class FileParser {
       For a more representative time, disable other test extensions then click the test refresh button a few times.
       (Note that for multi-root, multiple projects refresh in parallel, so you should consider the longest parseFiles[] time as the total time.)`
     );
-  }
-
-
-  // TODO: remove if not used
-  parseIsActiveForProject(projUri: vscode.Uri) {
-    if (!services.config.isIntegrationTestRun)
-      throw new Error("parseIsActiveForProject() is only for integration test support");
-    return !this._finishedParseForProject[projUri.path];
   }
 
 }
