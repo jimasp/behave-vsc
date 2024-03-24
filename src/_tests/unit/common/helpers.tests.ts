@@ -1,19 +1,17 @@
 import * as assert from 'assert';
-import * as fs from 'fs';
-import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
+import * as mockFs from 'mock-fs';
 import * as helpers from '../../../common/helpers';
-import { services } from '../../../common/services';
 import { ProjectSettings } from '../../../config/settings';
 import {
-  findFeatureFolders, getExcludedPathPatterns, getFeatureNodePath,
+  findFeatureFoldersInWorkingDir, getExcludedPathPatterns, getFeatureNodePath,
   getOptimisedFeatureParsingPaths, isExcludedPath, isStepsFile
 } from '../../../common/helpers';
 
 
 suite("isExcludedPath", () => {
-  const excludedPathPatterns = { "**/.venv{,/**}": true };
+  const excludedPathPatterns = ["**/.venv{,/**}"];
 
   test(`should return [] for excluded paths`, () => {
     const paths = [
@@ -33,9 +31,7 @@ suite("isExcludedPath", () => {
 });
 
 
-suite("findFeatureFolders", () => {
-  let sandbox: sinon.SinonSandbox;
-  let logger: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+suite("findFeatureFoldersInWorkingDir", () => {
   const projUri = vscode.Uri.file("/home/me/src/myproj");
 
   const projSettings = {
@@ -44,139 +40,105 @@ suite("findFeatureFolders", () => {
     behaveWorkingDirUri: projUri,
   } as ProjectSettings;
 
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    logger = { logInfo: sandbox.stub(), xRayLog: sandbox.stub() };
-    services.logger = logger;
-
-    const statStub = sandbox.stub(fs.promises, 'stat');
-    statStub.callsFake((path: fs.PathLike) => {
-      const isDirectory = !path.toString().includes(".");
-      return Promise.resolve({ isDirectory: () => isDirectory } as fs.Stats);
-    });
-
-  });
 
   teardown(() => {
-    sandbox.restore();
-    logger.logInfo.resetHistory();
+    mockFs.restore();
   });
 
-  test(`should return [] for an ignored root folder`, async () => {
-    // proj/
-    // └── .mypy_cache/
-    //     └── cache.feature    
-    const ignoredFolder = path.join(projUri.fsPath, ".mypy_cache");
-    sandbox.stub(fs.promises, 'readdir')
-      .withArgs(ignoredFolder)
-      .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
-
-    const result = await findFeatureFolders(projSettings, ignoredFolder);
-    const expected: string[] = [];
-    assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
-  });
 
   test(`should return [] for an ignored child folder`, async () => {
-    // proj/
-    // └── a/
-    //     └── .mypy_cache/
-    //         └── cache.feature    
-    const ignoredFolder = path.join(projUri.fsPath, "a", ".mypy_cache");
-    sandbox.stub(fs.promises, 'readdir')
-      .withArgs(ignoredFolder)
-      .returns(Promise.resolve(["cache.feature"]) as unknown as Promise<fs.Dirent[]>);
+    mockFs({
+      "/home/me/src/myproj": {
+        'a': {
+          '.mypy_cache': {
+            'cache.feature': '',
+          },
+        },
+      }
+    });
 
-    const result = await findFeatureFolders(projSettings, ignoredFolder);
+    const result = await findFeatureFoldersInWorkingDir(projSettings);
     const expected: string[] = [];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`);
   });
 
   test(`should NOT return work dir root path for "root.feature"`, async () => {
-    // proj/
-    // ├── root.feature    
-    // └── some_features/
-    //     └── a.feature
-    sandbox.stub(fs.promises, 'readdir')
-      .withArgs(projUri.fsPath).returns(Promise.resolve(["root.feature", "some_features"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/some_features").returns(Promise.resolve(["a.feature"]) as unknown as Promise<fs.Dirent[]>);
 
-    const result = await findFeatureFolders(projSettings, projUri.fsPath);
-    const expected = [path.join(projUri.fsPath, "some_features")];
+    mockFs({
+      "/home/me/src/myproj": {
+        'root.feature': '',
+        'some_features': {
+          'a.feature': '',
+        },
+      },
+    });
+
+    const result = await findFeatureFoldersInWorkingDir(projSettings);
+    const expected = ["some_features"];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
 
   test(`should return expected paths set`, async () => {
-    // proj/
-    // ├── root.feature
-    // ├── a/
-    // │   └── a.feature
-    // ├── b/
-    // │   └── b.feature   
-    // ├── c/
-    // │   ├── 1/
-    // │   │   └── c1.feature
-    // │   └── 2/
-    // │       ├── c2.feature
-    // │       └── 1/
-    // │           └── c21.feature
-    // ├── d/
-    // │   └── 1/
-    // │       └── d1.feature
-    // ├── e/
-    // │   ├── 1/
-    // │   │   ├── 1/
-    // │   │   │   └── e11.feature
-    // │   │   └── 2/
-    // │   │       ├── e12.feature
-    // │   │       └── 1/
-    // │   │           └── e121.feature
-    // ├── f/
-    //     └── 1/
-    //         └── 1/
-    //             └── 1/
-    //                 └── f111.feature
-    sandbox.stub(fs.promises, 'readdir')
-      .withArgs(projUri.fsPath).returns(Promise.resolve(["root.feature", "a", "b", "c", "d", "e", "f"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/a").returns(Promise.resolve(["a.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/b").returns(Promise.resolve(["b.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/c").returns(Promise.resolve(["1", "2"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/c/1").returns(Promise.resolve(["c1.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/c/2").returns(Promise.resolve(["1", "c2.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/c/2/1").returns(Promise.resolve(["c21.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/d").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/d/1").returns(Promise.resolve(["d1.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/e").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/e/1").returns(Promise.resolve(["1", "2"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/e/1/1").returns(Promise.resolve(["e11.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/e/1/2").returns(Promise.resolve(["e12.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/e/1/2/1").returns(Promise.resolve(["e121.feature"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/f").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/f/1").returns(Promise.resolve(["1"]) as unknown as Promise<fs.Dirent[]>)
-      .withArgs(projUri.fsPath + "/f/1/1").returns(Promise.resolve(["f111.feature"]) as unknown as Promise<fs.Dirent[]>);
+    mockFs({
+      "/home/me/src/myproj": {
+        'root.feature': '',
+        'a': {
+          'a.feature': '',
+        },
+        'b': {
+          'b.feature': '',
+        },
+        'c': {
+          '1': {
+            'c1.feature': '',
+          },
+          '2': {
+            '1': {
+              'c21.feature': '',
+            },
+            'c2.feature': '',
+          },
+        },
+        'd': {
+          '1': {
+            'd1.feature': '',
+          },
+        },
+        'e': {
+          '1': {
+            '1': {
+              'e11.feature': '',
+            },
+            '2': {
+              '1': {
+                'e121.feature': '',
+              },
+              'e12.feature': '',
+            },
+          },
+        },
+        'f': {
+          '1': {
+            '1': {
+              '1': {
+                'f111.feature': '',
+              },
+            },
+          },
+        },
+      }
+    });
 
-    const result = await findFeatureFolders(projSettings, projUri.fsPath);
-    const expected = ["a", "b", "c/1", "c/2", "d/1", "e/1/1", "e/1/2", "f/1/1"].map(rel => path.join(projUri.fsPath, rel));
+
+    const result = await findFeatureFoldersInWorkingDir(projSettings);
+    const expected = ["a", "b", "c/1", "c/2", "d/1", "c/2/1", "e/1/1", "e/1/2", "e/1/2/1", "f/1/1/1"];
     assert.deepStrictEqual(result, expected, `expected: ${expected}, got: ${result}`)
   });
 
 });
 
-suite("getLongestCommonPathsFromRelativePaths", () => {
-  let sandbox: sinon.SinonSandbox;
+suite("getOptimisedFeatureParsingPaths", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let logger: any;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    logger = { logInfo: sandbox.stub() };
-    services.logger = logger;
-  });
-
-  teardown(() => {
-    sandbox.restore();
-    logger.logInfo.resetHistory();
-  });
-
 
   test(`should return "" for ""`, () => {
     const paths = [""];
@@ -242,21 +204,6 @@ suite("getLongestCommonPathsFromRelativePaths", () => {
 
 
 suite("getFeatureNodePath", () => {
-  let sandbox: sinon.SinonSandbox;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let logger: any;
-
-  setup(() => {
-    sandbox = sinon.createSandbox();
-    logger = { logInfo: sandbox.stub() };
-    services.logger = logger;
-  });
-
-  teardown(() => {
-    sandbox.restore();
-    logger.logInfo.resetHistory();
-  });
-
 
   const pathsAndExpectations1 = {
     "/home/me/src/myproj/features/my.feature": "my.feature",

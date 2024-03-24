@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as fg from 'fast-glob';
 import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 import { services } from "./services";
@@ -122,11 +123,10 @@ export const getProjectUris = (() => {
       throw new Error(`Please disable the marketplace Behave VSC extension before beginning extension debugging!`);
 
     for (const folder of folders) {
-      const start2 = performance.now();
       const excludedPathPatterns = getExcludedPathPatterns(folder.uri);
-      if (await folderContainsAFeatureFile(excludedPathPatterns, folder.uri))
+      if (await folderContainsAFeatureFile(excludedPathPatterns, folder.uri)) {
         projectUris.push(folder.uri);
-      xRayLog(`PERF: folderContainsAFeatureFileSync took ${performance.now() - start2} ms for ${folder.uri.fsPath}`);
+      }
     }
 
     xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${projectUris.length}`);
@@ -340,123 +340,110 @@ export async function findFiles(directory: vscode.Uri, match: RegExp, recursive:
 }
 
 
-export async function folderContainsAFeatureFile(excludedPathPatterns: ExcludedPatterns, uri: vscode.Uri): Promise<boolean> {
+export async function folderContainsAFeatureFile(excludedPathPatterns: string[], uri: vscode.Uri): Promise<boolean> {
+  const start = performance.now();
+  // for speed, use stream for early exit, along with excludedPathPatterns
+  const stream = fg.stream('**/*.feature', { cwd: uri.fsPath, ignore: excludedPathPatterns });
+  const firstMatch = await stream[Symbol.asyncIterator]().next();
 
-  if (excludedPathPatterns && isExcludedPath(excludedPathPatterns, uri.fsPath))
-    return false;
+  xRayLog(`PERF: folderContainsAFeatureFile - found=${firstMatch.value ?? "not found"}, ` +
+    `took ${performance.now() - start} ms for ${uri.path}`);
 
-  const entries = await fs.promises.readdir(uri.fsPath);
-  for (const entry of entries) {
-    if (entry.endsWith(".feature"))
-      return true;
-    const stat = fs.statSync(path.join(uri.fsPath, entry));
-    if (stat.isDirectory() && await folderContainsAFeatureFile(excludedPathPatterns, vscode.Uri.file(path.join(uri.fsPath, entry))))
-      return true;
-  }
-  return false;
+  return firstMatch.value !== undefined;
 }
 
 
-export async function findFeatureFolders(ps: ProjectSettings, absolutePath: string):
-  Promise<string[]> {
-
+export async function findFeatureFoldersInWorkingDir(ps: ProjectSettings): Promise<string[]> {
   // THIS IS CALLED TO SEARCH FOR FEATURE FOLDERS ONLY WHEN THERE ARE NO BEHAVE CONFIG PATHS SET 
-  // (note that behave will ignore the root of the working dir when no config paths is set, so we will do the same)
+  // on the initial call, absolutePath is set to the absPath of the baseDir path
 
   // find feature folders, perform an early exit where possible, 
   // i.e. if path a/1 has a feature file, we don't need to check child paths a/1/1 or a/1/2 (but we do need to check a/2)
 
   const start = performance.now();
-  const entries = await fs.promises.readdir(absolutePath);
-  const childFolders: string[] = [];
   const results: string[] = [];
 
-  if (isExcludedPath(ps.excludedPathPatterns, absolutePath)) {
-    xRayLog(`findFeatureFolders: ignoring excluded path "${absolutePath}"`, ps.uri);
-    return [];
-  }
+  const stream = fg.stream('**/*.feature', { cwd: ps.behaveWorkingDirUri.fsPath, ignore: ps.excludedPathPatterns });
 
-  // first pass = files only
-  for (const entry of entries) {
-    const entryPath = path.join(absolutePath, entry);
-    const stat = await fs.promises.stat(entryPath);
-    if (stat.isDirectory()) {
-      childFolders.push(entryPath);
-    }
-    else {
-      if (entry.endsWith(".feature")) {
-        if (absolutePath === ps.behaveWorkingDirUri.fsPath)
-          continue;
-        results.push(absolutePath);
-        return results;
-      }
-    }
-  }
-
-  // no matched files in directory, so second pass: navigate down to child directories and see if they have a feature file
-  for (const absFolderPath of childFolders) {
-    const subDirResults = await findFeatureFolders(ps, absFolderPath);
-    results.push(...subDirResults);
+  for await (const entry of stream) {
+    const folder = path.dirname(entry.toString());
+    // behave will ignore a feature file in root of the working dir when 
+    // no config paths is set, so we will do the same
+    if (folder === ".")
+      continue;
+    if (!results.includes(folder))
+      results.push(folder);
   }
 
   const end = performance.now() - start;
-  xRayLog(`PERF: findFeatureFolders(${absolutePath}) took ${end}ms`, ps.uri);
+  xRayLog(`PERF: findFeatureFolders(${ps.behaveWorkingDirUri.fsPath}) took ${end}ms`, ps.uri);
 
   return results;
 }
 
 
-export function isExcludedPath(excludedPaths: ExcludedPatterns, path: string): boolean {
-  for (const pattern of Object.keys(excludedPaths)) {
-    if (excludedPaths[pattern] && minimatch(path, pattern))
+export function isExcludedPath(excludedPatterns: string[], path: string): boolean {
+  for (const pattern of excludedPatterns) {
+    if (minimatch(path, pattern))
       return true;
   }
   return false;
 }
 
-export type ExcludedPatterns = { [key: string]: boolean; };
 
-export function getExcludedPathPatterns(projUri: vscode.Uri): ExcludedPatterns {
+export function getExcludedPathPatterns(projUri: vscode.Uri): string[] {
+
+  const defaultExcludes = [
+    "**/.git",
+    "**/.DS_Store",
+    "**/node_modules",
+    "**/bower_components",
+    "**/__pycache__",
+    "**/.*_cache",
+    "**/.venv",
+    "**/__venv__",
+    "**/venv",
+    "**/env",
+    "**/__env__",
+    "**/.env",
+    "**/__.env__",
+    "**/.vscode",
+    "**/.vscode-test",
+    "**/out",
+    "**/dist",
+    "**/.github",
+  ];
 
   const projConfig = vscode.workspace.getConfiguration(undefined, projUri);
 
-  const excludePatterns: ExcludedPatterns = {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/node_modules": true,
-    "**/bower_components": true,
-    "**/__pycache__": true,
-    "**/.*_cache": true,
-    "**/.venv": true,
-    "**/__venv__": true,
-    "**/venv": true,
-    "**/env": true,
-    "**/__env__": true,
-    "**/.env": true,
-    "**/__.env__": true,
-    "**/.vscode": true,
-    "**/.vscode-test": true,
-    "**/out": true,
-    "**/dist": true,
-    "**/.github": true,
+  const excPatterns: { [key: string]: boolean; } = {
     // these 3 have BOTH defaults provided by vscode AND the user's own settings.json exclusions
-    ...projConfig.get<ExcludedPatterns>('files.exclude'),
-    ...projConfig.get<ExcludedPatterns>('files.watcherExclude'),
-    ...projConfig.get<ExcludedPatterns>('search.exclude'),
+    ...projConfig.get('files.exclude'),
+    ...projConfig.get('files.watcherExclude'),
+    ...projConfig.get('search.exclude'),
   };
 
+  // filter to where value is true
+  const excludePatterns = Object.keys(excPatterns).filter(p => excPatterns[p]);
+
+  // add default excludes
+  excludePatterns.push(...defaultExcludes);
+
   // append {,/**}' to each pattern so we also match child files and folders
-  for (const pattern of Object.keys(excludePatterns)) {
-    if (excludePatterns[pattern] && !pattern.endsWith("{,/**}"))
-      excludePatterns[pattern + "{,/**}"] = true;
+  for (const pattern of excludePatterns) {
+    if (!pattern.endsWith("{,/**}"))
+      excludePatterns.push(pattern + "{,/**}");
   }
 
-  xRayLog(`excludePatterns for ${projUri}:\n${JSON.stringify(excludePatterns, null, 2)}`);
+  xRayLog(`excludePatterns for ${projUri}:\n${JSON.stringify(excPatterns, null, 2)}`);
   return excludePatterns;
 }
 
 
 export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string[] {
+
+  // TODO: this needs work
+
   /* 
   get the smallest set of longest paths that contain all feature folder paths,
   i.e. return the most efficient paths to be used as the search paths for parsing feature files

@@ -6,7 +6,6 @@ import { services } from './services';
 export class Logger {
 
   private channels: { [projUri: string]: vscode.OutputChannel } = {};
-  public visible = false;
 
   syncOutputChannelsToProjects(projUris: vscode.Uri[]) {
 
@@ -35,7 +34,7 @@ export class Logger {
     }
   }
 
-  show = (projUri: vscode.Uri) => {
+  showOutputWindow = (projUri: vscode.Uri) => {
     this.channels[projUri.path].show();
   };
 
@@ -79,7 +78,7 @@ export class Logger {
       run.appendOutput(text);
   };
 
-  // used by settings.ts 
+
   logSettingsWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text, projUri, LogType.warn);
 

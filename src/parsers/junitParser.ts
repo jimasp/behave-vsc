@@ -112,7 +112,7 @@ function CreateParseResult(ps: ProjectSettings, debug: boolean, testCase: TestCa
     if (debug)
       showDebugWindow();
     else
-      services.logger.show(ps.uri);
+      services.logger.showOutputWindow(ps.uri);
     return { status: "untested", duration: xmlDuration };
   }
 
@@ -296,5 +296,5 @@ export function updateTestResultsForUnreadableJunitFile(ps: ProjectSettings, run
     throw new Error(`JUnit file ${junitFileUri.fsPath} could not be read.`);
   }
 
-  services.logger.show(ps.uri);
+  services.logger.showOutputWindow(ps.uri);
 }

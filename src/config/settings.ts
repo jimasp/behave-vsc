@@ -5,7 +5,7 @@ import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
   uriId,
-  findFeatureFolders,
+  findFeatureFoldersInWorkingDir,
   getActualWorkspaceSetting,
   getOptimisedFeatureParsingPaths,
   getExcludedPathPatterns,
@@ -61,8 +61,8 @@ export class ProjectSettings {
   public readonly id: string; // project id (unique)
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
-  public readonly excludedPathPatterns: { [key: string]: boolean; } = {}; // paths specifically excluded from watching/parsing
-  public readonly projRelativeBehaveWorkingDirPath: string = ""; // "behaveWorkingDirectory" in settings.json
+  public readonly excludedPathPatterns: string[]; // paths specifically excluded from watching/parsing
+  public readonly projRelativeBehaveWorkingDirPath: string = ""; // "behaveWorkingDirectory" if set in settings.json, otherwise empty string
   public readonly behaveWorkingDirUri: vscode.Uri; // optional working directory (projRelativeBehaveWorkingDirPath in absolute uri form)
   // calculated after real work in create():
   public isValid = true; // set to false if the project paths are invalid  
@@ -266,11 +266,13 @@ async function getPaths(ps: ProjectSettings) {
 
   const { rawBehaveConfigPaths, behaveWrkDirRelBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
-  // base dir is a concept borrowed from behave's source code
-  // NOTE: projRelBaseDirPath is used to calculate junit filenames (see getJunitFeatureName)
+  // NOTE: base dir is a concept borrowed from behave's source code
+  // this is IMPORTANT because baseDirPath is used to determine the expected junit filenames that behave will produce (see getJunitFeatureName)
   const baseDirPath = await getBaseDirPath(ps, behaveWrkDirRelBehaveConfigPaths);
   if (baseDirPath === null)
-    return;
+    return; // invalid project
+
+  const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
   const stepsFolder = path.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
   const projRelStepsFolders = getStepLibraryStepPaths(ps);
@@ -285,8 +287,6 @@ async function getPaths(ps: ProjectSettings) {
     else
       projRelStepsFolders.push(stepsFolder);
   }
-
-  const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
   xRayLog(`PERF: getPaths took ${performance.now() - start} ms for ${ps.id}`);
 
@@ -312,18 +312,18 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativ
   }
 
   // no behave config paths set (or working dir is one of them) so we'll gather feature paths from disk
-  const foldersContainingFeatureFiles = await findFeatureFolders(ps, ps.behaveWorkingDirUri.fsPath);
+  const foldersContainingFeatureFiles = await findFeatureFoldersInWorkingDir(ps);
 
-  let relFeatureFolders = foldersContainingFeatureFiles.map(folder => path.relative(ps.uri.fsPath, folder));
+  let projRelFeatureFolders = foldersContainingFeatureFiles.map(folder => path.join(ps.projRelativeBehaveWorkingDirPath, folder));
 
   // add the config paths even if there are no feature files in those paths (yet)
   // (they don't have to exist yet as the watcher uses the project root)
-  relFeatureFolders = [...new Set(relFeatureFolders.concat(projRelativeBehaveConfigPaths))];
+  projRelFeatureFolders = [...new Set(projRelFeatureFolders.concat(projRelativeBehaveConfigPaths))];
 
   // optimise to longest common search paths for parsing search paths
   // note that if "" is included in relFeatureFolders, then we maintain it 
   // as a distinct case (see _parseFeatureFiles)
-  const relFeaturePaths = getOptimisedFeatureParsingPaths(relFeatureFolders);
+  const relFeaturePaths = getOptimisedFeatureParsingPaths(projRelFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path
   if (relFeaturePaths.length === 0)

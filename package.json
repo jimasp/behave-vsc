@@ -302,6 +302,7 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "^10.0.6",
+		"@types/mock-fs": "^4.13.4",
 		"@types/node": "^20.11.16",
 		"@types/sinon": "^17.0.3",
 		"@types/vscode": "^1.86.0",
@@ -312,6 +313,7 @@
 		"eslint": "^8.56.0",
 		"glob": "^10.3.10",
 		"mocha": "^10.2.0",
+		"mock-fs": "^5.2.0",
 		"rimraf": "^5.0.5",
 		"sinon": "^17.0.1",
 		"ts-loader": "^9.5.1",
