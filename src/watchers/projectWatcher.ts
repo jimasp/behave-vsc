@@ -3,7 +3,7 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { isExcludedPath, isStepsFile } from '../common/helpers';
+import { isExcludedPath, isStepsFile, pathExists } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 
 
@@ -46,12 +46,6 @@ export class ProjectWatcher {
       try {
         if (!await shouldHandleIt(uri))
           return;
-
-        const isFolder = (await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory;
-        if (isFolder) {
-          services.parser.parseFilesForProject(projUri, ctrl, testData, "onDidCreate", false);
-          return;
-        }
 
         reparseTheFile(uri);
       }
@@ -133,7 +127,6 @@ export class ProjectWatcher {
       const projSettings = await services.config.getProjectSettings(projUri);
 
       if (isExcludedPath(projSettings.excludedPathPatterns, uri.path)) {
-        xRayLog(`ignoring fie change to "${uri.path}" as it matches an excluded path `, projUri);
         return false;
       }
 
@@ -147,18 +140,17 @@ export class ProjectWatcher {
             return false; // don't reload when integration tests change the behave.ini file
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           await services.config.reloadSettings(projUri);
-          // no need to await the parse
           services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - configFile", false);
-          return false; // just handled it
+          return false;
         }
       }
 
       // (*_environment = a stage environment file like stage1_environment.py etc.)
-      if (/(\/steps$|^environment\.py$|_environment\.py$)/.test(uri.path.toLowerCase())) {
+      if (/(.*\/(steps$|environment\.py$|_environment\.py$))/.test(uri.path.toLowerCase())) {
         // environment.py affects the baseDir, so reload settings and reparse
         await services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - environment", false);
-        return false; // just handled it
+        return false;
       }
 
       // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
