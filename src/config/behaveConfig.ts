@@ -66,8 +66,10 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
 
   const projRelPaths = relPaths.map(p => path.join(ps.projRelativeBehaveWorkingDirPath, p).replace(/^\.$/g, ""));
 
-  services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
-    `${projRelPaths.map(p => `"${p}"`).join(", ")}`, ps.uri);
+  if (projRelPaths.length > 0) {
+    services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
+      `${projRelPaths.map(p => `"${p}"`).join(", ")}`, ps.uri);
+  }
 
   return {
     rawBehaveConfigPaths: paths,

@@ -50,6 +50,10 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
   try {
 
+    const waitMs = textEditor ? 500 : 5000;
+    if (!await waitOnReadyForStepsNavigation(waitMs))
+      return;
+
     if (textEditor && (!fileUri || !await isStepsFile(fileUri))) {
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
       services.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
@@ -74,10 +78,6 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     }
 
     if (!refreshStore.uri)
-      return;
-
-    const waitMs = textEditor ? 500 : 5000;
-    if (!await waitOnReadyForStepsNavigation(waitMs))
       return;
 
     const stepReferences = getFeatureReferencesToStepFileFunction(refreshStore.uri, refreshStore.lineNo);

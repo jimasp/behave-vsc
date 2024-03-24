@@ -49,7 +49,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure, which is as follows:
   - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
   - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
-  - The `features` and `steps` folders must be somewhere *inside* the project folder for the extension to find them.
+  - The `features` and `steps` folders must be somewhere *inside* the project folder.
   - If you add subfolders inside the `steps` folder, then the extension will find those steps, but behave will only find them if you use `import` statements.
   - In the below example the behave configuration file is `behave.ini`, but you can also use `.behaverc`, `setup.cfg`, or `tox.ini`.
 
@@ -69,18 +69,17 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             ├── db_steps.py                             
             └── web_steps.py
 
-- The default working directory (and auto-discovery directory) is the project root. For very large projects, it is recommended to either:
-  - a. use a `behave.ini` file in the project-root to specify the `paths` setting, or
-  - b. use a subfolder for behave tests, e.g. `my_tests/behave`, and set the `behaveWorkingDirectory` setting to e.g. `my_tests/behave`.
-  This will stop the extension from having to parse/watch your entire project folder looking for feature and steps files.
-
-- In most cases, auto-discovery (along with `behaveWorkingDirectory` if required) will "just work", but otherwise see [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
+- The default behave working directory is the project root.
+- As per behave, *without additional configuration*, features will only be discovered if:
+  - (a) you have a `features` folder in your project root, or
+  - (b) you have a `steps` folder in your project root
+- If you do not have a `features` or `steps` folder in the project root, or you want to change your behave working directory, then you can configure the extension to find them elsewhere. See [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
 
 ---
 
 ## Behave settings
 
-- If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your project folder to determine the feature folder(s).
+- If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your project tree to determine the feature folder(s). A better solution for large projects is to use a separate subfolder for behave tests and set `behaveWorkingDirectory` in the extension settings.
 
 ## Extension settings
 
@@ -332,7 +331,7 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ## Advanced project configuration
 
-- Autodiscovery is based on the behave config `paths` setting and the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
+- Feature/Step discovery is based on the behave config `paths` setting and the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
 
 - If your behave working directory is not the same as your project directory, then you can set the `behaveWorkingDirectory` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
 

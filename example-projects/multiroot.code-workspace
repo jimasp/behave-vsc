@@ -50,11 +50,11 @@
 		},
 		{
 			"path": "./handle incorrect paths",
-			"name": "handle incorrect paths (show warning)"
+			"name": "handle incorrect paths (show warning in popup)"
 		},
 		{
 			"path": "./handle unconfigured paths",
-			"name": "handle unconfigured paths (show warning)"
+			"name": "handle unconfigured paths (show warning in output window)"
 		}
 	],
 	"settings": {
