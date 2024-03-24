@@ -447,34 +447,3 @@ export class RunProfile {
 }
 
 export type RunProfilesSetting = RunProfile[];
-
-
-
-// export interface IProjectSettingsLight {
-//   id: string;
-//   name: string;
-//   uri: vscode.Uri;
-//   behaveWorkingDirUri: vscode.Uri;
-//   integrationTestRunUseCpExec: boolean;
-//   excludedPathPatterns: { [key: string]: boolean; };
-// }
-
-// export class ProjectSettingsLight implements IProjectSettingsLight {
-//   // lightweight construction and settings.json validation ONLY, for use during startup
-//   // i.e. not a fully populated ProjectSettings object
-//   id: string;
-//   name: string;
-//   uri: vscode.Uri;
-//   behaveWorkingDirUri: vscode.Uri;
-//   integrationTestRunUseCpExec: boolean;
-//   excludedPathPatterns: { [key: string]: boolean; };
-
-//   constructor(ps: ProjectSettings) {
-//     this.id = ps.id;
-//     this.name = ps.name;
-//     this.uri = ps.uri;
-//     this.behaveWorkingDirUri = ps.behaveWorkingDirUri;
-//     this.integrationTestRunUseCpExec = ps.integrationTestRunUseCpExec;
-//     this.excludedPathPatterns = ps.excludedPathPatterns;
-//   }
-// }

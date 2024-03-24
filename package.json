@@ -27,7 +27,7 @@
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
 					"type": "string",
-					"deprecationMessage": "IGNORED legacy setting. Feature paths are now auto-discovered and controlled by the \"behaveWorkingDirectory\" setting and/or behave config file \"paths\".",
+					"deprecationMessage": "IGNORED legacy setting. Feature paths are now discovered via the behave config file \"paths\" setting and the extension \"behaveWorkingDirectory\" setting.",
 					"default": "features"
 				},
 				"behave-vsc.importedSteps": {
