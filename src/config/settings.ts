@@ -11,7 +11,7 @@ import {
   getExcludedPathPatterns,
   pathExistsSync,
   getProjectUris,
-  projectContainsRelativePath
+  projectContainsRelativePath,
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -131,8 +131,6 @@ export class ProjectSettings {
       throw new Error("runParallel is undefined");
     this.runParallel = runParallelCfg;
 
-    this.userRunProfiles = getValidUserRunProfiles(projConfig);
-
     try {
       const envCfg: { [name: string]: string } | undefined = projConfig.get("env");
       if (envCfg === undefined)
@@ -178,6 +176,7 @@ export class ProjectSettings {
       this.projRelativeBehaveWorkingDirPath = behaveWorkingDirectoryCfg;
     }
 
+    this.userRunProfiles = getValidUserRunProfiles(projUri, this.behaveWorkingDirUri, projConfig);
 
     const importedStepsCfg: ImportedStepsSetting | undefined = projConfig.get("importedSteps");
     if (importedStepsCfg === undefined)
@@ -192,7 +191,8 @@ export class ProjectSettings {
 }
 
 
-function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): RunProfile[] {
+function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscode.Uri,
+  projConfig: vscode.WorkspaceConfiguration): RunProfile[] {
 
   let runProfiles: RunProfile[] = [];
 
@@ -203,18 +203,22 @@ function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): Run
   try {
     let validRunProfiles = true;
     for (const profile of runProfilesCfg) {
-      const script = profile.customRunner?.scriptFile.trim();
+      let script = profile.customRunner?.scriptFile;
       if (script) {
-        if (script.includes("..")) {
-          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain ".."', projConfig.uri);
-          validRunProfiles = false;
-        }
+        script = script.trim();
         if (!script.endsWith(".py")) {
-          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', projConfig.uri);
+          services.logger.showWarn('Invalid runProfiles setting ignored: "customRunner.scriptFile" must end in ".py".', projUri);
           validRunProfiles = false;
         }
         if (script.includes("/") || script.includes("\\")) {
-          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', projConfig.uri);
+          services.logger.showWarn('Invalid runProfiles setting ignored: "customRunner.scriptFile" cannot contain a path, ' +
+            'only a filename.', projUri);
+          validRunProfiles = false;
+        }
+        const fullPath = path.join(behaveWorkingDirUri.fsPath, script);
+        if (!pathExistsSync(fullPath)) {
+          services.logger.showWarn(`Invalid runProfiles setting ignored: "customRunner.scriptFile" path "${fullPath}" ` +
+            `does not exist.`, projUri);
           validRunProfiles = false;
         }
       }
@@ -225,7 +229,7 @@ function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): Run
     }
   }
   catch {
-    services.logger.showWarn('Invalid "behave-vsc.runProfiles" setting was ignored.', projConfig.uri);
+    services.logger.showWarn('Invalid "behave-vsc.runProfiles" setting was ignored.', projUri);
   }
 
   return runProfiles;
@@ -431,7 +435,7 @@ export class CustomRunner {
     args?: string[],
     waitForJUnitFiles?: boolean
   ) {
-    this.scriptFile = script;
+    this.scriptFile = script.trim();
     this.args = args ?? [];
     this.waitForJUnitFiles = waitForJUnitFiles ?? true;
   }
@@ -453,7 +457,10 @@ export class RunProfile {
     // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
     this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
     this.env = env ?? {};
-    this.customRunner = customRunner;
+    // use the customRunner constructor (to apply trim() etc.)
+    this.customRunner = customRunner
+      ? new CustomRunner(customRunner.scriptFile, customRunner.args, customRunner.waitForJUnitFiles)
+      : undefined;
   }
 }
 
