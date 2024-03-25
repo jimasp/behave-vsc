@@ -89,5 +89,5 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
   xRayLog(`PERF: getRelativeBaseDirPath() took ${waited}ms`, ps.uri);
 
   // adjust basedir path to a behave-working-dir-relative path
-  return path.relative(ps.behaveWorkingDirUri.fsPath, new_base_dir);
+  return path.relative(ps.behaveWorkingDirUri.fsPath, new_base_dir) || ".";
 }

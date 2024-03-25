@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getProjectUriForFile, getLines } from '../common/helpers';
+import { getParentProjectUri, getLines } from '../common/helpers';
 import { services } from '../common/services';
 
 const zeroIndent = /^$|^\s*$|^\s*Feature:.*/
@@ -51,7 +51,7 @@ export const formatFeatureProvider = {
     catch (e: unknown) {
       // entry point function (handler) - show error  
       try {
-        const projUri = getProjectUriForFile(document.uri);
+        const projUri = getParentProjectUri(document.uri);
         services.logger.showError(e, projUri);
       }
       catch {

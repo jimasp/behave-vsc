@@ -6,7 +6,7 @@ const expectedPaths = ["subfolder 1/subfolder 2/features", "subfolder 1/features
 
 export const expectations: Expectations = {
   expectedRawBehaveConfigPaths: expectedPaths,
-  expectedProjRelativeBehaveWorkingDirPath: "",
+  expectedProjRelativeBehaveWorkingDirPath: ".",
   expectedBaseDirPath: "subfolder 1/subfolder 2",
   expectedProjRelativeFeatureFolders: ["subfolder 1/features", "subfolder 1/features2", "subfolder 1/subfolder 2/features"],
   expectedProjRelativeStepsFolders: ["subfolder 1/subfolder 2/steps"], // current behave behaviour is to match the first config path steps folder

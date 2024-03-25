@@ -162,15 +162,15 @@ For simple setups, the extension should work "out of the box", but there is plen
 ### How feature/step discovery works
 
 - It determines the features and steps folders by a combination of the following *optional* settings. If these are not supplied, then it uses defaults:
-  - `behaveWorkingDirectory` extension setting,
-  - `paths` in the behave configuration file,
-  - `importedSteps` extension setting.
+  - `behaveWorkingDirectory` extension setting, default is the project root,
+  - `paths` in the behave configuration file, default is `features`,
+  - `importedSteps` extension setting, default is `{}` (`steps` is always included regardless of the setting).
 
-- The extension parses `*.feature` files from the determined feature folders. It then uses this information to build a test tree in the test explorer UI.
+- The extension parses `*.feature` files from the feature folders. It then uses this information to build a test tree in the test explorer UI.
 
-- The extension parses `*.py` files from the determined steps folders. It then uses this information to provide step navigation.
+- The extension parses `*.py` files from the steps folders. It then uses this information to provide step navigation.
 
-- It uses a file system watcher to keep the test tree up to date with changes to feature and step files.
+- It uses a file system watcher to keep the test tree up to date with changes to feature and step files. (You can also refresh manually via the refresh button in the test explorer, or by restarting vscode.)
 
 ### How test runs work
 

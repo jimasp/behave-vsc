@@ -10,7 +10,8 @@ import {
   getOptimisedFeatureParsingPaths,
   getExcludedPathPatterns,
   pathExistsSync,
-  getProjectUris
+  getProjectUris,
+  projectContainsRelativePath
 } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { performance } from 'perf_hooks';
@@ -62,12 +63,12 @@ export class ProjectSettings {
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly excludedPathPatterns: string[]; // paths specifically excluded from watching/parsing
-  public readonly projRelativeBehaveWorkingDirPath: string = ""; // "behaveWorkingDirectory" if set in settings.json, otherwise empty string
+  public readonly projRelativeBehaveWorkingDirPath: string = "."; // "behaveWorkingDirectory" if set in settings.json, otherwise empty string
   public readonly behaveWorkingDirUri: vscode.Uri; // optional working directory (projRelativeBehaveWorkingDirPath in absolute uri form)
   // calculated after real work in create():
   public isValid = true; // set to false if the project paths are invalid  
   public rawBehaveConfigPaths: string[] = []; // behave.ini config paths in their original form
-  public baseDirPath = ""; // behave-working-dir-relative-path to the parent directory of the "steps" folder/environment.py file 
+  public baseDirPath = "features"; // behave-working-dir-relative-path to the parent directory of the "steps" folder/environment.py file 
   public projRelativeFeatureFolders: string[] = []; // all folders containing .feature files (parse locations)
   public projRelativeStepsFolders: string[] = []; // all folders containing steps files (parse locations)  
   // integration test only:
@@ -158,9 +159,15 @@ export class ProjectSettings {
       services.logger.showWarn('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
     }
 
-    const behaveWorkingDirectoryCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
+    let behaveWorkingDirectoryCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
     if (behaveWorkingDirectoryCfg === undefined)
       throw new Error("behaveWorkingDirectory is undefined");
+    behaveWorkingDirectoryCfg = behaveWorkingDirectoryCfg === "" ? "." : behaveWorkingDirectoryCfg.trim();
+    if (!projectContainsRelativePath(projUri, behaveWorkingDirectoryCfg)) {
+      services.logger.showWarn('"behave-vsc.behaveWorkingDirectory" setting ' +
+        '"${behaveWorkingDirectoryCfg}" is not inside the project and will be ignored');
+      behaveWorkingDirectoryCfg = ".";
+    }
     const workingDirUri = vscode.Uri.joinPath(projUri, behaveWorkingDirectoryCfg);
     if (!fs.existsSync(workingDirUri.fsPath)) {
       services.logger.showWarn(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${behaveWorkingDirectoryCfg}" ` +
@@ -196,14 +203,18 @@ function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): Run
   try {
     let validRunProfiles = true;
     for (const profile of runProfilesCfg) {
-      const script = profile.customRunner?.scriptFile;
+      const script = profile.customRunner?.scriptFile.trim();
       if (script) {
+        if (script.includes("..")) {
+          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain ".."', projConfig.uri);
+          validRunProfiles = false;
+        }
         if (!script.endsWith(".py")) {
-          vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', "OK");
+          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" must end in ".py".', projConfig.uri);
           validRunProfiles = false;
         }
         if (script.includes("/") || script.includes("\\")) {
-          vscode.window.showWarningMessage('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', "OK");
+          services.logger.showWarn('Invalid runProfiles setting: "customRunner.scriptFile" cannot contain a path, only a filename.', projConfig.uri);
           validRunProfiles = false;
         }
       }
@@ -214,7 +225,7 @@ function getValidUserRunProfiles(projConfig: vscode.WorkspaceConfiguration): Run
     }
   }
   catch {
-    vscode.window.showWarningMessage('Invalid "behave-vsc.runProfiles" setting was ignored.', "OK");
+    services.logger.showWarn('Invalid "behave-vsc.runProfiles" setting was ignored.', projConfig.uri);
   }
 
   return runProfiles;
@@ -266,7 +277,7 @@ async function getPaths(ps: ProjectSettings) {
 
   const { rawBehaveConfigPaths, behaveWrkDirRelBehaveConfigPaths, projRelBehaveConfigPaths } = getBehaveConfigPaths(ps);
 
-  // NOTE: base dir is a concept borrowed from behave's source code
+  // NOTE: base dir (parent dir of the steps folder) is a concept borrowed from behave's source code
   // this is IMPORTANT because baseDirPath is used to determine the expected junit filenames that behave will produce (see getJunitFeatureName)
   const baseDirPath = await getBaseDirPath(ps, behaveWrkDirRelBehaveConfigPaths);
   if (baseDirPath === null)

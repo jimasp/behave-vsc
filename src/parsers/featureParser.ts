@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ProjectSettings } from "../config/settings";
-import { uriId, sepr, basename, getLines, getProjectUriForFile } from '../common/helpers';
+import { uriId, sepr, basename, getLines, getParentProjectUri } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { services } from '../common/services';
 
@@ -59,7 +59,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
   if (featureName === '') {
     if (firstRun) {
       services.logger.showWarn(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
-        getProjectUriForFile(uri));
+        getParentProjectUri(uri));
     }
     return null;
   }

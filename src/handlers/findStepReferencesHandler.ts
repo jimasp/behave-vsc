@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { services } from "../common/services";
-import { uriId, getProjectUriForFile, isStepsFile, openDocumentRange } from '../common/helpers';
+import { uriId, getParentProjectUri, isStepsFile, openDocumentRange } from '../common/helpers';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';
 import { getStepMappingsForStepsFileFunction, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
 import { FeatureFileStep } from '../parsers/featureParser';
@@ -58,7 +58,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
       services.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
         "(i.e. /steps/ or a behave-vsc.importedSteps setting path). Project-relative file path was: " +
-        `"${fileUri ? vscode.workspace.asRelativePath(fileUri, false) : "undefined"}"`, getProjectUriForFile(fileUri));
+        `"${fileUri ? vscode.workspace.asRelativePath(fileUri, false) : "undefined"}"`, getParentProjectUri(fileUri));
       return;
     }
 
@@ -108,7 +108,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
   catch (e: unknown) {
     // entry point function (handler) - show error  
     try {
-      const projUri = getProjectUriForFile(fileUri);
+      const projUri = getParentProjectUri(fileUri);
       services.logger.showError(e, projUri);
     }
     catch {

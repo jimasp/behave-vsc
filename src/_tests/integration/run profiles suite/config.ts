@@ -92,7 +92,7 @@ export const runOptions: RunOptions = {
 
 export const expectations: Expectations = {
   expectedRawBehaveConfigPaths: [],
-  expectedProjRelativeBehaveWorkingDirPath: "",
+  expectedProjRelativeBehaveWorkingDirPath: ".",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["features"],
   expectedProjRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting

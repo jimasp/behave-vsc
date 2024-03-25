@@ -6,7 +6,8 @@
 				"behave-vsc.behaveWorkingDirectory": {
 					"scope": "resource",
 					"type": "string",
-					"markdownDescription": "The project-relative behave working directory (only required if it is not the project root)."
+					"markdownDescription": "The project-relative behave working directory (only required if it is not the project root).",
+					"default": "."
 				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",

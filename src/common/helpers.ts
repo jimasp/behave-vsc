@@ -149,7 +149,13 @@ export const getValidProjectUris = async (projectUris: vscode.Uri[]): Promise<vs
 }
 
 
-export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
+export const projectContainsRelativePath = (projUri: vscode.Uri, relPath: string): boolean => {
+  const uri = vscode.Uri.joinPath(projUri, relPath);
+  return pathExistsSync(uri.fsPath);
+}
+
+
+export const getParentProjectUri = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
   if (fileorFolderUri?.scheme !== "file")
     throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   if (!fileorFolderUri) // handling this here for caller convenience
@@ -163,7 +169,7 @@ export const getProjectUriForFile = (fileorFolderUri: vscode.Uri | undefined): v
 
 
 export const getProjectSettingsForFile = async (fileorFolderUri: vscode.Uri | undefined): Promise<ProjectSettings> => {
-  const projUri = getProjectUriForFile(fileorFolderUri);
+  const projUri = getParentProjectUri(fileorFolderUri);
   return await services.config.getProjectSettings(projUri);
 }
 
