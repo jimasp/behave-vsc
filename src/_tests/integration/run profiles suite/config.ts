@@ -95,7 +95,9 @@ export const expectations: Expectations = {
   expectedProjRelativeBehaveWorkingDirPath: ".",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["features"],
-  expectedProjRelativeStepsFolders: ["features", "features/steps"], // "features" = wsConfig importedSteps setting
+  // expectedProjRelativeStepsFolders includes "features" because of the wsConfig importedSteps 
+  // setting above (i.e. the regex will determine if contained files are considered steps files in isStepFile)
+  expectedProjRelativeStepsFolders: ["features", "features/steps"],
   getExpectedCountsFunc: getExpectedCounts,
   // getExpectedResultsFunc is replaced in test suite as needed to vary results as per different profiles
   // (there are several expectedResults functions in expectedResults.ts)  
