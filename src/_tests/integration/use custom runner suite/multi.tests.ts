@@ -18,18 +18,17 @@ suite(`use custom runner suite: multi.tests`, () => {
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
-	test("runAll - custom runner profile: wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: WAIT for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
-		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
-
 	test("runAll - custom runner profile: do not wait for results", async () => {
 		runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
 		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
+	test("runAll - custom runner profile: wait for results", async () => {
+		runOptions.selectedRunProfile = "behave-django runner profile: WAIT for test results";
+		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+	});
 
 });
 

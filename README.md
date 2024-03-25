@@ -9,22 +9,25 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 - Run/Debug behave tests, either from the test explorer or from inside a feature file.
   - Runs all tests, a nested folder, or just a single feature or scenario.
-  - Runs tests with specific tags and/or specific environment variables via run profiles.
+  - Runs tests with specific tags and/or specific environment variables (`runProfiles`).
   - Shows failed test run result inside the feature file.
   - Shows full behave output in the Behave VSC output window.
-  - Shows the behave command in the output so you can generate commands to run manually.  
-  - Allows you to set behave's working directory (via `behaveWorkingDirectory` setting).  
+  - Shows the behave command in the output so you can generate commands to run manually.
+  - Allows parallel test runs, if your features are isolated (`runParallel`).
+  - Configurable environment variables (`env` or `runProfiles`).
+  - Configurable behave working directory (`behaveWorkingDirectory`).  
+  - Configurable custom runner script, e.g. behave-django or just your own (`runProfiles`).
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
   - Quick-navigate in the Step References Window (default F4 + Shift F4).
-  - Includes navigation support for imported steps (e.g. step libraries) via the `importedSteps` setting.
+  - Includes navigation support for imported steps, e.g. step libraries (`importedSteps`).
 - Automatic Gherkin syntax highlighting (colourisation), including smart parameter highlighting.  
 - Smart feature step auto-completion, e.g. typing `And` after a `Given` step will only show `@given` or `@step` step suggestions. (Also some snippets are thrown in.)
 - Feature file formatting (default Ctrl+K,Ctrl+F), including optional autoformat on save.
 - Smart test runs minimise behave instances by building an optimised `-i` regex param for behave based on the selected test nodes. (Unless `runParallel` is enabled.)
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
-- Extensive customisation settings (e.g. `runParallel`, `env`, run profiles for per-run settings, etc.)
+- Extensive customisation settings (e.g. `runParallel`, `env`, `runProfiles` for per-run settings, etc.)
 
 ---
 

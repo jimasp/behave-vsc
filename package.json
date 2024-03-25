@@ -108,7 +108,7 @@
 									},
 									"waitForJUnitFiles": {
 										"type": "boolean",
-										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results."
+										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results. If false, all selected tests will be marked as skipped."
 									}
 								}
 							}
