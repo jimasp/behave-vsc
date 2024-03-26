@@ -1,9 +1,12 @@
 .vscode/**
 .vscode-test/**
 .github/**
+.git_hooks/**
 out/**
 node_modules/**
+**/.mypy_cache/**
 **/__pycache__/**
+.pylintrc
 src/**
 .gitignore
 webpack.config.js
@@ -11,6 +14,7 @@ webpack.config.js
 tsconfig.json
 **/*.map
 **/*.ts
+.tool-versions
 package-lock.json
 package.json
 vsix/**

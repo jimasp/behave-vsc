@@ -40,9 +40,8 @@
 6. Change to the cloned directory, and install required node packages:
     - `cd <mysourcedir>/behave-vsc`
     - `npm install`
-7. Install the pre-commit hooks (linux/mac only):
-    - `chmod +x hooks.sh`
-    - `./hooks.sh`
+7. Install the pre-commit hook (linux/mac only):
+    - `cp .git_hooks/* .git/hooks/ && chmod +x .git/hooks/*`
 8. Install required extensions for developing the extension:  
     - `code --install-extension ms-python.python` (if not already installed)
     - `code --install-extension dbaeumer.vscode-eslint`
