@@ -194,38 +194,53 @@ export class ProjectSettings {
 function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscode.Uri,
   projConfig: vscode.WorkspaceConfiguration): RunProfile[] {
 
-  let runProfiles: RunProfile[] = [];
+  const runProfiles: RunProfile[] = [];
 
   const runProfilesCfg: RunProfilesSetting | undefined = projConfig.get("runProfiles");
   if (runProfilesCfg === undefined)
     throw new Error("runProfiles is undefined");
 
   try {
-    let validRunProfiles = true;
     for (const profile of runProfilesCfg) {
-      let script = profile.customRunner?.scriptFile;
-      if (script) {
+      const customRunner = profile.customRunner;
+      if (customRunner) {
+        if (customRunner.waitForJUnitFiles === undefined) {
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.waitForJUnitFiles" is required.`, projUri);
+          continue;
+        }
+        let script = customRunner.scriptFile;
+        if (!script) {
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.scriptFile" is required.`, projUri);
+          continue;
+        }
         script = script.trim();
+        if (script.includes(" ")) {
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.scriptFile" must not contain a space.`, projUri);
+          continue;
+        }
         if (!script.endsWith(".py")) {
-          services.logger.showWarn('Invalid runProfiles setting ignored: "customRunner.scriptFile" must end in ".py".', projUri);
-          validRunProfiles = false;
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.scriptFile" must end in ".py".`, projUri);
+          continue;
         }
         if (script.includes("/") || script.includes("\\")) {
-          services.logger.showWarn('Invalid runProfiles setting ignored: "customRunner.scriptFile" cannot contain a path, ' +
-            'only a filename.', projUri);
-          validRunProfiles = false;
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.scriptFile" cannot contain a path, only a filename.`, projUri);
+          continue;
         }
         const fullPath = path.join(behaveWorkingDirUri.fsPath, script);
         if (!pathExistsSync(fullPath)) {
-          services.logger.showWarn(`Invalid runProfiles setting ignored: "customRunner.scriptFile" path "${fullPath}" ` +
-            `does not exist.`, projUri);
-          validRunProfiles = false;
+          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+            `"customRunner.scriptFile" path "${fullPath}" does not exist.`, projUri);
+          continue;
         }
       }
-    }
-    if (validRunProfiles) {
-      // call the RunProfile constructor for each run profile
-      runProfiles = runProfilesCfg.map(cfg => new RunProfile(cfg.name, cfg.tagsParameters, cfg.env, cfg.customRunner));
+
+      // if we got this far then this run profile is valid, create via the RunProfile constructor
+      runProfiles.push(new RunProfile(profile.name, profile.tagsParameters, profile.env, profile.customRunner));
     }
   }
   catch {
@@ -427,17 +442,17 @@ export type ImportedStepsSetting = { [key: string]: string };
 
 export class CustomRunner {
   public readonly scriptFile: string;
+  public readonly waitForJUnitFiles: boolean;
   public readonly args?: string[];
-  public readonly waitForJUnitFiles?: boolean;
 
   constructor(
     script: string,
+    waitForJUnitFiles: boolean,
     args?: string[],
-    waitForJUnitFiles?: boolean
   ) {
     this.scriptFile = script.trim();
+    this.waitForJUnitFiles = waitForJUnitFiles;
     this.args = args ?? [];
-    this.waitForJUnitFiles = waitForJUnitFiles ?? true;
   }
 }
 
@@ -459,7 +474,7 @@ export class RunProfile {
     this.env = env ?? {};
     // use the customRunner constructor (to apply trim() etc.)
     this.customRunner = customRunner
-      ? new CustomRunner(customRunner.scriptFile, customRunner.args, customRunner.waitForJUnitFiles)
+      ? new CustomRunner(customRunner.scriptFile, customRunner.waitForJUnitFiles, customRunner.args)
       : undefined;
   }
 }

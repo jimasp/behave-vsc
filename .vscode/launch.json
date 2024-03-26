@@ -10,7 +10,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/../mesh",
+				"${workspaceFolder}/../my-own-workspace",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [

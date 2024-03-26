@@ -3,7 +3,7 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { isExcludedPath, isStepsFile, pathExists } from '../common/helpers';
+import { isExcludedPath, isStepsFile } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 
 

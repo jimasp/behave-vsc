@@ -97,7 +97,11 @@
 								"properties": {
 									"scriptFile": {
 										"type": "string",
-										"markdownDescription": "The name of the custom script file in the root of your behave working directory."
+										"markdownDescription": "The name of the custom script file. This file must be in the root of your behave working directory."
+									},
+									"waitForJUnitFiles": {
+										"type": "boolean",
+										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results. If false, all selected tests will be marked as skipped."
 									},
 									"args": {
 										"type": "array",
@@ -105,10 +109,6 @@
 											"type": "string"
 										},
 										"markdownDescription": "Additional arguments to pass to the custom script. These are passed after the `behave` command and before the behave arguments."
-									},
-									"waitForJUnitFiles": {
-										"type": "boolean",
-										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results. If false, all selected tests will be marked as skipped."
 									}
 								}
 							}

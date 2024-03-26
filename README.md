@@ -13,10 +13,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Shows failed test run result inside the feature file.
   - Shows full behave output in the Behave VSC output window.
   - Shows the behave command in the output so you can generate commands to run manually.
-  - Allows parallel test runs, if your features are isolated (`runParallel`).
+  - Supports running parallel behave instances, if all your features are isolated (`runParallel`).
   - Configurable environment variables (`env` or `runProfiles`).
   - Configurable behave working directory (`behaveWorkingDirectory`).  
-  - Configurable custom runner script, e.g. behave-django or just your own (`runProfiles`).
+  - Configurable custom runner script, e.g. manage.py for behave-django or just your own script (`runProfiles`).
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
