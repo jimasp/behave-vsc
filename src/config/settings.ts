@@ -203,6 +203,15 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
   try {
     for (const profile of runProfilesCfg) {
       const customRunner = profile.customRunner;
+      if (!profile.name) {
+        services.logger.showWarn(`Invalid runProfiles setting ignored: "name" is required.`, projUri);
+        continue;
+      }
+      if (runProfiles.find(p => p.name === profile.name && projUri === p.projUri)) {
+        services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          `duplicate run profile name for this project.`, projUri);
+        continue;
+      }
       if (customRunner) {
         if (customRunner.waitForJUnitFiles === undefined) {
           services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
@@ -240,7 +249,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
       }
 
       // if we got this far then this run profile is valid, create via the RunProfile constructor
-      runProfiles.push(new RunProfile(profile.name, profile.tagsParameters, profile.env, profile.customRunner));
+      runProfiles.push(new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.customRunner));
     }
   }
   catch {
@@ -458,17 +467,20 @@ export class CustomRunner {
 
 export class RunProfile {
   public readonly name: string;
+  public readonly projUri: vscode.Uri;
   public readonly tagsParameters?: string;
   public readonly env?: EnvSetting;
   public readonly customRunner?: CustomRunner
 
   constructor(
     name: string,
+    projUri: vscode.Uri,
     tagsParameters?: string,
     env?: EnvSetting,
     customRunner?: CustomRunner
   ) {
     this.name = name;
+    this.projUri = projUri;
     // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
     this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
     this.env = env ?? {};

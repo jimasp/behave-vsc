@@ -82,9 +82,9 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     await runBehaveInstance(pr, args, friendlyCmd);
   }
   catch (e: unknown) {
-    pr.run.end();
+    pr.projTestRun.end();
     // unawaited (if runParallel) async func, must log the error 
-    throw new projError(e, pr.projSettings.uri, pr.run);
+    throw new projError(e, pr.projSettings.uri, pr.projTestRun);
   }
 
 }
@@ -132,9 +132,9 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
     await runBehaveInstance(pr, args, friendlyCmd);
   }
   catch (e: unknown) {
-    pr.run.end();
+    pr.projTestRun.end();
     // unawaited (if runParallel) async func, must log the error 
-    throw new projError(e, pr.projSettings.uri, pr.run);
+    throw new projError(e, pr.projSettings.uri, pr.projTestRun);
   }
 
 }

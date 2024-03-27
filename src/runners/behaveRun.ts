@@ -9,7 +9,7 @@ import { ProjRun } from './testRunHandler';
 export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
 
   let cp: ChildProcess;
-  const cancellationHandler = pr.run.token.onCancellationRequested(() => cp?.kill());
+  const cancellationHandler = pr.projTestRun.token.onCancellationRequested(() => cp?.kill());
   const projUri = pr.projSettings.uri;
   const local_args = [...args];
 
@@ -65,8 +65,8 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
       services.logger.logInfo("---", projUri);
     }
 
-    if (pr.run.token.isCancellationRequested)
-      services.logger.logInfo(`\n-- TEST RUN ${pr.run.name} CANCELLED --`, projUri, pr.run);
+    if (pr.projTestRun.token.isCancellationRequested)
+      services.logger.logInfo(`\n-- TEST RUN ${pr.projTestRun.name} CANCELLED --`, projUri, pr.projTestRun);
 
   }
   finally {

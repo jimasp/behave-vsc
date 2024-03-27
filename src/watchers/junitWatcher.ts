@@ -7,6 +7,7 @@ import { services } from '../common/services';
 import { xRayLog, LogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
+import { ProjectSettings } from '../config/settings';
 
 
 
@@ -20,10 +21,10 @@ function getJunitRunDirUri(run: vscode.TestRun): vscode.Uri {
   return vscode.Uri.joinPath(getJunitDirUri(), run.name);
 }
 
-export function getJunitProjRunDirUri(run: vscode.TestRun, projName: string): vscode.Uri {
+export function getJunitProjRunDirUri(ps: ProjectSettings, run: vscode.TestRun): vscode.Uri {
   if (!run.name)
     throw new Error("run.name is undefined");
-  return vscode.Uri.joinPath(getJunitRunDirUri(run), projName);
+  return vscode.Uri.joinPath(getJunitRunDirUri(run), ps.name);
 }
 
 
@@ -82,7 +83,7 @@ export class JunitWatcher {
   }
 
 
-  async startWatchingRun(run: vscode.TestRun, debug: boolean, projNamesInRun: string[], queueItemMap: QueueItemMapEntry[]) {
+  async startWatchingRun(ps: ProjectSettings, run: vscode.TestRun, debug: boolean, queueItemMap: QueueItemMapEntry[]) {
     // method called when a test run/debug session is starting.
 
     // add the run and wait for the watcher to be ready
@@ -91,15 +92,13 @@ export class JunitWatcher {
 
     if (!this._firstRun) {
       await vscode.workspace.fs.createDirectory(getJunitRunDirUri(run));
-      for (const projName of projNamesInRun) {
-        const junitProjRunDirUri = getJunitProjRunDirUri(run, projName);
-        await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
-      }
+      const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
+      await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
       return;
     }
 
     this._firstRun = false;
-    await this._waitForWatcher(run, projNamesInRun);
+    await this._waitForWatcher(ps, run);
   }
 
 
@@ -177,7 +176,7 @@ export class JunitWatcher {
   }
 
 
-  async _waitForWatcher(run: vscode.TestRun, projNamesInRun: string[]) {
+  async _waitForWatcher(ps: ProjectSettings, run: vscode.TestRun) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
     if (!watcher)
@@ -192,13 +191,8 @@ export class JunitWatcher {
     if (!await this._waitForFolderWatch(junitRunDirUri, 3000))
       return;
 
-    const waits: Promise<boolean>[] = [];
-    for (const projName of projNamesInRun) {
-      const junitProjRunDirUri = getJunitProjRunDirUri(run, projName);
-      waits.push(this._waitForFolderWatch(junitProjRunDirUri, 2000));
-    }
-    await Promise.all(waits);
-
+    const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
+    await this._waitForFolderWatch(junitProjRunDirUri, 2000);
   }
 
 

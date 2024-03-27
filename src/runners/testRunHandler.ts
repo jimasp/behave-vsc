@@ -4,24 +4,35 @@ import { services } from "../common/services";
 import { ProjectSettings, CustomRunner, RunProfile } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
-import {
-  countTestItems, getTestItems, getContentFromFilesystem, uriId,
-  getProjectUris, getProjectSettingsForFile, getTimeString
-} from '../common/helpers';
+import { countTestItems, getTestItems, getContentFromFilesystem, uriId, getTimeString } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
-import { getProjQueueJunitFileMap, QueueItemMapEntry } from '../parsers/junitParser';
+import { getProjQueueJunitFileMap } from '../parsers/junitParser';
 
-
+const sequence: number[] = [];
 
 export function testRunHandler(ctrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
-    let run: vscode.TestRun | undefined;
+    // create finally vars
+    let seqNo = -1;
+    let projTestRun: vscode.TestRun | undefined = undefined;
 
     try {
-      xRayLog(`testRunHandler: invoked`);
+
+      // wait for this project's turn if required (i.e. run projects sequentially if required)
+      if (debug || !services.config.instanceSettings.runMultiRootProjectsInParallel) {
+        seqNo = sequence.length === 0 ? 0 : Math.max(...sequence) + 1;
+        sequence.push(seqNo);
+        while (Math.min(...sequence) !== seqNo) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      const projUri = runProfile.projUri;
+      const ps = await services.config.getProjectSettings(projUri);
+      xRayLog(`testRunHandler: invoked for project "${ps.name}"`);
 
       if (!isValidTagsParameters(runProfile.tagsParameters)) {
         services.logger.showWarn(`Invalid tag expression: ${runProfile.tagsParameters}`);
@@ -42,24 +53,24 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
         return;
       }
 
-      const runName = getTimeString();
-      run = ctrl.createTestRun(request, runName, false);
+      const runName = ps.name + " " + getTimeString();
+      projTestRun = ctrl.createTestRun(request, runName, false);
 
       const queue: QueueItem[] = [];
       const tests = request.include ?? convertToTestItemArray(ctrl.items);
       xRayLog(`testRunHandler: tests length = ${tests.length}`);
-      await queueSelectedTestItems(ctrl, run, request, queue, tests, testData);
+      await queueSelectedProjTestItems(ps, ctrl, projTestRun, request, queue, tests, testData);
 
       if (queue.length === 0) {
         if (services.config.isIntegrationTestRun)
           debugger; // eslint-disable-line no-debugger
-        run.appendOutput("Test run aborted. No matching tests found.");
+        projTestRun.appendOutput("Test run aborted. No matching tests found.");
         throw new Error("empty queue - nothing to do");
       }
 
       xRayLog(`testRunHandler: queue length = ${queue.length}`);
-      xRayLog(`testRunHandler: starting run ${run.name}`);
-      await runTestQueue(ctrl, run, request, testData, debug, queue, junitWatcher, runProfile);
+      xRayLog(`testRunHandler: starting run ${projTestRun.name}`);
+      await runProjTestQueue(ps, ctrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
 
     }
@@ -68,17 +79,18 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
       services.logger.showError(e);
     }
     finally {
-      if (run) {
-        xRayLog(`testRunHandler: completed run ${run.name}`);
-        run.end();
+      if (projTestRun) {
+        xRayLog(`testRunHandler: completed run ${projTestRun.name}`);
+        projTestRun.end();
       }
+      sequence.splice(sequence.indexOf(seqNo), 1);
     }
   }
 }
 
 
 
-async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.TestRun,
+async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
   request: vscode.TestRunRequest, queue: QueueItem[], tests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of tests) {
@@ -95,12 +107,11 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
     }
     else {
       if (data instanceof TestFile && !data.didResolve) {
-        const projSettings = await getProjectSettingsForFile(test.uri);
         const content = await getContentFromFilesystem(test.uri);
-        await data.createScenarioTestItemsFromFeatureFileContent(projSettings, content, testData, ctrl, test, "queueSelectedTestItems");
+        await data.createScenarioTestItemsFromFeatureFileContent(ps, content, testData, ctrl, test, "queueSelectedTestItems");
       }
 
-      await queueSelectedTestItems(ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
+      await queueSelectedProjTestItems(ps, ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
     }
 
   }
@@ -108,62 +119,33 @@ async function queueSelectedTestItems(ctrl: vscode.TestController, run: vscode.T
 }
 
 
-async function runTestQueue(ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
+async function runProjTestQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
   testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
 
   xRayLog(`runTestQueue: started for run ${run.name}`);
 
+  const projQueue = queue.filter(item => item.test.id.includes(ps.id));
+  const projQueueMap = getProjQueueJunitFileMap(ps, run, projQueue);
 
-  const projRunPromises: Promise<void>[] = [];
-  const winSettings = services.config.instanceSettings;
-  const allProjectsQueueMap: QueueItemMapEntry[] = [];
+  if (!debug)
+    services.logger.clear(ps.uri);
 
-  const allProjectsSettings = await Promise.all((await getProjectUris()).map(async (projUri) =>
-    await services.config.getProjectSettings(projUri)
-  ));
-  const projNames = allProjectsSettings.map(x => x.name);
-
-  for (const projSettings of allProjectsSettings) {
-    const idMatch = uriId(projSettings.uri);
-    const projQueue = queue.filter(item => item.test.id.includes(idMatch));
-    const projQueueMap = getProjQueueJunitFileMap(projSettings, run, projQueue);
-    allProjectsQueueMap.push(...projQueueMap);
-  }
+  if (projQueueMap.map(q => q.queueItem).length === 0)
+    return;
 
   const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
   if (!waitForJUnitFiles) {
-    allProjectsQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
+    projQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
   }
   else {
     // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
-    await junitWatcher.startWatchingRun(run, debug, projNames, allProjectsQueueMap);
+    await junitWatcher.startWatchingRun(ps, run, debug, projQueueMap);
   }
 
-  // run each project queue  
-  for (const projSettings of allProjectsSettings) {
+  if (run.token.isCancellationRequested)
+    return;
 
-    if (run.token.isCancellationRequested)
-      break;
-
-    const projQueue = allProjectsQueueMap.filter(x => x.projSettings.id == projSettings.id).map(q => q.queueItem);
-    if (projQueue.length === 0)
-      continue;
-
-    if (!debug)
-      services.logger.clear(projSettings.uri);
-
-    // run projects sequentially
-    if (!winSettings.runMultiRootProjectsInParallel || debug) {
-      await runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile);
-      continue;
-    }
-
-    // run projects in parallel
-    projRunPromises.push(runProjectQueue(projSettings, ctrl, run, request, testData, debug, projQueue, runProfile));
-  }
-
-  // wait for all project runs to complete
-  await Promise.all(projRunPromises);
+  await runProjectQueue(ps, ctrl, run, request, testData, debug, projQueue, runProfile);
 
   // stop the junitwatcher for this run folder
   if (waitForJUnitFiles)
@@ -186,7 +168,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
     const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
     projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitProjRunDirUri = getJunitProjRunDirUri(run, ps.name);
+    const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
@@ -207,7 +189,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
 
   }
   catch (e: unknown) {
-    pr?.run.end();
+    pr?.projTestRun.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
     services.logger.showError(e, ps.uri, run);
   }
@@ -224,7 +206,7 @@ async function doRunType(pr: ProjRun) {
   }
 
   if (pr.allTestsForThisProjIncluded) {
-    pr.sortedQueue.forEach(projQueueItem => pr.run.started(projQueueItem.test));
+    pr.sortedQueue.forEach(projQueueItem => pr.projTestRun.started(projQueueItem.test));
     await runAllFeatures(pr);
     return;
   }
@@ -248,7 +230,7 @@ async function runFeaturesTogether(pr: ProjRun) {
 
   for (const projQueueItem of pr.sortedQueue) {
 
-    if (pr.run.token.isCancellationRequested)
+    if (pr.projTestRun.token.isCancellationRequested)
       break;
 
     const runEntireFeature = pr.allTestsForThisProjIncluded
@@ -267,14 +249,14 @@ async function runFeaturesTogether(pr: ProjRun) {
       continue;
 
     const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
-    selectedScenarios.forEach(qi => pr.run.started(qi.test));
+    selectedScenarios.forEach(qi => pr.projTestRun.started(qi.test));
     await runOrDebugFeatureWithSelectedScenarios(pr, selectedScenarios);
   }
 
   if (runTogetherFeatures.length > 0) {
     const allChildScenarios: QueueItem[] = [];
     runTogetherFeatures.forEach(feature => allChildScenarios.push(...getChildScenariosForFeature(pr, feature)));
-    allChildScenarios.forEach(x => pr.run.started(x.test));
+    allChildScenarios.forEach(x => pr.projTestRun.started(x.test));
 
     await runOrDebugFeatures(pr, allChildScenarios);
   }
@@ -294,7 +276,7 @@ async function runFeaturesParallel(pr: ProjRun) {
 
   for (const projQueueItem of pr.sortedQueue) {
 
-    if (pr.run.token.isCancellationRequested)
+    if (pr.projTestRun.token.isCancellationRequested)
       break;
 
     const runEntireFeature = pr.allTestsForThisProjIncluded
@@ -307,7 +289,7 @@ async function runFeaturesParallel(pr: ProjRun) {
       featuresRun.push(runEntireFeature.id);
 
       const childScenarios: QueueItem[] = getChildScenariosForParentFeature(pr, projQueueItem);
-      childScenarios.forEach(x => pr.run.started(x.test));
+      childScenarios.forEach(x => pr.projTestRun.started(x.test));
       const promise = runOrDebugFeatures(pr, childScenarios);
       asyncRunPromises.push(promise);
       continue;
@@ -318,7 +300,7 @@ async function runFeaturesParallel(pr: ProjRun) {
       continue;
 
     const selectedScenarios = pr.sortedQueue.filter(qi => qi.test.id.includes(featureId));
-    selectedScenarios.forEach(qi => pr.run.started(qi.test));
+    selectedScenarios.forEach(qi => pr.projTestRun.started(qi.test));
     const promise = runOrDebugFeatureWithSelectedScenarios(pr, selectedScenarios);
     asyncRunPromises.push(promise);
   }
@@ -363,8 +345,8 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
 
 function logProjRunStarted(pr: ProjRun) {
   if (!pr.debug) {
-    services.logger.logInfo(`--- Starting ${pr.projSettings.name} tests for run "${pr.run.name}" ---\n`,
-      pr.projSettings.uri, pr.run);
+    services.logger.logInfo(`--- Starting ${pr.projSettings.name} tests for run "${pr.projTestRun.name}" ---\n`,
+      pr.projSettings.uri, pr.projTestRun);
   }
 }
 
@@ -372,15 +354,15 @@ function logProjRunStarted(pr: ProjRun) {
 function logProjRunComplete(pr: ProjRun, start: number) {
   const end = performance.now();
   if (!pr.debug) {
-    services.logger.logInfo(`\n--- Completed ${pr.projSettings.name} tests for run "${pr.run.name}" ` +
+    services.logger.logInfo(`\n--- Completed ${pr.projSettings.name} tests for run "${pr.projTestRun.name}" ` +
       `(took ${((end - start) / 1000).toFixed(4)} secs)---`,
-      pr.projSettings.uri, pr.run);
+      pr.projSettings.uri, pr.projTestRun);
   }
-  pr.run.appendOutput('\r\n');
-  pr.run.appendOutput('-----------------------------------------------------------\r\n');
-  pr.run.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
-  pr.run.appendOutput('-----------------------------------------------------------\r\n');
-  pr.run.appendOutput('\r\n');
+  pr.projTestRun.appendOutput('\r\n');
+  pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
+  pr.projTestRun.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
+  pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
+  pr.projTestRun.appendOutput('\r\n');
 }
 
 
@@ -467,7 +449,7 @@ function isValidTagsParameters(tagsParameters: string | undefined): boolean {
 export class ProjRun {
   constructor(
     public readonly projSettings: ProjectSettings,
-    public readonly run: vscode.TestRun,
+    public readonly projTestRun: vscode.TestRun,
     public readonly request: vscode.TestRunRequest,
     public readonly debug: boolean,
     public readonly ctrl: vscode.TestController,

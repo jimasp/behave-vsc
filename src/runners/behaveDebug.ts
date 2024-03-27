@@ -7,14 +7,14 @@ import { ProjRun } from './testRunHandler';
 
 export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyCmd: string): Promise<void> {
 
-  const runCancelHandler = pr.run.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
+  const runCancelHandler = pr.projTestRun.token.onCancellationRequested(async () => await vscode.debug.stopDebugging());
 
   try {
     xRayLog(friendlyCmd, pr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
 
     // --outfile = remove stdout noise from debug console
     args.push("--no-summary", "--outfile",
-      vscode.Uri.joinPath(services.config.extensionTempFilesUri, `${(pr.run.name ?? "")}-${pr.projSettings.name}-debug.log`).fsPath);
+      vscode.Uri.joinPath(services.config.extensionTempFilesUri, `${(pr.projTestRun.name ?? "")}-${pr.projSettings.name}-debug.log`).fsPath);
 
     const env = { ...process.env, ...pr.env };
 
