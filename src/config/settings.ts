@@ -465,11 +465,19 @@ export class CustomRunner {
   }
 }
 
-export class RunProfile {
+export interface IRunProfile {
+  name: string;
+  projUri?: vscode.Uri;
+  tagsParameters?: string;
+  env?: EnvSetting;
+  customRunner?: CustomRunner;
+}
+
+export class RunProfile implements IRunProfile {
   public readonly name: string;
   public readonly projUri: vscode.Uri;
-  public readonly tagsParameters?: string;
-  public readonly env?: EnvSetting;
+  public readonly tagsParameters: string;
+  public readonly env: EnvSetting;
   public readonly customRunner?: CustomRunner
 
   constructor(
@@ -491,4 +499,4 @@ export class RunProfile {
   }
 }
 
-export type RunProfilesSetting = RunProfile[];
+export type RunProfilesSetting = IRunProfile[];

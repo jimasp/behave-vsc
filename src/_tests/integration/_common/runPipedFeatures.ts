@@ -19,8 +19,8 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
   // sanity check
   if (testExtConfig.runParallel) {
-    throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them " +
-      "individually, and running features individually is already tested by runProject.ts");
+    throw new Error("runPipedFeatures is pointless with runParallel=true, because runParallel=true won't pipe features, it will run them " +
+      "individually, and running features individually is already tested by runProjectTests.ts");
   }
 
   // ARRANGE
@@ -36,7 +36,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+  const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -109,7 +109,7 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
     queueItems.push(qi);
   }
 
-  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems);
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(projUri, testExtConfig, runOptions, request, projName, queueItems);
   assertLogExists(projUri, expectCmdOrderedIncludes);
 }
 

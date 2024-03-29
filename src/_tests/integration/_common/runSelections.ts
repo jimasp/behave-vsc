@@ -4,13 +4,11 @@ import * as path from 'path';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { checkExtensionIsReady, getExpectedEnvVarsString, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import { JS_OUTPUT_DIR, checkExtensionIsReady, getExpectedEnvVarsString, getRunProfile, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
 import { Expectations, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
 import { logStore } from '../../runner';
-import { RunProfile } from '../../../config/settings';
-
 
 
 
@@ -27,8 +25,8 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
 
   // sanity check
   if (testExtConfig.runParallel) {
-    throw new Error("runPipedFeatures is pointless with runParallel=true, because it won't pipe features, it will run them " +
-      "individually, and running features individually in parallel is already tested by runProject.ts");
+    throw new Error("runSelections has not been tested with runParallel=true, " +
+      "(runParallel=true won't pipe features, it will run them individually, which may affect assertions).");
   }
 
   const api = await checkExtensionIsReady();
@@ -75,7 +73,7 @@ async function runSelection(params: Selection, consoleName: string, projUri: vsc
   const selectedTestIds = params.selection.map(id => {
     if (!id.includes(".feature")) {
       // folder
-      const absPath = path.join(__dirname, "../../../..", id).replace("/out/", "/");
+      const absPath = path.join(__dirname, "../../../..", id).replace(JS_OUTPUT_DIR, "/");
       return uriId(vscode.Uri.file(absPath));
     }
 
@@ -83,7 +81,7 @@ async function runSelection(params: Selection, consoleName: string, projUri: vsc
     const split = id.split(".feature");
     const featurePath = split[0] + ".feature";
     const slashScenarioName = split[1];
-    const absPath = path.join(__dirname, "../../../..", featurePath).replace("/out/", "/");
+    const absPath = path.join(__dirname, "../../../..", featurePath).replace(JS_OUTPUT_DIR, "/");
     return uriId(vscode.Uri.file(absPath)) + slashScenarioName;
   });
 
@@ -120,7 +118,7 @@ async function actAndAssert(params: Selection, consoleName: string, requestItems
 
   console.log(`${consoleName}: calling runHandler to run piped features...`);
   const request = new vscode.TestRunRequest(requestItems);
-  const runProfile = new RunProfile("Features");
+  const runProfile = getRunProfile(projUri, testExtConfig, undefined);
   const results = await api.getProjMapEntry(projUri).runHandler(false, request, runProfile);
 
   // ASSERT  
@@ -133,7 +131,7 @@ async function actAndAssert(params: Selection, consoleName: string, requestItems
 function assertExpectedFriendlyCmd(params: Selection, projUri: vscode.Uri, projName: string,
   testExtConfig: TestWorkspaceConfig) {
 
-  const envVarsString = getExpectedEnvVarsString(testExtConfig);
+  const envVarsString = getExpectedEnvVarsString(projUri, testExtConfig);
   const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
   let expScenarioRegExWithOptionChar = "";

@@ -35,8 +35,8 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     }
 
     if (!cp.pid) {
-      throw new Error(`unable to launch python or behave, command: ${pr.pythonExec} ${local_args.join(" ")}\n` +
-        `working directory:${projUri.fsPath}\nenv var overrides: ${JSON.stringify(pr.env)}`);
+      throw new Error(`unable to launch python or behave.\ncommand: ${pr.pythonExec} ${local_args.join(" ")}` +
+        `\n\nworking directory: ${projUri.fsPath}\nenv var overrides: ${JSON.stringify(pr.env)}`);
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order

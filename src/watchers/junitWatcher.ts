@@ -149,11 +149,13 @@ export class JunitWatcher {
         updates.push((async () => {
           if (fs.existsSync(qim.junitFileUri.fsPath)) {
             await this._updateResult(qim.junitFileUri, "runEnded");
+            return;
           }
-          else if (!stoppedRun.run.token.isCancellationRequested && !stoppedRun.debug) {
+          if (!stoppedRun.debug && !stoppedRun.run.token.isCancellationRequested) {
             // junit file does not exist, so if the run was not stopped, and it's not a debug run, then there was an 
             // error executing behave - so set the test result to error.
-            // (unfortunately, in the case of a debug run, we don't know if the run reached its end or debug stop was clicked 
+            // (unfortunately, in the case of a debug run, if the run was not cancelled via the run tests stop button, 
+            // then we don't know if the run reached its end or debug stop was clicked 
             // because the vscode onDidTerminateDebugSession event doesn't tell us, so we just have to assume debug stop 
             // was clicked and that is why the junit file was not written. any error will still display to 
             // the user in the debug console if they open it.)

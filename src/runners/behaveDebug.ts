@@ -45,7 +45,7 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
       return;
     }
 
-    await new Promise(r => vscode.debug.onDidTerminateDebugSession(async () => r("")));
+    await new Promise(resolve => vscode.debug.onDidTerminateDebugSession(async () => resolve("")));
 
   }
   finally {

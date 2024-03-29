@@ -4,6 +4,13 @@ import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig";
 import { getExpectedCountsWithoutBehaveIni, getExpectedResultsWithoutBehaveIni } from "./expectedResultsWithoutBehaveIni";
 import { getExpectedCountsWith2PathBehaveIni, getExpectedResultsWith2PathBehaveIni } from "./expectedResultsWith2PathBehaveIni"
 import { getExpectedCountsWith3PathBehaveIni, getExpectedResultsWith3PathBehaveIni } from "./expectedResultsWith3PathBehaveIni";
+import { getExampleProjectFolderAbsPath } from "../_common/helpers";
+
+
+const absPathProjRoot = getExampleProjectFolderAbsPath("working dir");
+const absPathWorkRoot = path.join(absPathProjRoot, "working folder");
+const absPathFeatures = path.join(absPathWorkRoot, "features");
+
 
 export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "working folder",
@@ -52,18 +59,6 @@ export const expectationsWith3RelPathsBehaveIni: Expectations = {
   getExpectedResultsFunc: getExpectedResultsWith3PathBehaveIni,
 }
 
-
-const absPathFeatures = path
-  .resolve(__dirname, '..', '..', 'example-projects', 'working dir', 'working folder', 'features')
-  .replace("/out/_tests/", "/");
-
-const absPathWorkRoot = path
-  .resolve(__dirname, '..', '..', 'example-projects', 'working dir', 'working folder')
-  .replace("/out/_tests/", "/");
-
-const absPathProjRoot = path
-  .resolve(__dirname, '..', '..', 'example-projects', 'working dir')
-  .replace("/out/_tests/", "/");
 
 export const behaveIniWith3AbsPathsSetting: TestBehaveIni = {
   content: `[behave]\npaths=${absPathFeatures}\n\t${absPathWorkRoot}\n\t${absPathProjRoot}`

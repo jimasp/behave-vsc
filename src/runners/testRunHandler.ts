@@ -10,25 +10,14 @@ import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap } from '../parsers/junitParser';
 
-const sequence: number[] = [];
+
 
 export function testRunHandler(ctrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
-    // create finally vars
-    let seqNo = -1;
     let projTestRun: vscode.TestRun | undefined = undefined;
 
     try {
-
-      // wait for this project's turn if required (i.e. run projects sequentially if required)
-      if (debug || !services.config.instanceSettings.runMultiRootProjectsInParallel) {
-        seqNo = sequence.length === 0 ? 0 : Math.max(...sequence) + 1;
-        sequence.push(seqNo);
-        while (Math.min(...sequence) !== seqNo) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
 
       const projUri = runProfile.projUri;
       const ps = await services.config.getProjectSettings(projUri);
@@ -68,8 +57,7 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
         throw new Error("empty queue - nothing to do");
       }
 
-      xRayLog(`testRunHandler: queue length = ${queue.length}`);
-      xRayLog(`testRunHandler: starting run ${projTestRun.name}`);
+      xRayLog(`testRunHandler: starting run ${projTestRun.name}, queue length = ${queue.length}`);
       await runProjTestQueue(ps, ctrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
 
@@ -83,7 +71,6 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
         xRayLog(`testRunHandler: completed run ${projTestRun.name}`);
         projTestRun.end();
       }
-      sequence.splice(sequence.indexOf(seqNo), 1);
     }
   }
 }
@@ -119,40 +106,59 @@ async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.Test
 }
 
 
-async function runProjTestQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
-  testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) {
+const runProjTestQueue = (() => {
+  const sequence: number[] = [];
 
-  xRayLog(`runTestQueue: started for run ${run.name}`);
+  return async (ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
+    testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) => {
+    let seqNo = -1;
 
-  const projQueue = queue.filter(item => item.test.id.includes(ps.id));
-  const projQueueMap = getProjQueueJunitFileMap(ps, run, projQueue);
+    try {
+      xRayLog(`runTestQueue: started for run ${run.name}`);
 
-  if (!debug)
-    services.logger.clear(ps.uri);
+      const projQueue = queue.filter(item => item.test.id.includes(ps.id));
+      const projQueueMap = getProjQueueJunitFileMap(ps, run, projQueue);
 
-  if (projQueueMap.map(q => q.queueItem).length === 0)
-    return;
+      if (!debug)
+        services.logger.clear(ps.uri);
 
-  const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
-  if (!waitForJUnitFiles) {
-    projQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
+      if (projQueueMap.map(q => q.queueItem).length === 0)
+        return;
+
+      const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
+      if (!waitForJUnitFiles) {
+        projQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
+      }
+      else {
+        // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
+        await junitWatcher.startWatchingRun(ps, run, debug, projQueueMap);
+      }
+
+      if (run.token.isCancellationRequested)
+        return;
+
+      // watcher is ready, now wait for this project's turn if required
+      if (debug || !services.config.instanceSettings.runMultiRootProjectsInParallel) {
+        seqNo = sequence.length === 0 ? 0 : Math.max(...sequence) + 1;
+        sequence.push(seqNo);
+        while (Math.min(...sequence) !== seqNo) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      await runProjectQueue(ps, ctrl, run, request, testData, debug, projQueue, runProfile);
+
+      // stop the junitwatcher for this run folder
+      if (waitForJUnitFiles)
+        await junitWatcher.stopWatchingRun(run);
+
+      xRayLog(`runTestQueue: completed for run ${run.name}`);
+    }
+    finally {
+      sequence.splice(sequence.indexOf(seqNo), 1);
+    }
   }
-  else {
-    // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
-    await junitWatcher.startWatchingRun(ps, run, debug, projQueueMap);
-  }
-
-  if (run.token.isCancellationRequested)
-    return;
-
-  await runProjectQueue(ps, ctrl, run, request, testData, debug, projQueue, runProfile);
-
-  // stop the junitwatcher for this run folder
-  if (waitForJUnitFiles)
-    await junitWatcher.stopWatchingRun(run);
-
-  xRayLog(`runTestQueue: completed for run ${run.name}`);
-}
+})();
 
 
 async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
@@ -178,7 +184,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
       ps, run, request, debug, ctrl, testData, projQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
       allenv,
-      runProfile.tagsParameters ?? "",
+      runProfile.tagsParameters,
       runProfile.customRunner
     )
 
@@ -191,7 +197,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
   catch (e: unknown) {
     pr?.projTestRun.end();
     // unawaited async function (if runMultiRootProjectsInParallel) - show error
-    services.logger.showError(e, ps.uri, run);
+    services.logger.logError(e, ps.uri, run);
   }
 
   xRayLog(`runWorkspaceQueue: completed for run ${run.name}`, ps.uri);

@@ -6,7 +6,7 @@ import { ProjParseCounts } from "../../../parsers/fileParser";
 import { TestWorkspaceConfig } from "./testWorkspaceConfig";
 import { Expectations, TestResult, testGlobals } from "./types";
 import { services } from "../../../common/services";
-import { ProjectSettings, RunProfile } from "../../../config/settings";
+import { ProjectSettings, RunProfile, RunProfilesSetting } from "../../../config/settings";
 import { getLines, isFeatureFile, isStepsFile } from "../../../common/helpers";
 import { featureFileStepRe } from "../../../parsers/featureParser";
 import { funcRe } from "../../../parsers/stepsParser";
@@ -42,7 +42,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
     assert.strictEqual(projSettings.projRelativeBehaveWorkingDirPath, expectations.expectedProjRelativeBehaveWorkingDirPath,
       `${projName} project: projRelativeWorkingDirPath`);
     const behaveWorkDirUri = vscode.Uri.joinPath(projUri, expectations.expectedProjRelativeBehaveWorkingDirPath);
-    const populateLazy_fsPath = behaveWorkDirUri.fsPath; // eslint-disable-line @typescript-eslint/no-unused-vars
+    void behaveWorkDirUri.fsPath; // populate lazy property before comparison
     assert.deepStrictEqual(projSettings.behaveWorkingDirUri, behaveWorkDirUri,
       `${projName} project: behaveWorkingDirUri`);
     assert.strictEqual(projSettings.justMyCode, testConfig.getExpected("justMyCode"),
@@ -52,9 +52,10 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
     assert.deepStrictEqual(projSettings.importedSteps, testConfig.getExpected("importedSteps"),
       `${projName} project: importedSteps`);
 
-    // convert constructor names to plain objects for deepStrictEqual
-    const actualProfiles = projSettings.userRunProfiles.map(p => JSON.parse(JSON.stringify(p)));
-    const expectedProfiles = (testConfig.getExpected("runProfiles") as RunProfile[]).map(p => JSON.parse(JSON.stringify(p)));
+    // convert RunProfiles to plain objects for deepStrictEqual
+    const actualProfiles = projSettings.userRunProfiles.map(p => JSON.stringify(p));
+    const expectedProfiles = (testConfig.getExpected("runProfiles") as RunProfilesSetting).map(p =>
+      JSON.stringify(new RunProfile(p.name, projUri, p.tagsParameters, p.env, p.customRunner)));
     assert.deepStrictEqual(actualProfiles, expectedProfiles, `${projName} project: runProfiles`);
   }
   catch (assertErr: unknown) {
@@ -252,7 +253,7 @@ export function assertExpectedResults(projName: string, results: QueueItem[] | u
 
   try {
     assert(results && (results.length !== 0 || expectedResults.length === 0),
-      "runHandler returned an empty result check for previous errors in the debug console and check that parse completed");
+      "runHandler returned an empty result! Check for previous errors in the debug console and check that parse completed");
 
     results.forEach(result => {
       const scenResult = ScenarioResult(result);

@@ -284,7 +284,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/simple",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/simple suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/simple suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -314,7 +314,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/working dir",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/working dir suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -329,7 +329,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/run profiles",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/run profiles suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -344,7 +344,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/nested steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/nested steps folder suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/nested steps folder suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -359,7 +359,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 1",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 1 suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 1 suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -374,7 +374,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/sibling steps folder 2",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 2 suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/sibling steps folder 2 suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -389,7 +389,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/higher steps folder",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/higher steps folder suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/higher steps folder suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -404,7 +404,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project A",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project A suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project A suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -419,7 +419,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/project B",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project B suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/project B suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -434,7 +434,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/multiple top-level features folders",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiple top-level features folders suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/multiple top-level features folders suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -449,7 +449,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/imported steps",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/imported steps suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/imported steps suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -464,7 +464,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/handle bad import",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/handle bad import suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/handle bad import suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",
@@ -479,7 +479,7 @@
 			"args": [
 				"${workspaceFolder}/example-projects/use custom runner",
 				"--extensionDevelopmentPath=${workspaceFolder}",
-				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/use custom runner suite/runAll"
+				"--extensionTestsPath=${workspaceFolder}/out/_tests/integration/use custom runner suite/runAllTests"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js",

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { RunProfilesSetting, ImportedSteps, ImportedStepsSetting, RunProfile } from '../../../config/settings';
+import { ImportedSteps, ImportedStepsSetting, RunProfilesSetting } from '../../../config/settings';
+
 
 
 // used in extension code to allow us to dynamically inject a test workspace configuration
@@ -8,7 +9,6 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 
 	// additional integration-test-only settings
 	public integrationTestRunUseCpExec = false;
-	public testProjUri: vscode.Uri | undefined;
 
 	// user-settable settings
 	public readonly runParallel?: boolean;
@@ -168,8 +168,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 			case "importedSteps":
 				return <T><unknown>(this.get("importedSteps") === undefined ? [] : convertimportedStepsToExpectedArray(this.get("importedSteps")));
 			case "runProfiles":
-				return <T><unknown>((this.get("runProfiles") as RunProfilesSetting).map(cfg =>
-					new RunProfile(cfg.name, cfg.tagsParameters, cfg.env, cfg.customRunner)));
+				return <T><unknown>(this.get("runProfiles"));
 			case "behaveWorkingDirectory":
 				return <T><unknown>(this.get("behaveWorkingDirectory"));
 			case "xRay":
@@ -207,4 +206,8 @@ function convertimportedStepsToExpectedArray(importedSteps: ImportedStepsSetting
 	}
 	return arr;
 }
+
+
+
+
 

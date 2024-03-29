@@ -90,23 +90,23 @@ export class Logger {
   };
 
 
+  logError = (error: unknown, projUri: vscode.Uri, run?: vscode.TestRun) => {
+    const text = getErrorText(error);
+    this.channels[projUri.path].appendLine(text);
+    this.channels[projUri.path].show(true);
+
+    if (run)
+      run.appendOutput(text + "\r\n");
+  }
+
+
   showWarn = (text: string, projUri?: vscode.Uri, run?: vscode.TestRun) => {
     this._show(text, projUri, run, LogType.warn);
   }
 
 
   showError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
-    let text: string;
-
-    if (error instanceof Error) {
-      text = error.message;
-      if (error.stack && inDiagnosticMode())
-        text += `\n${error.stack.split("\n").slice(1).join("\n")}`;
-    }
-    else {
-      text = `${error}`;
-    }
-
+    const text = getErrorText(error);
     this._show(text, projUri, run, LogType.error);
   }
 
@@ -197,6 +197,21 @@ export const xRayLog = (message: string, projUri?: vscode.Uri, logType?: LogType
 
 export enum LogType {
   "info", "warn", "error"
+}
+
+function getErrorText(error: unknown) {
+  let text: string;
+
+  if (error instanceof Error) {
+    text = error.message;
+    if (error.stack && inDiagnosticMode())
+      text = error.stack;
+  }
+  else {
+    text = `${error}`;
+  }
+
+  return text;
 }
 
 function inDiagnosticMode() {

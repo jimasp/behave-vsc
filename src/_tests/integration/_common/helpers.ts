@@ -11,6 +11,8 @@ import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { ProjRun } from '../../../runners/testRunHandler';
 
+export const JS_OUTPUT_DIR = "/out/";
+export const JS_OUTPUT_TESTS_DIR = "/out/_tests/";
 
 
 let lockVal = "";
@@ -120,21 +122,21 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 }
 
 
-export function getExpectedTagsString(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
 	let tagsString = "";
-	const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 	if (runProfile.tagsParameters)
 		tagsString = runProfile.tagsParameters;
 	return tagsString;
 }
 
-export function getExpectedEnvVarsString(testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions) {
+export function getExpectedEnvVarsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions) {
 
 	const env: object = testExtConfig.get("env");
 
 	let rpEnv: object | undefined = {};
 	if (runOptions && runOptions.selectedRunProfile) {
-		const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+		const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 		rpEnv = runProfile.env;
 	}
 
@@ -160,16 +162,17 @@ export function createFakeProjRun(testExtConfig: TestWorkspaceConfig, request: v
 	} as ProjRun;
 }
 
-export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorkspaceConfig, runOptions: RunOptions,
+export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
+	testExtConfig: TestWorkspaceConfig, runOptions: RunOptions,
 	request: vscode.TestRunRequest, projName: string, queueItems?: QueueItem[], includeScenariosRx = false) {
 
-	const tagsString = getExpectedTagsString(testExtConfig, runOptions);
-	const envVarsString = getExpectedEnvVarsString(testExtConfig, runOptions);
+	const tagsString = getExpectedTagsString(projUri, testExtConfig, runOptions);
+	const envVarsString = getExpectedEnvVarsString(projUri, testExtConfig, runOptions);
 	const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
 	let customRunner: CustomRunner | undefined = undefined;
 	if (runOptions.selectedRunProfile) {
-		const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+		const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 		customRunner = runProfile.customRunner;
 	}
 
@@ -205,14 +208,28 @@ export function buildExpectedFriendlyCmdOrderedIncludes(testExtConfig: TestWorks
 }
 
 
-export function getRunProfile(testExtConfig: TestWorkspaceConfig, profileName: string | undefined): RunProfile {
-	if (!profileName)
-		return new RunProfile("Features");
-	const runProfiles = testExtConfig.get("runProfiles") as RunProfilesSetting;
-	const runProfile = runProfiles.find(x => x.name === profileName);
-	if (!runProfile)
-		throw new Error(`selectedRunProfile "${profileName}" not found in runProfiles`);
-	return runProfile;
+export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions | undefined): RunProfile {
+	if (!runOptions?.selectedRunProfile)
+		return new RunProfile("IntTestDefaultProfile", projUri);
+	const runProfilesSetting = testExtConfig.get("runProfiles") as RunProfilesSetting;
+	const profile = runProfilesSetting.find(x => x.name === runOptions.selectedRunProfile);
+	if (!profile)
+		assert(profile, `selectedRunProfile "${runOptions.selectedRunProfile}" not found in testExtConfig runProfiles`);
+	return new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.customRunner);
+}
+
+
+export function getExampleProjectFolderAbsPath(exampleProjectFolderName: string): string {
+	const absPath = path.join(__dirname, "../../example-projects", exampleProjectFolderName)
+		.replace(JS_OUTPUT_TESTS_DIR, "/");
+	return absPath;
+}
+
+
+export function getExampleProjectFolderUri(exampleProjectFolderName: string) {
+	const absPath = getExampleProjectFolderAbsPath(exampleProjectFolderName);
+	const uri = vscode.Uri.file(absPath);
+	return uri;
 }
 
 

@@ -55,11 +55,11 @@ async function npmRunTest() {
     });
 
 
-    // 3. loop through each suite and run each runProject.ts file
+    // 3. loop through each suite and run each runProjectTests.ts file
     const integrationFolderPath = path.resolve(__dirname, './integration');
     const integrationFolders = await fs.promises.readdir(integrationFolderPath);
     for (const folder of integrationFolders) {
-      const projectTests = path.resolve(integrationFolderPath, `${folder}/runProject.js`);
+      const projectTests = path.resolve(integrationFolderPath, `${folder}/runProjectTests.js`);
       if (!folder.endsWith(" suite") || !fs.existsSync(projectTests)) {
         console.log(`skipping ${projectTests}`);
         continue;

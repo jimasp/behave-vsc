@@ -34,7 +34,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+  const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -116,6 +116,8 @@ function assertExpectedFriendlyCmd(request: vscode.TestRunRequest, projUri: vsco
     });
   }
 
-  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems, true);
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(projUri, testExtConfig,
+    runOptions, request, projName, queueItems, true);
+
   assertLogExists(projUri, expectCmdOrderedIncludes);
 }

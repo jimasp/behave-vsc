@@ -29,7 +29,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   if (execFriendlyCmd)
     testExtConfig.integrationTestRunUseCpExec = true;
 
-  const runProfile = getRunProfile(testExtConfig, runOptions.selectedRunProfile);
+  const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
@@ -96,7 +96,7 @@ function assertExpectedFriendlyCmdsForParallel(request: vscode.TestRunRequest, f
       scenario: { featureFileProjectRelativePath: expectedResult.scenario_featureFileRelativePath }
     } as unknown as QueueItem;
 
-    const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, [queueItem]);
+    const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(projUri, testExtConfig, runOptions, request, projName, [queueItem]);
     assertLogExists(projUri, expectCmdOrderedIncludes);
   });
 
@@ -119,7 +119,7 @@ function assertExpectedFriendlyCmdsForTogether(request: vscode.TestRunRequest, a
     queueItems.push(qi);
   }
 
-  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(testExtConfig, runOptions, request, projName, queueItems);
+  const expectCmdOrderedIncludes = buildExpectedFriendlyCmdOrderedIncludes(projUri, testExtConfig, runOptions, request, projName, queueItems);
   assertLogExists(projUri, expectCmdOrderedIncludes);
 }
 
