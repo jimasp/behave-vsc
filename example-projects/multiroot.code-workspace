@@ -1,48 +1,49 @@
 {
 	"folders": [
+		// "pj" = give projects a different name to their folder name for testing purposes
 		{
 			"path": "./simple",
-			"name": "simple"
+			"name": "simple pj"
 		},
 		{
 			"path": "./project A",
-			"name": "project A"
+			"name": "project A pj"
 		},
 		{
 			"path": "./project B",
-			"name": "project B"
+			"name": "project B pj"
 		},
 		{
 			"path": "./working dir",
-			"name": "working dir"
+			"name": "working dir pj"
 		},
 		{
 			"path": "./run profiles",
-			"name": "run profiles"
+			"name": "run profiles pj"
 		},
 		{
 			"path": "./multiple top-level features folders",
-			"name": "multiple top-level features folders"
+			"name": "multiple top-level features folders pj"
 		},
 		{
 			"path": "./imported steps",
-			"name": "imported steps"
+			"name": "imported steps pj"
 		},
 		{
 			"path": "./sibling steps folder 1",
-			"name": "sibling steps folder 1"
+			"name": "sibling steps folder 1  pj"
 		},
 		{
 			"path": "./sibling steps folder 2",
-			"name": "sibling steps folder 2"
+			"name": "sibling steps folder 2  pj"
 		},
 		{
 			"path": "./handle bad import",
-			"name": "handle bad import"
+			"name": "handle bad import pj"
 		},
 		{
 			"path": "./use custom runner",
-			"name": "use custom runner"
+			"name": "use custom runner pj"
 		},
 		{
 			"path": "./handle empty folder",
