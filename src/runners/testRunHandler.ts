@@ -4,15 +4,16 @@ import { services } from "../common/services";
 import { ProjectSettings, CustomRunner, RunProfile } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
-import { countTestItems, getTestItems, getContentFromFilesystem, uriId, getTimeString } from '../common/helpers';
+import { countTestItems, getTestItems, getContentFromFilesystem, uriId } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap } from '../parsers/junitParser';
+import { basename } from 'path';
 
 
 
-export function testRunHandler(ctrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
+export function createProjTestRunHandler(projCtrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
 
   return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
     let projTestRun: vscode.TestRun | undefined = undefined;
@@ -24,7 +25,8 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
       xRayLog(`testRunHandler: invoked for project "${ps.name}"`);
 
       if (!isValidTagsParameters(runProfile.tagsParameters)) {
-        services.logger.showWarn(`Invalid tag expression: ${runProfile.tagsParameters}`);
+        // bad ad-hoc tags
+        services.logger.popupWarn(`Invalid tag expression: ${runProfile.tagsParameters}`);
         return;
       }
 
@@ -42,13 +44,18 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
         return;
       }
 
-      const runName = ps.name + " " + getTimeString();
-      projTestRun = ctrl.createTestRun(request, runName, false);
+      // projRunName will be used as junitOutputFolderName, and project folder name is a known-safe filesystem name
+      // this will also be displayed on the right-hand-side of the test results window
+      const projFolderName = basename(projUri.path);
+      // we put the datetime first because the projRunName is also used for the junit folder name,
+      // and so the junit folders will be sorted by datetime if sorted by name
+      const projRunName = `${new Date().toISOString()} ${projFolderName}`;
+      projTestRun = projCtrl.createTestRun(request, projRunName, false);
 
       const queue: QueueItem[] = [];
-      const tests = request.include ?? convertToTestItemArray(ctrl.items);
-      xRayLog(`testRunHandler: tests length = ${tests.length}`);
-      await queueSelectedProjTestItems(ps, ctrl, projTestRun, request, queue, tests, testData);
+      const tests = request.include ?? convertToTestItemArray(projCtrl.items);
+      xRayLog(`testRunHandler: ${projRunName} tests length = ${tests.length}`);
+      await queueSelectedProjTestItems(ps, projCtrl, projTestRun, request, queue, tests, testData);
 
       if (queue.length === 0) {
         if (services.config.isIntegrationTestRun)
@@ -57,14 +64,13 @@ export function testRunHandler(ctrl: vscode.TestController, testData: TestData, 
         throw new Error("empty queue - nothing to do");
       }
 
-      xRayLog(`testRunHandler: starting run ${projTestRun.name}, queue length = ${queue.length}`);
-      await runProjTestQueue(ps, ctrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile);
+      await runProjTestQueue(ps, projCtrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile);
       return queue;
 
     }
     catch (e: unknown) {
       // entry point (handler) - show error
-      services.logger.showError(e);
+      services.logger.popupError(e);
     }
     finally {
       if (projTestRun) {
@@ -109,15 +115,15 @@ async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.Test
 const runProjTestQueue = (() => {
   const sequence: number[] = [];
 
-  return async (ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun, request: vscode.TestRunRequest,
+  return async (ps: ProjectSettings, projCtrl: vscode.TestController, projTestRun: vscode.TestRun, request: vscode.TestRunRequest,
     testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) => {
     let seqNo = -1;
 
     try {
-      xRayLog(`runTestQueue: started for run ${run.name}`);
+      xRayLog(`runProjTestQueue: started for run ${projTestRun.name}`);
 
       const projQueue = queue.filter(item => item.test.id.includes(ps.id));
-      const projQueueMap = getProjQueueJunitFileMap(ps, run, projQueue);
+      const projQueueMap = getProjQueueJunitFileMap(ps, projTestRun, projQueue);
 
       if (!debug)
         services.logger.clear(ps.uri);
@@ -127,18 +133,20 @@ const runProjTestQueue = (() => {
 
       const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
       if (!waitForJUnitFiles) {
-        projQueueMap.map(q => q.queueItem).forEach(x => { run.skipped(x.test); x.scenario.result = undefined; });
+        projQueueMap.map(q => q.queueItem).forEach(x => { projTestRun.skipped(x.test); x.scenario.result = undefined; });
       }
       else {
         // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
-        await junitWatcher.startWatchingRun(ps, run, debug, projQueueMap);
+        await junitWatcher.startWatchingRun(projTestRun, debug, projQueueMap);
       }
 
-      if (run.token.isCancellationRequested)
+      if (projTestRun.token.isCancellationRequested)
         return;
 
       // watcher is ready, now wait for this project's turn if required
       if (debug || !services.config.instanceSettings.runMultiRootProjectsInParallel) {
+        xRayLog(`runProjTestQueue: waiting for sequence for run ${projTestRun.name}`);
+        projTestRun.appendOutput(`${projTestRun.name} waiting to commence...\r\n`)
         seqNo = sequence.length === 0 ? 0 : Math.max(...sequence) + 1;
         sequence.push(seqNo);
         while (Math.min(...sequence) !== seqNo) {
@@ -146,13 +154,13 @@ const runProjTestQueue = (() => {
         }
       }
 
-      await runProjectQueue(ps, ctrl, run, request, testData, debug, projQueue, runProfile);
+      await runProjectQueue(ps, projCtrl, projTestRun, request, testData, debug, projQueue, runProfile);
 
       // stop the junitwatcher for this run folder
       if (waitForJUnitFiles)
-        await junitWatcher.stopWatchingRun(run);
+        await junitWatcher.stopWatchingRun(projTestRun);
 
-      xRayLog(`runTestQueue: completed for run ${run.name}`);
+      xRayLog(`runProjTestQueue: completed for run ${projTestRun.name}`);
     }
     finally {
       sequence.splice(sequence.indexOf(seqNo), 1);
@@ -166,7 +174,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
 
   let pr: ProjRun | undefined = undefined;
 
-  xRayLog(`runWorkspaceQueue: started for run ${run.name}`, ps.uri);
+  xRayLog(`runProjectQueue: started for run ${run.name}`, ps.uri);
 
   try {
 
@@ -174,7 +182,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     const projIncludedFeatures = getIncludedFeaturesForProj(ps.uri, request);
     const pythonExec = await services.config.getPythonExecutable(ps.uri, ps.name);
     projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
-    const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
+    const junitProjRunDirUri = getJunitProjRunDirUri(run);
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
@@ -200,7 +208,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     services.logger.logError(e, ps.uri, run);
   }
 
-  xRayLog(`runWorkspaceQueue: completed for run ${run.name}`, ps.uri);
+  xRayLog(`runProjectQueue: completed for run ${run.name}`, ps.uri);
 }
 
 
@@ -475,5 +483,7 @@ export class ProjRun {
 export interface ITestRunHandler {
   (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined>;
 }
+
+
 
 

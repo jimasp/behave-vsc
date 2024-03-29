@@ -51,7 +51,7 @@ export class ProjectWatcher {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.logger.showError(e, projUri);
+        services.logger.popupError(e, projUri);
       }
 
     }));
@@ -65,7 +65,7 @@ export class ProjectWatcher {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.logger.showError(e, projUri);
+        services.logger.popupError(e, projUri);
       }
     }));
 
@@ -106,7 +106,7 @@ export class ProjectWatcher {
       }
       catch (e: unknown) {
         // unawaited entry point (event handler) - show error
-        services.logger.showError(e, projUri);
+        services.logger.popupError(e, projUri);
       }
     }));
 

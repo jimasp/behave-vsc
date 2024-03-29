@@ -8,7 +8,7 @@ import {
 import { StepFileStep } from './parsers/stepsParser';
 import { gotoStepHandler } from './handlers/gotoStepHandler';
 import { findStepReferencesHandler, nextStepReferenceHandler, prevStepReferenceHandler, treeView } from './handlers/findStepReferencesHandler';
-import { ITestRunHandler, testRunHandler } from './runners/testRunHandler';
+import { ITestRunHandler, createProjTestRunHandler } from './runners/testRunHandler';
 import { xRayLog } from './common/logger';
 import { performance } from 'perf_hooks';
 import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForStepsFileFunction } from './parsers/stepMappings';
@@ -103,7 +103,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        services.logger.popupError(e);
       }
     }));
 
@@ -123,7 +123,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        services.logger.popupError(e);
       }
     }));
 
@@ -195,7 +195,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.showError(e);
+        services.logger.popupError(e);
       }
     }
 
@@ -224,7 +224,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
   catch (e: unknown) {
     // entry point function (handler) - show error    
     if (services.config && services.logger) {
-      services.logger.showError(e);
+      services.logger.popupError(e);
     }
     else {
       // no logger yet, use vscode.window.showErrorMessage directly
@@ -267,7 +267,7 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
   }
   catch (e: unknown) {
     // unawaited async function - show error
-    services.logger.showError(e);
+    services.logger.popupError(e);
   }
 }
 
@@ -302,34 +302,34 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
         projMap.delete(ps.id);
       }
 
-      const ctrl = vscode.tests.createTestController(`behave-vsc.${ps.name}`, multiRoot ? "Feature Tests: " + ps.name : "Feature Tests");
-      const projRunHandler = testRunHandler(ctrl, testData, junitWatcher);
-      const projWatcher = ProjectWatcher.create(projUri, ctrl, testData);
-      const projRunProfiles = createRunProfilesForProject(ps, multiRoot, ctrl, projRunHandler);
-      const projMapEntry = new ProjMapEntry(ctrl, projRunHandler, projWatcher, projRunProfiles);
+      const projCtrl = vscode.tests.createTestController(`behave-vsc.${ps.name}`, multiRoot ? "Feature Tests: " + ps.name : "Feature Tests");
+      const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
+      const projWatcher = ProjectWatcher.create(projUri, projCtrl, testData);
+      const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
+      const projMapEntry = new ProjMapEntry(projCtrl, projRunHandler, projWatcher, projRunProfiles);
       projMap.set(ps.id, projMapEntry);
 
       // called by manual refresh button in test explorer
-      ctrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
+      projCtrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
         try {
           await services.config.reloadSettings(projUri);
-          services.parser.parseFilesForProject(projUri, ctrl, testData, "refreshHandler", false, cancelToken);
+          services.parser.parseFilesForProject(projUri, projCtrl, testData, "refreshHandler", false, cancelToken);
         }
         catch (e: unknown) {
           // entry point function (handler) - show error        
-          services.logger.showError(e);
+          services.logger.popupError(e);
         }
       };
 
       // (recreateRunHandlersAndProfilesAndWatchersAndReparse is normally not awaited)
-      await services.parser.parseFilesForProject(projUri, ctrl, testData, "activate", true);
+      await services.parser.parseFilesForProject(projUri, projCtrl, testData, "activate", true);
     }
 
     xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
   }
   catch (e: unknown) {
     // unawaited (except for integration tests) async function - show error       
-    services.logger.showError(e);
+    services.logger.popupError(e);
   }
 }
 

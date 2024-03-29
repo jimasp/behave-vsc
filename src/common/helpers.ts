@@ -540,7 +540,7 @@ export function showDebugWindow() {
 }
 
 
-export function basename(uri: vscode.Uri) {
+export function basename(uri: vscode.Uri): string {
   const basename = uri.path.split("/").pop();
   if (!basename)
     throw "could not determine file name from uri";
@@ -548,14 +548,15 @@ export function basename(uri: vscode.Uri) {
 }
 
 
-export function getLines(text: string) {
+export function getMinSecMsTimeString() {
+  return new Date().toISOString().slice(14, 23).replace(/[-.]/g, '');
+}
+
+
+export function getLines(text: string): string[] {
   return text.split(/\r\n|\r|\n/);
 }
 
 export function isIterable(obj: unknown): boolean {
   return obj != null && typeof (obj as Iterable<unknown>)[Symbol.iterator] === 'function';
-}
-
-export function getTimeString() {
-  return new Date().toISOString().replace(/:/g, "-");
 }

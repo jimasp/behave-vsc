@@ -37,7 +37,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
 
     const projectRelPath = path.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
-      services.logger.showWarn(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
+      services.logger.logWarning(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
       continue;
     }
 
@@ -48,11 +48,11 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
     // check path exists
     const fsPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, behaveWrkRelPath).fsPath;
     if (!fs.existsSync(fsPath)) {
-      services.logger.showWarn(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
+      services.logger.logWarning(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
     }
     else {
       if (!fs.statSync(fsPath).isDirectory()) {
-        services.logger.showWarn(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
+        services.logger.logWarning(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
         continue;
       }
       relPaths.push(behaveWrkRelPath);

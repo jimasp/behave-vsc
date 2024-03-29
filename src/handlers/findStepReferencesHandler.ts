@@ -56,7 +56,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
 
     if (textEditor && (!fileUri || !await isStepsFile(fileUri))) {
       // note that context menu command availability is controlled by the package.json editor/context "when" clause 
-      services.logger.showWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
+      services.logger.popupWarn("Find All Step References must be used from a python file in a (non-stage) steps path, " +
         "(i.e. /steps/ or a behave-vsc.importedSteps setting path). Project-relative file path was: " +
         `"${fileUri ? vscode.workspace.asRelativePath(fileUri, false) : "undefined"}"`, getParentProjectUri(fileUri));
       return;
@@ -109,10 +109,10 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     // entry point function (handler) - show error  
     try {
       const projUri = getParentProjectUri(fileUri);
-      services.logger.showError(e, projUri);
+      services.logger.popupError(e, projUri);
     }
     catch {
-      services.logger.showError(e);
+      services.logger.popupError(e);
     }
   }
 
@@ -131,7 +131,7 @@ export function prevStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.logger.showError(e);
+    services.logger.popupError(e);
   }
 }
 
@@ -141,6 +141,6 @@ export function nextStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.logger.showError(e);
+    services.logger.popupError(e);
   }
 }

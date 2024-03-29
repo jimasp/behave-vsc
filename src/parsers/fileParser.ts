@@ -191,7 +191,7 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        services.logger.showError(e, projUri);
+        services.logger.popupError(e, projUri);
       }
 
     }
@@ -298,7 +298,7 @@ export class FileParser {
     }
     catch (e: unknown) {
       // unawaited async func, show error
-      services.logger.showError(e, ps ? ps.uri : undefined);
+      services.logger.popupError(e, ps ? ps.uri : undefined);
     }
     finally {
       this._reparsingFile = false;
@@ -331,7 +331,7 @@ export class FileParser {
       const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), recursive, cancelToken));
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        services.logger.showWarn(`No feature files found in (project-relative) path "${relFeaturesFolder}".
+        services.logger.popupWarn(`No feature files found in (project-relative) path "${relFeaturesFolder}".
           Check behave config "paths" setting.`, projUri);
 
       for (const uri of featureFiles) {

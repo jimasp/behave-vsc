@@ -138,7 +138,7 @@ export class ProjectSettings {
       this.env = envCfg;
     }
     catch {
-      services.logger.showWarn('Invalid "behave-vsc.env" setting was ignored.', projUri);
+      services.logger.logWarning('Invalid "behave-vsc.env" setting was ignored.', projUri);
     }
 
 
@@ -154,7 +154,7 @@ export class ProjectSettings {
       }
     }
     catch {
-      services.logger.showWarn('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
+      services.logger.logWarning('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
     }
 
     let behaveWorkingDirectoryCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
@@ -162,13 +162,13 @@ export class ProjectSettings {
       throw new Error("behaveWorkingDirectory is undefined");
     behaveWorkingDirectoryCfg = behaveWorkingDirectoryCfg === "" ? "." : behaveWorkingDirectoryCfg.trim();
     if (!projectContainsRelativePath(projUri, behaveWorkingDirectoryCfg)) {
-      services.logger.showWarn('"behave-vsc.behaveWorkingDirectory" setting ' +
-        '"${behaveWorkingDirectoryCfg}" is not inside the project and will be ignored');
+      services.logger.logWarning('"behave-vsc.behaveWorkingDirectory" setting ' +
+        '"${behaveWorkingDirectoryCfg}" is not inside the project and will be ignored', projUri);
       behaveWorkingDirectoryCfg = ".";
     }
     const workingDirUri = vscode.Uri.joinPath(projUri, behaveWorkingDirectoryCfg);
     if (!fs.existsSync(workingDirUri.fsPath)) {
-      services.logger.showWarn(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${behaveWorkingDirectoryCfg}" ` +
+      services.logger.logWarning(`Invalid "behave-vsc.behaveWorkingDirectory" setting: "${behaveWorkingDirectoryCfg}" ` +
         "does not exist and will be ignored.", projUri);
     }
     else {
@@ -204,45 +204,45 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
     for (const profile of runProfilesCfg) {
       const customRunner = profile.customRunner;
       if (!profile.name) {
-        services.logger.showWarn(`Invalid runProfiles setting ignored: "name" is required.`, projUri);
+        services.logger.logWarning(`Invalid runProfiles setting ignored: "name" is required.`, projUri);
         continue;
       }
       if (runProfiles.find(p => p.name === profile.name && projUri === p.projUri)) {
-        services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+        services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
           `duplicate run profile name for this project.`, projUri);
         continue;
       }
       if (customRunner) {
         if (customRunner.waitForJUnitFiles === undefined) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.waitForJUnitFiles" is required.`, projUri);
           continue;
         }
         let script = customRunner.scriptFile;
         if (!script) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" is required.`, projUri);
           continue;
         }
         script = script.trim();
         if (script.includes(" ")) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" must not contain a space.`, projUri);
           continue;
         }
         if (!script.endsWith(".py")) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" must end in ".py".`, projUri);
           continue;
         }
         if (script.includes("/") || script.includes("\\")) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" cannot contain a path, only a filename.`, projUri);
           continue;
         }
         const fullPath = path.join(behaveWorkingDirUri.fsPath, script);
         if (!pathExistsSync(fullPath)) {
-          services.logger.showWarn(`Invalid runProfiles setting "${profile.name}" ignored: ` +
+          services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" path "${fullPath}" does not exist.`, projUri);
           continue;
         }
@@ -253,7 +253,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
     }
   }
   catch {
-    services.logger.showWarn('Invalid "behave-vsc.runProfiles" setting was ignored.', projUri);
+    services.logger.logWarning('Invalid "behave-vsc.runProfiles" setting was ignored.', projUri);
   }
 
   return runProfiles;
@@ -269,20 +269,20 @@ function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedSt
       const tKey = stepLibrary[0].trim().replace(/\\/g, "/");
       const tValue = stepLibrary[1].trim().replace(/\\/g, "/");
       if (tKey === "") {
-        services.logger.showWarn("behave-vsc.importedSteps key (i.e. the project relative path) cannot be an empty string", projUri);
+        services.logger.logWarning("behave-vsc.importedSteps key (i.e. the project relative path) cannot be an empty string", projUri);
         continue;
       }
       if (tValue === "") {
-        services.logger.showWarn("behave-vsc.importedSteps value (i.e. the sub-path regex) cannot be an empty string", projUri);
+        services.logger.logWarning("behave-vsc.importedSteps value (i.e. the sub-path regex) cannot be an empty string", projUri);
         continue;
       }
       if (importedSteps.find(l => l.relativePath === tKey)) {
-        services.logger.showWarn(`behave-vsc.importedSteps key ${stepLibrary[0]} is a duplicate and will be ignored`, projUri);
+        services.logger.logWarning(`behave-vsc.importedSteps key ${stepLibrary[0]} is a duplicate and will be ignored`, projUri);
         continue;
       }
       const keyFsPath = vscode.Uri.joinPath(projUri, tKey).fsPath;
       if (!pathExistsSync(keyFsPath)) {
-        services.logger.showWarn(`behave-vsc.importedSteps path "${keyFsPath}" not found and will be ignored`, projUri);
+        services.logger.logWarning(`behave-vsc.importedSteps path "${keyFsPath}" not found and will be ignored`, projUri);
         continue;
       }
 
@@ -322,7 +322,7 @@ async function getPaths(ps: ProjectSettings) {
   // (also note the line in parseStepsFileContent that says "replacing duplicate step file step")
   if (stepsFolder) {
     if (projRelStepsFolders.includes(stepsFolder))
-      services.logger.showWarn(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, ps.uri);
+      services.logger.logWarning(`stepsLibraries path "${stepsFolder}" is a known (redundant) steps path`, ps.uri);
     else
       projRelStepsFolders.push(stepsFolder);
   }
@@ -383,14 +383,14 @@ function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
 
     if (!relativePath) {
       // the path is required as it is used to set the watcher path
-      services.logger.showWarn('imported steps path specified in "behave-vsc.importedSteps" cannot be an empty ' +
+      services.logger.logWarning('imported steps path specified in "behave-vsc.importedSteps" cannot be an empty ' +
         'string and will be ignored', ps.uri);
       continue;
     }
 
     const folderUri = vscode.Uri.joinPath(ps.uri, relativePath);
     if (!fs.existsSync(folderUri.fsPath)) {
-      services.logger.showWarn(`imported steps path "${folderUri.fsPath}" specified in "behave-vsc.importedSteps" not found ` +
+      services.logger.logWarning(`imported steps path "${folderUri.fsPath}" specified in "behave-vsc.importedSteps" not found ` +
         `and will be ignored`, ps.uri);
     }
     else {

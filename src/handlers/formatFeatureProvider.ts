@@ -52,10 +52,10 @@ export const formatFeatureProvider = {
       // entry point function (handler) - show error  
       try {
         const projUri = getParentProjectUri(document.uri);
-        services.logger.showError(e, projUri);
+        services.logger.popupError(e, projUri);
       }
       catch {
-        services.logger.showError(e);
+        services.logger.popupError(e);
       }
     }
   }

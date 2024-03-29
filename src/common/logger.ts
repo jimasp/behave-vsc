@@ -79,7 +79,7 @@ export class Logger {
   };
 
 
-  logSettingsWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
+  logWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text, projUri, LogType.warn);
 
     this.channels[projUri.path].appendLine(text);
@@ -92,7 +92,7 @@ export class Logger {
 
   logError = (error: unknown, projUri: vscode.Uri, run?: vscode.TestRun) => {
     const text = getErrorText(error);
-    this.channels[projUri.path].appendLine(text);
+    this.channels[projUri.path].appendLine("ERROR: " + text);
     this.channels[projUri.path].show(true);
 
     if (run)
@@ -100,18 +100,18 @@ export class Logger {
   }
 
 
-  showWarn = (text: string, projUri?: vscode.Uri, run?: vscode.TestRun) => {
-    this._show(text, projUri, run, LogType.warn);
+  popupWarn = (text: string, projUri?: vscode.Uri, run?: vscode.TestRun) => {
+    this._popup(text, projUri, run, LogType.warn);
   }
 
 
-  showError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
+  popupError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
     const text = getErrorText(error);
-    this._show(text, projUri, run, LogType.error);
+    this._popup(text, projUri, run, LogType.error);
   }
 
 
-  private _show = (text: string, projUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: LogType) => {
+  private _popup = (text: string, projUri: vscode.Uri | undefined, run: vscode.TestRun | undefined, logType: LogType) => {
 
     xRayLog(text, projUri, logType);
 

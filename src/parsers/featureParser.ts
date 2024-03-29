@@ -58,7 +58,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
   const featureName = featureText[1].trim();
   if (featureName === '') {
     if (firstRun) {
-      services.logger.showWarn(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
+      services.logger.logWarning(`No feature name found in file: ${uri.fsPath}. This feature will be ignored until it has a name.`,
         getParentProjectUri(uri));
     }
     return null;

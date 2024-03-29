@@ -7,6 +7,7 @@ import { services } from '../common/services';
 import { testGlobals } from './integration/_common/types';
 
 
+
 export function runner(globStr: string, ignore?: string[]): Promise<void> {
 
 	const mocha = initialise();
@@ -42,16 +43,19 @@ function initialise() {
 	if (!testGlobals.multiRootTest)
 		vscode.commands.executeCommand("testing.clearTestResults");
 
-	testGlobals.debuggerAttached = inspector.url() !== undefined;
-
 	const mocha = new Mocha({
 		ui: 'tdd',
 		color: true,
 		bail: true,
-		timeout: testGlobals.debuggerAttached ? 900000 : 30000,
+		timeout: debuggerIsAttached() ? 900000 : 30000,
 	});
 
 	return mocha;
+}
+
+
+function debuggerIsAttached(): boolean {
+	return inspector.url() !== undefined;
 }
 
 

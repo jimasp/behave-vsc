@@ -7,7 +7,6 @@ import { services } from '../common/services';
 import { xRayLog, LogType } from '../common/logger';
 import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResultsForUnreadableJunitFile } from "../parsers/junitParser";
 import { performance } from 'perf_hooks';
-import { ProjectSettings } from '../config/settings';
 
 
 
@@ -15,25 +14,17 @@ export function getJunitDirUri(): vscode.Uri {
   return services.config.extensionTempFilesUri;
 }
 
-function getJunitRunDirUri(run: vscode.TestRun): vscode.Uri {
-  if (!run.name)
-    throw new Error("run.name is undefined");
-  return vscode.Uri.joinPath(getJunitDirUri(), run.name);
-}
 
-export function getJunitProjRunDirUri(ps: ProjectSettings, run: vscode.TestRun): vscode.Uri {
-  if (!run.name)
+export function getJunitProjRunDirUri(projTestRun: vscode.TestRun): vscode.Uri {
+  if (!projTestRun.name)
     throw new Error("run.name is undefined");
-  return vscode.Uri.joinPath(getJunitRunDirUri(run), ps.name);
+  return vscode.Uri.joinPath(getJunitDirUri(), projTestRun.name);
 }
 
 
 class Run {
-  // NOTE: runs are not necessarily one-at-a-time but also staggered, for example a
-  // user can click to start one project/feature/scenario, then then click to run another
-  // (staggered workspace runs are simulated/tested by "Integration Tests: multiroot workspace")
   constructor(
-    public readonly run: vscode.TestRun,
+    public readonly projTestRun: vscode.TestRun,
     public readonly debug: boolean,
     public queue: QueueItemMapEntry[] = [],
   ) { }
@@ -83,22 +74,21 @@ export class JunitWatcher {
   }
 
 
-  async startWatchingRun(ps: ProjectSettings, run: vscode.TestRun, debug: boolean, queueItemMap: QueueItemMapEntry[]) {
+  async startWatchingRun(projTestRun: vscode.TestRun, debug: boolean, queueItemMap: QueueItemMapEntry[]) {
     // method called when a test run/debug session is starting.
 
     // add the run and wait for the watcher to be ready
-    this._currentRuns.push(new Run(run, debug, queueItemMap));
-    xRayLog(`junitWatcher: run ${run.name} added to currentRuns list`);
+    this._currentRuns.push(new Run(projTestRun, debug, queueItemMap));
+    xRayLog(`junitWatcher: run ${projTestRun.name} added to currentRuns list`);
 
     if (!this._firstRun) {
-      await vscode.workspace.fs.createDirectory(getJunitRunDirUri(run));
-      const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
+      const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
       await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
       return;
     }
 
     this._firstRun = false;
-    await this._waitForWatcher(ps, run);
+    await this._waitForWatcher(projTestRun);
   }
 
 
@@ -109,7 +99,7 @@ export class JunitWatcher {
 
     try {
 
-      stoppedRun = this._currentRuns.find(cr => cr.run.name === run.name);
+      stoppedRun = this._currentRuns.find(cr => cr.projTestRun.name === run.name);
       if (!stoppedRun)
         throw new Error(`junitWatcher: runEnded() could not find a current run with name "${run.name}"`);
 
@@ -151,7 +141,7 @@ export class JunitWatcher {
             await this._updateResult(qim.junitFileUri, "runEnded");
             return;
           }
-          if (!stoppedRun.debug && !stoppedRun.run.token.isCancellationRequested) {
+          if (!stoppedRun.debug && !stoppedRun.projTestRun.token.isCancellationRequested) {
             // junit file does not exist, so if the run was not stopped, and it's not a debug run, then there was an 
             // error executing behave - so set the test result to error.
             // (unfortunately, in the case of a debug run, if the run was not cancelled via the run tests stop button, 
@@ -159,7 +149,7 @@ export class JunitWatcher {
             // because the vscode onDidTerminateDebugSession event doesn't tell us, so we just have to assume debug stop 
             // was clicked and that is why the junit file was not written. any error will still display to 
             // the user in the debug console if they open it.)
-            updateTestResultsForUnreadableJunitFile(qim.projSettings, stoppedRun.run, [qim.queueItem], qim.junitFileUri);
+            updateTestResultsForUnreadableJunitFile(qim.projSettings, stoppedRun.projTestRun, [qim.queueItem], qim.junitFileUri);
           }
         })());
       }
@@ -172,13 +162,13 @@ export class JunitWatcher {
     finally {
       // all updates done, remove the run from the list
       // (the run will end after this method returns, and you cannot update tests on a run that has ended)
-      this._currentRuns = this._currentRuns.filter(x => x.run !== run);
+      this._currentRuns = this._currentRuns.filter(x => x.projTestRun !== run);
       xRayLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
     }
   }
 
 
-  async _waitForWatcher(ps: ProjectSettings, run: vscode.TestRun) {
+  async _waitForWatcher(projTestRun: vscode.TestRun) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
     if (!watcher)
@@ -189,11 +179,7 @@ export class JunitWatcher {
       await new Promise(r => setTimeout(r, 100));
     }
 
-    const junitRunDirUri = getJunitRunDirUri(run);
-    if (!await this._waitForFolderWatch(junitRunDirUri, 3000))
-      return;
-
-    const junitProjRunDirUri = getJunitProjRunDirUri(ps, run);
+    const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
     await this._waitForFolderWatch(junitProjRunDirUri, 2000);
   }
 
@@ -287,18 +273,18 @@ export class JunitWatcher {
       // one junit file is created per feature, so update all tests belonging to this feature
       const matchedQueueItems = matches.map(m => m.queueItem);
       const projSettings = matches[0].projSettings;
-      await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.run, matchedRun.debug, uri, matchedQueueItems);
+      await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.projTestRun, matchedRun.debug, uri, matchedQueueItems);
       for (const match of matches) {
-        xRayLog(`junitWatcher: run ${matchedRun.run.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
+        xRayLog(`junitWatcher: run ${matchedRun.projTestRun.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;
       }
 
     }
     catch (e: unknown) {
-      const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.run.name}`);
-      matchedRun?.run.end();
+      const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.projTestRun.name}`);
+      matchedRun?.projTestRun.end();
       // entry point function (handler) - show error
-      services.logger.showError(err);
+      services.logger.popupError(err);
     }
 
   }

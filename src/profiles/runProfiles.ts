@@ -62,7 +62,7 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           if (!tagsString)
             return;
           if (tagsString?.includes("--tags")) {
-            services.logger.showWarn("Tags string should not include `--tags`.");
+            services.logger.logWarning("Tags string should not include `--tags`.", projUri);
             return;
           }
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
@@ -81,7 +81,7 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           if (!tagsString)
             return;
           if (tagsString?.includes("--tags")) {
-            services.logger.showWarn("Tags string should not include `--tags`.");
+            services.logger.logWarning("Tags string should not include `--tags`.", projUri);
             return;
           }
           const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
@@ -102,7 +102,7 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
           if (!tagsParameters)
             return;
           if (!tagsParameters?.startsWith("--tags=")) {
-            services.logger.showWarn("Parameters must start with `--tags=`.");
+            services.logger.logWarning("Parameters must start with `--tags=`.", projUri);
             return;
           }
           await runHandler(debug, request, new RunProfile(profileName, projUri, tagsParameters));
@@ -133,7 +133,7 @@ function onlyAllowOneDefaultPerProject(isDefault: boolean, projRunProfiles: vsco
   if (selectedDefaultsForThisProject.length > 2) {
     projRunProfiles.forEach(p => p.isDefault = false);
     projRunProfiles.filter(x => x.label === standardProfile).forEach(x => x.isDefault = true);
-    services.logger.showWarn(`Only one default Features run profile is supported. Default has been reset to "${standardProfile}".`);
+    services.logger.popupWarn(`Only one default Features run profile is supported. Default has been reset to "${standardProfile}".`);
     return;
   }
 

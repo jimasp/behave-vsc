@@ -69,7 +69,7 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
   if (new_base_dir === project_parent_dir) {
     // behave would fail out here, and therefore so must we    
     if (behaveWrkDirRelativeConfigPaths.length === 0) {
-      services.logger.logSettingsWarning(
+      services.logger.logWarning(
         `\nWARNING: Could not find "steps" directory for project "${ps.name}".` +
         '\nPlease either:' +
         '\n\t(a) add a "steps" folder if it does not exist, and/or' +
@@ -79,7 +79,7 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
         '\nSee the README for more information on configuration.', ps.uri);
     }
     else {
-      services.logger.logSettingsWarning(`WARNING: Could not find "steps" directory for project "${ps.name}". ` +
+      services.logger.logWarning(`WARNING: Could not find "steps" directory for project "${ps.name}". ` +
         `Using the first behave configuration paths value "${initial_base_dir}"`, ps.uri);
     }
     return null;

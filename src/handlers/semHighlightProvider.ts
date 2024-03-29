@@ -59,7 +59,7 @@ export class SemHighlightProvider implements vscode.DocumentSemanticTokensProvid
 				services.logger.logInfo(`${e}`, projUri);
 			}
 			catch {
-				services.logger.showError(`${e}`);
+				services.logger.popupError(`${e}`);
 			}
 			return new vscode.SemanticTokens(new Uint32Array(0));
 		}
