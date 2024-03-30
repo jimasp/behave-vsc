@@ -114,7 +114,7 @@ def profile_vs_args_check(context):
     def get_expected_args(value):
         return {
             "default": {"foo": "bar", "fizz": "buzz"},
-            "qu'oted\"tag and qu'oted\"env profile": ["foo=bar"],
+            "qu'oted\"tag and qu'oted\"env profile": {"foo": "bar", "fizz": "buzz"},
             "args profile": {"d1":"val1", "d2":"val2"},
             "no args profile": {},
             "stage2 profile": {"foo": "bar", "fizz": "buzz"},

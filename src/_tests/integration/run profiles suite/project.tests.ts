@@ -6,6 +6,7 @@ import {
   getExpectedResultsForTag1andTag2RunProfile,
   getExpectedResultsForNotTag1andNotTag2RunProfile,
   getExpectedResultsForTag1orTag2andTag3RunProfile,
+  getExpectedResultsForUnmatchedTagsSpecified,
 } from "./expectedResults";
 import { TestProjectRunner } from "../_common/projectRunner";
 import { noBehaveIni } from "../_common/types";
@@ -26,6 +27,24 @@ suite(`run profiles suite test: project.tests`, () => {
     runOptions.selectedRunProfile = "tag1 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
+  });
+
+  test("runAll - qu'oted\"tag and qu'oted\"env profile", async () => {
+    runOptions.selectedRunProfile = "qu'oted\"tag and qu'oted\"env profile";
+    expectations.getExpectedResultsFunc = getExpectedResultsForUnmatchedTagsSpecified;
+    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+  });
+
+  test("runAll - args profile", async () => {
+    runOptions.selectedRunProfile = "args profile";
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
+    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+  });
+
+  test("runAll - no args profile", async () => {
+    runOptions.selectedRunProfile = "no args profile";
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
+    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
   test("runAll - stage2 profile", async () => {

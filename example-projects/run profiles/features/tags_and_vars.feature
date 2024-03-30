@@ -1,4 +1,4 @@
-Feature: Tags and Vars
+Feature: Run Profiles Feature
 
    @tag1 @tag2 @tag3 @qu'oted"tag
    Scenario: all tags - success - check tags and envvars and args
