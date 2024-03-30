@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { services } from './common/services';
 import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {
+  deleteDirectoryContentsOlderThanDays,
   getProjectUris, isFeatureFile,
   isStepsFile, logExtensionVersion, uriId, urisMatch
 } from './common/helpers';
@@ -249,6 +250,13 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
 
     const start = performance.now();
 
+    // remove existing tmp files older than 2 days on startup, 
+    // (this is mostly to reduce the number of junit inotify watchers that are created)
+    await deleteDirectoryContentsOlderThanDays(services.config.extensionTempDirUri.fsPath, 2, false);
+
+    // kick off the junit watcher
+    junitWatcher.startWatchingJunitFolder();
+
     // get "project" uris, i.e. uris of workspace folders that contain .feature files
     const projUris = await getProjectUris(true);
     if (projUris.length === 0) {
@@ -259,8 +267,6 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
     // get the logger sorted first,
     services.logger.syncOutputChannelsToProjects(projUris);
     logExtensionVersion(context);
-
-    junitWatcher.startWatchingJunitFolder();
 
     await recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, projUris, junitWatcher);
 

@@ -28,6 +28,8 @@ export class ProjectWatcher {
   }
 
   public static create(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): ProjectWatcher {
+    // we watch ** because we want to catch folder deletes/renames, so 
+    // we can e.g. detect if a features/steps subfolder gets moved/deleted 
     const projectPattern = new vscode.RelativePattern(projUri, `**`);
     const watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
     const watcherEvents = ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);

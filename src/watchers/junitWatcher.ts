@@ -1,5 +1,4 @@
 
-
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { uriId } from '../common/helpers';
@@ -9,11 +8,9 @@ import { QueueItemMapEntry, parseJunitFileAndUpdateTestResults, updateTestResult
 import { performance } from 'perf_hooks';
 
 
-
 export function getJunitDirUri(): vscode.Uri {
-  return services.config.extensionTempDirUri;
+  return vscode.Uri.joinPath(services.config.extensionTempDirUri, "junit");
 }
-
 
 export function getJunitProjRunDirUri(projTestRun: vscode.TestRun): vscode.Uri {
   if (!projTestRun.name)
@@ -34,10 +31,12 @@ class Run {
 export class JunitWatcher {
 
   static #instance: JunitWatcher | null = null;
+
   readonly #DETECT_FILE = "bvsc.detect.me.xml";
+  readonly #watcherEvents: vscode.Disposable[] = [];
+  readonly #foldersWaitingForWatcher = new Set<string>();
+
   #currentRuns: Run[] = [];
-  #foldersWaitingForWatcher = new Set<string>();
-  #watcherEvents: vscode.Disposable[] = [];
   #watcher: vscode.FileSystemWatcher | undefined = undefined;
 
 
@@ -55,24 +54,20 @@ export class JunitWatcher {
 
   startWatchingJunitFolder() {
     // called on startup ONLY, watches the root junit directory
+    try {
+      if (JunitWatcher.#instance)
+        throw new Error("there should only ever be one junitWatcher per extension instance");
+      JunitWatcher.#instance = this;
 
-    if (JunitWatcher.#instance)
-      throw new Error("there should only ever be one junitWatcher per extension instance");
-    JunitWatcher.#instance = this;
+      // (do NOT await this)
+      this.#startJunitFolderWatch();
 
-    const junitDirectoryUri = getJunitDirUri();
-    const pattern = new vscode.RelativePattern(junitDirectoryUri, '**/*.xml');
-    this.#watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, true);
-    this.#watcherEvents.push(this.#watcher.onDidCreate((uri) => this._updateResult(uri, "onDidCreate")));
-    this.#watcherEvents.push(this.#watcher.onDidChange((uri) => this._updateResult(uri, "onDidChange")));
-    xRayLog(`junitWatcher: watcher pattern is ${vscode.Uri.joinPath(pattern.baseUri, pattern.pattern).fsPath}`);
-
-    // we want a generous timeout here, because the filesystemwatcher can take a while to "wake up" on extension 
-    // start up. (a user will not wait for that long, as it is not checked until startWatchingRun)
-    // do NOT await this here or it will hold up activate!
-    this._waitForFolderWatch(junitDirectoryUri, 10000);
-
-    return JunitWatcher.#instance;
+      return JunitWatcher.#instance;
+    }
+    catch (e: unknown) {
+      // unawaited async function (handler) - show error
+      services.logger.popupError(e);
+    }
   }
 
 
@@ -84,7 +79,7 @@ export class JunitWatcher {
     xRayLog(`junitWatcher: run ${projTestRun.name} added to currentRuns list`);
     const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
     await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
-    await this._waitForWatcher(projTestRun);
+    await this.#waitForWatcher(projTestRun);
   }
 
 
@@ -134,7 +129,7 @@ export class JunitWatcher {
       for (const qim of notUpdatedAfterGrace) {
         updates.push((async () => {
           if (fs.existsSync(qim.junitFileUri.fsPath)) {
-            await this._updateResult(qim.junitFileUri, "runEnded");
+            await this.#updateResult(qim.junitFileUri, "runEnded");
             return;
           }
           if (!stoppedRun.debug && !stoppedRun.projTestRun.token.isCancellationRequested) {
@@ -164,7 +159,28 @@ export class JunitWatcher {
   }
 
 
-  async _waitForWatcher(projTestRun: vscode.TestRun) {
+  async #startJunitFolderWatch() {
+    try {
+      const junitDirUri = getJunitDirUri();
+      const pattern = new vscode.RelativePattern(junitDirUri, '**/*.xml');
+      this.#watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, true);
+      this.#watcherEvents.push(this.#watcher.onDidCreate((uri) => this.#updateResult(uri, "onDidCreate")));
+      this.#watcherEvents.push(this.#watcher.onDidChange((uri) => this.#updateResult(uri, "onDidChange")));
+      xRayLog(`junitWatcher: watcher pattern is ${vscode.Uri.joinPath(pattern.baseUri, pattern.pattern).fsPath}`);
+
+      // we want a generous timeout here, because the filesystemwatcher can take a while to "wake up" on extension 
+      // start up. (a user will not wait for that long, as it is not checked until startWatchingRun)
+      // (awaiting here just to catch any error so we don't need to add another error handler in waitForFolderWatch)
+      await this.#waitForFolderWatch(junitDirUri, 10000);
+    }
+    catch (e: unknown) {
+      // unawaited async function - show error
+      services.logger.popupError(e);
+    }
+  }
+
+
+  async #waitForWatcher(projTestRun: vscode.TestRun) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
     if (!this.#watcher)
@@ -176,11 +192,11 @@ export class JunitWatcher {
     }
 
     const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
-    await this._waitForFolderWatch(junitProjRunDirUri, 2000);
+    await this.#waitForFolderWatch(junitProjRunDirUri, 2000);
   }
 
 
-  async _waitForFolderWatch(folderUri: vscode.Uri, timeout: number): Promise<boolean> {
+  async #waitForFolderWatch(folderUri: vscode.Uri, timeout: number): Promise<boolean> {
     // create detection files, and WAIT a short time for the watcher to detect one (or timeout so run does not get stuck).
     // if it does timeout, i.e. the filesystemwatcher is not working, then the run will still work but some or all of the test 
     // results will not be updated in real time, i.e. not until the run ends, giving a poor user experience.
@@ -235,7 +251,7 @@ export class JunitWatcher {
   }
 
 
-  async _updateResult(uri: vscode.Uri, caller: string) {
+  async #updateResult(uri: vscode.Uri, caller: string) {
     // re-entrant updater method
 
     if (uri.fsPath.endsWith(this.#DETECT_FILE)) {

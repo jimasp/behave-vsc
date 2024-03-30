@@ -531,8 +531,8 @@ export async function pathExists(path: string): Promise<boolean> {
   }
 }
 
-export function pathExistsSync(pattern: string): boolean {
-  return fs.existsSync(pattern);
+export function pathExistsSync(path: string): boolean {
+  return fs.existsSync(path);
 }
 
 export function showDebugWindow() {
@@ -559,4 +559,45 @@ export function getLines(text: string): string[] {
 
 export function isIterable(obj: unknown): boolean {
   return obj != null && typeof (obj as Iterable<unknown>)[Symbol.iterator] === 'function';
+}
+
+
+export async function deleteDirectoryContents(dirPath: string, errorIfDirMissing = true) {
+  const exists = pathExistsSync(dirPath);
+  if (!exists) {
+    if (errorIfDirMissing)
+      throw new Error(`Directory not found: ${dirPath}`);
+    return;
+  }
+
+  xRayLog(`Deleting directory contents: ${dirPath}`);
+  await fs.promises.rm(dirPath, { recursive: true, force: true });
+}
+
+export async function deleteDirectoryContentsOlderThanDays(dirPath: string, days: number, errorIfDirMissing: boolean) {
+  const exists = pathExistsSync(dirPath);
+  if (!exists) {
+    if (errorIfDirMissing)
+      throw new Error(`Directory not found: ${dirPath}`);
+    return;
+  }
+
+  xRayLog(`Deleting directory contents: ${dirPath}`);
+
+  const files = await fs.promises.readdir(dirPath);
+  const oneWeekAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+  await Promise.all(files.map(async (file) => {
+    const filePath = path.join(dirPath, file);
+    const stats = await fs.promises.stat(filePath);
+
+    if (stats.mtime < oneWeekAgo) {
+      if (stats.isDirectory()) {
+        await fs.promises.rm(filePath, { recursive: true, force: true });
+      }
+      else {
+        await fs.promises.unlink(filePath);
+      }
+    }
+  }));
 }
