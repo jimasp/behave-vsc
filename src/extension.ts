@@ -26,6 +26,7 @@ const projMap = new Map<string, ProjMapEntry>();
 
 export function deactivate() {
   // clean any disposable objects not handled by context.subscriptions (or any potentially large non-disposable objects)
+  projMap.forEach(m => m.dispose());
   projMap.clear();
   xRayLog("PERF: ignore all PERF times during vscode startup, as most functions are async and affected by startup contention, " +
     "(in most cases you can click refresh in test explorer for a more representative time)");
@@ -54,7 +55,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // to a register command, which returns a disposable so our custom command is deregistered when the extension is deactivated).
     // to test any custom dispose() methods (which must be synchronous), just start and then close the extension host environment.    
     context.subscriptions.push(
-      ...Array.from(projMap.values()),
+      // note - if you use the ... spread operator here, double-check that dispose actually gets called on each item
       treeView,
       junitWatcher,
       vscode.commands.registerTextEditorCommand(`behave-vsc.gotoStep`, gotoStepHandler),
@@ -284,6 +285,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
     projectUris = projectUris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
 
     if (!projUri) {
+      // a project folder could have been removed, so get rid of everything
       projMap.forEach(m => m.dispose());
       projMap.clear();
     }
@@ -296,9 +298,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
 
       const map = projMap.get(ps.id);
       if (map) {
-        map.ctrl.dispose();
-        map.watcher.dispose();
-        map.runProfiles.forEach(r => r.dispose());
+        map.dispose();
         projMap.delete(ps.id);
       }
 
@@ -306,6 +306,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
       const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
       const projWatcher = ProjectWatcher.create(projUri, projCtrl, testData);
       const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
+
       const projMapEntry = new ProjMapEntry(projCtrl, projRunHandler, projWatcher, projRunProfiles);
       projMap.set(ps.id, projMapEntry);
 

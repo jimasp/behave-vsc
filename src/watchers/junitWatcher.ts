@@ -11,7 +11,7 @@ import { performance } from 'perf_hooks';
 
 
 export function getJunitDirUri(): vscode.Uri {
-  return services.config.extensionTempFilesUri;
+  return services.config.extensionTempDirUri;
 }
 
 
@@ -31,22 +31,20 @@ class Run {
 }
 
 
-let watcher: vscode.FileSystemWatcher | undefined = undefined;
-const DETECT_FILE = "bvsc.detect.me.xml";
-
-
 export class JunitWatcher {
 
-  private _currentRuns: Run[] = [];
-  private _foldersWaitingForWatcher = new Set<string>();
-  private _watcherEvents: vscode.Disposable[] = [];
-  private _firstRun = true;
+  static #instance: JunitWatcher | null = null;
+  readonly #DETECT_FILE = "bvsc.detect.me.xml";
+  #currentRuns: Run[] = [];
+  #foldersWaitingForWatcher = new Set<string>();
+  #watcherEvents: vscode.Disposable[] = [];
+  #watcher: vscode.FileSystemWatcher | undefined = undefined;
 
 
   public dispose() {
     xRayLog("junitWatcher: disposing");
-    this._watcherEvents.forEach(e => e.dispose());
-    watcher?.dispose();
+    this.#watcherEvents.forEach(e => e.dispose());
+    this.#watcher?.dispose();
     if (services.config.isIntegrationTestRun) {
       xRayLog("Integration test run complete.\n");
       xRayLog('NOTE: if next line says "canceled" (sic) or "Channel has been closed" AND you did not stop the run, then check for ' +
@@ -56,38 +54,36 @@ export class JunitWatcher {
 
 
   startWatchingJunitFolder() {
+    // called on startup ONLY, watches the root junit directory
 
-    if (watcher) // simple singleton check
+    if (JunitWatcher.#instance)
       throw new Error("there should only ever be one junitWatcher per extension instance");
+    JunitWatcher.#instance = this;
 
     const junitDirectoryUri = getJunitDirUri();
     const pattern = new vscode.RelativePattern(junitDirectoryUri, '**/*.xml');
-    watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, true);
-    this._watcherEvents.push(watcher.onDidCreate((uri) => this._updateResult(uri, "onDidCreate")));
-    this._watcherEvents.push(watcher.onDidChange((uri) => this._updateResult(uri, "onDidChange")));
+    this.#watcher = vscode.workspace.createFileSystemWatcher(pattern, false, false, true);
+    this.#watcherEvents.push(this.#watcher.onDidCreate((uri) => this._updateResult(uri, "onDidCreate")));
+    this.#watcherEvents.push(this.#watcher.onDidChange((uri) => this._updateResult(uri, "onDidChange")));
     xRayLog(`junitWatcher: watcher pattern is ${vscode.Uri.joinPath(pattern.baseUri, pattern.pattern).fsPath}`);
 
     // we want a generous timeout here, because the filesystemwatcher can take a while to "wake up" on extension 
     // start up. (a user will not wait for that long, as it is not checked until startWatchingRun)
     // do NOT await this here or it will hold up activate!
     this._waitForFolderWatch(junitDirectoryUri, 10000);
+
+    return JunitWatcher.#instance;
   }
 
 
   async startWatchingRun(projTestRun: vscode.TestRun, debug: boolean, queueItemMap: QueueItemMapEntry[]) {
     // method called when a test run/debug session is starting.
-
     // add the run and wait for the watcher to be ready
-    this._currentRuns.push(new Run(projTestRun, debug, queueItemMap));
+
+    this.#currentRuns.push(new Run(projTestRun, debug, queueItemMap));
     xRayLog(`junitWatcher: run ${projTestRun.name} added to currentRuns list`);
-
-    if (!this._firstRun) {
-      const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
-      await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
-      return;
-    }
-
-    this._firstRun = false;
+    const junitProjRunDirUri = getJunitProjRunDirUri(projTestRun);
+    await vscode.workspace.fs.createDirectory(junitProjRunDirUri);
     await this._waitForWatcher(projTestRun);
   }
 
@@ -99,7 +95,7 @@ export class JunitWatcher {
 
     try {
 
-      stoppedRun = this._currentRuns.find(cr => cr.projTestRun.name === run.name);
+      stoppedRun = this.#currentRuns.find(cr => cr.projTestRun.name === run.name);
       if (!stoppedRun)
         throw new Error(`junitWatcher: runEnded() could not find a current run with name "${run.name}"`);
 
@@ -162,7 +158,7 @@ export class JunitWatcher {
     finally {
       // all updates done, remove the run from the list
       // (the run will end after this method returns, and you cannot update tests on a run that has ended)
-      this._currentRuns = this._currentRuns.filter(x => x.projTestRun !== run);
+      this.#currentRuns = this.#currentRuns.filter(x => x.projTestRun !== run);
       xRayLog(`junitWatcher: run ${run.name} removed from currentRuns list`);
     }
   }
@@ -171,11 +167,11 @@ export class JunitWatcher {
   async _waitForWatcher(projTestRun: vscode.TestRun) {
     // this method protects against starting a run before the watcher is ready (or times out)
 
-    if (!watcher)
+    if (!this.#watcher)
       throw new Error("junitWatcher: watcher is undefined");
 
     const junitDirUri = getJunitDirUri();
-    while (this._foldersWaitingForWatcher.has(uriId(junitDirUri))) {
+    while (this.#foldersWaitingForWatcher.has(uriId(junitDirUri))) {
       await new Promise(r => setTimeout(r, 100));
     }
 
@@ -185,24 +181,23 @@ export class JunitWatcher {
 
 
   async _waitForFolderWatch(folderUri: vscode.Uri, timeout: number): Promise<boolean> {
-    // create detection files, and WAIT for the watcher to detect one.
-    // if the watcher does not detect any files within a short time, then timeout so the run does not get stuck. 
+    // create detection files, and WAIT a short time for the watcher to detect one (or timeout so run does not get stuck).
     // if it does timeout, i.e. the filesystemwatcher is not working, then the run will still work but some or all of the test 
-    // results will not be updated until the run ends, giving a poor user experience.
+    // results will not be updated in real time, i.e. not until the run ends, giving a poor user experience.
 
     const fileUris: vscode.Uri[] = [];
 
     try {
 
-      this._foldersWaitingForWatcher.add(uriId(folderUri));
+      this.#foldersWaitingForWatcher.add(uriId(folderUri));
       let detected = false;
 
       const poll = 100;
       for (let ms = 0; ms < timeout; ms += poll) {
-        detected = !this._foldersWaitingForWatcher.has(uriId(folderUri));
+        detected = !this.#foldersWaitingForWatcher.has(uriId(folderUri));
         if (detected)
           break;
-        const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${DETECT_FILE}`);
+        const fileUri = vscode.Uri.joinPath(folderUri, `${ms}.${this.#DETECT_FILE}`);
         await vscode.workspace.fs.writeFile(fileUri, Buffer.from("<detect_me/>"));
         fileUris.push(fileUri);
         xRayLog("junitWatcher: writing " + fileUri.fsPath);
@@ -234,7 +229,7 @@ export class JunitWatcher {
           //
         }
       }
-      this._foldersWaitingForWatcher.delete(uriId(folderUri));
+      this.#foldersWaitingForWatcher.delete(uriId(folderUri));
     }
 
   }
@@ -243,10 +238,10 @@ export class JunitWatcher {
   async _updateResult(uri: vscode.Uri, caller: string) {
     // re-entrant updater method
 
-    if (uri.fsPath.endsWith(DETECT_FILE)) {
+    if (uri.fsPath.endsWith(this.#DETECT_FILE)) {
       const parentFolderId = uriId(vscode.Uri.file(uri.path.substring(0, uri.path.lastIndexOf('/'))));
-      if (this._foldersWaitingForWatcher.has(parentFolderId)) {
-        this._foldersWaitingForWatcher.delete(parentFolderId);
+      if (this.#foldersWaitingForWatcher.has(parentFolderId)) {
+        this.#foldersWaitingForWatcher.delete(parentFolderId);
         xRayLog(`junitWatcher: _updateResult() watcher successfully detected file ${uri.fsPath}`);
       }
       return;
@@ -256,7 +251,7 @@ export class JunitWatcher {
 
     try {
 
-      const matches = this._currentRuns.map(cr => {
+      const matches = this.#currentRuns.map(cr => {
         const filter = cr.queue.filter(m => uriId(m.junitFileUri) === uriId(uri));
         if (filter.length > 0) {
           if (matchedRun && cr !== matchedRun)

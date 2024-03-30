@@ -22,7 +22,7 @@ export class ProjectWatcher {
   }
 
   public dispose() {
-    xRayLog("junitWatcher: disposing");
+    xRayLog("projectWatcher: disposing");
     this.#watcherEvents.forEach(e => e.dispose());
     this.#watcher?.dispose();
   }
@@ -31,8 +31,8 @@ export class ProjectWatcher {
     const projectPattern = new vscode.RelativePattern(projUri, `**`);
     const watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
     const watcherEvents = ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);
-    const projectWatcher = new ProjectWatcher(watcher, watcherEvents);
-    return projectWatcher;
+    // create instance, passing in disposables
+    return new ProjectWatcher(watcher, watcherEvents);
   }
 
   static setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,

@@ -8,13 +8,13 @@ export class Configuration {
   isIntegrationTestRun = false; // whether we are inside an integration test run
   instanceSettingsLoaded = false; // used by xRayLog to check if instanceSettings is available (i.e. without get() side-effects)
   readonly exampleProject: boolean = false; // whether we're debugging an example project (we may/may not be running integration tests)
-  readonly extensionTempFilesUri; // e.g. /tmp/behave-vsc
+  readonly extensionTempDirUri; // e.g. /tmp/behave-vsc
   #windowSettings: InstanceSettings | undefined = undefined; // configuration settings for the whole vscode instance
   #resourceSettings: { [projId: string]: ProjectSettings } = {}; // configuration settings for a specific project
   #processing = new Map<string, boolean>(); // used to prevent parallel async calls to getProjectSettings() for the same project
 
   constructor() {
-    this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
+    this.extensionTempDirUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
     this.exampleProject = (vscode.workspace.workspaceFolders?.find(f =>
       f.uri.path.includes("/behave-vsc/example-projects/")) !== undefined);
   }
