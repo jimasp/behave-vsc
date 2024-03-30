@@ -4,7 +4,7 @@ import { services } from "../common/services";
 import { ProjectSettings, CustomRunner, RunProfile } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
 import { runOrDebugAllFeaturesInOneInstance, runOrDebugFeatures, runOrDebugFeatureWithSelectedScenarios } from './runOrDebug';
-import { countTestItems, getTestItems, getContentFromFilesystem, uriId } from '../common/helpers';
+import { countTestItems, getTestItems, getContentFromFilesystem, uriId, getNowAsFilesystemSafeIsoString } from '../common/helpers';
 import { QueueItem } from '../extension';
 import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
@@ -49,7 +49,7 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
       const projFolderName = basename(projUri.path);
       // we put the datetime first because the projRunName is also used for the junit folder name,
       // and so the junit folders will be sorted by datetime if sorted by name
-      const projRunName = `${new Date().toISOString()} ${projFolderName}`;
+      const projRunName = `${getNowAsFilesystemSafeIsoString()} ${projFolderName}`;
       projTestRun = projCtrl.createTestRun(request, projRunName, false);
 
       const queue: QueueItem[] = [];
@@ -186,12 +186,19 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
 
     // note that runProfile.env will (and should) override 
     // any pr.projSettings.env global setting with the same key
-    const allenv = { ...ps.env, ...runProfile.env };
+    const allEnv = { ...ps.env, ...runProfile.env };
+
+    // note that runProfile.args will (and should) completely override
+    // any pr.projSettings.args global setting.
+    // also note that we must differentiate between undefined (not set by user) and an empty array set by user 
+    // (i.e. user may want to override default args to [])
+    const args = runProfile.args === undefined ? ps.args : runProfile.args;
 
     pr = new ProjRun(
       ps, run, request, debug, ctrl, testData, projQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
-      allenv,
+      allEnv,
+      args,
       runProfile.tagsParameters,
       runProfile.customRunner
     )
@@ -474,6 +481,7 @@ export class ProjRun {
     public readonly includedFeatures: vscode.TestItem[],
     public readonly junitRunDirUri: vscode.Uri,
     public readonly env: { [key: string]: string; },
+    public readonly args: string[],
     public readonly tagsParameters: string,
     public readonly customRunner?: CustomRunner
   ) { }

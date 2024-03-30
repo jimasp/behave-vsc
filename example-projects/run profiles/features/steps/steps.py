@@ -5,21 +5,35 @@ from behave import *
 @given("we have run profiles")
 def installed(context):
     pass
+
+
    
 @then("envvars are as expected")
 def profile_vs_envvar_check(context):
     profile = os.environ.get("profile")
     if not profile:
-        profile = "Features"     
+        profile = "default"     
    
     def get_expected_env_vars(value):
         return {
-            "Features": {
+            "default": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None
             },
+            "args profile": {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None
+            },     
+            "no args profile": {
+                "var1": "ENV-var1",
+                "var2": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None
+            },                          
             "qu'oted\"tag and qu'oted\"env profile": {
                 "var1": "ENV-var1",
                 "var2": None,
@@ -88,12 +102,43 @@ def profile_vs_envvar_check(context):
         "qu'oted\"env": os.environ.get("qu'oted\"env")
     }
     
+    
+@then("args are as expected")
+def profile_vs_args_check(context):
+    profile = os.environ.get("profile")
+    if not profile:
+        profile = "default"  
+
+    args = context._config.userdata
+    
+    def get_expected_args(value):
+        return {
+            "default": {"foo": "bar", "fizz": "buzz"},
+            "qu'oted\"tag and qu'oted\"env profile": ["foo=bar"],
+            "args profile": {"d1":"val1", "d2":"val2"},
+            "no args profile": {},
+            "stage2 profile": {"foo": "bar", "fizz": "buzz"},
+            "tag1 profile": {"foo": "bar", "fizz": "buzz"},
+            "tag1 vars profile": {"foo": "bar", "fizz": "buzz"},
+            "tag2 vars profile": {"foo": "bar", "fizz": "buzz"},
+            "tag1ortag2 vars profile": {"foo": "bar", "fizz": "buzz"},
+            "tag1andtag2 profile": {"foo": "bar", "fizz": "buzz"},
+            "tag1ortag2andtag3 profile": {"foo": "bar", "fizz": "buzz"},     
+            "nottag1andnottag2 profile": {"foo": "bar", "fizz": "buzz"},
+            "qu'oted\"tag and env profile": {"foo": "bar", "fizz": "buzz"},
+        }.get(value)    
+        
+    expected_args = get_expected_args(profile)  
+    assert expected_args or expected_args == {}
+    
+    assert args == expected_args
+    
 
 @then("tags are as expected")
 def profile_vs_tags_check(context):
     profile = os.environ.get("profile")
     if not profile:
-        profile = "Features"  
+        profile = "default"  
     
     # ands = while this is called "ands" it could be an OR or an AND or both combined
     # an OR is [[tag1, tag2]],
@@ -102,8 +147,10 @@ def profile_vs_tags_check(context):
     
     def get_expected_tags(value):
         return {
-            "Features": [],
+            "default": [],
             "qu'oted\"tag and qu'oted\"env profile": [["qu'oted\"tag"]],
+            "args profile": [],
+            "no args profile": [],            
             "stage2 profile": [],
             "tag1 profile": [["tag1"]],
             "tag1 vars profile": [["tag1"]],
@@ -119,6 +166,8 @@ def profile_vs_tags_check(context):
     assert expected_tags or expected_tags == []
     
     assert tags == expected_tags
+    
+    
 
 
 @given("we have behave installed")

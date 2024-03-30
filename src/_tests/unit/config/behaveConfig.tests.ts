@@ -7,9 +7,10 @@ import { getBehaveConfigPaths } from '../../../config/behaveConfig';
 import { services } from '../../../common/services';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../../../behaveLogic';
 import { ProjectSettings } from '../../../config/settings';
+import { getNowAsFilesystemSafeIsoString } from '../../../common/helpers';
 
 
-const nowString = () => new Date().toISOString().replace(/:/g, "-").replace(/\./g, "-").replace('Z', '');
+const nowString = () => getNowAsFilesystemSafeIsoString();
 
 
 suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {

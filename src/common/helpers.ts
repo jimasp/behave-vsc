@@ -548,8 +548,8 @@ export function basename(uri: vscode.Uri): string {
 }
 
 
-export function getMinSecMsTimeString() {
-  return new Date().toISOString().slice(14, 23).replace(/[-.]/g, '');
+export function getNowAsFilesystemSafeIsoString() {
+  return new Date().toISOString().replace(/[-:.Z]/g, "");
 }
 
 

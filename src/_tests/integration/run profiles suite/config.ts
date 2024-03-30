@@ -12,6 +12,12 @@ export const wsConfig = new TestWorkspaceConfig({
     "var1": "ENV-var1",
     "var3": "ENV-var3"
   },
+  args: [
+    "-D",
+    "foo=bar",
+    "-D",
+    "fizz=buzz",
+  ],
   runProfiles: [
     {
       "name": "qu'oted\"tag and qu'oted\"env profile",
@@ -20,6 +26,25 @@ export const wsConfig = new TestWorkspaceConfig({
         "qu'oted\"env": "v'al\"ue"
       },
       "tagsParameters": "--tags=@qu'oted\"tag",
+    },
+    {
+      "name": "args profile",
+      "env": {
+        "profile": "args profile",
+      },
+      "args": [
+        "-D",
+        "d1=val1",
+        "-D",
+        "d2=val2",
+      ],
+    },
+    {
+      "name": "no args profile",
+      "env": {
+        "profile": "no args profile",
+      },
+      "args": [],
     },
     {
       "name": "stage2 profile",

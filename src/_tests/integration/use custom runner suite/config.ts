@@ -13,11 +13,11 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "var1 value",
       },
       "tagsParameters": "--tags=~@skip",
+      "args": [
+        "--simple"
+      ],
       "customRunner": {
         "scriptFile": "manage.py",
-        "args": [
-          "--simple"
-        ],
         "waitForJUnitFiles": true
       },
     },

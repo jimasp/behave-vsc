@@ -1,14 +1,16 @@
 Feature: Tags and Vars
 
    @tag1 @tag2 @tag3 @qu'oted"tag
-   Scenario: all tags - success - check tags and envvars
+   Scenario: all tags - success - check tags and envvars and args
       Given we have run profiles
       Then envvars are as expected
+      And args are as expected
       And tags are as expected
 
-   Scenario: untagged - success - check tags and envvars
+   Scenario: untagged - success - check tags and envvars and args
       Given we have run profiles
       Then envvars are as expected
+      And args are as expected
       And tags are as expected   
 
    Scenario: untagged - fail

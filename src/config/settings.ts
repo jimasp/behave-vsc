@@ -54,6 +54,7 @@ export class ProjectSettings {
 
   // user-settable:
   public readonly env: EnvSetting = {};
+  public readonly args: string[] = [];
   public readonly justMyCode: boolean;
   public readonly runParallel: boolean;
   public readonly importedSteps: ImportedSteps;
@@ -157,6 +158,17 @@ export class ProjectSettings {
       services.logger.logWarning('Invalid "behave-vsc.envVarOverrides" setting was ignored.', projUri);
     }
 
+
+    try {
+      const argsCfg: string[] | undefined = projConfig.get("args");
+      if (argsCfg === undefined)
+        throw new Error("behave-vsc.args is undefined");
+      this.args = argsCfg;
+    }
+    catch {
+      services.logger.logWarning('Invalid "behave-vsc.args" setting was ignored.', projUri);
+    }
+
     let behaveWorkingDirectoryCfg: string | undefined = projConfig.get("behaveWorkingDirectory");
     if (behaveWorkingDirectoryCfg === undefined)
       throw new Error("behaveWorkingDirectory is undefined");
@@ -249,7 +261,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
       }
 
       // if we got this far then this run profile is valid, create via the RunProfile constructor
-      runProfiles.push(new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.customRunner));
+      runProfiles.push(new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.args, profile.customRunner));
     }
   }
   catch {
@@ -452,16 +464,13 @@ export type ImportedStepsSetting = { [key: string]: string };
 export class CustomRunner {
   public readonly scriptFile: string;
   public readonly waitForJUnitFiles: boolean;
-  public readonly args?: string[];
 
   constructor(
     script: string,
     waitForJUnitFiles: boolean,
-    args?: string[],
   ) {
     this.scriptFile = script.trim();
     this.waitForJUnitFiles = waitForJUnitFiles;
-    this.args = args ?? [];
   }
 }
 
@@ -470,6 +479,7 @@ export interface IRunProfile {
   projUri?: vscode.Uri;
   tagsParameters?: string;
   env?: EnvSetting;
+  args?: string[];
   customRunner?: CustomRunner;
 }
 
@@ -478,6 +488,9 @@ export class RunProfile implements IRunProfile {
   public readonly projUri: vscode.Uri;
   public readonly tagsParameters: string;
   public readonly env: EnvSetting;
+  // note that for args, we must differentiate between undefined (not set by user) and an empty array set by user 
+  // (i.e. user may want to override default args to [])
+  public readonly args: string[] | undefined;
   public readonly customRunner?: CustomRunner
 
   constructor(
@@ -485,6 +498,7 @@ export class RunProfile implements IRunProfile {
     projUri: vscode.Uri,
     tagsParameters?: string,
     env?: EnvSetting,
+    args?: string[],
     customRunner?: CustomRunner
   ) {
     this.name = name;
@@ -492,9 +506,10 @@ export class RunProfile implements IRunProfile {
     // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
     this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
     this.env = env ?? {};
+    this.args = args;
     // use the customRunner constructor (to apply trim() etc.)
     this.customRunner = customRunner
-      ? new CustomRunner(customRunner.scriptFile, customRunner.waitForJUnitFiles, customRunner.args)
+      ? new CustomRunner(customRunner.scriptFile, customRunner.waitForJUnitFiles)
       : undefined;
   }
 }

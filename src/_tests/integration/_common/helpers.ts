@@ -122,7 +122,7 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 }
 
 
-export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions) {
+export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions): string {
 	let tagsString = "";
 	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 	if (runProfile.tagsParameters)
@@ -130,7 +130,18 @@ export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWo
 	return tagsString;
 }
 
-export function getExpectedEnvVarsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions) {
+
+export function getExpectedArgsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions): string {
+	let args: string[] = testExtConfig.get("args");
+	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
+	if (runProfile.args)
+		args = runProfile.args;
+	const argsString = args ? args.join(" ") : "";
+	return argsString;
+}
+
+
+export function getExpectedEnvVarsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions): string {
 
 	const env: object = testExtConfig.get("env");
 
@@ -168,6 +179,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 
 	const tagsString = getExpectedTagsString(projUri, testExtConfig, runOptions);
 	const envVarsString = getExpectedEnvVarsString(projUri, testExtConfig, runOptions);
+	const argsString = getExpectedArgsString(projUri, testExtConfig, runOptions);
 	const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
 
 	let customRunner: CustomRunner | undefined = undefined;
@@ -189,7 +201,6 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 	}
 
 	const scriptOrModule = customRunner ? customRunner.scriptFile : "-m";
-	const scriptArgs = customRunner?.args ? customRunner.args.join(" ") : "";
 
 	const expectCmdOrderedIncludes = [
 		`cd `, `example-projects`, projName, workingFolder, `\n`,
@@ -197,7 +208,7 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 		`python`,
 		scriptOrModule,
 		`behave`,
-		scriptArgs,
+		argsString,
 		tagsString,
 		argPipedFeaturePathsRx,
 		argPipedScenariosRx,
@@ -215,7 +226,7 @@ export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceC
 	const profile = runProfilesSetting.find(x => x.name === runOptions.selectedRunProfile);
 	if (!profile)
 		assert(profile, `selectedRunProfile "${runOptions.selectedRunProfile}" not found in testExtConfig runProfiles`);
-	return new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.customRunner);
+	return new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.args, profile.customRunner);
 }
 
 

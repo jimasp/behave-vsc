@@ -13,6 +13,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	// user-settable settings
 	public readonly runParallel?: boolean;
 	private env?: { [name: string]: string };
+	private args?: string[];
 	private envVarOverrides?: { [name: string]: string };
 	private justMyCode?: boolean;
 	private runMultiRootProjectsInParallel?: boolean;
@@ -25,6 +26,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// all USER-SETTABLE settings in settings.json or *.code-workspace		
 		envVarOverrides = undefined,
 		env = undefined,
+		args = undefined,
 		justMyCode = undefined,
 		runMultiRootProjectsInParallel = undefined,
 		runParallel = undefined,
@@ -35,6 +37,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	}: {
 		envVarOverrides?: { [name: string]: string },
 		env?: { [name: string]: string },
+		args?: string[],
 		justMyCode?: boolean,
 		runMultiRootProjectsInParallel?: boolean,
 		runParallel?: boolean,
@@ -45,6 +48,7 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 	} = {}) {
 		this.envVarOverrides = envVarOverrides;
 		this.env = env;
+		this.args = args;
 		this.justMyCode = justMyCode;
 		this.runParallel = runParallel;
 		this.runMultiRootProjectsInParallel = runMultiRootProjectsInParallel;
@@ -65,6 +69,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// 3. the default value for the type (e.g. bool = false, string = "", dict = {}, array = [])
 		// SO WE MUST MIRROR THAT BEHAVIOUR HERE
 		switch (section) {
+			case "args":
+				return <T><unknown>(this.args ?? []);
 			case "envVarOverrides": // DEPRECATED
 				return <T><unknown>(this.envVarOverrides ?? {});
 			case "env":
@@ -108,6 +114,9 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for all user-settable settings in settings.json or *.code-workspace
 		let response;
 		switch (section) {
+			case "args":
+				response = <T><unknown>this.args;
+				break;
 			case "envVarOverrides": // DEPRECATED
 				response = <T><unknown>this.envVarOverrides;
 				break;
@@ -157,6 +166,8 @@ export class TestWorkspaceConfig implements vscode.WorkspaceConfiguration {
 		// switch for ALL (i.e. including non-user-settable) settings in settings.json or *.code-workspace 
 		// (unless tested directly in assertWorkspaceSettingsAsExpected)		
 		switch (section) {
+			case "args":
+				return <T><unknown>(this.get("args"));
 			case "env":
 				return <T><unknown>(Object.keys(this.get("env") || {}).length === 0 ? (this.envVarOverrides ? this.envVarOverrides : {}) : this.get("env"));
 			case "justMyCode":

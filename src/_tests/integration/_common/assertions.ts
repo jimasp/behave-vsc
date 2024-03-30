@@ -55,7 +55,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
     // convert RunProfiles to plain objects for deepStrictEqual
     const actualProfiles = projSettings.userRunProfiles.map(p => JSON.stringify(p));
     const expectedProfiles = (testConfig.getExpected("runProfiles") as RunProfilesSetting).map(p =>
-      JSON.stringify(new RunProfile(p.name, projUri, p.tagsParameters, p.env, p.customRunner)));
+      JSON.stringify(new RunProfile(p.name, projUri, p.tagsParameters, p.env, p.args, p.customRunner)));
     assert.deepStrictEqual(actualProfiles, expectedProfiles, `${projName} project: runProfiles`);
   }
   catch (assertErr: unknown) {
@@ -311,7 +311,8 @@ export function assertExpectedCounts(projUri: vscode.Uri, projName: string, conf
     }
   }
   catch (assertErr: unknown) {
-    // UHOH - did we comment something out? do a git diff?
+    // UHOH - did we comment something out? or add/remove steps or tests etc.? do a git diff? 
+    // (it may be that the counts are just out of sync if you intentionally added/removed something)
     debugger; // eslint-disable-line no-debugger      
 
     throw new Error(`assertExpectedCounts failed for ${projName} project:\n${assertErr}`);

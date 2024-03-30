@@ -7,7 +7,10 @@
 					"scope": "resource",
 					"type": "string",
 					"markdownDescription": "The project-relative behave working directory (only required if it is not the project root).",
-					"default": "."
+					"default": ".",
+					"examples": [
+						"tests/behave"
+					]
 				},
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
@@ -23,7 +26,26 @@
 					"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to use when calling a behave command. This will apply to all behave tests within the project folder. Note that environment variables can also be set per run by using the `runProfiles` setting.",
 					"additionalProperties": {
 						"type": "string"
-					}
+					},
+					"examples": [
+						{
+							"foo": "bar",
+							"fizz": "buzz"
+						}
+					]
+				},
+				"behave-vsc.args": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"markdownDescription": "Additional arguments to pass to behave.",
+					"examples": [
+						[
+							"--D",
+							"foo=bar"
+						]
+					]
 				},
 				"behave-vsc.featuresPath": {
 					"scope": "resource",
@@ -34,10 +56,15 @@
 				"behave-vsc.importedSteps": {
 					"scope": "resource",
 					"type": "object",
-					"markdownDescription": "Key-value pairs of additional imported steps to include for step navigation (e.g. step libraries that are not in your \"steps\" folder). Each pair has a key of a *project-relative* path to a folder inside the project, and a value of a regex (not glob) of step files to include. See the readme for an example.",
+					"markdownDescription": "Key-value pairs of additional imported steps to include for step navigation (e.g. step libraries that are not in your \"steps\" folder). Each pair has a key of a *project-relative* path to a folder inside the project, and a value of a regex (not glob) of step files to include.",
 					"additionalProperties": {
 						"type": "string"
-					}
+					},
+					"examples": [
+						{
+							"my_steps_lib": ".*\\.py"
+						}
+					]
 				},
 				"behave-vsc.justMyCode": {
 					"scope": "resource",
@@ -81,13 +108,32 @@
 								"type": "object",
 								"additionalProperties": {
 									"type": "string",
-									"markdownDescription": "Key-value pairs of environment variable overrides (or additions) when this run profile is executed"
-								}
+									"markdownDescription": "Key-value pairs of environment variable overrides (or additions) when this run profile is executed. These are combined with the global `env` setting and will override any global settings with the same key."
+								},
+								"examples": [
+									{
+										"foo": "bar",
+										"fizz": "buzz"
+									}
+								]
+							},
+							"args": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"markdownDescription": "Additional arguments to pass to behave when this run profile is executed. Note that these will replace any global `args` setting during execution.",
+								"examples": [
+									[
+										"--D",
+										"foo=bar"
+									]
+								]
 							},
 							"tagsParameters": {
 								"type": "string"
 							},
-							"customRunner": {
+							"script": {
 								"type": "object",
 								"required": [
 									"scriptFile",
@@ -102,13 +148,6 @@
 									"waitForJUnitFiles": {
 										"type": "boolean",
 										"markdownDescription": "If true, the extension will wait for JUnit XML files to be created by the custom runner and update test results. If false, all selected tests will be marked as skipped."
-									},
-									"args": {
-										"type": "array",
-										"items": {
-											"type": "string"
-										},
-										"markdownDescription": "Additional arguments to pass to the custom script. These are passed after the `behave` command and before the behave arguments."
 									}
 								}
 							}

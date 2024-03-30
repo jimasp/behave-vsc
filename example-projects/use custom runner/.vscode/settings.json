@@ -7,11 +7,11 @@
         // (do not create conflicting profile names between projects)
         {
             "name": "behave-django runner profile - wait for results",
+            "args": [
+                "--keepdb"
+            ],
             "customRunner": {
                 "scriptFile": "manage.py",
-                "args": [
-                    "--keepdb"
-                ],
                 "waitForJUnitFiles": true
             },
         },

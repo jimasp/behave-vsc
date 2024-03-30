@@ -396,8 +396,7 @@ For simple setups, the extension should work "out of the box", but there is plen
     {
       "behave-vsc.importedSteps": {
           // project-relative path : regex (not glob)
-          "my_steps_lib" : ".*",
-          ".venv/lib/python3.9/site-packages/package-steps-lib" : ".*/steps/.*|.*/steps.py"
+          "my_steps_lib" : ".*"
       },
       "behave-vsc.justMyCode": false
     }

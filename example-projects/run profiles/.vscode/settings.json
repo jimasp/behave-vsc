@@ -4,6 +4,12 @@
         "var1": "ENV-var1",
         "var3": "ENV-var3",
     },
+    "behave-vsc.args": [
+        "-D",
+        "foo=bar",
+        "-D",
+        "fizz=buzz",
+    ],
     "behave-vsc.runProfiles": [
         // note - for multiroot, runProfiles will only be read from the workspace file 
         // (do not create conflicting profile names between projects)
@@ -15,6 +21,25 @@
             },
             "tagsParameters": "--tags=@qu'oted\"tag",
         },
+        {
+            "name": "args profile",
+            "env": {
+                "profile": "args profile",
+            },
+            "args": [
+                "-D",
+                "d1=val1",
+                "-D",
+                "d2=val2",
+            ],
+        },
+        {
+            "name": "no args profile",
+            "env": {
+                "profile": "no args profile",
+            },
+            "args": [],
+        },        
         {
             "name": "stage2 profile",
             "env": {
