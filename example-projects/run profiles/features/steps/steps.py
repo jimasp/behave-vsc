@@ -109,7 +109,7 @@ def profile_vs_args_check(context):
     if not profile:
         profile = "default"  
 
-    args = context._config.userdata
+    args = context.config.userdata
     
     def get_expected_args(value):
         return {
@@ -143,7 +143,7 @@ def profile_vs_tags_check(context):
     # ands = while this is called "ands" it could be an OR or an AND or both combined
     # an OR is [[tag1, tag2]],
     # an AND is [[tag1], [tag2]]
-    tags = context._config.tags.ands
+    tags = context.config.tags.ands
     
     def get_expected_tags(value):
         return {
@@ -166,8 +166,6 @@ def profile_vs_tags_check(context):
     assert expected_tags or expected_tags == []
     
     assert tags == expected_tags
-    
-    
 
 
 @given("we have behave installed")

@@ -14,8 +14,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Shows full behave output in the Behave VSC output window.
   - Shows the behave command in the output so you can generate commands to run manually.
   - Supports running parallel behave instances, if all your features are isolated (`runParallel`).
+  - Configurable behave working directory (`behaveWorkingDirectory`).
   - Configurable environment variables (`env` or `runProfiles`).
-  - Configurable behave working directory (`behaveWorkingDirectory`).  
+  - Configurable behave arguments (`args` or `runProfiles`).
   - Configurable custom runner script, e.g. manage.py for behave-django or just your own script (`runProfiles`).
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
@@ -118,6 +119,12 @@ For simple setups, the extension should work "out of the box", but there is plen
           "BEHAVE_STAGE": "Local",
           "ENDPOINT": "http://localhost:4566"
       },
+      "behave-vsc.args": [
+        "-D", 
+        "foo=bar"
+        "-D",
+        "fizz=buzz"
+      ],
       "behave-vsc.runProfiles": [
         {
           "name": "Tags: A",
@@ -126,13 +133,15 @@ For simple setups, the extension should work "out of the box", but there is plen
         {
           "name": "Tags: B,C",
           "tagsParameters": "--tags=@tagB, @tagC",
+          "args": ["-D", "foo=baz"],
         },                
         {
           "name": "System",
           "env": {
             // override ONE of the default env vars
             "BEHAVE_STAGE": "System"           
-          }
+          },
+          "args": [],
         },          
         {         
           "name": "Staging: Tag B",
@@ -149,14 +158,15 @@ For simple setups, the extension should work "out of the box", but there is plen
   - Notes:
     - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` profiles and it would run all tests with tags A, B and C by default.
     - Regarding environment variables in runProfiles:
-      - The `env` property in a runProfile will (while running) override any `behave-vsc.env` setting that has the same key.
-      - You can use an environment variable for a high level of customisation:
+      - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
+      - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
         - in your `environment.py` (or `mystage_environment.py`) file:
           - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
           - to control `scenario.skip()`
           - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
           - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
         - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
+    - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
 
 ---
 
