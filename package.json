@@ -110,13 +110,13 @@
 							"promptForTags": {
 								"type": "boolean",
 								"default": false,
-								"markdownDescription": "If true, the extension will always prompt for adhoc tags to pass to behave. If false, the extension will just use the --tags included in `args` and/or `args.ArgList`."
+								"markdownDescription": "If true, the extension will always prompt for adhoc tags to pass to behave. If false, the extension will just use the --tags included in `args` and/or `args.list`."
 							},
 							"env": {
 								"type": "object",
 								"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to set when this run profile is executed.",
 								"required": [
-									"envVars"
+									"vars"
 								],
 								"properties": {
 									"inherit": {
@@ -124,14 +124,14 @@
 										"default": true,
 										"markdownDescription": "Whether or not to concatenate the `behave-vsc.env` setting. If false, the `envVars` setting will overwrite the `behave-vsc.env` setting."
 									},
-									"envVars": {
+									"vars": {
 										"type": "object",
 										"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to set when this run profile is executed."
 									}
 								},
 								"examples": {
 									"inherit": true,
-									"envVars": {
+									"vars": {
 										"FOO": "bar",
 										"FIZZ": "buzz"
 									}
@@ -141,15 +141,15 @@
 								"type": "object",
 								"markdownDescription": "Additional arguments to pass to behave when this run profile is executed. These will overwrite any `behave-vsc.args` if `inherit` is false. Note that the extension does not validate these arguments, so it is possible to break the extension and/or behave.",
 								"required": [
-									"argList"
+									"list"
 								],
 								"properties": {
 									"inherit": {
 										"type": "boolean",
 										"default": true,
-										"markdownDescription": "Whether or not to concatenate the `behave-vsc.args` setting. If false, the `argList` setting will overwrite the `behave-vsc.args` setting."
+										"markdownDescription": "Whether or not to concatenate the `behave-vsc.args` setting. If false, the `list` setting will overwrite the `behave-vsc.args` setting."
 									},
-									"argList": {
+									"list": {
 										"type": "array",
 										"items": {
 											"type": "string"
@@ -159,7 +159,7 @@
 								},
 								"examples": {
 									"inherit": true,
-									"argList": [
+									"list": [
 										"-D",
 										"foo=bar",
 										"-D",
@@ -181,7 +181,7 @@
 								"properties": {
 									"scriptFile": {
 										"type": "string",
-										"markdownDescription": "The name of a custom python script file. Command becomes: `python <script> behave <args> <behave args>`. This file must be in the root of your behave working directory. Note that unless this is an actual behave runner (e.g. setup like behave-django's manage.py), you will not be able to debug tests except by custom means, e.g. attaching to the process via import debugpy and launch.json.",
+										"markdownDescription": "The name of a custom python script file. Command becomes: `python <script> behave <your_args> <extension_behave_args>`. This file must be in the root of your behave working directory. Note that unless this is an actual behave runner (e.g. setup like behave-django's manage.py), you will not be able to debug tests except by custom means, e.g. attaching to the process via import debugpy and launch.json.",
 										"examples": [
 											"manage.py"
 										]

@@ -457,12 +457,12 @@ export type EnvSetting = { [key: string]: string };
 
 export type RunProfileEnvSetting = {
   inherit?: boolean,
-  envVars: EnvSetting
+  vars: EnvSetting
 }
 
 export type RunProfileArgsSetting = {
   inherit?: boolean,
-  argList: string[]
+  list: string[]
 }
 
 export type StepImport = {
@@ -517,11 +517,11 @@ export class RunProfile implements IRunProfile {
     this.projUri = projUri;
     this.env = {
       inherit: env?.inherit ?? true,
-      envVars: env?.envVars ?? {}
+      vars: env?.vars ?? {}
     };
     this.args = {
       inherit: args?.inherit ?? true,
-      argList: args?.argList ?? []
+      list: args?.list ?? []
     };
     // use the customRunner constructor (to apply trim() etc.)
     this.customRunner = customRunner

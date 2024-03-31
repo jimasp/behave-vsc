@@ -1,6 +1,6 @@
 @myscript
 Feature: MyScript
 
-   Scenario: test success
+   Scenario: test success if myscript
       Given we have behave installed
-      Then we will see the result
+      Then this will succeed if profile is "myscript"

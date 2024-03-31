@@ -191,11 +191,11 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
 
     let env = ps.env;
     if (runProfile.env)
-      env = runProfile.env.inherit ? { ...ps.env, ...runProfile.env.envVars } : runProfile.env.envVars;
+      env = runProfile.env.inherit ? { ...ps.env, ...runProfile.env.vars } : runProfile.env.vars;
 
     let args = ps.args;
     if (runProfile.args)
-      args = runProfile.args.inherit ? [...ps.args, ...runProfile.args.argList] : runProfile.args.argList;
+      args = runProfile.args.inherit ? [...ps.args, ...runProfile.args.list] : runProfile.args.list;
 
     // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
     adhocTagsParameters = (adhocTagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();

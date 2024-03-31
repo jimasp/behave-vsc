@@ -10,8 +10,9 @@ export const wsConfig = new TestWorkspaceConfig({
       "name": "behave-django runner profile - wait for results",
       "promptForTags": false,
       "args": {
-        "argList": [
-          "--keepdb"
+        "list": [
+          "--keepdb",
+          "--tags=~@myscript"
         ],
       },
       "customRunner": {
@@ -22,6 +23,11 @@ export const wsConfig = new TestWorkspaceConfig({
     {
       "name": "behave-django runner profile - do not wait for results",
       "promptForTags": false,
+      "args": {
+        "list": [
+          "--tags=~@myscript"
+        ],
+      },
       "customRunner": {
         "scriptFile": "manage.py",
         "waitForJUnitFiles": false
@@ -30,15 +36,22 @@ export const wsConfig = new TestWorkspaceConfig({
     {
       "name": "myscript - wait for results",
       "promptForTags": false,
+      "env": {
+        "vars": {
+          "profile": "myscript"
+        },
+      },
       "args": {
-        "argList": ["--tags=@myscript"],
+        "list": [
+          "--tags=@myscript"
+        ],
       },
       "customRunner": {
         "scriptFile": "myscript.py",
         "waitForJUnitFiles": true
       },
     },
-  ]
+  ],
 });
 
 export const wsConfigParallel = new TestWorkspaceConfig({

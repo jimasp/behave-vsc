@@ -23,6 +23,8 @@ def step_impl(context, status):
 def step_inst(context):
     pass
 
-@then("we will see the result")
+@then("this will succeed if profile is \"myscript\"")
 def step_inst(context):
+    assert os.environ['profile'] == 'myscript'
     pass
+

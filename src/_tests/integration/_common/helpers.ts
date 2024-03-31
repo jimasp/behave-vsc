@@ -126,7 +126,7 @@ export function getExpectedArgsString(projUri: vscode.Uri, testExtConfig: TestWo
 
 	let args: string[] = testExtConfig.get("args");
 	if (runProfile.args)
-		args = runProfile.args.inherit ? [...args, ...runProfile.args.argList] : runProfile.args.argList;
+		args = runProfile.args.inherit ? [...args, ...runProfile.args.list] : runProfile.args.list;
 
 	const argsString = args ? args.join(" ") : "";
 	return argsString;
@@ -143,7 +143,7 @@ export function getExpectedEnvVarsString(projUri: vscode.Uri, testExtConfig: Tes
 
 	let env: object = testExtConfig.get("env");
 	if (rpEnv)
-		env = rpEnv.inherit ? { ...env, ...rpEnv.envVars } : rpEnv.envVars;
+		env = rpEnv.inherit ? { ...env, ...rpEnv.vars } : rpEnv.vars;
 
 	const pr = { env: env } as ProjRun;
 	const envVarsString = getFriendlyEnvVars(pr);

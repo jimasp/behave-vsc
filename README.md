@@ -389,7 +389,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         "args": {
           "inherit": true,  
           // concatenate to the default args
-          "argsList":["--tags=@tagA"]
+          "list":["--tags=@tagA"]
         },
         "promptForTags": false,        
       },   
@@ -398,14 +398,14 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         "args": { 
           // override the default args
           "inherit": true, 
-          "argsList":["--tags=@tagB, @tagC"]
+          "list":["--tags=@tagB, @tagC"]
         },
         "promptForTags": false,
       },                
       {
         "name": "System",
         "env": {         
-          "envVars": {
+          "vars": {
             "inherit": true,
             // override one of the default env vars
             "BEHAVE_STAGE": "System"
@@ -413,14 +413,14 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         },
           "args": { 
             "inherit": false,
-            "argsList":["-D", "foo=baz"]
+            "list":["-D", "foo=baz"]
           },
         "promptForTags": true,
       },          
       {         
         "name": "Staging: Tag B",
         "env": {
-          "envVars": {
+          "vars": {
             "inherit": false,
             // override all of the default env vars
             "BEHAVE_STAGE": "Staging",
@@ -428,7 +428,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           }
         },
         "args": { 
-          "argsList": ["--tags=@tagB"]
+          "list": ["--tags=@tagB"]
         },
         "promptForTags": false,
       },
@@ -437,8 +437,9 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
 
 - Notes:
   - You can select a default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same profile.  
+  - The `runProfile.args.list` is concatentated to `behave-vsc.args` if `inherit` is true, otherwise the `runProfile.args` will override `behave-vsc.args` when the profile is actively running.
+  - The `runProfile.env.vars` is concatentated to `behave-vsc.env` if `inherit` is true, otherwise the `runProfile.env` will override `behave-vsc.env` when the profile is actively running.  
   - Regarding environment variables in `runProfiles`:
-    - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
     - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
       - in your `environment.py` (or `mystage_environment.py`) file:
         - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
@@ -446,9 +447,8 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
         - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
       - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
-  - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
 
-- You can also add a `customRunner` script to do anything you want. An example `runProfiles` section for a customRunner might look like this:
+- You can also add a `customRunner` script to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example for behave-django:
 
     ```json
     // settings.json
@@ -457,14 +457,14 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         "name": "behave-django",
         "promptForTags": false,
         "env": {
-          "envVars": {          
+          "vars": {          
             "FOO": "bar"
           }
         },        
         "args": { 
-          "argsList": [
-            "--tags=@django"
-            "--keepdb"
+          "list": [
+            "--keepdb",
+            "--tags=@django"            
           ],           
         },
         "customRunner": {
@@ -478,7 +478,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
 - Notes on using a customRunner:
   - The `scriptFile` must be a file in the root of your behave working directory.
   - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
-  - The command becomes: `python <script> behave <args> <behave args>`, so in the above example it would produce `python manage.py behave --keepdb --tags=@django ...`.
+  - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@django ...`.
   - The extension does not know if your script succeeded or failed, it only launches/debugs the script (and monitors junit file output if `waitForJUnitFiles` is true).
   - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
   - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
@@ -488,8 +488,8 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   from behave.__main__ import main as behave_main
   
   def __main__():
-      args = sys.argv[2:]
-      print(f'script: behave {" ".join(args)}\n')
+      args = sys.argv[1:]
+      print(f'script called with args: {" ".join(args)}\n')
       sys.exit(behave_main(args))
 
   if __name__ == "__main__":
