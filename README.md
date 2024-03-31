@@ -72,12 +72,14 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             ├── shared_steps.py
             ├── db_steps.py                             
             └── web_steps.py
+    ```
 
 - The default behave working directory is the project root.
-- As per behave, *without additional configuration*, features will only be discovered if:
-  - (a) you have a `features` folder in your project root, or
+- As per behave itself, *without additional configuration*, features will only be discovered if:
+  - (a) you have a `features/steps` folder in your project root, or
   - (b) you have a `steps` folder in your project root
-- If you do not have a `features` or `steps` folder in the project root, or you want to change your behave working directory, then you can configure the extension to find them elsewhere. See [advanced project configuration](#advanced-project-configuration) for information on how to configure the extension for your project structure.
+- Beyond either of those simple cases, feature/step discovery is based on the extension `behaveWorkingDirectory` setting and the the behave configuration file `paths` setting.
+- If you are having trouble with the extension finding your feature/step files, see [advanced project configuration](#advanced-project-configuration) for more information.
 
 ---
 
@@ -87,22 +89,18 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ## Extension settings
 
-Extension settings in this document should be prefixed with `behave-vsc.` in your `settings.json` file, e.g. `behave-vsc.behaveWorkingDirectory`.
+- Extension settings in this document should be prefixed with `behave-vsc.` in your `settings.json` file, e.g. `behave-vsc.env`.
 
-For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`:
+- For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`.
+The most important extension settings to be aware of are probably `behaveWorkingDirectory` and `justMyCode` for debug (via `settings.json` not `launch.json`).
 
-- For information on all available options, go to the extension settings in vscode and/or see examples in this readme, but a quick rundown is as follows:
-- Customise your test run via `settings.json`, e.g. `behaveWorkingDirectory`, `env`, etc.
-- Enable/disable `justMyCode` for debug (via `settings.json` not `launch.json`).
-- Import steps from step libraries via `importedSteps`.
-- Environment variables, behave tags and even a custom runner script can be set on a per run basis via custom `runProfiles`. These then then appear in the test explorer UI.
-- If you are using a multi-root workspace, you can set some default settings such as `runProfiles` in your `*.code-workspace` file. You can determine which `settings.json` or `*.code-workspace` settings are active if they are greyed out or not.
+- For information on all available options, go to the extension settings in vscode and/or see examples in this readme (and also see the next section on run profiles).
 
 ---
 
-## Running a subset of tests
+### Running a subset of tests
 
-- There are several options here. Using a combination of all of these is recommended:
+- There are several options here. Using a combination of these is recommended for maximum flexibility:
 
   - A. Consider if you can group your feature files into subfolders, i.e. don't just use tags. This way you can select to run any folder/subfolder from the test tree in the test explorer UI.
 
@@ -110,63 +108,109 @@ For simple setups, the extension should work "out of the box", but there is plen
 
   - C. Via the `Run Feature Tests with Tags (ad-hoc)` run profile in test explorer (or via the `>` icon and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
 
-  - D. Via custom (reusable) run profiles. Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+  - D. Via run profiles
 
-      ```json
-      // settings.json
-      "behave-vsc.env": {
-          // default env vars
-          "BEHAVE_STAGE": "Local",
-          "ENDPOINT": "http://localhost:4566"
+### Run profiles  
+
+Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+
+  ```json
+    // settings.json
+    "behave-vsc.env": {
+        // default env vars
+        "BEHAVE_STAGE": "Local",
+        "ENDPOINT": "http://localhost:4566"
+    },
+    "behave-vsc.args": [
+      "-D", 
+      "foo=bar"
+      "-D",
+      "fizz=buzz"
+    ],
+    "behave-vsc.runProfiles": [
+      {
+        "name": "Tags: A",
+        "args": "--tags=@tagA",
+      },   
+      {
+        "name": "Tags: B,C",
+        "args": ["--tags=@tagB, @tagC"],
+      },                
+      {
+        "name": "System",
+        "env": {
+          // override ONE of the default env vars
+          "BEHAVE_STAGE": "System"           
+        },
+        "args": ["-D", "foo=baz"],
+      },          
+      {         
+        "name": "Staging: Tag B",
+        "env": {
+          // override BOTH of the default env vars
+          "BEHAVE_STAGE": "Staging",
+          "ENDPOINT": "http://123.456.789.012:4766"  
+        },
+        "args": ["--tags=@tagB"]
       },
-      "behave-vsc.args": [
-        "-D", 
-        "foo=bar"
-        "-D",
-        "fizz=buzz"
-      ],
-      "behave-vsc.runProfiles": [
-        {
-          "name": "Tags: A",
-          "tagsParameters": "--tags=@tagA",
-        },   
-        {
-          "name": "Tags: B,C",
-          "tagsParameters": "--tags=@tagB, @tagC",
-          "args": ["-D", "foo=baz"],
-        },                
-        {
-          "name": "System",
-          "env": {
-            // override ONE of the default env vars
-            "BEHAVE_STAGE": "System"           
-          },
-          "args": [],
-        },          
-        {         
-          "name": "Staging: Tag B",
-          "env": {
-            // override BOTH of the default env vars
-            "BEHAVE_STAGE": "Staging",
-            "ENDPOINT": "http://123.456.789.012:4766"  
-          },
-          "tagsParameters": "--tags=@tagB"
-        }
-      ]
-      ```
+    ]
+  ```
 
-  - Notes:
-    - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` profiles and it would run all tests with tags A, B and C by default.
-    - Regarding environment variables in runProfiles:
-      - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
-      - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
-        - in your `environment.py` (or `mystage_environment.py`) file:
-          - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
-          - to control `scenario.skip()`
-          - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-          - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
-        - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
-    - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
+- Notes:
+  - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` profiles and it would run all tests with tags A, B and C by default.
+  - Regarding environment variables in `runProfiles`:
+    - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
+    - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
+      - in your `environment.py` (or `mystage_environment.py`) file:
+        - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
+        - to control `scenario.skip()`
+        - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+        - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
+  - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
+
+- You can also add a customRunner script to do anything you want. An example `runProfiles` section might look like this:
+
+    ```json
+    // settings.json
+    "behave-vsc.runProfiles": [
+      {
+        "name": "behave-django",
+        "env": {
+          "FOO": "bar"
+        },        
+        "args": [
+            "--tags=@django"
+            "--keepdb"
+        ],           
+        "customRunner": {
+            "scriptFile": "manage.py",
+            "waitForJUnitFiles": true
+        }
+      },
+    ]
+    ```
+
+- Notes on using a customRunner:
+  - The `scriptFile` must be a file in the root of your behave working directory.
+  - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful if you always run your tests with a custom script.  
+  - The command becomes: `python <script> behave <args> <behave args>`, so in the above example it would produce `python manage.py behave --keepdb --tags=@django ...`.
+  - The extension does not know if your script succeeded or failed, it only launches/debugs the script (and monitors junit file output if `waitForJUnitFiles` is true).
+  - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
+  - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
+  
+  ```python
+  import sys
+  from behave.__main__ import main as behave_main
+  
+  def __main__():
+      args = sys.argv[2:]
+      print(f'script: behave {" ".join(args)}\n')
+      sys.exit(behave_main(args))
+
+  if __name__ == "__main__":
+      __main__()
+  ```
 
 ---
 
@@ -344,7 +388,14 @@ For simple setups, the extension should work "out of the box", but there is plen
 
 ## Advanced project configuration
 
-- Feature/Step discovery is based on the behave config `paths` setting and the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use these settings to configure the extension to find your features and steps.
+- Feature/Step discovery is based on the behave configuration file `paths` setting and/or the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use either/both of these settings to configure the extension to find your features and steps folders.
+
+- Remember that if present, your `environment.py` file must be a sibling of your `steps` folder.
+
+- Note that the extension ignores files in the following folders (or their default values):
+  - `files.exclude`
+  - `files.watcherExclude`
+  - `search.exclude`
 
 - If your behave working directory is not the same as your project directory, then you can set the `behaveWorkingDirectory` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
 
@@ -353,7 +404,8 @@ For simple setups, the extension should work "out of the box", but there is plen
     ```json
       // settings.json
       {
-        "behave-vsc.behaveWorkingDirectory": "my_behave_working_folder", // project-relative path
+        // e.g. for my_behave_working_folder/features/steps structure
+        "behave-vsc.behaveWorkingDirectory": "my_behave_working_folder", // this must be a project-relative path
       }
     ```
 
@@ -394,7 +446,7 @@ For simple setups, the extension should work "out of the box", but there is plen
     }
     ```
 
-- Step navigation is automatically enabled for your steps folder, but by using `importedSteps` setting you can also enable step navigation for:
+- Step navigation is automatically enabled for your `steps` folder, but by using the `importedSteps` setting you can also enable step navigation for:
   - imported step libraries in your project folder
   - your own imported steps in your project folder
   - (note that if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)

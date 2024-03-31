@@ -12,7 +12,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "var1": "var1 value",
       },
-      "tagsParameters": "--tags=~@skip",
+      "adhocTagsParameters": "--tags=~@skip",
       "args": [
         "--simple"
       ],
@@ -26,7 +26,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "var1": "var1 value",
       },
-      "tagsParameters": "--tags=~@skip",
+      "adhocTagsParameters": "--tags=~@skip",
       "customRunner": {
         "scriptFile": "manage.py",
         "waitForJUnitFiles": false

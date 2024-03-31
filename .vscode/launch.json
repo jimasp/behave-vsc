@@ -10,7 +10,7 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"${workspaceFolder}/../my-own-workspace",
+				"${workspaceFolder}/../multicast-notification-service-infrastructure",
 				"--extensionDevelopmentPath=${workspaceFolder}",
 			],
 			"outFiles": [

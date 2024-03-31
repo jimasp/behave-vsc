@@ -13,7 +13,7 @@ import { xRayLog } from './common/logger';
 
 
 // this array must have the same order of precedence as in the behave source code function "config_filenames",
-export const BEHAVE_CONFIG_FILES_PRECEDENCE = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini", "pyproject.toml"];
+export const BEHAVE_CONFIG_FILES_PRECEDENCE = ["behave.ini", ".behaverc", "setup.cfg", "tox.ini"]; //, "pyproject.toml"];
 
 
 export function getJunitFeatureName(ps: ProjectSettings, scenario: Scenario): string {
@@ -73,7 +73,7 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
         `\nWARNING: Could not find "steps" directory for project "${ps.name}".` +
         '\nPlease either:' +
         '\n\t(a) add a "steps" folder if it does not exist, and/or' +
-        '\n\t(b) specify a "behave-vsc.behaveWorkingDirectory" setting (if it is not the same as you project root), and/or' +
+        '\n\t(b) specify a "behave-vsc.behaveWorkingDirectory" (if it is not the same as you project root) in your settings.json, and/or' +
         '\n\t(c) specify a "paths" setting in your behave configuration file (e.g. behave.ini).' +
         '\n(If you have a behave configuration file, please ensure that it is in your project root or "behave-vsc.behaveWorkingDirectory")' +
         '\nSee the README for more information on configuration.', ps.uri);

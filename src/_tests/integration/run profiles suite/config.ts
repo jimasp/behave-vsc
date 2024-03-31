@@ -25,7 +25,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "profile": "qu'oted\"tag and qu'oted\"env profile",
         "qu'oted\"env": "v'al\"ue"
       },
-      "tagsParameters": "--tags=@qu'oted\"tag",
+      "adhocTagsParameters": "--tags=@qu'oted\"tag",
     },
     {
       "name": "args profile",
@@ -58,7 +58,7 @@ export const wsConfig = new TestWorkspaceConfig({
       "env": {
         "profile": "tag1 profile",
       },
-      "tagsParameters": "--tags=tag1",
+      "adhocTagsParameters": "--tags=tag1",
     },
     {
       "name": "tag1 vars profile",
@@ -67,7 +67,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG1-var1",
         "var2": "TAG1-var2"
       },
-      "tagsParameters": "--tags=tag1",
+      "adhocTagsParameters": "--tags=tag1",
     },
     {
       "name": "tag2 vars profile",
@@ -76,7 +76,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG2-var1",
         "var2": "TAG2-var2"
       },
-      "tagsParameters": "--tags=@tag2",
+      "adhocTagsParameters": "--tags=@tag2",
     },
     {
       "name": "tag1ortag2 vars profile",
@@ -85,28 +85,28 @@ export const wsConfig = new TestWorkspaceConfig({
         "var1": "TAG1_OR_2-var1",
         "var2": "TAG1_OR_2-var2"
       },
-      "tagsParameters": "--tags=tag1,@tag2",
+      "adhocTagsParameters": "--tags=tag1,@tag2",
     },
     {
       "name": "tag1andtag2 profile",
       "env": {
         "profile": "tag1andtag2 profile",
       },
-      "tagsParameters": "--tags=tag1 --tags=tag2",
+      "adhocTagsParameters": "--tags=tag1 --tags=tag2",
     },
     {
       "name": "tag1ortag2andtag3 profile",
       "env": {
         "profile": "tag1ortag2andtag3 profile",
       },
-      "tagsParameters": "--tags=tag1,tag2 --tags=tag3",
+      "adhocTagsParameters": "--tags=tag1,tag2 --tags=tag3",
     },
     {
       "name": "nottag1andnottag2 profile",
       "env": {
         "profile": "nottag1andnottag2 profile",
       },
-      "tagsParameters": "--tags=~tag1 --tags=-tag2",
+      "adhocTagsParameters": "--tags=~tag1 --tags=-tag2",
     },
   ]
 });

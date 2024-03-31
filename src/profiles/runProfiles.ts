@@ -65,8 +65,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
             services.logger.logWarning("Tags string should not include `--tags`.", projUri);
             return;
           }
-          const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
-          await runHandler(debug, request, new RunProfile(profileName, projUri, tagsParameters));
+          const adhocTagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim());
+          await runHandler(debug, request, new RunProfile(profileName, projUri), adhocTagsParameters);
         });
       profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, projStandardProfile));
       projRunProfiles.push(profile);
@@ -84,8 +84,8 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
             services.logger.logWarning("Tags string should not include `--tags`.", projUri);
             return;
           }
-          const tagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
-          await runHandler(debug, request, new RunProfile(profileName, projUri, tagsParameters));
+          const adhocTagsParameters = "--tags=" + tagsString.split(",").map(x => x.trim()).join(" --tags=");
+          await runHandler(debug, request, new RunProfile(profileName, projUri), adhocTagsParameters);
         });
       profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, projStandardProfile));
       projRunProfiles.push(profile);
@@ -96,16 +96,16 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
       const profileName = `${projPrefix}ad-hoc tags (Params)`;
       const profile = ctrl.createRunProfile(profileName, profileKind,
         async (request: vscode.TestRunRequest) => {
-          const tagsParameters = await vscode.window.showInputBox({
+          const adhocTagsParameters = await vscode.window.showInputBox({
             placeHolder: "--tags=tag1,~tag2 --tags=tag3", prompt: "Specify full tags parameters."
           });
-          if (!tagsParameters)
+          if (!adhocTagsParameters)
             return;
-          if (!tagsParameters?.startsWith("--tags=")) {
+          if (!adhocTagsParameters?.startsWith("--tags=")) {
             services.logger.logWarning("Parameters must start with `--tags=`.", projUri);
             return;
           }
-          await runHandler(debug, request, new RunProfile(profileName, projUri, tagsParameters));
+          await runHandler(debug, request, new RunProfile(profileName, projUri), adhocTagsParameters);
         });
       profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, projStandardProfile));
       projRunProfiles.push(profile);

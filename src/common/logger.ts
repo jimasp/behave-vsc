@@ -82,7 +82,7 @@ export class Logger {
   logWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text, projUri, LogType.warn);
 
-    this.channels[projUri.path].appendLine(text);
+    this.channels[projUri.path].appendLine("WARNING: " + text);
     this.channels[projUri.path].show(true);
 
     if (run)

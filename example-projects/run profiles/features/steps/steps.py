@@ -19,103 +19,122 @@ def profile_vs_envvar_check(context):
             "default": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None
             },
-            "args profile": {
+            "inherit args and envs profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None
-            },     
+            },   
+            "do NOT inherit args and envs profile": {
+                "var1": "do NOT inherit",
+                "var2": None,
+                "var3": None,
+                "BEHAVE_STAGE": None,
+                "qu'oted\"env": None
+            },              
             "no args profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None
             },                          
             "qu'oted\"tag and qu'oted\"env profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": "v'al\"ue"
             },            
             "stage2 profile":  {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": "stage2",
                 "qu'oted\"env": None
             },
             "tag1 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None         
             },
             "tag1 vars profile": {
                 "var1": "TAG1-var1",
                 "var2": "TAG1-var2",
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None         
             },
             "tag2 vars profile": {
                 "var1": "TAG2-var1",
                 "var2": "TAG2-var2",
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None         
             },
             "tag1ortag2 vars profile": {
                 "var1": "TAG1_OR_2-var1",
                 "var2": "TAG1_OR_2-var2",
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None       
             },
             "tag1andtag2 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None       
             },         
            "tag1ortag2andtag3 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None       
             },     
            "nottag1andnottag2 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
+                "var3": "ENV-var3",
                 "BEHAVE_STAGE": None,
                 "qu'oted\"env": None       
             }  
         }.get(value)        
         
-
-    assert os.environ.get("var3") == "ENV-var3"    
     expected_env_vars = get_expected_env_vars(profile)
     assert expected_env_vars
 
     assert expected_env_vars == {
         "var1": os.environ.get("var1"),
         "var2": os.environ.get("var2"),
+        "var3": os.environ.get("var3"),
         "BEHAVE_STAGE": os.environ.get("BEHAVE_STAGE"),
         "qu'oted\"env": os.environ.get("qu'oted\"env")
     }
     
     
-@then("args are as expected")
+@then("userdata is as expected")
 def profile_vs_args_check(context):
     profile = os.environ.get("profile")
     if not profile:
         profile = "default"  
 
-    args = context.config.userdata
+    userdata = context.config.userdata
     
-    def get_expected_args(value):
+    def get_expected_userdata(value):
         return {
             "default": {"foo": "bar", "fizz": "buzz"},
             "qu'oted\"tag and qu'oted\"env profile": {"foo": "bar", "fizz": "buzz"},
-            "args profile": {"d1":"val1", "d2":"val2"},
+            "inherit args and envs profile": {"d1":"val1", "d2":"val2", "foo": "bar", "fizz": "buzz"},
+            "do NOT inherit args and envs profile": {"do":"NOT inherit"},
             "no args profile": {},
             "stage2 profile": {"foo": "bar", "fizz": "buzz"},
             "tag1 profile": {"foo": "bar", "fizz": "buzz"},
@@ -128,10 +147,10 @@ def profile_vs_args_check(context):
             "qu'oted\"tag and env profile": {"foo": "bar", "fizz": "buzz"},
         }.get(value)    
         
-    expected_args = get_expected_args(profile)  
-    assert expected_args or expected_args == {}
+    expected_userdata = get_expected_userdata(profile)  
+    assert expected_userdata or expected_userdata == {}
     
-    assert args == expected_args
+    assert userdata == expected_userdata
     
 
 @then("tags are as expected")
@@ -149,7 +168,8 @@ def profile_vs_tags_check(context):
         return {
             "default": [],
             "qu'oted\"tag and qu'oted\"env profile": [["qu'oted\"tag"]],
-            "args profile": [],
+            "inherit args and envs profile": [],
+            "do NOT inherit args and envs profile": [],            
             "no args profile": [],            
             "stage2 profile": [],
             "tag1 profile": [["tag1"]],

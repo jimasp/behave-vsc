@@ -29,8 +29,8 @@
 					},
 					"examples": [
 						{
-							"foo": "bar",
-							"fizz": "buzz"
+							"FOO": "bar",
+							"FIZZ": "buzz"
 						}
 					]
 				},
@@ -39,11 +39,13 @@
 					"items": {
 						"type": "string"
 					},
-					"markdownDescription": "Additional arguments to pass to behave.",
+					"markdownDescription": "Additional arguments to pass to behave. Note that the extension does not validate these arguments, so it is possible to break the extension and/or behave.",
 					"examples": [
 						[
-							"--D",
-							"foo=bar"
+							"-D",
+							"foo=bar",
+							"-D",
+							"fizz=buzz"
 						]
 					]
 				},
@@ -106,44 +108,77 @@
 							},
 							"env": {
 								"type": "object",
-								"additionalProperties": {
-									"type": "string",
-									"markdownDescription": "Key-value pairs of environment variable overrides (or additions) when this run profile is executed. These are combined with the global `env` setting and will override any global settings with the same key."
-								},
-								"examples": [
-									{
-										"foo": "bar",
-										"fizz": "buzz"
+								"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to set when this run profile is executed.",
+								"required": [
+									"envVars"
+								],
+								"properties": {
+									"inherit": {
+										"type": "boolean",
+										"default": true,
+										"markdownDescription": "Whether or not to concatenate the `behave-vsc.env` setting. If false, the `envVars` setting will overwrite the `behave-vsc.env` setting."
+									},
+									"envVars": {
+										"type": "object",
+										"markdownDescription": "Key-value pairs of environment variable overrides (or additions) to set when this run profile is executed."
 									}
-								]
+								},
+								"examples": {
+									"inherit": true,
+									"envVars": {
+										"FOO": "bar",
+										"FIZZ": "buzz"
+									}
+								}
 							},
 							"args": {
-								"type": "array",
-								"items": {
-									"type": "string"
-								},
-								"markdownDescription": "Additional arguments to pass to behave when this run profile is executed. Note that these will replace any global `args` setting during execution.",
-								"examples": [
-									[
-										"--D",
-										"foo=bar"
-									]
-								]
-							},
-							"tagsParameters": {
-								"type": "string"
-							},
-							"script": {
 								"type": "object",
+								"markdownDescription": "Additional arguments to pass to behave when this run profile is executed. These will overwrite any `behave-vsc.args` if `inherit` is false. Note that the extension does not validate these arguments, so it is possible to break the extension and/or behave.",
+								"required": [
+									"argList"
+								],
+								"properties": {
+									"inherit": {
+										"type": "boolean",
+										"default": true,
+										"markdownDescription": "Whether or not to concatenate the `behave-vsc.args` setting. If false, the `argList` setting will overwrite the `behave-vsc.args` setting."
+									},
+									"argList": {
+										"type": "array",
+										"items": {
+											"type": "string"
+										},
+										"markdownDescription": "Additional arguments to pass to behave."
+									}
+								},
+								"examples": {
+									"inherit": true,
+									"argList": [
+										"-D",
+										"foo=bar",
+										"-D",
+										"fizz=buzz"
+									]
+								}
+							},
+							"customRunner": {
+								"type": "object",
+								"examples": {
+									"scriptFile": "myscript.py",
+									"waitForJUnitFiles": true
+								},
 								"required": [
 									"scriptFile",
 									"waitForJUnitFiles"
 								],
-								"markdownDescription": "Custom Python script to invoke instead of the default behave command. The script file must be in the root of your behave working directory. Command becomes: `python <script> behave <args> <behave args>`.",
+								"markdownDescription": "Custom Python script to invoke instead of the default behave command.",
 								"properties": {
 									"scriptFile": {
 										"type": "string",
-										"markdownDescription": "The name of the custom script file. This file must be in the root of your behave working directory."
+										"markdownDescription": "The name of a custom python script file. Command becomes: `python <script> behave <args> <behave args>`. This file must be in the root of your behave working directory. Note that unless this is an actual behave runner (e.g. setup like behave-django's manage.py), you will not be able to debug tests except by custom means, e.g. attaching to the process via import debugpy and launch.json.",
+										"examples": [
+											"manage.py"
+										]
 									},
 									"waitForJUnitFiles": {
 										"type": "boolean",

@@ -15,7 +15,9 @@ import { basename } from 'path';
 
 export function createProjTestRunHandler(projCtrl: vscode.TestController, testData: TestData, junitWatcher: JunitWatcher) {
 
-  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined> => {
+  return async (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile,
+    adhocTagsParameters?: string): Promise<QueueItem[] | undefined> => {
+
     let projTestRun: vscode.TestRun | undefined = undefined;
 
     try {
@@ -24,9 +26,9 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
       const ps = await services.config.getProjectSettings(projUri);
       xRayLog(`testRunHandler: invoked for project "${ps.name}"`);
 
-      if (!isValidTagsParameters(runProfile.tagsParameters)) {
+      if (!isValidTagsParameters(adhocTagsParameters)) {
         // bad ad-hoc tags
-        services.logger.popupWarn(`Invalid tag expression: ${runProfile.tagsParameters}`);
+        services.logger.popupWarn(`Invalid tag expression: ${adhocTagsParameters}`);
         return;
       }
 
@@ -64,7 +66,7 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
         throw new Error("empty queue - nothing to do");
       }
 
-      await runProjTestQueue(ps, projCtrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile);
+      await runProjTestQueue(ps, projCtrl, projTestRun, request, testData, debug, queue, junitWatcher, runProfile, adhocTagsParameters);
       return queue;
 
     }
@@ -116,7 +118,9 @@ const runProjTestQueue = (() => {
   const sequence: number[] = [];
 
   return async (ps: ProjectSettings, projCtrl: vscode.TestController, projTestRun: vscode.TestRun, request: vscode.TestRunRequest,
-    testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile) => {
+    testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile,
+    adhocTagsParameters: string) => {
+
     let seqNo = -1;
 
     try {
@@ -154,7 +158,7 @@ const runProjTestQueue = (() => {
         }
       }
 
-      await runProjectQueue(ps, projCtrl, projTestRun, request, testData, debug, projQueue, runProfile);
+      await runProjectQueue(ps, projCtrl, projTestRun, request, testData, debug, projQueue, runProfile, adhocTagsParameters);
 
       // stop the junitwatcher for this run folder
       if (waitForJUnitFiles)
@@ -170,7 +174,8 @@ const runProjTestQueue = (() => {
 
 
 async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile) {
+  request: vscode.TestRunRequest, testData: TestData, debug: boolean, projQueue: QueueItem[], runProfile: RunProfile,
+  adhocTagsParameters?: string) {
 
   let pr: ProjRun | undefined = undefined;
 
@@ -184,22 +189,23 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
     projQueue.sort((a, b) => a.test.id.localeCompare(b.test.id));
     const junitProjRunDirUri = getJunitProjRunDirUri(run);
 
-    // note that runProfile.env will (and should) override 
-    // any pr.projSettings.env global setting with the same key
-    const allEnv = { ...ps.env, ...runProfile.env };
+    let env = ps.env;
+    if (runProfile.env)
+      env = runProfile.env.inherit ? { ...ps.env, ...runProfile.env.envVars } : runProfile.env.envVars;
 
-    // note that runProfile.args will (and should) completely override
-    // any pr.projSettings.args global setting.
-    // also note that we must differentiate between undefined (not set by user) and an empty array set by user 
-    // (i.e. user may want to override default args to [])
-    const args = runProfile.args === undefined ? ps.args : runProfile.args;
+    let args = ps.args;
+    if (runProfile.args)
+      args = runProfile.args.inherit ? [...ps.args, ...runProfile.args.argList] : runProfile.args.argList;
+
+    // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
+    adhocTagsParameters = (adhocTagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
 
     pr = new ProjRun(
       ps, run, request, debug, ctrl, testData, projQueue, pythonExec,
       allTestsForThisProjIncluded, projIncludedFeatures, junitProjRunDirUri,
-      allEnv,
+      env,
       args,
-      runProfile.tagsParameters,
+      adhocTagsParameters,
       runProfile.customRunner
     )
 
@@ -381,7 +387,12 @@ function logProjRunComplete(pr: ProjRun, start: number) {
   }
   pr.projTestRun.appendOutput('\r\n');
   pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
-  pr.projTestRun.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
+  if (pr.debug) {
+    pr.projTestRun.appendOutput(`#### See ${services.config.extensionTempDirUri.fsPath}/debug for Behave output ####\r\n`);
+  }
+  else {
+    pr.projTestRun.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
+  }
   pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
   pr.projTestRun.appendOutput('\r\n');
 }
@@ -482,14 +493,14 @@ export class ProjRun {
     public readonly junitRunDirUri: vscode.Uri,
     public readonly env: { [key: string]: string; },
     public readonly args: string[],
-    public readonly tagsParameters: string,
+    public readonly adhocTagsParameters: string,
     public readonly customRunner?: CustomRunner
   ) { }
 }
 
 
 export interface ITestRunHandler {
-  (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile): Promise<QueueItem[] | undefined>;
+  (debug: boolean, request: vscode.TestRunRequest, runProfile: RunProfile, adhocTagsParameters?: string): Promise<QueueItem[] | undefined>;
 }
 
 

@@ -27,7 +27,7 @@ export async function runOrDebugAllFeaturesInOneInstance(pr: ProjRun): Promise<v
   const { ps1, ps2 } = getPSCmdModifyIfWindows();
   const friendlyArgs = [
     ...pr.args ?? [],
-    ...splitTagsParameters(pr.tagsParameters),
+    ...splitTagsParameters(pr.adhocTagsParameters),
     ...CONFIG_OVERRIDE_ARGS,
     `"${pr.junitRunDirUri.fsPath}"`,
   ];
@@ -62,7 +62,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
     const friendlyArgs = [
       ...pr.args ?? [],
-      ...splitTagsParameters(pr.tagsParameters),
+      ...splitTagsParameters(pr.adhocTagsParameters),
       "-i", `"${featurePathsPattern}"`,
       ...CONFIG_OVERRIDE_ARGS,
       `"${pr.junitRunDirUri.fsPath}"`,
@@ -110,7 +110,7 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
 
     const friendlyArgs = [
       ...pr.args ?? [],
-      ...splitTagsParameters(pr.tagsParameters),
+      ...splitTagsParameters(pr.adhocTagsParameters),
       "-i", `"${featureFileWorkRelPath}$"`,
       "-n", `"${friendlyArgsPipedScenarioNames}"`,
       ...CONFIG_OVERRIDE_ARGS,

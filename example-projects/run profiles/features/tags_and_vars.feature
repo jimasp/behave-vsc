@@ -1,16 +1,16 @@
 Feature: Run Profiles Feature
 
    @tag1 @tag2 @tag3 @qu'oted"tag
-   Scenario: all tags - success - check tags and envvars and args
+   Scenario: all tags - success - check tags and envvars and userdata
       Given we have run profiles
       Then envvars are as expected
-      And args are as expected
+      And userdata is as expected
       And tags are as expected
 
-   Scenario: untagged - success - check tags and envvars and args
+   Scenario: untagged - success - check tags and envvars and userdata
       Given we have run profiles
       Then envvars are as expected
-      And args are as expected
+      And userdata is as expected
       And tags are as expected   
 
    Scenario: untagged - fail

@@ -261,7 +261,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
       }
 
       // if we got this far then this run profile is valid, create via the RunProfile constructor
-      runProfiles.push(new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.args, profile.customRunner));
+      runProfiles.push(new RunProfile(profile.name, projUri, profile.env, profile.args, profile.customRunner));
     }
   }
   catch {
@@ -430,6 +430,7 @@ async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, p
   let projEntries = Object.entries(ps);
   projEntries = projEntries.filter(([key]) => userSettableProjSettings.includes(key));
   projEntries.push(["behaveWorkingDirectory", ps.projRelativeBehaveWorkingDirPath]);
+  projEntries.push(["runProfiles", ps.userRunProfiles.map(p => p.name).join(", ")]);
   projEntries = projEntries.sort(([a], [b]) => a.localeCompare(b));
   const resourceSettingsDic: { [name: string]: object; } = {};
   const userEntries: { [name: string]: object; } = {};
@@ -454,6 +455,16 @@ async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, p
 
 export type EnvSetting = { [key: string]: string };
 
+export type RunProfileEnvSetting = {
+  inherit: boolean,
+  envVars: EnvSetting
+}
+
+export type RunProfileArgsSetting = {
+  inherit: boolean,
+  argList: string[]
+}
+
 export type StepImport = {
   relativePath: string;
   stepFilesRx: string;
@@ -477,36 +488,37 @@ export class CustomRunner {
 export interface IRunProfile {
   name: string;
   projUri?: vscode.Uri;
-  tagsParameters?: string;
-  env?: EnvSetting;
-  args?: string[];
+  env?: RunProfileEnvSetting;
+  args?: RunProfileArgsSetting;
   customRunner?: CustomRunner;
 }
 
 export class RunProfile implements IRunProfile {
   public readonly name: string;
   public readonly projUri: vscode.Uri;
-  public readonly tagsParameters: string;
-  public readonly env: EnvSetting;
+  public readonly env: RunProfileEnvSetting;
   // note that for args, we must differentiate between undefined (not set by user) and an empty array set by user 
   // (i.e. user may want to override default args to [])
-  public readonly args: string[] | undefined;
+  public readonly args: RunProfileArgsSetting | undefined;
   public readonly customRunner?: CustomRunner
 
   constructor(
     name: string,
     projUri: vscode.Uri,
-    tagsParameters?: string,
-    env?: EnvSetting,
-    args?: string[],
-    customRunner?: CustomRunner
+    env?: RunProfileEnvSetting,
+    args?: RunProfileArgsSetting,
+    customRunner?: CustomRunner,
   ) {
     this.name = name;
     this.projUri = projUri;
-    // remove any extra spaces, e.g. "--tags= @foo,  @bar  --tags = foo2" => "--tags=@foo,@bar -tags=foo2"
-    this.tagsParameters = (tagsParameters ?? "").replace(/\s/g, "").replace(/(--tags)/g, ' $1').trim();
-    this.env = env ?? {};
-    this.args = args;
+    this.env = {
+      inherit: env?.inherit ?? true,
+      envVars: env?.envVars ?? {}
+    };
+    this.args = {
+      inherit: args?.inherit ?? true,
+      argList: args?.argList ?? []
+    };
     // use the customRunner constructor (to apply trim() etc.)
     this.customRunner = customRunner
       ? new CustomRunner(customRunner.scriptFile, customRunner.waitForJUnitFiles)

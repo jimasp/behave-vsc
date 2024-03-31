@@ -22,6 +22,14 @@
                 "waitForJUnitFiles": false
             },
         },
+        {
+            "name": "myscript - wait for results",
+            "args": "--tags=@myscript",
+            "customRunner": {
+                "scriptFile": "myscript.py",
+                "waitForJUnitFiles": true
+            },
+        },
     ],
     "mypy-type-checker.ignorePatterns": [
         ".*"

@@ -125,8 +125,8 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions): string {
 	let tagsString = "";
 	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
-	if (runProfile.tagsParameters)
-		tagsString = runProfile.tagsParameters;
+	if (runProfile.adhocTagsParameters)
+		tagsString = runProfile.adhocTagsParameters;
 	return tagsString;
 }
 
@@ -226,7 +226,7 @@ export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceC
 	const profile = runProfilesSetting.find(x => x.name === runOptions.selectedRunProfile);
 	if (!profile)
 		assert(profile, `selectedRunProfile "${runOptions.selectedRunProfile}" not found in testExtConfig runProfiles`);
-	return new RunProfile(profile.name, projUri, profile.tagsParameters, profile.env, profile.args, profile.customRunner);
+	return new RunProfile(profile.name, projUri, profile.adhocTagsParameters, profile.env, profile.args, profile.customRunner);
 }
 
 

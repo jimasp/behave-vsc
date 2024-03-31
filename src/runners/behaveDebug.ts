@@ -38,10 +38,12 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
       debugLaunchConfig = { ...launchConfig, module: "behave", args: args };
     }
 
+    xRayLog(`Starting debug session, launch config: ${JSON.stringify(debugLaunchConfig, null, 2)}`);
+
     const projFolder = vscode.workspace.getWorkspaceFolder(pr.projSettings.uri);
 
     if (!await vscode.debug.startDebugging(projFolder, debugLaunchConfig)) {
-      xRayLog("unable to start debug session, was debug stop button clicked?", pr.projSettings.uri);
+      xRayLog("unable to start debug session, was debug stop button clicked? or did a custom script fail to run?", pr.projSettings.uri);
       return;
     }
 
