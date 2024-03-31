@@ -108,109 +108,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
   - C. Via the `Run Feature Tests with Tags (ad-hoc)` run profile in test explorer (or via the `>` icon and `Execute using profile` in the feature file itself). Note that this can be further filtered by your selection in the test tree.
 
-  - D. Via run profiles
-
-### Run profiles  
-
-Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
-
-  ```json
-    // settings.json
-    "behave-vsc.env": {
-        // default env vars
-        "BEHAVE_STAGE": "Local",
-        "ENDPOINT": "http://localhost:4566"
-    },
-    "behave-vsc.args": [
-      "-D", 
-      "foo=bar"
-      "-D",
-      "fizz=buzz"
-    ],
-    "behave-vsc.runProfiles": [
-      {
-        "name": "Tags: A",
-        "args": "--tags=@tagA",
-      },   
-      {
-        "name": "Tags: B,C",
-        "args": ["--tags=@tagB, @tagC"],
-      },                
-      {
-        "name": "System",
-        "env": {
-          // override ONE of the default env vars
-          "BEHAVE_STAGE": "System"           
-        },
-        "args": ["-D", "foo=baz"],
-      },          
-      {         
-        "name": "Staging: Tag B",
-        "env": {
-          // override BOTH of the default env vars
-          "BEHAVE_STAGE": "Staging",
-          "ENDPOINT": "http://123.456.789.012:4766"  
-        },
-        "args": ["--tags=@tagB"]
-      },
-    ]
-  ```
-
-- Notes:
-  - vscode has the option to set a *combination* of run profiles as a default run profile via `Select Default Profile`. So you could for example select `Tags: A` and `Tags: B,C` profiles and it would run all tests with tags A, B and C by default.
-  - Regarding environment variables in `runProfiles`:
-    - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
-    - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
-      - in your `environment.py` (or `mystage_environment.py`) file:
-        - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
-        - to control `scenario.skip()`
-        - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
-        - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
-      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
-  - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
-
-- You can also add a customRunner script to do anything you want. An example `runProfiles` section might look like this:
-
-    ```json
-    // settings.json
-    "behave-vsc.runProfiles": [
-      {
-        "name": "behave-django",
-        "env": {
-          "FOO": "bar"
-        },        
-        "args": [
-            "--tags=@django"
-            "--keepdb"
-        ],           
-        "customRunner": {
-            "scriptFile": "manage.py",
-            "waitForJUnitFiles": true
-        }
-      },
-    ]
-    ```
-
-- Notes on using a customRunner:
-  - The `scriptFile` must be a file in the root of your behave working directory.
-  - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful if you always run your tests with a custom script.  
-  - The command becomes: `python <script> behave <args> <behave args>`, so in the above example it would produce `python manage.py behave --keepdb --tags=@django ...`.
-  - The extension does not know if your script succeeded or failed, it only launches/debugs the script (and monitors junit file output if `waitForJUnitFiles` is true).
-  - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
-  - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
-  
-  ```python
-  import sys
-  from behave.__main__ import main as behave_main
-  
-  def __main__():
-      args = sys.argv[2:]
-      print(f'script: behave {" ".join(args)}\n')
-      sys.exit(behave_main(args))
-
-  if __name__ == "__main__":
-      __main__()
-  ```
+  - D. Via [run profiles](#run-profiles). This is an advanced option which allows you to setup flexible options for running tests on the fly. It also enables the use of custom scripts. You may want to read about this after you have got your project up and running with the extension and understood the basics.
 
 ---
 
@@ -463,6 +361,140 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
       "behave-vsc.justMyCode": false
     }
     ```
+
+---
+
+## Run profiles  
+
+Use the `runProfiles` setting to set up run profiles in the test explorer. Combining test tree test selection with run profiles makes a very flexible combination, e.g. you can select to run a single folder of feature tests with a given tag. An example `runProfiles` section might look like this:
+
+  ```json
+    // settings.json
+    "behave-vsc.env": {
+        // default env vars for the project
+        "BEHAVE_STAGE": "Local",
+        "ENDPOINT": "http://localhost:4566"
+    },
+    "behave-vsc.args": [
+      // default args for the project
+      "-D", 
+      "foo=bar"
+      "-D",
+      "fizz=buzz",
+      "tags=@tagZ"
+    ],
+    "behave-vsc.runProfiles": [
+      {
+        "name": "Tags: A",
+        "args": {
+          "inherit": true,  
+          // concatenate to the default args
+          "argsList":["--tags=@tagA"]
+        },
+        "promptForAdhocTags": false,        
+      },   
+      {
+        "name": "Tags: B,C",
+        "args": { 
+          // override the default args
+          "inherit": true, 
+          "argsList":["--tags=@tagB, @tagC"]
+        },
+        "promptForAdhocTags": false,
+      },                
+      {
+        "name": "System",
+        "env": {         
+          "envVars": {
+            "inherit": true,
+            // override one of the default env vars
+            "BEHAVE_STAGE": "System"
+          }           
+        },
+          "args": { 
+            "inherit": false,
+            "argsList":["-D", "foo=baz"]
+          },
+        "promptForAdhocTags": true,
+      },          
+      {         
+        "name": "Staging: Tag B",
+        "env": {
+          "envVars": {
+            "inherit": false,
+            // override all of the default env vars
+            "BEHAVE_STAGE": "Staging",
+            "ENDPOINT": "http://123.456.789.012:4766"  
+          }
+        },
+        "args": { 
+          "argsList": ["--tags=@tagB"]
+        },
+        "promptForAdhocTags": false,
+      },
+    ]
+  ```
+
+- Notes:
+  - You can select a default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same profile.  
+  - Regarding environment variables in `runProfiles`:
+    - The `env` property in a runProfile is cumulative, but also it will (when executing) override any `behave-vsc.env` setting that has the same key.
+    - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
+      - in your `environment.py` (or `mystage_environment.py`) file:
+        - to control a behave [active_tag_value_provider](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#active-tags)
+        - to control `scenario.skip()`
+        - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
+        - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
+      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
+  - Unlike `env`, the `args` property in runProfiles is not cumulative (because they are not key-value pairs), i.e. any args in a runProfile will completely overwrite any args set in `behave-vsc.args`.
+
+- You can also add a `customRunner` script to do anything you want. An example `runProfiles` section for a customRunner might look like this:
+
+    ```json
+    // settings.json
+    "behave-vsc.runProfiles": [
+      {
+        "name": "behave-django",
+        "promptForAdhocTags": false,
+        "env": {
+          "envVars": {          
+            "FOO": "bar"
+          }
+        },        
+        "args": { 
+          "argsList": [
+            "--tags=@django"
+            "--keepdb"
+          ],           
+        },
+        "customRunner": {
+            "scriptFile": "manage.py",
+            "waitForJUnitFiles": true
+        }
+      },
+    ]
+    ```
+
+- Notes on using a customRunner:
+  - The `scriptFile` must be a file in the root of your behave working directory.
+  - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
+  - The command becomes: `python <script> behave <args> <behave args>`, so in the above example it would produce `python manage.py behave --keepdb --tags=@django ...`.
+  - The extension does not know if your script succeeded or failed, it only launches/debugs the script (and monitors junit file output if `waitForJUnitFiles` is true).
+  - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
+  - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
+  
+  ```python
+  import sys
+  from behave.__main__ import main as behave_main
+  
+  def __main__():
+      args = sys.argv[2:]
+      print(f'script: behave {" ".join(args)}\n')
+      sys.exit(behave_main(args))
+
+  if __name__ == "__main__":
+      __main__()
+  ```
 
 ---
 
