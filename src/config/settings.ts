@@ -487,6 +487,7 @@ export class CustomRunner {
 
 export interface IRunProfile {
   name: string;
+  promptForAdhocTags: boolean;
   projUri?: vscode.Uri;
   env?: RunProfileEnvSetting;
   args?: RunProfileArgsSetting;
@@ -496,6 +497,7 @@ export interface IRunProfile {
 export class RunProfile implements IRunProfile {
   public readonly name: string;
   public readonly projUri: vscode.Uri;
+  public readonly promptForAdhocTags: boolean;
   public readonly env: RunProfileEnvSetting;
   // note that for args, we must differentiate between undefined (not set by user) and an empty array set by user 
   // (i.e. user may want to override default args to [])
@@ -505,11 +507,13 @@ export class RunProfile implements IRunProfile {
   constructor(
     name: string,
     projUri: vscode.Uri,
+    promptForAdhocTags?: boolean,
     env?: RunProfileEnvSetting,
     args?: RunProfileArgsSetting,
     customRunner?: CustomRunner,
   ) {
     this.name = name;
+    this.promptForAdhocTags = promptForAdhocTags ?? false;
     this.projUri = projUri;
     this.env = {
       inherit: env?.inherit ?? true,

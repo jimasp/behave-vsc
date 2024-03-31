@@ -33,7 +33,21 @@ export function createRunProfilesForProject(ps: ProjectSettings, multiRoot: bool
         const profileName = `${projPrefix}${runProfile.name}`;
         const profile = ctrl.createRunProfile(profileName, profileKind,
           async (request: vscode.TestRunRequest) => {
-            await runHandler(debug, request, runProfile);
+            if (runProfile.promptForAdhocTags) {
+              const adhocTagsParameters = await vscode.window.showInputBox({
+                placeHolder: "--tags=tag1,~tag2 --tags=tag3", prompt: "Specify full tags parameters."
+              });
+              if (!adhocTagsParameters)
+                return;
+              if (!adhocTagsParameters?.startsWith("--tags=")) {
+                services.logger.logWarning("Parameters must start with `--tags=`.", projUri);
+                return;
+              }
+              await runHandler(debug, request, runProfile, adhocTagsParameters);
+            }
+            else {
+              await runHandler(debug, request, runProfile);
+            }
           });
         profile.onDidChangeDefault(isDefault => onlyAllowOneDefaultPerProject(isDefault, projRunProfiles, projStandardProfile));
         projRunProfiles.push(profile);

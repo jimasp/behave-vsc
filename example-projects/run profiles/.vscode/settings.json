@@ -14,7 +14,22 @@
         // note - for multiroot, runProfiles will only be read from the workspace file 
         // (do not create conflicting profile names between projects)
         {
+            "name": "prompt for tags",
+            "promptForAdhocTags": true,
+            "env": {
+                "envVars": {
+                    "profile": "prompt for tags",
+                }
+            },
+            "args": {
+                "argList": [
+                    "--tags=@another_tag"
+                ]
+            },
+        },
+        {
             "name": "qu'oted\"tag and qu'oted\"env profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "qu'oted\"tag and qu'oted\"env profile",
@@ -22,13 +37,16 @@
                 }
             },
             "args": {
-                "argList": ["--tags=@qu'oted\"tag"]
+                "argList": [
+                    "--tags=@qu'oted\"tag"
+                ]
             },
         },
         {
             "name": "inherit args and envs profile",
+            "promptForAdhocTags": false,
             "env": {
-                "envVars": {                
+                "envVars": {
                     "profile": "inherit args and envs profile",
                 }
             },
@@ -43,6 +61,7 @@
         },
         {
             "name": "do NOT inherit args and envs profile",
+            "promptForAdhocTags": false,
             "env": {
                 "inherit": false,
                 "envVars": {
@@ -57,9 +76,10 @@
                     "do=NOT inherit",
                 ]
             },
-        },        
+        },
         {
             "name": "no args profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "no args profile",
@@ -67,11 +87,12 @@
             },
             "args": {
                 "inherit": false,
-                "argList":[]
+                "argList": []
             },
         },
         {
             "name": "stage2 profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "stage2 profile",
@@ -81,17 +102,21 @@
         },
         {
             "name": "tag1 profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "tag1 profile",
                 }
             },
             "args": {
-                "argList": ["--tags=tag1"],
+                "argList": [
+                    "--tags=tag1"
+                ],
             }
         },
         {
             "name": "tag1 vars profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "tag1 vars profile",
@@ -99,10 +124,15 @@
                     "var2": "TAG1-var2"
                 }
             },
-            "args": { "argList":["--tags=tag1"] }
+            "args": {
+                "argList": [
+                    "--tags=tag1"
+                ]
+            }
         },
         {
             "name": "tag2 vars profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "tag2 vars profile",
@@ -110,11 +140,15 @@
                     "var2": "TAG2-var2"
                 }
             },
-            "args": {"argList":["--tags=@tag2"],
-        },
+            "args": {
+                "argList": [
+                    "--tags=@tag2"
+                ],
+            },
         },
         {
             "name": "tag1ortag2 vars profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "tag1ortag2 vars profile",
@@ -122,38 +156,56 @@
                     "var2": "TAG1_OR_2-var2"
                 }
             },
-            "args": {"argList": ["--tags=tag1,@tag2"],
-        },
+            "args": {
+                "argList": [
+                    "--tags=tag1,@tag2"
+                ],
+            },
         },
         {
             "name": "tag1andtag2 profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "tag1andtag2 profile",
                 }
             },
-            "args": { "argList":["--tags=tag1", "--tags=tag2"],
-        },
+            "args": {
+                "argList": [
+                    "--tags=tag1",
+                    "--tags=tag2"
+                ],
+            },
         },
         {
             "name": "tag1ortag2andtag3 profile",
+            "promptForAdhocTags": false,
             "env": {
-                "envVars": {                
-                   "profile": "tag1ortag2andtag3 profile",
+                "envVars": {
+                    "profile": "tag1ortag2andtag3 profile",
                 }
             },
-            "args": {"argList": ["--tags=tag1,tag2", "--tags=tag3"],
-        },
+            "args": {
+                "argList": [
+                    "--tags=tag1,tag2",
+                    "--tags=tag3"
+                ],
+            },
         },
         {
             "name": "nottag1andnottag2 profile",
+            "promptForAdhocTags": false,
             "env": {
                 "envVars": {
                     "profile": "nottag1andnottag2 profile",
                 }
             },
-            "args": {"argList": ["--tags=~tag1", "--tags=-tag2"],
-        },
+            "args": {
+                "argList": [
+                    "--tags=~tag1",
+                    "--tags=-tag2"
+                ],
+            },
         }
     ],
     "mypy-type-checker.ignorePatterns": [

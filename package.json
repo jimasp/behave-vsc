@@ -99,7 +99,8 @@
 					"items": {
 						"type": "object",
 						"required": [
-							"name"
+							"name",
+							"promptForAdhocTags"
 						],
 						"properties": {
 							"name": {
@@ -160,6 +161,11 @@
 										"fizz=buzz"
 									]
 								}
+							},
+							"promptForAdhocTags": {
+								"type": "boolean",
+								"default": false,
+								"markdownDescription": "If true, the extension will always prompt for adhoc tags to pass to behave. If false, the extension will just use the --tags included in `args` and/or `args.ArgList`."
 							},
 							"customRunner": {
 								"type": "object",
