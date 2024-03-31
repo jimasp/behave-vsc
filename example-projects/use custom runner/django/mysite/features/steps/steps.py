@@ -19,3 +19,10 @@ def step_impl(context, status):
     assert context.response.status_code == status
     
 
+@given("we have behave installed")
+def step_inst(context):
+    pass
+
+@then("we will see the result")
+def step_inst(context):
+    pass

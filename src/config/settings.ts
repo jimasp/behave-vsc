@@ -261,7 +261,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
       }
 
       // if we got this far then this run profile is valid, create via the RunProfile constructor
-      runProfiles.push(new RunProfile(profile.name, projUri, profile.env, profile.args, profile.customRunner));
+      runProfiles.push(new RunProfile(profile.name, projUri, profile.promptForTags, profile.env, profile.args, profile.customRunner));
     }
   }
   catch {
@@ -456,12 +456,12 @@ async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, p
 export type EnvSetting = { [key: string]: string };
 
 export type RunProfileEnvSetting = {
-  inherit: boolean,
+  inherit?: boolean,
   envVars: EnvSetting
 }
 
 export type RunProfileArgsSetting = {
-  inherit: boolean,
+  inherit?: boolean,
   argList: string[]
 }
 
@@ -487,8 +487,8 @@ export class CustomRunner {
 
 export interface IRunProfile {
   name: string;
-  promptForAdhocTags: boolean;
   projUri?: vscode.Uri;
+  promptForTags?: boolean;
   env?: RunProfileEnvSetting;
   args?: RunProfileArgsSetting;
   customRunner?: CustomRunner;
@@ -497,7 +497,7 @@ export interface IRunProfile {
 export class RunProfile implements IRunProfile {
   public readonly name: string;
   public readonly projUri: vscode.Uri;
-  public readonly promptForAdhocTags: boolean;
+  public readonly promptForTags: boolean;
   public readonly env: RunProfileEnvSetting;
   // note that for args, we must differentiate between undefined (not set by user) and an empty array set by user 
   // (i.e. user may want to override default args to [])
@@ -507,13 +507,13 @@ export class RunProfile implements IRunProfile {
   constructor(
     name: string,
     projUri: vscode.Uri,
-    promptForAdhocTags?: boolean,
+    promptForTags?: boolean,
     env?: RunProfileEnvSetting,
     args?: RunProfileArgsSetting,
     customRunner?: CustomRunner,
   ) {
     this.name = name;
-    this.promptForAdhocTags = promptForAdhocTags ?? false;
+    this.promptForTags = promptForTags ?? false;
     this.projUri = projUri;
     this.env = {
       inherit: env?.inherit ?? true,

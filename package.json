@@ -100,14 +100,14 @@
 						"type": "object",
 						"required": [
 							"name",
-							"promptForAdhocTags"
+							"promptForTags"
 						],
 						"properties": {
 							"name": {
 								"type": "string",
 								"markdownDescription": "The name of the run profile."
 							},
-							"promptForAdhocTags": {
+							"promptForTags": {
 								"type": "boolean",
 								"default": false,
 								"markdownDescription": "If true, the extension will always prompt for adhoc tags to pass to behave. If false, the extension will just use the --tags included in `args` and/or `args.ArgList`."

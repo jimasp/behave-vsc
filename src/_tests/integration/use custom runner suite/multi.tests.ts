@@ -4,6 +4,7 @@ import { runOptions, wsConfig, expectations } from "./config";
 import {
 	getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles,
 	getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles,
+	getExpectedResultsForMyScriptProfileWaitForJUnitFiles,
 	getExpectedResultsForNoProfile
 } from "./expectedResults";
 
@@ -12,21 +13,29 @@ import {
 suite(`use custom runner suite: multi.tests`, () => {
 	const testProjectRunner = new TestProjectRunner("use custom runner");
 
-	test("runAll - no selected runProfile", async () => {
+	test("runAll - custom runner profile: manage.py, do not wait for results", async () => {
+		runOptions.selectedRunProfile = "behave-django runner profile - do not wait for results";
+		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles;
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+	});
+
+	test("runAll - custom runner profile: manage.py, wait for results", async () => {
+		runOptions.selectedRunProfile = "behave-django runner profile - wait for results";
+		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
+		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+	});
+
+
+	test("runAll - no profile", async () => {
 		runOptions.selectedRunProfile = undefined;
 		expectations.getExpectedResultsFunc = getExpectedResultsForNoProfile;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
-	test("runAll - custom runner profile: do not wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: do NOT wait for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileDoNotWaitForJUnitFiles;
-		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-	});
 
-	test("runAll - custom runner profile: wait for results", async () => {
-		runOptions.selectedRunProfile = "behave-django runner profile: WAIT for test results";
-		expectations.getExpectedResultsFunc = getExpectedResultsForBehaveDjangoProfileWaitForJUnitFiles;
+	test("runAll - custom runner profile: myscript.py, wait for results", async () => {
+		runOptions.selectedRunProfile = "myscript - wait for results";
+		expectations.getExpectedResultsFunc = getExpectedResultsForMyScriptProfileWaitForJUnitFiles;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 

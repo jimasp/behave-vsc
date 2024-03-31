@@ -6,30 +6,36 @@ import { getExpectedCounts } from "./expectedResults"
 export const wsConfig = new TestWorkspaceConfig({
   behaveWorkingDirectory: "django/mysite",
   runProfiles: [
-    // NOTE - these are also used in simple suite (see simple suite's multi.tests.ts)
     {
-      "name": "behave-django runner profile: WAIT for test results",
-      "env": {
-        "var1": "var1 value",
+      "name": "behave-django runner profile - wait for results",
+      "promptForTags": false,
+      "args": {
+        "argList": [
+          "--keepdb"
+        ],
       },
-      "adhocTagsParameters": "--tags=~@skip",
-      "args": [
-        "--simple"
-      ],
       "customRunner": {
         "scriptFile": "manage.py",
         "waitForJUnitFiles": true
       },
     },
     {
-      "name": "behave-django runner profile: do NOT wait for test results",
-      "env": {
-        "var1": "var1 value",
-      },
-      "adhocTagsParameters": "--tags=~@skip",
+      "name": "behave-django runner profile - do not wait for results",
+      "promptForTags": false,
       "customRunner": {
         "scriptFile": "manage.py",
         "waitForJUnitFiles": false
+      },
+    },
+    {
+      "name": "myscript - wait for results",
+      "promptForTags": false,
+      "args": {
+        "argList": ["--tags=@myscript"],
+      },
+      "customRunner": {
+        "scriptFile": "myscript.py",
+        "waitForJUnitFiles": true
       },
     },
   ]

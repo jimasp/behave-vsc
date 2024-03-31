@@ -55,7 +55,7 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
     // convert RunProfiles to plain objects for deepStrictEqual
     const actualProfiles = projSettings.userRunProfiles.map(p => JSON.stringify(p));
     const expectedProfiles = (testConfig.getExpected("runProfiles") as RunProfilesSetting).map(p =>
-      JSON.stringify(new RunProfile(p.name, projUri, p.env, p.args, p.customRunner)));
+      JSON.stringify(new RunProfile(p.name, projUri, p.promptForTags, p.env, p.args, p.customRunner)));
     assert.deepStrictEqual(actualProfiles, expectedProfiles, `${projName} project: runProfiles`);
   }
   catch (assertErr: unknown) {

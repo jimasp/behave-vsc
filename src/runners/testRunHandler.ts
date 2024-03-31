@@ -119,7 +119,7 @@ const runProjTestQueue = (() => {
 
   return async (ps: ProjectSettings, projCtrl: vscode.TestController, projTestRun: vscode.TestRun, request: vscode.TestRunRequest,
     testData: TestData, debug: boolean, queue: QueueItem[], junitWatcher: JunitWatcher, runProfile: RunProfile,
-    adhocTagsParameters: string) => {
+    adhocTagsParameters?: string) => {
 
     let seqNo = -1;
 

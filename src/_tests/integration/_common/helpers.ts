@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
 import { RunOptions, testGlobals } from './types';
-import { CustomRunner, ProjectSettings, RunProfile, RunProfilesSetting } from '../../../config/settings';
+import { CustomRunner, ProjectSettings, RunProfile, RunProfileEnvSetting, RunProfilesSetting } from '../../../config/settings';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioNamesRegex } from '../../../runners/helpers';
 import { ProjRun } from '../../../runners/testRunHandler';
@@ -121,21 +121,13 @@ export async function checkExtensionIsReady(): Promise<IntegrationTestAPI> {
 	return api;
 }
 
-
-export function getExpectedTagsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions): string {
-	let tagsString = "";
-	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
-	if (runProfile.adhocTagsParameters)
-		tagsString = runProfile.adhocTagsParameters;
-	return tagsString;
-}
-
-
 export function getExpectedArgsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions: RunOptions): string {
-	let args: string[] = testExtConfig.get("args");
 	const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
+
+	let args: string[] = testExtConfig.get("args");
 	if (runProfile.args)
-		args = runProfile.args;
+		args = runProfile.args.inherit ? [...args, ...runProfile.args.argList] : runProfile.args.argList;
+
 	const argsString = args ? args.join(" ") : "";
 	return argsString;
 }
@@ -143,18 +135,18 @@ export function getExpectedArgsString(projUri: vscode.Uri, testExtConfig: TestWo
 
 export function getExpectedEnvVarsString(projUri: vscode.Uri, testExtConfig: TestWorkspaceConfig, runOptions?: RunOptions): string {
 
-	const env: object = testExtConfig.get("env");
-
-	let rpEnv: object | undefined = {};
+	let rpEnv: RunProfileEnvSetting | undefined;
 	if (runOptions && runOptions.selectedRunProfile) {
 		const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 		rpEnv = runProfile.env;
 	}
 
-	const allenv = { ...env, ...rpEnv };
-	const pr = { env: allenv } as ProjRun;
-	const envVarsString = getFriendlyEnvVars(pr);
+	let env: object = testExtConfig.get("env");
+	if (rpEnv)
+		env = rpEnv.inherit ? { ...env, ...rpEnv.envVars } : rpEnv.envVars;
 
+	const pr = { env: env } as ProjRun;
+	const envVarsString = getFriendlyEnvVars(pr);
 	return envVarsString;
 }
 
@@ -177,7 +169,6 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 	testExtConfig: TestWorkspaceConfig, runOptions: RunOptions,
 	request: vscode.TestRunRequest, projName: string, queueItems?: QueueItem[], includeScenariosRx = false) {
 
-	const tagsString = getExpectedTagsString(projUri, testExtConfig, runOptions);
 	const envVarsString = getExpectedEnvVarsString(projUri, testExtConfig, runOptions);
 	const argsString = getExpectedArgsString(projUri, testExtConfig, runOptions);
 	const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
@@ -209,7 +200,6 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 		scriptOrModule,
 		`behave`,
 		argsString,
-		tagsString,
 		argPipedFeaturePathsRx,
 		argPipedScenariosRx,
 		`--show-skipped --junit --junit-directory`,
@@ -226,7 +216,7 @@ export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceC
 	const profile = runProfilesSetting.find(x => x.name === runOptions.selectedRunProfile);
 	if (!profile)
 		assert(profile, `selectedRunProfile "${runOptions.selectedRunProfile}" not found in testExtConfig runProfiles`);
-	return new RunProfile(profile.name, projUri, profile.adhocTagsParameters, profile.env, profile.args, profile.customRunner);
+	return new RunProfile(profile.name, projUri, profile.promptForTags, profile.env, profile.args, profile.customRunner);
 }
 
 

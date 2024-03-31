@@ -391,7 +391,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           // concatenate to the default args
           "argsList":["--tags=@tagA"]
         },
-        "promptForAdhocTags": false,        
+        "promptForTags": false,        
       },   
       {
         "name": "Tags: B,C",
@@ -400,7 +400,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           "inherit": true, 
           "argsList":["--tags=@tagB, @tagC"]
         },
-        "promptForAdhocTags": false,
+        "promptForTags": false,
       },                
       {
         "name": "System",
@@ -415,7 +415,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
             "inherit": false,
             "argsList":["-D", "foo=baz"]
           },
-        "promptForAdhocTags": true,
+        "promptForTags": true,
       },          
       {         
         "name": "Staging: Tag B",
@@ -430,7 +430,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         "args": { 
           "argsList": ["--tags=@tagB"]
         },
-        "promptForAdhocTags": false,
+        "promptForTags": false,
       },
     ]
   ```
@@ -455,7 +455,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
     "behave-vsc.runProfiles": [
       {
         "name": "behave-django",
-        "promptForAdhocTags": false,
+        "promptForTags": false,
         "env": {
           "envVars": {          
             "FOO": "bar"
