@@ -3,47 +3,47 @@
 		// "pj" = give projects a different name to their folder name for testing purposes
 		{
 			"path": "./simple",
-			"name": "simple pj"
+			"name": "simple prj"
 		},
 		{
 			"path": "./project A",
-			"name": "project A pj"
+			"name": "project A prj"
 		},
 		{
 			"path": "./project B",
-			"name": "project B pj"
+			"name": "project B prj"
 		},
 		{
 			"path": "./working dir",
-			"name": "working dir pj"
+			"name": "working dir prj"
 		},
 		{
 			"path": "./run profiles",
-			"name": "run profiles pj"
+			"name": "run profiles prj"
 		},
 		{
 			"path": "./multiple top-level features folders",
-			"name": "multiple top-level features folders pj"
+			"name": "multiple top-level features folders prj"
 		},
 		{
 			"path": "./imported steps",
-			"name": "imported steps pj"
+			"name": "imported steps prj"
 		},
 		{
 			"path": "./sibling steps folder 1",
-			"name": "sibling steps folder 1  pj"
+			"name": "sibling steps folder 1  prj"
 		},
 		{
 			"path": "./sibling steps folder 2",
-			"name": "sibling steps folder 2  pj"
+			"name": "sibling steps folder 2  prj"
 		},
 		{
 			"path": "./handle bad import",
-			"name": "handle bad import pj"
+			"name": "handle bad import prj"
 		},
 		{
 			"path": "./use custom runner",
-			"name": "use custom runner pj"
+			"name": "use custom runner prj"
 		},
 		{
 			"path": "./handle empty folder",
@@ -51,11 +51,11 @@
 		},
 		{
 			"path": "./handle incorrect paths",
-			"name": "handle incorrect paths (show warning in popup)"
+			"name": "handle incorrect paths (show warning in popup when run)"
 		},
 		{
 			"path": "./handle unconfigured paths",
-			"name": "handle unconfigured paths (show warning in output window)"
+			"name": "handle unconfigured paths (show warning in output window on startup)"
 		}
 	],
 	"settings": {

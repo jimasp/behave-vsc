@@ -13,8 +13,7 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
     xRayLog(friendlyCmd, pr.projSettings.uri); // log debug friendlyCmd in diagnostics log only
 
     // --outfile = remove stdout noise from debug console
-    args.push("--no-summary", "--outfile",
-      vscode.Uri.joinPath(services.config.extensionTempDirUri, "debug", `${(pr.projTestRun.name ?? "")}.log`).fsPath);
+    args.push("--no-summary", "--outfile", getDebugLogPath(pr.projTestRun.name));
 
     const env = { ...process.env, ...pr.env };
 
@@ -53,4 +52,8 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
   finally {
     runCancelHandler.dispose();
   }
+}
+
+export function getDebugLogPath(runName: string | undefined): string {
+  return vscode.Uri.joinPath(services.config.extensionTempDirUri, "debug", `${runName ?? ""}.log`).fsPath;
 }

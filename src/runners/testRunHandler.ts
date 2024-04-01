@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { performance } from 'perf_hooks';
 import { services } from "../common/services";
 import { ProjectSettings, CustomRunner, RunProfile } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';
@@ -10,6 +9,7 @@ import { xRayLog, LogType } from '../common/logger';
 import { getJunitProjRunDirUri, JunitWatcher } from '../watchers/junitWatcher';
 import { getProjQueueJunitFileMap } from '../parsers/junitParser';
 import { basename } from 'path';
+import { getDebugLogPath } from './behaveDebug';
 
 
 
@@ -79,6 +79,7 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
     finally {
       if (projTestRun) {
         xRayLog(`testRunHandler: completed run ${projTestRun.name}`);
+        logProjTestRunComplete(projTestRun, debug);
         projTestRun.end();
       }
     }
@@ -155,7 +156,6 @@ const runProjTestQueue = (() => {
       // watcher is ready, now wait for this project's turn if required
       if (debug || !services.config.instanceSettings.runMultiRootProjectsInParallel) {
         xRayLog(`runProjTestQueue: waiting for sequence for run ${projTestRun.name}`);
-        projTestRun.appendOutput(`${projTestRun.name} waiting to commence...\r\n`)
         seqNo = sequence.length === 0 ? 0 : Math.max(...sequence) + 1;
         sequence.push(seqNo);
         while (Math.min(...sequence) !== seqNo) {
@@ -214,11 +214,7 @@ async function runProjectQueue(ps: ProjectSettings, ctrl: vscode.TestController,
       runProfile.customRunner
     )
 
-    const start = performance.now();
-    logProjRunStarted(pr);
     await doRunType(pr);
-    logProjRunComplete(pr, start);
-
   }
   catch (e: unknown) {
     pr?.projTestRun.end();
@@ -362,6 +358,12 @@ function allTestsForThisProjAreIncluded(request: vscode.TestRunRequest, ps: Proj
 }
 
 
+function logProjTestRunComplete(projTestRun: vscode.TestRun, debug: boolean) {
+  const outputLoc = debug ? `"${getDebugLogPath(projTestRun.name)}"` : "Behave VSC output window";
+  projTestRun.appendOutput(`\r\n=== See ${outputLoc} for behave output ===\r\n`);
+}
+
+
 function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: string[], projQueueItem: QueueItem) {
   const featureId = projQueueItem.test.parent?.id;
   if (!featureId)
@@ -373,35 +375,6 @@ function getFeatureIdIfFeatureNotAlreadyProcessed(alreadyProcessedFeatureIds: st
   alreadyProcessedFeatureIds.push(featureId);
   return featureId;
 }
-
-
-function logProjRunStarted(pr: ProjRun) {
-  if (!pr.debug) {
-    services.logger.logInfo(`--- Starting ${pr.projSettings.name} tests for run "${pr.projTestRun.name}" ---\n`,
-      pr.projSettings.uri, pr.projTestRun);
-  }
-}
-
-
-function logProjRunComplete(pr: ProjRun, start: number) {
-  const end = performance.now();
-  if (!pr.debug) {
-    services.logger.logInfo(`\n--- Completed ${pr.projSettings.name} tests for run "${pr.projTestRun.name}" ` +
-      `(took ${((end - start) / 1000).toFixed(4)} secs)---`,
-      pr.projSettings.uri, pr.projTestRun);
-  }
-  pr.projTestRun.appendOutput('\r\n');
-  pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
-  if (pr.debug) {
-    pr.projTestRun.appendOutput(`#### See ${services.config.extensionTempDirUri.fsPath}/debug for Behave output ####\r\n`);
-  }
-  else {
-    pr.projTestRun.appendOutput('#### See "Behave VSC" output window for Behave output ####\r\n');
-  }
-  pr.projTestRun.appendOutput('-----------------------------------------------------------\r\n');
-  pr.projTestRun.appendOutput('\r\n');
-}
-
 
 
 function getIncludedFeaturesForProj(projUri: vscode.Uri, req: vscode.TestRunRequest | undefined,

@@ -91,7 +91,7 @@ export function updateTest(run: vscode.TestRun, debug: boolean, result: ParseRes
   }
 
   item.scenario.result = result.status;
-  run.appendOutput(`Test item ${vscode.Uri.parse(item.test.id).fsPath}: ${result.status === "passed" || result.status === "skipped"
+  run.appendOutput(`${item.scenario.featureFileProjectRelativePath}/${item.scenario.scenarioName}: ${result.status === "passed" || result.status === "skipped"
     ? result.status.toUpperCase() : "FAILED"}\r\n`);
 
 }
