@@ -305,7 +305,7 @@ suite("getBehaveConfigPaths - more path checks", () => {
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
       const result = getBehaveConfigPaths(p.ps);
       assert.deepStrictEqual(result.projRelBehaveConfigPaths, []);
-      assert(logger.logInfo.calledOnceWithExactly('Behave config file "pyproject.toml" did not set paths, using default paths.', p.ps.uri));
+      assert(logger.logInfo.calledOnceWithExactly('Behave config file(s) "behave.ini,.behaverc,setup.cfg,tox.ini" did not set paths, using default paths.', p.ps.uri));
     });
 
     test(`should return empty array when paths is empty, params: ${p}`, () => {
@@ -317,7 +317,7 @@ suite("getBehaveConfigPaths - more path checks", () => {
       sandbox.stub(fs, 'readFileSync').returns(fileContent);
       const result = getBehaveConfigPaths(p.ps);
       assert.deepStrictEqual(result.projRelBehaveConfigPaths, []);
-      assert(logger.logInfo.calledOnceWithExactly('Behave config file "tox.ini" did not set paths, using default paths.', p.ps.uri));
+      assert(logger.logInfo.calledOnceWithExactly('Behave config file(s) "tox.ini" did not set paths, using default paths.', p.ps.uri));
     });
 
     test(`should return working dir features when paths is ./features, params: ${p}`, () => {

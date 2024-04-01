@@ -82,7 +82,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
 function getBehavePathsFromConfigFile(ps: ProjectSettings) {
   let paths: string[] | null = null;
   let matchedConfigFile;
-  let lastExistingConfigFile = null;
+  const configFilesRead: string[] = [];
 
   // we DON'T need to reverse() BEHAVE_CONFIG_FILES like behave because we are only 
   // interested in the "paths" setting (not all cumulative settings), 
@@ -91,11 +91,11 @@ function getBehavePathsFromConfigFile(ps: ProjectSettings) {
   for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
     const configFilePath = path.join(ps.behaveWorkingDirUri.fsPath, configFile);
     if (fs.existsSync(configFilePath)) {
-      lastExistingConfigFile = configFile;
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
       if (configFile === "pyproject.toml")
         continue;
       const contents = fs.readFileSync(configFilePath, 'utf-8');
+      configFilesRead.push(configFile);
       paths = getBehavePathsFromIniContents(contents);
       if (paths) {
         matchedConfigFile = configFile;
@@ -104,11 +104,11 @@ function getBehavePathsFromConfigFile(ps: ProjectSettings) {
     }
   }
 
-  if (!lastExistingConfigFile) {
-    services.logger.logInfo(`No Behave config file found, using default paths.`, ps.uri);
-  }
-  else if (!paths) {
-    services.logger.logInfo(`Behave config file "${lastExistingConfigFile}" did not set paths, using default paths.`, ps.uri);
+  if (!paths) {
+    if (configFilesRead.length === 0)
+      services.logger.logInfo(`No Behave config file found, using default paths.`, ps.uri);
+    else
+      services.logger.logInfo(`Behave config file(s) "${configFilesRead}" did not set paths, using default paths.`, ps.uri);
   }
 
   return { matchedConfigFile, paths };

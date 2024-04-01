@@ -20,7 +20,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     else
       local_args.unshift("-m", "behave");
 
-    xRayLog(`${pr.pythonExec} ${local_args.join(" ")}`, projUri);
+    xRayLog(`Starting behave with cmd: ${pr.pythonExec} ${local_args.join(" ")}`, projUri);
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
 
