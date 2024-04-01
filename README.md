@@ -439,7 +439,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   - You can select a default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same profile.  
   - The `runProfile.args.list` is concatentated to `behave-vsc.args` if `inherit` is true, otherwise the `runProfile.args` will override `behave-vsc.args` when the profile is actively running.
   - The `runProfile.env.vars` is concatentated to `behave-vsc.env` if `inherit` is true, otherwise the `runProfile.env` will override `behave-vsc.env` when the profile is actively running.  
-  - If `promptForTags` is true, then the user will be prompted to enter tags when the profile is run. Note that the tags entered will be in addition to any tags specified in `runProfile.args` and/or `runProfile.args.list`.
+  - If `promptForTags` is true, then the user will be prompted to enter tags when the profile is run. Note that the tags entered will be in addition to any tags specified in `runProfile.args.list` (and `behave-vsc.args` if inherited).
   - Regarding environment variables in `runProfiles`:
     - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
       - in your `environment.py` (or `mystage_environment.py`) file:
