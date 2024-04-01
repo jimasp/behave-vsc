@@ -264,7 +264,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 ## Known issues and limitations
 
-- If your project is so large that you file watchers do not work, then you will need to use the refresh button in the test explorer to see new/modified tests.
+- If you hit a filewatcher limit in your workspace, then you will need to use the refresh button in the test explorer to see new/modified tests and update step navigation. (For a better experience, you should increase the watcher file handle limit on your operating system, or reduce the number of filewatchers.)
 
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
 
@@ -479,7 +479,9 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   - The `scriptFile` must be a file in the root of your behave working directory.
   - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
   - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@django ...`.
-  - The extension does not know if your script succeeded or failed, it only launches/debugs the script (and monitors junit file output if `waitForJUnitFiles` is true).
+  - The extension will monitor for junit file output if `waitForJUnitFiles` is true. Note that:
+    - If true, the extension will expect junit files to have the exact same filenames/content content that behave would create when executed on its own in the `behaveWorkingDirectory` (or project root if this is not specified).
+    - If false, the extension will fire-and-forget the script and test results will be unchanged from any previous run where junit files were present.
   - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
   - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
   
@@ -488,8 +490,8 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   from behave.__main__ import main as behave_main
   
   def __main__():
-      args = sys.argv[1:]
-      print(f'script called with args: {" ".join(args)}\n')
+      args = sys.argv[2:]
+      print(f'my script was called with args: {" ".join(args)}\n')
       sys.exit(behave_main(args))
 
   if __name__ == "__main__":

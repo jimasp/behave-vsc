@@ -6,7 +6,12 @@ import { getExpectedCounts } from "./expectedResults"
 
 export const wsConfig = new TestWorkspaceConfig({
   importedSteps: {
+    // just to check it doesn't break anything if we import stage2_steps
     "features": ".*/steps/.*"
+  },
+  env: {
+    "var1": "ENV-var1",
+    "var3": "ENV-var3",
   },
   args: [
     "-D",
@@ -15,6 +20,20 @@ export const wsConfig = new TestWorkspaceConfig({
     "fizz=buzz",
   ],
   runProfiles: [
+    {
+      "name": "prompt for tags",
+      "promptForTags": true,
+      "env": {
+        "vars": {
+          "profile": "prompt for tags",
+        }
+      },
+      "args": {
+        "list": [
+          "--tags=@another_tag"
+        ]
+      },
+    },
     {
       "name": "qu'oted\"tag and qu'oted\"env profile",
       "promptForTags": false,

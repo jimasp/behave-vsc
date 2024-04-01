@@ -25,13 +25,11 @@ suite(`use custom runner suite: multi.tests`, () => {
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
 
-
 	test("runAll - no profile", async () => {
 		runOptions.selectedRunProfile = undefined;
 		expectations.getExpectedResultsFunc = getExpectedResultsForNoProfile;
 		await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
 	});
-
 
 	test("runAll - custom runner profile: myscript.py, wait for results", async () => {
 		runOptions.selectedRunProfile = "myscript - wait for results";

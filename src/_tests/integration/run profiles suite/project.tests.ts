@@ -23,20 +23,26 @@ suite(`run profiles suite test: project.tests`, () => {
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("debugAll - tag1 profile", async () => {
-    runOptions.selectedRunProfile = "tag1 profile";
-    expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
-    await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
-  });
-
   test("runAll - qu'oted\"tag and qu'oted\"env profile", async () => {
     runOptions.selectedRunProfile = "qu'oted\"tag and qu'oted\"env profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForUnmatchedTagsSpecified;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("runAll - args profile", async () => {
-    runOptions.selectedRunProfile = "args profile";
+  test("runAll - inherit args and envs profile", async () => {
+    runOptions.selectedRunProfile = "inherit args and envs profile";
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
+    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
+  });
+
+  test("debugAll - inherit args and envs profile", async () => {
+    runOptions.selectedRunProfile = "inherit args and envs profile";
+    expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
+    await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
+  });
+
+  test("runAll - do NOT inherit args and envs profile", async () => {
+    runOptions.selectedRunProfile = "do NOT inherit args and envs profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
@@ -50,12 +56,6 @@ suite(`run profiles suite test: project.tests`, () => {
   test("runAll - stage2 profile", async () => {
     runOptions.selectedRunProfile = "stage2 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForNoTagsSpecified;
-    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-  });
-
-  test("runAll - tag1 profile", async () => {
-    runOptions.selectedRunProfile = "tag1 profile";
-    expectations.getExpectedResultsFunc = getExpectedResultsForTag1RunProfile;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 

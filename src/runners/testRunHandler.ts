@@ -57,7 +57,9 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
       const queue: QueueItem[] = [];
       const tests = request.include ?? convertToTestItemArray(projCtrl.items);
       xRayLog(`testRunHandler: ${projRunName} tests length = ${tests.length}`);
-      await queueSelectedProjTestItems(ps, projCtrl, projTestRun, request, queue, tests, testData);
+
+      const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
+      await queueSelectedProjTestItems(ps, projCtrl, projTestRun, request, waitForJUnitFiles, queue, tests, testData);
 
       if (queue.length === 0) {
         if (services.config.isIntegrationTestRun)
@@ -86,7 +88,7 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
 
 
 async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.TestController, run: vscode.TestRun,
-  request: vscode.TestRunRequest, queue: QueueItem[], tests: Iterable<vscode.TestItem>, testData: TestData) {
+  request: vscode.TestRunRequest, waitForJUnitFiles: boolean, queue: QueueItem[], tests: Iterable<vscode.TestItem>, testData: TestData) {
 
   for (const test of tests) {
 
@@ -97,7 +99,10 @@ async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.Test
     const data = testData.get(test);
 
     if (data instanceof Scenario) {
-      run.enqueued(test);
+      if (waitForJUnitFiles)
+        run.enqueued(test);
+      else
+        data.result = undefined;
       queue.push({ test, scenario: data });
     }
     else {
@@ -106,7 +111,7 @@ async function queueSelectedProjTestItems(ps: ProjectSettings, ctrl: vscode.Test
         await data.createScenarioTestItemsFromFeatureFileContent(ps, content, testData, ctrl, test, "queueSelectedTestItems");
       }
 
-      await queueSelectedProjTestItems(ps, ctrl, run, request, queue, convertToTestItemArray(test.children), testData);
+      await queueSelectedProjTestItems(ps, ctrl, run, request, waitForJUnitFiles, queue, convertToTestItemArray(test.children), testData);
     }
 
   }
@@ -137,7 +142,7 @@ const runProjTestQueue = (() => {
 
       const waitForJUnitFiles = !runProfile.customRunner || runProfile.customRunner.waitForJUnitFiles;
       if (!waitForJUnitFiles) {
-        projQueueMap.map(q => q.queueItem).forEach(x => { projTestRun.skipped(x.test); x.scenario.result = undefined; });
+        projQueueMap.map(q => q.queueItem).forEach(x => { x.scenario.result = undefined; });
       }
       else {
         // startWatchingRun will try to wait for the junit watcher to be ready (detecting files) on the run folder before starting the run  
