@@ -63,6 +63,9 @@ Feature: Go to Step def tests
 	Scenario: 'yet' 'another' step single quoted
 		Given 'yet' 'another' step
 
+	Scenario: wrapped step
+		Given wrapped step blah text blah text blah text blah blah text
+
 	Scenario: wrapped step 1
 		Given wrapped step1 blaha unquoted params blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
 
@@ -79,7 +82,7 @@ Feature: Go to Step def tests
 		Given we have a u string with a param foo
 
 	Scenario: @behave style
-		Given @behave style step
+		Given @behave prefixed step
 
 	Scenario: @behave style wrapped
-		Given wrapped @behave step blaha "double" "quoted" blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz
+		Given wrapped @behave prefixed step blaha "double" "quoted" blahd blahe blahf blahg blahh blahi blahj blahk blahl blahm blahn blaho blahp blahq blahr blahs blaht blahu blahv blahw blahx blahy blahz

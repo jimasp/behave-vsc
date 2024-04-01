@@ -5,7 +5,8 @@ import { xRayLog } from '../common/logger';
 export const parseRepWildcard = ".*";
 export const funcRe = /^(async )?def/;
 const stepFileStepStartStr = "^\\s*@(behave\\.)?(step|given|when|then)\\(";
-const stepFileStepStartRe = new RegExp(`${stepFileStepStartStr}.*`, "i");
+const stepFileStepStartRe = new RegExp(`${stepFileStepStartStr}(.*)`, "i");
+const stepFileStepEndRe = new RegExp("(.*)\\)", "i");
 const stepFileStepRe = new RegExp(`${stepFileStepStartStr}u?(?:"|')(.+)(?:"|').*\\).*$`, "i");
 const stepFileSteps = new Map<string, StepFileStep>();
 
@@ -99,16 +100,19 @@ export async function parseStepsFileContent(projUri: vscode.Uri, content: string
 
     const foundStep = stepFileStepStartRe.exec(line);
     if (foundStep) {
-      if (foundStep && line.endsWith("(")) {
+      if (foundStep && !line.endsWith(")")) {
         startLineNo = lineNo;
         multiLineStepType = foundStep[2];
         multiLineBuilding = true;
+        multiLine += foundStep[3];
         continue;
       }
     }
 
     if (multiLineBuilding) {
-      if (line.startsWith(")")) {
+      if (line.endsWith(")")) {
+        const stepEnd = stepFileStepEndRe.exec(line);
+        multiLine += stepEnd ? stepEnd[1] : "";
         multiLine = multiLine.replaceAll("''", "");
         multiLine = multiLine.replaceAll('""', "");
         multiLineBuilding = false;

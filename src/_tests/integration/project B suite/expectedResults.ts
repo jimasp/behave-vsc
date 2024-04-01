@@ -4,10 +4,10 @@ import { TestResult } from "../_common/types"
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 79, testCount: testCount },
+    tests: { nodeCount: 80, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 16, stepFilesExceptEmptyOrCommentedOut: 6,
-    stepFileStepsExceptCommentedOut: 47,
-    featureFileStepsExceptCommentedOut: 125, stepMappings: 124  // (1 diff = "When we have a missing step")
+    stepFileStepsExceptCommentedOut: 48,
+    featureFileStepsExceptCommentedOut: 126, stepMappings: 125  // (1 diff = "When we have a missing step")
   };
 }
 
@@ -691,6 +691,22 @@ export const getExpectedResults = (): TestResult[] => {
     new TestResult({
       scenario_featureFileRelativePath: 'features/goto_step.feature',
       scenario_featureName: 'Go to Step def tests',
+      scenario_getLabel: 'wrapped step',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'wrapped step',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../project B/features/goto_step.feature/wrapped step',
+      test_label: 'wrapped step',
+      test_parent: '.../project B/features/goto_step.feature',
+      test_uri: '.../project B/features/goto_step.feature',
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'features/goto_step.feature',
+      scenario_featureName: 'Go to Step def tests',
       scenario_getLabel: 'wrapped step 1',
       scenario_isOutline: false,
       scenario_result: 'passed',
@@ -959,6 +975,7 @@ export const getExpectedResults = (): TestResult[] => {
       test_parent: '.../project B/features/goto_step.feature',
       test_uri: '.../project B/features/goto_step.feature',
     }),
+
 
   ];
 

@@ -1,6 +1,6 @@
 from behave import *
 
-
+   
 def non_step_function(context):
     pass
 
@@ -96,6 +96,12 @@ def a_double_quoted_step(context, a, b):
     assert a == "yet"
     assert b == "another"
     
+    
+@step('wrapped step blah {a} blah {b}'
+      ' blah {c} blah blah {d}')    
+def wrapped_step(context, a, b, c, d):
+    pass
+
 
 @step(
     "wrapped step1 blaha {a} {b} blahd blahe blahf blahg blahh blahi blahj blahk " 
