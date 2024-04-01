@@ -439,6 +439,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   - You can select a default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same profile.  
   - The `runProfile.args.list` is concatentated to `behave-vsc.args` if `inherit` is true, otherwise the `runProfile.args` will override `behave-vsc.args` when the profile is actively running.
   - The `runProfile.env.vars` is concatentated to `behave-vsc.env` if `inherit` is true, otherwise the `runProfile.env` will override `behave-vsc.env` when the profile is actively running.  
+  - If `promptForTags` is true, then the user will be prompted to enter tags when the profile is run. Note that the tags entered will be in addition to any tags specified in `runProfile.args` and/or `runProfile.args.list`.
   - Regarding environment variables in `runProfiles`:
     - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
       - in your `environment.py` (or `mystage_environment.py`) file:
@@ -448,7 +449,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
       - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
 
-- You can also add a `customRunner` script to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example for behave-django:
+- You can also add a `customRunner` script to a run profile do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable:
 
     ```json
     // settings.json
@@ -483,7 +484,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
     - If true, the extension will expect junit files to have the exact same filenames/content content that behave would create when executed on its own in the `behaveWorkingDirectory` (or project root if this is not specified).
     - If false, the extension will fire-and-forget the script and test results will be unchanged from any previous run where junit files were present.
   - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
-  - If you are using a custom script, note that debugging behave steps will only be possible if `behave.__main__` is imported into your script. Example:
+  - Note that debugging behave steps will only be possible for a customRunner if behave is imported into your script. Example:
   
   ```python
   import sys
