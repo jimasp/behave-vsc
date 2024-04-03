@@ -210,21 +210,6 @@ export const isFeatureFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
 export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
-  // function to get the matching steps library dictionary entry for the given relative path
-  const getStepLibraryMatch = (ps: ProjectSettings, relPath: string) => {
-    let stepLibMatch: StepImport | null = null;
-    let currentMatchLen = 0, lenPath = 0;
-    for (const stepLib of ps.importedSteps) {
-      if (relPath.startsWith(stepLib.relativePath))
-        lenPath = stepLib.relativePath.length;
-      if (lenPath > currentMatchLen) {
-        currentMatchLen = lenPath;
-        stepLibMatch = stepLib;
-      }
-    }
-    return stepLibMatch;
-  }
-
   if (fileUri.scheme !== "file")
     return false;
 
@@ -243,19 +228,36 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
   if (/.*\/steps\/.*/.test(lcPath))
     return true;
 
-  // if the file path does is not contain "/steps/" and we got this far, 
+  // if the file path does not contain "/steps/" and we got this far, 
   // then this must be a steps library folder,
   // (steps library folders are always included in projRelativeStepsFolders)
   const projSettings = await getProjectSettingsForFile(fileUri);
-  const relPath = path.relative(projSettings.uri.fsPath, fileUri.fsPath);
-  const stepLibMatch = getStepLibraryMatch(projSettings, relPath);
-
-  // check if it matches the regex
-  if (!stepLibMatch || !new RegExp(stepLibMatch.stepFilesRx).test(relPath))
-    return false;
-
-  return true;
+  return isImportedStepFile(projSettings, fileUri);
 }
+
+
+
+// function to get the matching steps library dictionary entry for the given relative path
+const isImportedStepFile = (ps: ProjectSettings, fileUri: vscode.Uri): boolean => {
+  let stepLibMatch: StepImport | undefined;
+  let currentMatchLen = 0, lenPath = 0;
+
+  const relPath = path.relative(ps.uri.fsPath, fileUri.fsPath);
+
+  // check if filePath is inside a matching folder
+  for (const stepLib of ps.importedSteps) {
+    if (relPath.startsWith(stepLib.relativePath))
+      lenPath = stepLib.relativePath.length;
+    if (lenPath > currentMatchLen) {
+      currentMatchLen = lenPath;
+      stepLibMatch = stepLib;
+    }
+  }
+
+  // check if filePath matches the regex
+  return !!stepLibMatch && new RegExp(stepLibMatch.stepFilesRx).test(relPath);
+}
+
 
 export const getFeaturesFolderUriForFeatureFileUri = (ps: ProjectSettings, featureFileUri: vscode.Uri) => {
   for (const relFeaturesPath of ps.projRelativeFeatureFolders) {
@@ -388,12 +390,14 @@ export async function findFeatureFoldersInWorkingDir(ps: ProjectSettings): Promi
 }
 
 
-export function isExcludedPath(excludedPatterns: string[], path: string): boolean {
-  for (const pattern of excludedPatterns) {
-    if (minimatch(path, pattern))
+export function isExcludedPath(ps: ProjectSettings, uri: vscode.Uri): boolean {
+  // this function must be FAST
+  for (const pattern of ps.excludedPathPatterns) {
+    if (minimatch(uri.path, pattern))
       return true;
   }
-  return false;
+  // specifically imported steps are not excluded
+  return isImportedStepFile(ps, uri);
 }
 
 

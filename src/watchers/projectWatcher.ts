@@ -126,44 +126,44 @@ export class ProjectWatcher {
       // it is called for EVERY project file/folder change
 
       // get the latest project settings (this project watcher has a lifetime as long as the extension)
-      const projSettings = await services.config.getProjectSettings(projUri);
+      const ps = await services.config.getProjectSettings(projUri);
 
-      if (isExcludedPath(projSettings.excludedPathPatterns, uri.path)) {
+      // we MUST have this check early on for efficiency as it will handle a lot of cases
+      if (isExcludedPath(ps, uri))
         return false;
-      }
 
       if (uri.path.endsWith(".tmp")) // vscode file history file 
         return false;
 
       for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-        const configPath = `${projSettings.behaveWorkingDirUri.path}/${configFile}`;
+        const configPath = `${ps.behaveWorkingDirUri.path}/${configFile}`;
         if (uri.path.startsWith(configPath)) {
           if (services.config.isIntegrationTestRun)
             return false; // don't reload when integration tests change the behave.ini file
           xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
           await services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - configFile", false);
-          return false;
+          return false; // just handled it
         }
       }
 
-      // (*_environment = a stage environment file like stage1_environment.py etc.)
+      // if steps folder itself (not descendents), or environment.py, or e.g. stage1_environment.py
       if (/(.*\/(steps$|environment\.py$|_environment\.py$))/.test(uri.path.toLowerCase())) {
         // environment.py affects the baseDir, so reload settings and reparse
         await services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - environment", false);
-        return false;
+        return false; // just handled it
       }
 
-      // if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
-      const relFolderPaths = projSettings.projRelativeFeatureFolders.concat(projSettings.projRelativeStepsFolders);
+      // at this point, if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
+      const relFolderPaths = ps.projRelativeFeatureFolders.concat(ps.projRelativeStepsFolders);
       if (!relFolderPaths.some(relPath => uri.path.startsWith(`${projUri.path}/${relPath}`)))
         return false;
 
       if (uri.path.endsWith(".feature") || uri.path.endsWith(".py"))
         return true;
 
-      // if we've got this far, then we know the path is inside a steps/feature folder    
+      // at this point, then we know the path is inside a steps/feature folder    
       // but not a .feature or steps (.py) file, so now we're only interested in folder changes
       try {
         const stat = await vscode.workspace.fs.stat(uri);

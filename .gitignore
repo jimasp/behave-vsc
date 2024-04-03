@@ -5,5 +5,5 @@ node_modules
 .mypy_cache
 __pycache__
 .vscode-test
-**/.venv/**
-**/venv/**
+**/.venv/
+**/venv/

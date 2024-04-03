@@ -11,10 +11,16 @@ import {
 
 
 suite("isExcludedPath", () => {
-  const excludedPathPatterns = ["**/.venv{,/**}"];
+  const projUri = vscode.Uri.file("/home/me/src/myproj");
+  const projSettings = {
+    uri: projUri,
+    excludedPathPatterns: ["**/.venv{,/**}"],
+  } as ProjectSettings;
 
-  test(`should return [] for excluded paths`, () => {
+
+  test(`should return true for excluded paths, false otherwise`, async () => {
     const paths = [
+      "a path",
       '.venv',
       'folder/.venv',
       'folder/folder/.venv',
@@ -22,8 +28,9 @@ suite("isExcludedPath", () => {
       'folder/folder/.venv/something/some.py'];
 
     for (const path of paths) {
-      const result = isExcludedPath(excludedPathPatterns, path);
-      const expected = true;
+      const uri = vscode.Uri.file(`/home/me/src/myproj/${path}`);
+      const result = isExcludedPath(projSettings, uri);
+      const expected = path === "a path" ? false : true;
       assert.deepStrictEqual(result, expected, `path:"${path}", expected: ${expected}, got: ${result}`);
     }
   });
