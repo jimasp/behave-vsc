@@ -2,6 +2,7 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import { uriId } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
+import { services } from '../common/services';
 
 
 export class Configuration {
@@ -19,19 +20,27 @@ export class Configuration {
       f.uri.path.includes("/behave-vsc/example-projects/")) !== undefined);
   }
 
-  // called by onDidChangeConfiguration
-  async reloadSettings(projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) {
-    const projId = uriId(projUri);
-    if (testConfig) {
-      this.#windowSettings = new InstanceSettings(testConfig);
-      this.#resourceSettings[projId] = await ProjectSettings.create(projUri, testConfig, this.#windowSettings);
+  reloadSettings = (() => {
+    let alreadyReloading = false;
+    // called by ProjectWatcher and onDidChangeConfiguration
+    return async (projUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration) => {
+      if (alreadyReloading)
+        return;
+      alreadyReloading = true;
+      const projId = uriId(projUri);
+      services.logger.clear(projUri);
+      if (testConfig) {
+        this.#windowSettings = new InstanceSettings(testConfig);
+        this.#resourceSettings[projId] = await ProjectSettings.create(projUri, testConfig, this.#windowSettings);
+      }
+      else {
+        this.#windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
+        this.#resourceSettings[projId] = await ProjectSettings.create(projUri,
+          vscode.workspace.getConfiguration("behave-vsc", projUri), this.#windowSettings);
+      }
+      alreadyReloading = false;
     }
-    else {
-      this.#windowSettings = new InstanceSettings(vscode.workspace.getConfiguration("behave-vsc"));
-      this.#resourceSettings[projId] = await ProjectSettings.create(projUri,
-        vscode.workspace.getConfiguration("behave-vsc", projUri), this.#windowSettings);
-    }
-  }
+  })();
 
   get instanceSettings(): InstanceSettings {
     if (this.#windowSettings)

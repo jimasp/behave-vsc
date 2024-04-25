@@ -158,7 +158,7 @@ feature file formatting is provided by:
 ### Diagnostics
 
 - Diagnostic logs are controlled via the extension setting `behave-vsc.xRay` (this is enabled by default in the example projects and for most integration tests).
-- Diagnostics logs are written automatically if you call `services.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `diagLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
+- Diagnostics logs are written automatically if you call `services.logger.logInfo` etc., but if you want to write something *only* to diagnostic logs, then use `xRayLog()`. These logs can be viewed in the debug console if debugging the extension itself, or otherwise via the vscode command `Developer: Toggle developer tools`.
 - Diagnostics inside integration tests should simply use `console.log`.
 
 ### Exception handling
@@ -189,7 +189,7 @@ feature file formatting is provided by:
 - Log info to all Behave VSC output windows (regardless of project): `services.logger.logInfoAllProjects`. *This should be used sparingly, i.e. only where a project context does not make sense.*
 - Log info to the vscode test run output at the same time: specify the run parameter: `services.logger.logInfo("msg", projUri, run)`.
 - Log only to the vscode test run output: `run.appendOutput("msg\r\n")`.
-- Log only for extension developers (contributors) and users who want to see diagnostic output: `diagLog("msg")`.
+- Log only for extension developers (contributors) and users who want to see diagnostic output: `xRayLog("msg")`.
 
 ---
 
@@ -228,7 +228,7 @@ feature file formatting is provided by:
 
 ### Guidelines
 
-- Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `diagLog` to log timings where needed.)
+- Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `xRayLog` to log timings where needed.)
 - YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and readme updates.
 - The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
 - No reliance on other extensions except `ms-python.python`.

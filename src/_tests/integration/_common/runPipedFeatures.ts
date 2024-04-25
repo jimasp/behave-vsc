@@ -77,7 +77,7 @@ export async function runPipedFeatures(projName: string, isDebugRun: boolean, te
 
     console.log(`${consoleName}: calling runHandler to run piped features...`);
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
+    const results = await api.getProjMapEntry(projUri).runHandler!(isDebugRun, request, runProfile);
 
     // ASSERT  
 

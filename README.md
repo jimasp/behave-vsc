@@ -310,9 +310,9 @@ The most important extension settings to be aware of are probably `behaveWorking
 - If your features folder is non-standard, i.e.:
   - it is not in your behave working directory root, or
   - it is in the behave working directory root, but is not called `features` *and* does not have a sibling `steps` folder, or
-  - you have multiple features folders in the root of your behave-working-directory,
+  - you have multiple features folders in the root of your behave working directory,
 
-  then you can use the `paths` setting in your behave configuration file to specify a behave-working-directory-relative path to the features folder(s):
+  then you can use the `paths` setting in your behave configuration file to specify your feature folder path(s):
 
   - Example A, features folder is a subfolder of the working directory called `my_folder/my_features` and does not have a sibling `steps` folder:
 

@@ -3,15 +3,39 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { isExcludedPath, isStepsFile } from '../common/helpers';
+import { isStepsFile } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
+import { ProjectSettings } from '../config/settings';
 
 
 
 export class ProjectWatcher {
 
+  #projectWatchers: FolderWatcher[] = [];
+
+  private constructor(projectWatchers: FolderWatcher[]) {
+    this.#projectWatchers = projectWatchers;
+  }
+
+  public dispose() {
+    this.#projectWatchers.forEach(pw => pw.dispose());
+  }
+
+  public static create(ps: ProjectSettings, ctrl: vscode.TestController, testData: TestData): ProjectWatcher {
+    // we don't want to watch the whole project as that would create loads of file watcher handles,
+    // so we'll just watch the known features and steps folders
+    const paths = ps.projRelativeFeatureFolders.concat(ps.projRelativeStepsFolders);
+    const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData));
+    return new ProjectWatcher(folderWatchers);
+  }
+
+}
+
+
+class FolderWatcher {
+
   #watcherEvents: vscode.Disposable[] = [];
-  #watcher: vscode.FileSystemWatcher | undefined = undefined;
+  #watcher: vscode.FileSystemWatcher;
 
   private constructor(
     watcher: vscode.FileSystemWatcher,
@@ -24,93 +48,139 @@ export class ProjectWatcher {
   public dispose() {
     xRayLog("projectWatcher: disposing");
     this.#watcherEvents.forEach(e => e.dispose());
-    this.#watcher?.dispose();
+    this.#watcher.dispose();
   }
 
-  public static create(projUri: vscode.Uri, ctrl: vscode.TestController, testData: TestData): ProjectWatcher {
-    // we watch ** because we want to catch folder deletes/renames, so 
-    // we can e.g. detect if a features/steps subfolder gets moved/deleted 
-    const projectPattern = new vscode.RelativePattern(projUri, `**`);
-    const watcher = vscode.workspace.createFileSystemWatcher(projectPattern);
-    const watcherEvents = ProjectWatcher.setWatcherEventHandlers(watcher, projUri, ctrl, testData);
-    // create instance, passing in disposables
-    return new ProjectWatcher(watcher, watcherEvents);
+
+  public static create(ps: ProjectSettings, projRelPath: string, ctrl: vscode.TestController, testData: TestData): FolderWatcher {
+    const pattern = new vscode.RelativePattern(ps.uri, projRelPath + "/**");
+    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+    const watcherEvents = FolderWatcher.#setWatcherEventHandlers(watcher, ps.uri, ctrl, testData);
+    return new FolderWatcher(watcher, watcherEvents);
   }
 
-  static setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
+  static #setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
     testData: TestData): vscode.Disposable[] {
 
     const events: vscode.Disposable[] = [];
 
-    events.push(watcher.onDidCreate(async (uri) => {
-      // onDidCreate fires on either new file/folder creation OR rename (inc. git actions)
-      // (bear in mind that an entire folder tree can copied in one go)    
+    // onDidDelete fires on: file/folder delete/move/rename
+    // (bear in mind that an entire folder tree can renamed/moved in one go)            
+    events.push(watcher.onDidDelete(async (uri) => reparseAsNeeded(uri, true)));
+
+    // onDidCreate fires on: file/folder create/copy/move/rename
+    // (bear in mind that an entire folder tree can copied/renamed/moved in one go)    
+    events.push(watcher.onDidCreate(async (uri) => reparseAsNeeded(uri, false)));
+
+    // onDidChange fires on: file content change only
+    events.push(watcher.onDidChange(async (uri) => reparseAsNeeded(uri, false)));
+
+
+    const reparseAsNeeded = async (uri: vscode.Uri, isDelete: boolean): Promise<void> => {
+
+      // NOTE: ORDER OF IF STATEMENTS IS IMPORTANT IN SOME CASES, AS A 
+      // SUBSEQUENT IF MAY FORM PART OF THE ELIMINATION LOGIC OF A PREVIOUS IF (VIA RETURN STATEMENT)
+      // (see comments that state "at this point" below)
+
       try {
-        if (!await shouldHandleIt(uri))
-          return;
-
-        reparseTheFile(uri);
-      }
-      catch (e: unknown) {
-        // unawaited entry point (event handler) - show error
-        services.logger.popupError(e, projUri);
-      }
-
-    }));
-
-    events.push(watcher.onDidChange(async (uri) => {
-      // onDidChange fires on file save ONLY (inc. git actions)    
-      try {
-        if (!await shouldHandleIt(uri))
-          return;
-        reparseTheFile(uri);
-      }
-      catch (e: unknown) {
-        // unawaited entry point (event handler) - show error
-        services.logger.popupError(e, projUri);
-      }
-    }));
-
-    events.push(watcher.onDidDelete(async (uri) => {
-      // onDidDelete fires on either file/folder delete OR move/rename (inc. git actions)
-      // (bear in mind that an entire folder tree can renamed/moved in one go)        
-      try {
-        if (!await shouldHandleIt(uri))
-          return;
         if (uri.scheme !== "file")
           return;
 
-        if (await isStepsFile(uri)) {
-          deleteStepsAndStepMappingsForStepsFile(uri);
+        if (uri.path.endsWith(".tmp")) // vscode file history file 
+          return;
+
+        // get the latest project settings (this project watcher has a lifetime as long as the extension)
+        const ps = await services.config.getProjectSettings(projUri);
+
+        for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
+          const configPath = `${ps.behaveWorkingDirUri.path}/${configFile}`;
+          if (uri.path.startsWith(configPath)) {
+            if (services.config.isIntegrationTestRun)
+              return; // don't reload when integration tests change the behave.ini file
+            xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
+            await services.config.reloadSettings(projUri);
+            services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - configFile", false);
+            return;
+          }
+        }
+
+        // if steps folder itself (not descendents), or environment.py, or e.g. stage1_environment.py
+        if (/(.*\/(steps$|environment\.py$|_environment\.py$))/.test(uri.path.toLowerCase())) {
+          // steps/environment.py affects the baseDir, so reload settings and reparse project
+          await services.config.reloadSettings(projUri);
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - steps/environment", false);
           return;
         }
 
-        // notes: 
-        // (a) deleting/renaming a folder does not raise events for descendent files and folders.
-        // (b) any of these events would ideally start a full reparse of the project:
-        //    - deletion of a feature file (need to rebuild test tree, possibly inc. parent folder tree nodes), or
-        //    - deletion of a folder inside a steps/feature folder, or
-        //    - deletion of the steps/feature folder itself 
-        // (c) we cannot properly determine if this is a file or folder deletion as:
-        //     - it has been deleted so we can't stat it, and 
-        //     - "." is valid in folder names so we can't really determine by looking at the path.      
-        // so we'll do a best guess via deletedPathWasProbablyAFile, i.e. if the path is not a feature file, and the 
-        // last part of the path contains ".", then for efficiency we'll *assume* it's a file and not a folder and do nothing.
-        // in cases where this assumption is wrong, then the user will have to refresh the test explorer manually.
-        // (".py" is handled above via isStepsFile)
-        if (deletedPathWasProbablyAFile(uri.path) && !uri.path.endsWith(".feature"))
+        // if uri matches current known folder (not descendents) then reload settings and reparse project
+        const projRelPath = uri.path.substring(ps.uri.path.length + 1);
+        if (ps.projRelativeFeatureFolders.some(f => f === projRelPath) ||
+          ps.projRelativeStepsFolders.some(f => f === projRelPath) ||
+          ps.projRelativeBehaveWorkingDirPath === projRelPath) {
+          await services.config.reloadSettings(projUri);
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - knownFolder", false);
+          return;
+        }
+
+        // at this point, we've dealt with special case files and folders, now act on deletes
+        if (isDelete) {
+          if (await isStepsFile(uri)) {
+            deleteStepsAndStepMappingsForStepsFile(uri);
+            return;
+          }
+
+          // notes: 
+          // (a) deleting/renaming a folder does not raise events for descendent files and folders.
+          // (b) any of these events would ideally start a full reparse of the project:
+          //    - deletion of a feature file (need to rebuild test tree, possibly inc. parent folder tree nodes), or
+          //    - deletion of a folder inside a steps/feature folder, or
+          //    - deletion of the steps/feature folder itself 
+          // (c) we cannot properly determine if this is a file or folder deletion as:
+          //     - it has been deleted so we can't stat it, and 
+          //     - "." is valid in folder names so we can't really determine by looking at the path.      
+          // so we'll do a best guess via deletedPathWasProbablyAFile, i.e. if the path is not a feature file, and the 
+          // last part of the path contains ".", then for efficiency we'll *assume* it's a file and not a folder and do nothing.
+          // in cases where this assumption is wrong, then the user will have to refresh the test explorer manually.
+          // (".py" is handled above via isStepsFile)
+          if (deletedPathWasProbablyAFile(uri.path) && !uri.path.endsWith(".feature"))
+            return;
+
+          // deleted feature/steps file (or folder), reparse the entire project to rebuild the test tree
+          //await services.config.reloadSettings(projUri);
+          services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded", false);
+
+          return;
+        }
+
+        // at this point, it's not a special case and it's not a delete, so if its a steps/feature file, then just reparse the file
+        if (uri.path.endsWith(".py") || uri.path.endsWith(".feature")) {
+          reparseTheFile(uri);
+          return;
+        }
+
+        // at this point, we know the path is inside a steps/feature folder but is not a .feature or steps (.py) file, 
+        // so now we're only interested in folder changes.
+        // we also know this is not a delete event at this point, so we know we can stat.
+        const stat = await vscode.workspace.fs.stat(uri);
+        console.log(stat.type);
+        if (stat.type !== vscode.FileType.Directory)
           return;
 
-        // deleted feature/steps file (or folder), reparse the entire project to rebuild the test tree
-        //await services.config.reloadSettings(projUri);
-        // no need to await the parse
-        services.parser.parseFilesForProject(projUri, ctrl, testData, "OnDidDelete", false);
+        // There's been a folder change inside project steps/feature folders - reparse everything in this project to rebuild the test tree.
+        //
+        // NOTE: this reparse won't work if the features/steps folder ITSELT is renamed/moved, as the reparse will still 
+        // point at the old features/steps paths. So the user will have to manually refresh the test explorer in this case.
+        // The obvious alternatives to a manual refresh are both bad:
+        // a) calling recreateRunHandlersAndProfilesAndWatchersAndReparse on every folder change, but that's much too heavy/slow, or
+        // b) to watch the whole project, but that would create loads of file watcher handles including excluded paths like node_modules 
+        // and be very inefficient, (vscode filesystemwatcher does not allow you to exclude paths atm).
+        services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded", false);
       }
       catch (e: unknown) {
-        // unawaited entry point (event handler) - show error
+        // caller is an unawaited entry point (event handler) without its own error handler (to avoid duplication) - show error
         services.logger.popupError(e, projUri);
       }
-    }));
+    }
 
 
     function deletedPathWasProbablyAFile(path: string) {
@@ -118,65 +188,6 @@ export class ProjectWatcher {
       const lastPart = parts[parts.length - 1];
       return lastPart.includes('.');
     }
-
-
-    const shouldHandleIt = async (uri: vscode.Uri): Promise<boolean> => {
-      // we'll have one watcher per project root and use this handleIt function as a filter.
-      // *** THIS FUNCTION SHOULD RETURN FAST *** (i.e. early exits where possible) as 
-      // it is called for EVERY project file/folder change
-
-      // get the latest project settings (this project watcher has a lifetime as long as the extension)
-      const ps = await services.config.getProjectSettings(projUri);
-
-      // we MUST have this check early on for efficiency as it will handle a lot of cases
-      if (isExcludedPath(ps, uri))
-        return false;
-
-      if (uri.path.endsWith(".tmp")) // vscode file history file 
-        return false;
-
-      for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-        const configPath = `${ps.behaveWorkingDirUri.path}/${configFile}`;
-        if (uri.path.startsWith(configPath)) {
-          if (services.config.isIntegrationTestRun)
-            return false; // don't reload when integration tests change the behave.ini file
-          xRayLog(`behave config file change detected: ${uri.path} - reloading settings and reparsing project`, projUri);
-          await services.config.reloadSettings(projUri);
-          services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - configFile", false);
-          return false; // just handled it
-        }
-      }
-
-      // if steps folder itself (not descendents), or environment.py, or e.g. stage1_environment.py
-      if (/(.*\/(steps$|environment\.py$|_environment\.py$))/.test(uri.path.toLowerCase())) {
-        // environment.py affects the baseDir, so reload settings and reparse
-        await services.config.reloadSettings(projUri);
-        services.parser.parseFilesForProject(projUri, ctrl, testData, "shouldHandleIt - environment", false);
-        return false; // just handled it
-      }
-
-      // at this point, if it's not a behave config file change then we're only interested in steps/feature folders or their descendants
-      const relFolderPaths = ps.projRelativeFeatureFolders.concat(ps.projRelativeStepsFolders);
-      if (!relFolderPaths.some(relPath => uri.path.startsWith(`${projUri.path}/${relPath}`)))
-        return false;
-
-      if (uri.path.endsWith(".feature") || uri.path.endsWith(".py"))
-        return true;
-
-      // at this point, then we know the path is inside a steps/feature folder    
-      // but not a .feature or steps (.py) file, so now we're only interested in folder changes
-      try {
-        const stat = await vscode.workspace.fs.stat(uri);
-        if (stat.type !== vscode.FileType.Directory)
-          return false;
-      }
-      catch (e: unknown) {
-        // deleted - could have been a file or folder, so we can't filter it out
-      }
-
-      return true;
-    }
-
 
     const reparseTheFile = async (uri: vscode.Uri) => {
       if (uri.scheme !== "file")

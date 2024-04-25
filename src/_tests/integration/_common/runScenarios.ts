@@ -74,7 +74,7 @@ export async function runScenarios(projName: string, isDebugRun: boolean, testEx
     // ACT
 
     const request = new vscode.TestRunRequest(requestItems);
-    const results = await api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
+    const results = await api.getProjMapEntry(projUri).runHandler!(isDebugRun, request, runProfile);
 
     // ASSERT  
 

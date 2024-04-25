@@ -89,6 +89,10 @@ export class ProjectSettings {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
       ps.isValid = false;
+      // set default paths for the projectWatcher to use so that if/when a user 
+      // adds these paths to a new project they won't need to manually refresh
+      ps.projRelativeFeatureFolders = ["features"];
+      ps.projRelativeStepsFolders = ["steps", "features/steps"];
       return ps;
     }
 

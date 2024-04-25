@@ -53,7 +53,6 @@ export class FileParser {
     this._parseFilesCallCounts[projPath]++;
 
     const parseId = `${projPath}#${this._parseFilesCallCounts[projPath]}`;
-    this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
 
     // if caller itself cancels, pass it on to the internal token
     const cancellationHandler = callerCancelToken?.onCancellationRequested(() => {
@@ -68,7 +67,7 @@ export class FileParser {
           xRayLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
           this._cancelTokenSources[key].cancel();
           while (this._cancelTokenSources[key]) {
-            await new Promise(t => setTimeout(t, 20));
+            await new Promise(t => setTimeout(t, 50));
           }
         }
       }
@@ -90,6 +89,7 @@ export class FileParser {
       // cancel any existing parseFiles call for this project
       await cancelOtherParsesForThisProject(projName);
 
+      this._cancelTokenSources[parseId] = new vscode.CancellationTokenSource();
       if (this._cancelTokenSources[parseId].token.isCancellationRequested) {
         xRayLog(`${callName}: cancellation complete`);
         return;
@@ -196,11 +196,11 @@ export class FileParser {
 
     }
     finally {
+      xRayLog(`disposing cancellation token for ${parseId}`);
       this._cancelTokenSources[parseId]?.dispose();
       delete this._cancelTokenSources[parseId];
       cancellationHandler?.dispose();
     }
-
 
   }
 
@@ -330,9 +330,10 @@ export class FileParser {
 
       const featureFiles = (await findFiles(featuresFolderUri, new RegExp(".*\\.feature$"), recursive, cancelToken));
 
-      if (featureFiles.length < 1 && !cancelToken.isCancellationRequested)
-        services.logger.popupWarn(`No feature files found in (project-relative) path "${relFeaturesFolder}".
+      if (featureFiles.length < 1 && !cancelToken.isCancellationRequested) {
+        services.logger.logWarning(`No feature files found in (project-relative) path "${relFeaturesFolder}".
           Check behave config "paths" setting.`, projUri);
+      }
 
       for (const uri of featureFiles) {
         if (cancelToken.isCancellationRequested)

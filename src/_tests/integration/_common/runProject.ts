@@ -69,7 +69,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  // (shouldHandleIt doesn't reload when change the behave.ini file, if isIntegrationTestRun is set so we don't need this in the lock)
+  // (reparseAsNeeded doesn't reload when change the behave.ini file, if isIntegrationTestRun is set so we don't need this in the lock)
   await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
 
@@ -134,7 +134,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
     // ACT 2
 
     // kick off the run, do NOT await (see comment above)
-    const resultsPromise = api.getProjMapEntry(projUri).runHandler(isDebugRun, request, runProfile);
+    const runHandler = api.getProjMapEntry(projUri).runHandler;
+    if (!runHandler) throw new Error("runHandler is undefined");
+    const resultsPromise = runHandler(isDebugRun, request, runProfile);
 
 
     // release lock: 
