@@ -113,7 +113,7 @@ export const getProjectUris = (() => {
     // so we'll default to returning a cached result unless forceRefresh is true
     if (projectUris.length > 0 && !forceRefresh)
       return projectUris;
-    projectUris = [];
+    const newProjectUris = [];
 
     const folders = vscode.workspace.workspaceFolders;
     if (!folders)
@@ -125,12 +125,13 @@ export const getProjectUris = (() => {
     for (const folder of folders) {
       const excludedPathPatterns = getExcludedPathPatterns(folder.uri);
       if (await folderContainsAFeatureFile(excludedPathPatterns, folder.uri)) {
-        projectUris.push(folder.uri);
+        newProjectUris.push(folder.uri);
       }
     }
 
-    xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${projectUris.length}`);
+    xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${newProjectUris.length}`);
 
+    projectUris = newProjectUris;
     return projectUris;
   }
 })();

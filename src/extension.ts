@@ -99,8 +99,11 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // NOTE: the first time a new not-previously recognised workspace folder gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let wsFolderChanged = false;
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
+        wsFolderChanged = true;
+        xRayLog(`workspace folders changed: ${JSON.stringify(event)}`);
         await configurationChangedHandler(true);
       }
       catch (e: unknown) {
@@ -162,7 +165,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
         const projectUris = wkspFoldersChanged ? await getProjectUris(true) : await getProjectUris();
 
-        // adding/removing/renaming workspaces will not only change the 
+        // adding/removing/renaming workspace folders will not only change the 
         // set of workspaces we are watching, but also the output channels        
         if (wkspFoldersChanged)
           services.logger.syncOutputChannelsToProjects(projectUris);
@@ -176,7 +179,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
           await services.config.reloadSettings(projUri);
         }
-
 
 
         // code.workspace or settings.json configuration has now changed, so we need to reparse files
@@ -203,6 +205,14 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
 
     context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
+      // don't fire both events if the workspace folder is changed
+      // (we prefer onDidChangeWorkspaceFolders because that will update vscode.workspace.workspaceFolders 
+      // which we may need to resync output channels)
+      await new Promise(resolve => setTimeout(resolve, 50));
+      if (wsFolderChanged) {
+        wsFolderChanged = false;
+        return;
+      }
       await configurationChangedHandler(false, event);
     }));
 

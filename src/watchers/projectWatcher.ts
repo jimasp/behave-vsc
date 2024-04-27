@@ -3,7 +3,7 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { isStepsFile } from '../common/helpers';
+import { getProjectUris, isStepsFile } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from '../config/settings';
 
@@ -117,6 +117,7 @@ class FolderWatcher {
         if (ps.projRelativeFeatureFolders.some(f => f === projRelPath) ||
           ps.projRelativeStepsFolders.some(f => f === projRelPath) ||
           ps.projRelativeBehaveWorkingDirPath === projRelPath) {
+          services.logger.syncOutputChannelsToProjects(await getProjectUris(true));
           await services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - knownFolder", false);
           return;
