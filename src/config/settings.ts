@@ -85,14 +85,22 @@ export class ProjectSettings {
 
     // now do "real work" on filesystem to get path properties
     const paths = await getPaths(ps);
+
+    // if we can't get paths, then set some defaults and return
     if (!paths) {
       // most likely behave config "paths" is misconfigured, 
       // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
       ps.isValid = false;
+
       // set default paths for the projectWatcher to use so that if/when a user 
-      // adds these paths to a new project they won't need to manually refresh
-      ps.projRelativeFeatureFolders = ["features"];
-      ps.projRelativeStepsFolders = ["steps", "features/steps"];
+      // adds these folders to a new project they won't need to manually refresh
+      ps.projRelativeFeatureFolders = [
+        path.join(ps.projRelativeBehaveWorkingDirPath, "features")
+      ];
+      ps.projRelativeStepsFolders = [
+        path.join(ps.projRelativeBehaveWorkingDirPath, "steps"),
+        path.join(ps.projRelativeBehaveWorkingDirPath, "features/steps")
+      ];
       return ps;
     }
 
