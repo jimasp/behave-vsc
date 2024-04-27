@@ -321,24 +321,12 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
       };
 
       const projWatcher = ProjectWatcher.create(ps, projCtrl, testData);
-
-      // NOTE: we want the refreshHandler (above) to be wired up even for invalid projects, 
-      // this is so that the refresh button can be clicked by the user after they fix the project,
-      // and we want the projectWatcher to be wired up for invalid projects so that the user won't have to refresh 
-      // if they use the project root features and steps (or features/steps) folders
-      if (!ps.isValid) {
-        projMap.set(ps.id, new ProjMapEntry(projCtrl, projWatcher));
-        continue;
-      }
-
       const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
       const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
 
       const projMapEntry = new ProjMapEntry(projCtrl, projWatcher, projRunProfiles, projRunHandler);
       projMap.set(ps.id, projMapEntry);
 
-
-      // (recreateRunHandlersAndProfilesAndWatchersAndReparse is normally not awaited)
       await services.parser.parseFilesForProject(projUri, projCtrl, testData, "activate", true, recreateCancelToken);
     }
 
@@ -358,17 +346,17 @@ export interface QueueItem {
 
 export class ProjMapEntry {
   ctrl: vscode.TestController;
-  runHandler?: ITestRunHandler;
-  watcher?: ProjectWatcher;
-  runProfiles?: vscode.TestRunProfile[];
+  runHandler: ITestRunHandler;
+  watcher: ProjectWatcher;
+  runProfiles: vscode.TestRunProfile[];
 
   dispose() {
     this.ctrl.dispose();
-    this.watcher?.dispose();
-    this.runProfiles?.forEach(r => r.dispose());
+    this.watcher.dispose();
+    this.runProfiles.forEach(r => r.dispose());
   }
 
-  constructor(ctrl: vscode.TestController, watcher: ProjectWatcher, runProfiles?: vscode.TestRunProfile[], runHandler?: ITestRunHandler,) {
+  constructor(ctrl: vscode.TestController, watcher: ProjectWatcher, runProfiles: vscode.TestRunProfile[], runHandler: ITestRunHandler) {
     this.ctrl = ctrl;
     this.watcher = watcher;
     this.runProfiles = runProfiles;

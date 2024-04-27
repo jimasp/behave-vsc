@@ -63,11 +63,13 @@ export class FileParser {
     const cancelOtherParsesForThisProject = async (projName: string) => {
       for (const key of Object.keys(this._cancelTokenSources)) {
         if (key !== parseId && key.startsWith(projPath + "#")) {
-          const cancelledLogId = key.replace(projPath + "#", projName + "#");
-          xRayLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
-          this._cancelTokenSources[key].cancel();
-          while (this._cancelTokenSources[key]) {
-            await new Promise(t => setTimeout(t, 50));
+          if (this._cancelTokenSources[key]) {
+            const cancelledLogId = key.replace(projPath + "#", projName + "#");
+            xRayLog(`parseFiles (${intiator}): cancelling previous parseFiles[${cancelledLogId}]`);
+            this._cancelTokenSources[key].cancel();
+            while (this._cancelTokenSources[key]) {
+              await new Promise(t => setTimeout(t, 50));
+            }
           }
         }
       }

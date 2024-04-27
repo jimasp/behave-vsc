@@ -112,7 +112,7 @@ class FolderWatcher {
           return;
         }
 
-        // if uri matches current known folder (not descendents) then reload settings and reparse project
+        // if uri is the features/steps folder itself (not descendents) then reload settings and reparse project
         const projRelPath = uri.path.substring(ps.uri.path.length + 1);
         if (ps.projRelativeFeatureFolders.some(f => f === projRelPath) ||
           ps.projRelativeStepsFolders.some(f => f === projRelPath) ||

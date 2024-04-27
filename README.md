@@ -226,15 +226,15 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Are there any warnings or errors in the Behave VSC output window? (Also try restarting vscode and looking at the Behave VSC output window immediately after startup.)
 
-- Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
+- Does refreshing the test explorer solve your issue?
 
-- If your project is not a simple setup, have you read the [advanced project configuration](#advanced-project-configuration)?
+- Does restarting vscode solve your issue?
+
+- Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
 
 - Make sure the `paths` setting in your behave configuration file is correct.
 
-- Does refreshing the Test explorer solve your issue?
-
-- Does restarting vscode solve your issue?
+- If your project is not a simple set up, have you read the [advanced project configuration](#advanced-project-configuration)?
 
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
