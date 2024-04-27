@@ -86,23 +86,10 @@ export class ProjectSettings {
     // now do "real work" on filesystem to get path properties
     const paths = await getPaths(ps);
 
-    // if we can't get paths, then set some defaults and return
-    if (!paths) {
-      // most likely behave config "paths" is misconfigured, 
-      // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
-      ps.isValid = false;
-
-      // set default paths for the projectWatcher to use so that if/when a user 
-      // adds these folders to a new project they won't need to manually refresh
-      ps.projRelativeFeatureFolders = [
-        path.join(ps.projRelativeBehaveWorkingDirPath, "features")
-      ];
-      ps.projRelativeStepsFolders = [
-        path.join(ps.projRelativeBehaveWorkingDirPath, "steps"),
-        path.join(ps.projRelativeBehaveWorkingDirPath, "features/steps")
-      ];
+    // if paths is not set, then most likely behave config "paths" is misconfigured, 
+    // (in which case an appropriate warning should have been shown by getRelativeBaseDirPath)
+    if (!paths)
       return ps;
-    }
 
     // update properties after real work
     ps.rawBehaveConfigPaths = paths.rawBehaveConfigPaths;
@@ -110,7 +97,7 @@ export class ProjectSettings {
     ps.projRelativeFeatureFolders = paths.projRelFeatureFolders;
     ps.projRelativeStepsFolders = paths.projRelStepsFolders;
 
-    // pass projRelBehaveConfigPaths separately, because is not a public property of ProjectSettings
+    // (pass projRelBehaveConfigPaths separately to the logger, because is not a public property of ProjectSettings)
     await logSettings(winSettings, ps, paths.projRelBehaveConfigPaths);
 
     xRayLog(`PERF: ProjectSettings.create took ${performance.now() - start} ms for ${ps.id}`);
@@ -323,7 +310,7 @@ function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedSt
 }
 
 
-async function getPaths(ps: ProjectSettings) {
+async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
 
   const start = performance.now();
 
@@ -332,8 +319,20 @@ async function getPaths(ps: ProjectSettings) {
   // NOTE: base dir (parent dir of the steps folder) is a concept borrowed from behave's source code
   // this is IMPORTANT because baseDirPath is used to determine the expected junit filenames that behave will produce (see getJunitFeatureName)
   const baseDirPath = await getBaseDirPath(ps, behaveWrkDirRelBehaveConfigPaths);
-  if (baseDirPath === null)
-    return; // invalid project
+  if (baseDirPath === null) {
+    // if baseDirPath is null, then we can't proceed, so
+    // set default paths for the projectWatcher to use so that if/when a user 
+    // adds these folders to a new project they won't need to manually refresh
+    ps.projRelativeFeatureFolders = [
+      path.join(ps.projRelativeBehaveWorkingDirPath, "features")
+    ];
+    ps.projRelativeStepsFolders = [
+      path.join(ps.projRelativeBehaveWorkingDirPath, "steps"),
+      path.join(ps.projRelativeBehaveWorkingDirPath, "features/steps")
+    ];
+    ps.isValid = false; // invalid project
+    return;
+  }
 
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
@@ -462,6 +461,17 @@ async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, p
     services.logger.logInfoAllProjects(`\nInstance settings:\n${JSON.stringify(windowSettingsDic, null, 2)}`);
 
   services.logger.logInfo(`\nProject settings:\n${JSON.stringify(resourceSettingsDic, null, 2)}`, ps.uri);
+}
+
+
+
+
+type GetPaths = {
+  rawBehaveConfigPaths: string[];
+  baseDirPath: string;
+  projRelBehaveConfigPaths: string[];
+  projRelFeatureFolders: string[];
+  projRelStepsFolders: string[];
 }
 
 

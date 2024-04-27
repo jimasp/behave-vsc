@@ -224,27 +224,29 @@ The most important extension settings to be aware of are probably `behaveWorking
   
 ### Otherwise
 
+- Are there any warnings or errors in the Behave VSC output window? (Also try restarting vscode and looking at the Behave VSC output window immediately after startup.)
+
 - Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
 
 - If your project is not a simple setup, have you read the [advanced project configuration](#advanced-project-configuration)?
 
 - Make sure the `paths` setting in your behave configuration file is correct.
 
-- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
-
 - Does refreshing the Test explorer solve your issue?
 
 - Does restarting vscode solve your issue?
+
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
 - Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
 
 - Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
 
-- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release on [github](https://github.com/jimasp/behave-vsc/releases) and downgrade as required.
+- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release on [github](https://github.com/jimasp/behave-vsc/releases) and upgrade/downgrade as required.
 
 - If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
 
-- If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, e.g. do you have "Raised Exceptions" etc. turned off?
+- If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, i.e. do you have "Raised Exceptions" etc. turned off?
 
 - Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
 
@@ -256,21 +258,21 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Try temporarily disabling other extensions. Especially if they relate to behave, gherkin or cucumber.
 
-- Any extension errors should pop up in a notification window, but you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
+- Any extension errors should pop up in a notification window, warnings will be in the Behave VSC output window, you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
 
-- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects). It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own.)
+- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects). It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own project.)
 
 ---
 
 ## Known issues and limitations
 
-- If you hit a filewatcher limit in your workspace, then you will need to use the refresh button in the test explorer to see new/modified tests and update step navigation. (For a better experience, you should increase the watcher file handle limit on your operating system, or reduce the number of filewatchers.)
+- If you hit a filewatcher limit in your workspace, then you will need to use the refresh button in the test explorer to see new/modified tests and update step navigation. (For a better experience, you should increase the watcher file handle limit on your operating system, or reduce the number of filewatchers e.g. by disabling extensions that watch the entire workspace folder.)
 
 - Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
-  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them. (You can however install external steps as a package and use the `importedSteps` setting.)
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can install external steps as a python package and use the `importedSteps` setting to enable navigation.
 
 - There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
 
