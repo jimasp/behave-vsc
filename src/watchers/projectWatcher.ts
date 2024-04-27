@@ -3,7 +3,7 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { getProjectUris, isStepsFile } from '../common/helpers';
+import { getProjectUris, isStepsFile, urisMatch } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from '../config/settings';
 
@@ -20,11 +20,13 @@ export class ProjectWatcher {
     this.#projectWatchers.forEach(pw => pw.dispose());
   }
 
-  public static create(ps: ProjectSettings, ctrl: vscode.TestController, testData: TestData): ProjectWatcher {
+  public static create(ps: ProjectSettings, ctrl: vscode.TestController, testData: TestData,
+    folderRenameHandler: (projUri: vscode.Uri) => void): ProjectWatcher {
+
     // we don't want to watch the whole project as that would create loads of file watcher handles,
     // so we'll just watch the known features and steps folders
     const paths = ps.projRelativeFeatureFolders.concat(ps.projRelativeStepsFolders);
-    const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData));
+    const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData, folderRenameHandler));
     return new ProjectWatcher(folderWatchers);
   }
 }
@@ -50,10 +52,37 @@ class FolderWatcher {
   }
 
 
-  public static create(ps: ProjectSettings, projRelPath: string, ctrl: vscode.TestController, testData: TestData): FolderWatcher {
+  public static create(ps: ProjectSettings, projRelPath: string, ctrl: vscode.TestController, testData: TestData,
+    folderRenameHandler: (projUri: vscode.Uri) => void): FolderWatcher {
+
     const pattern = new vscode.RelativePattern(ps.uri, projRelPath + "/**");
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);
     const watcherEvents = FolderWatcher.#setWatcherEventHandlers(watcher, ps.uri, ctrl, testData);
+
+    vscode.workspace.onDidRenameFiles((e) => {
+      // handles the features or steps folder itself being renamed/moved 
+      // (something this watcher can't do because its optimised to only watch the features/steps folders)
+      const fullPath = vscode.Uri.joinPath(ps.uri, projRelPath);
+      e.files.forEach(async (file) => {
+        if (urisMatch(file.oldUri, fullPath)) {
+          folderRenameHandler(ps.uri);
+          return;
+        }
+      });
+    });
+
+    vscode.workspace.onDidDeleteFiles((e) => {
+      // handles the features or steps folder itself being deleted
+      // (something this watcher can't do because its optimised to only watch the features/steps folders)
+      const fullPath = vscode.Uri.joinPath(ps.uri, projRelPath);
+      e.files.forEach(async (file) => {
+        if (urisMatch(file, fullPath)) {
+          folderRenameHandler(ps.uri);
+          return;
+        }
+      });
+    });
+
     return new FolderWatcher(watcher, watcherEvents);
   }
 
@@ -132,8 +161,7 @@ class FolderWatcher {
           // (a) deleting/renaming a folder does not raise events for descendent files and folders.
           // (b) any of these events would ideally start a full reparse of the project:
           //    - deletion of a feature file (need to rebuild test tree, possibly inc. parent folder tree nodes), or
-          //    - deletion of a folder inside a steps/feature folder, or
-          //    - deletion of the steps/feature folder itself 
+          //    - deletion of a folder inside a steps/feature folder
           // (c) we cannot properly determine if this is a file or folder deletion as:
           //     - it has been deleted so we can't stat it, and 
           //     - "." is valid in folder names so we can't really determine by looking at the path.      
@@ -145,6 +173,7 @@ class FolderWatcher {
             return;
 
           // deleted feature file (or folder), reparse the entire project to rebuild the test tree
+          await services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded", false);
 
           return;
@@ -165,13 +194,7 @@ class FolderWatcher {
           return;
 
         // There's been a folder change inside project steps/feature folders - reparse everything in this project to rebuild the test tree.
-        //
-        // NOTE: this reparse won't work if the features/steps folder ITSELT is renamed/moved, as the reparse will still 
-        // point at the old features/steps paths. So the user will have to manually refresh the test explorer in this case.
-        // The obvious alternatives to a manual refresh are both bad:
-        // a) calling recreateRunHandlersAndProfilesAndWatchersAndReparse on every folder change, but that's much too heavy/slow, or
-        // b) to watch the whole project, but that would create loads of file watcher handles including excluded paths like node_modules 
-        // and be very inefficient, (vscode filesystemwatcher does not allow you to exclude paths atm).
+        // await services.config.reloadSettings(projUri);
         services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded", false);
       }
       catch (e: unknown) {

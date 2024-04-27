@@ -305,7 +305,7 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
     }
 
     const wsFolders = vscode.workspace.workspaceFolders;
-    const nonProjFolders = wsFolders ? wsFolders.filter(f => !projectUris.some(p => urisMatch(p, f.uri))) : [];
+    const nonProjFolders = wsFolders ? wsFolders.filter(f => !allProjectUris.some(p => urisMatch(p, f.uri))) : [];
 
     // (if multiroot, we need nonProjectFolderWatchers, but if there's only one workspace folder, 
     // then we don't need one because the extension is only activated in the first place if there is a .feature file)
@@ -345,7 +345,13 @@ async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: Tes
         }
       }
 
-      const projWatcher = ProjectWatcher.create(ps, projCtrl, testData);
+
+      const folderRenameHandler = async (projUri: vscode.Uri) => {
+        await services.config.reloadSettings(projUri);
+        recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, allProjectUris, junitWatcher, projUri);
+      }
+
+      const projWatcher = ProjectWatcher.create(ps, projCtrl, testData, folderRenameHandler);
       const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
       const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
 
