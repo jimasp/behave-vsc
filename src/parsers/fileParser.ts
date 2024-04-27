@@ -334,7 +334,7 @@ export class FileParser {
 
       if (featureFiles.length < 1 && !cancelToken.isCancellationRequested) {
         services.logger.logWarning(`No feature files found in (project-relative) path "${relFeaturesFolder}".
-          Check behave config "paths" setting.`, projUri);
+          If this path is incorrect, then check behave config "paths" setting.`, projUri);
       }
 
       for (const uri of featureFiles) {

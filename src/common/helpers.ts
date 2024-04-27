@@ -109,10 +109,12 @@ export const getProjectUris = (() => {
 
     // NOTE: NOTHING THAT THIS FUNCTION CALLS CAN USE THE LOGGER, AS IT MAY NOT BE AVAILABLE YET
 
-    // this function reads the file system (i.e. slow-ish)
+    // this function reads the file system (i.e. SLOW-ish)
     // so we'll default to returning a cached result unless forceRefresh is true
     if (projectUris.length > 0 && !forceRefresh)
       return projectUris;
+
+
     const newProjectUris = [];
 
     const folders = vscode.workspace.workspaceFolders;
@@ -131,6 +133,7 @@ export const getProjectUris = (() => {
 
     xRayLog(`PERF: getProjectUris took ${performance.now() - start} ms, projects: ${newProjectUris.length}`);
 
+    services.logger.syncOutputChannelsToProjects(newProjectUris);
     projectUris = newProjectUris;
     return projectUris;
   }

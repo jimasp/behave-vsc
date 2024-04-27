@@ -8,7 +8,6 @@ import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from '../config/settings';
 
 
-
 export class ProjectWatcher {
 
   #projectWatchers: FolderWatcher[] = [];
@@ -28,7 +27,6 @@ export class ProjectWatcher {
     const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData));
     return new ProjectWatcher(folderWatchers);
   }
-
 }
 
 
@@ -117,7 +115,7 @@ class FolderWatcher {
         if (ps.projRelativeFeatureFolders.some(f => f === projRelPath) ||
           ps.projRelativeStepsFolders.some(f => f === projRelPath) ||
           ps.projRelativeBehaveWorkingDirPath === projRelPath) {
-          services.logger.syncOutputChannelsToProjects(await getProjectUris(true));
+          await getProjectUris(true);
           await services.config.reloadSettings(projUri);
           services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - knownFolder", false);
           return;

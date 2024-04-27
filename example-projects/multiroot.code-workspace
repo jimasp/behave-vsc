@@ -1,6 +1,6 @@
 {
 	"folders": [
-		// "pj" = give projects a different name to their folder name for testing purposes
+		// "prj" = give projects a different name to their folder name for testing purposes
 		{
 			"path": "./simple",
 			"name": "simple prj"
