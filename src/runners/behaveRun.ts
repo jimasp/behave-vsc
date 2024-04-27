@@ -20,7 +20,9 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     else
       local_args.unshift("-m", "behave");
 
-    xRayLog(`Starting behave with cmd: ${pr.pythonExec} ${local_args.join(" ")}`, projUri);
+    xRayLog(`Starting behave with cmd: "${pr.pythonExec}" ${local_args.join(" ")}` +
+      `\n\nworking directory: "${projUri.fsPath}"\nenv var overrides: ${JSON.stringify(pr.env)}`, projUri);
+
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
 
@@ -35,8 +37,8 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     }
 
     if (!cp.pid) {
-      throw new Error(`unable to launch python or behave.\ncommand: ${pr.pythonExec} ${local_args.join(" ")}` +
-        `\n\nworking directory: ${projUri.fsPath}\nenv var overrides: ${JSON.stringify(pr.env)}`);
+      services.logger.logError(`Unable to launch python or behave using commands:\n${friendlyCmd}`, projUri);
+      return;
     }
 
     // if parallel mode, use a buffer so logs gets written out in a human-readable order

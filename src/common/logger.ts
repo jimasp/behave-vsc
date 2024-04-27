@@ -93,7 +93,9 @@ export class Logger {
 
   logError = (error: unknown, projUri: vscode.Uri, run?: vscode.TestRun) => {
 
-    const text = "\nERROR: " + getErrorText(error);
+    let errText = getErrorText(error);
+    errText = errText.replace(/^Error: /, "");
+    const text = "\nERROR: " + errText;
     this.channels[projUri.path].appendLine(text);
     this.channels[projUri.path].show(true);
 

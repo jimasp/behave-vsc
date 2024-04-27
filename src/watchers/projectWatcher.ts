@@ -145,8 +145,7 @@ class FolderWatcher {
           if (deletedPathWasProbablyAFile(uri.path) && !uri.path.endsWith(".feature"))
             return;
 
-          // deleted feature/steps file (or folder), reparse the entire project to rebuild the test tree
-          //await services.config.reloadSettings(projUri);
+          // deleted feature file (or folder), reparse the entire project to rebuild the test tree
           services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded", false);
 
           return;

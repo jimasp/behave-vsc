@@ -308,7 +308,7 @@ function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedSt
     return importedSteps;
   }
   catch {
-    vscode.window.showWarningMessage('Invalid "behave-vsc.importedSteps" setting was ignored.', "OK");
+    services.logger.logWarning('Invalid "behave-vsc.importedSteps" setting was ignored.', projUri);
     return [];
   }
 
