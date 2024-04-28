@@ -119,24 +119,27 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     }));
 
 
-    // called when a user edits a file.
-    // we want to reparse on edit (not just on disk changes) because:
-    // a. the user may run a file they just edited without saving,
-    // b. the semantic highlighting while typing requires the stepmappings to be up to date as the user types,
-    // c. instant test tree updates is a nice bonus for user experience
-    // d. to keep stepmappings in sync in case user clicks go to step def/ref before file save
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
-      try {
-        const uri = event.document.uri;
-        if (!await isFeatureFile(uri) && !await isStepsFile(uri))
-          return;
-        services.parser.reparseFile(uri, testData, "onDidChangeTextDocument", event.document.getText());
-      }
-      catch (e: unknown) {
-        // entry point function (handler) - show error        
-        services.logger.popupError(e);
-      }
-    }));
+    // (wrapping in startupPromise to ensure that output channels etc. are ready)
+    startupPromise.then(() => {
+      // called when a user edits a file.
+      // we want to reparse on edit (not just on disk changes) because:
+      // a. the user may run a file they just edited without saving,
+      // b. the semantic highlighting while typing requires the stepmappings to be up to date as the user types,
+      // c. instant test tree updates is a nice bonus for user experience
+      // d. to keep stepmappings in sync in case user clicks go to step def/ref before file save
+      context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
+        try {
+          const uri = event.document.uri;
+          if (!await isFeatureFile(uri) && !await isStepsFile(uri))
+            return;
+          services.parser.reparseFile(uri, testData, "onDidChangeTextDocument", event.document.getText());
+        }
+        catch (e: unknown) {
+          // entry point function (handler) - show error        
+          services.logger.popupError(e);
+        }
+      }));
+    });
 
 
     // called by onDidChangeConfiguration when there is a settings.json/*.vscode-workspace change 
@@ -435,8 +438,11 @@ export class ProjMapEntry {
   }
 }
 
-export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry | undefined {
-  return projMap.get(uriId(projUri));
+export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
+  const entry = projMap.get(uriId(projUri));
+  if (!entry)
+    throw new Error("projMap not found");
+  return entry;
 }
 
 

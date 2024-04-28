@@ -283,14 +283,7 @@ export class FileParser {
         content = await getContentFromFilesystem(fileUri);
 
       ps = await getProjectSettingsForFile(fileUri);
-
-      const entry = getProjMapEntry(ps.uri);
-      // entry could be undefined if the user edits a file quickly during startup or other major reparse event
-      // in which case file save will trigger a reparse anyway or failing that a manual refresh
-      if (!entry)
-        return;
-
-      const ctrl = entry.ctrl;
+      const ctrl = getProjMapEntry(ps.uri).ctrl;
 
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
