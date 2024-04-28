@@ -19,8 +19,10 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
 
     let debugLaunchConfig: vscode.DebugConfiguration;
 
+    const bvscSessionName = "Behave VSC";
+
     const launchConfig = {
-      name: `Behave VSC`,
+      name: bvscSessionName,
       console: "internalConsole",
       type: "debugpy",
       cwd: pr.projSettings.behaveWorkingDirUri.fsPath,
@@ -46,7 +48,10 @@ export async function debugBehaveInstance(pr: ProjRun, args: string[], friendlyC
       return;
     }
 
-    await new Promise(resolve => vscode.debug.onDidTerminateDebugSession(async () => resolve("")));
+    await new Promise(resolve => vscode.debug.onDidTerminateDebugSession(async (session) => {
+      if (session.name === bvscSessionName)
+        resolve("");
+    }));
 
   }
   finally {

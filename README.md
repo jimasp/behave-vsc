@@ -292,7 +292,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Remember that if present, your `environment.py` file must be a sibling of your `steps` folder.
 
-- Note that the extension ignores files in the following folders (or their default values):
+- Note that the extension ignores files that match the paths in the following settings (and their default values):
   - `files.exclude`
   - `files.watcherExclude`
   - `search.exclude`
@@ -352,7 +352,7 @@ The most important extension settings to be aware of are probably `behaveWorking
   
   - Notes:
     - you should try to use the lowest-level path so that file watchers are not watching hundreds of unrelated files
-    - if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes
+    - if any imported step path/regex is also matched by the vscode `files.watcherExclude` setting or its default values (`.venv` etc.) it will not have dynamic navigation updates on file/folder changes
 
   - Example:
 
@@ -385,49 +385,49 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
       "-D", 
       "foo=bar"
       "-D",
-      "fizz=buzz",
-      "tags=@tagZ"
+      "fizz=buzz"
     ],
     "behave-vsc.runProfiles": [
       {
+        // concatenate to the behave-vsc.args              
         "name": "Tags: A",
         "args": {
           "inherit": true,  
-          // concatenate to the default args
           "list":["--tags=@tagA"]
         },
         "promptForTags": false,        
       },   
       {
+        // override the behave-vsc.args        
         "name": "Tags: B,C",
         "args": { 
-          // override the default args
-          "inherit": true, 
-          "list":["--tags=@tagB, @tagC"]
+          "inherit": false, 
+          "list":["-D", "foo=rab", "--tags=@tagB, @tagC"]
         },
         "promptForTags": false,
       },                
       {
+        // override one of the behave-vsc.env vars AND
+        // concatenate to the behave-vsc.args
         "name": "System",
         "env": {         
           "vars": {
             "inherit": true,
-            // override one of the default env vars
             "BEHAVE_STAGE": "System"
           }           
         },
-          "args": { 
+          "args": {          
             "inherit": false,
             "list":["-D", "foo=baz"]
           },
         "promptForTags": true,
       },          
       {         
+        // override all of the behave-vsc.env vars     
         "name": "Staging: Tag B",
         "env": {
           "vars": {
             "inherit": false,
-            // override all of the default env vars
             "BEHAVE_STAGE": "Staging",
             "ENDPOINT": "http://123.456.789.012:4766"  
           }
@@ -454,7 +454,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
       - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
 
-- You can also add a `customRunner` script to a run profile do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable:
+- You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable:
 
     ```json
     // settings.json
@@ -482,14 +482,14 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
     ```
 
 - Notes on using a customRunner:
-  - The `scriptFile` must be a file in the root of your behave working directory.
+  - The `scriptFile` must be a python file in the root of your behave working directory.
   - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
   - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@django ...`.
   - The extension will monitor for junit file output if `waitForJUnitFiles` is true. Note that:
     - If true, the extension will expect junit files to have the exact same filenames/content content that behave would create when executed on its own in the `behaveWorkingDirectory` (or project root if this is not specified).
     - If false, the extension will fire-and-forget the script and test results will be unchanged from any previous run where junit files were present.
   - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
-  - Note that debugging behave steps will only be possible for a customRunner if behave is imported into your script. Example:
+  - Debugging behave steps will only be possible for a customRunner if behave is imported into your script. Example:
   
   ```python
   import sys

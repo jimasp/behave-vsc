@@ -55,7 +55,7 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
   try {
 
     if (pr.projSettings.runParallel && pr.debug)
-      throw new Error("running async debug is not supported");
+      throw new Error("running parallel debug is not supported");
 
     const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
