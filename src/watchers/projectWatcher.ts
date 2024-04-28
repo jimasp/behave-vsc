@@ -3,10 +3,9 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { getProjectUris, isStepsFile, uriStartsWith, urisMatch } from '../common/helpers';
+import { isStepsFile, urisMatch } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from '../config/settings';
-import { get } from 'http';
 
 
 export class ProjectWatcher {
