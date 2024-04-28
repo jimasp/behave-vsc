@@ -19,12 +19,14 @@ import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider
 import { ProjectWatcher } from './watchers/projectWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 import { createRunProfilesForProject } from './profiles/runProfiles';
-import { NonProjectFolderWatcher } from './watchers/nonProjectWatcher';
+import { NonProjectWatcher } from './watchers/nonProjectWatcher';
 
 
 
 const projMap = new Map<string, ProjMapEntry>();
-const nonProjFolderWatchers: NonProjectFolderWatcher[] = [];
+const nonProjFolderWatchers: NonProjectWatcher[] = [];
+let recreateFunc: (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken) => Promise<void>;
+let refreshFunc: (cancelToken: vscode.CancellationToken) => Promise<void>;
 
 
 export function deactivate() {
@@ -32,6 +34,7 @@ export function deactivate() {
   projMap.forEach(m => m.dispose());
   projMap.clear();
   nonProjFolderWatchers.forEach(w => w.dispose());
+  nonProjFolderWatchers.length = 0;
   xRayLog("PERF: ignore all PERF times during vscode startup, as most functions are async and affected by startup contention, " +
     "(in most cases you can click refresh in test explorer for a more representative time)");
 }
@@ -78,7 +81,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // (a test node expansion can fire this even if not by user interaction, e.g. on startup if it was expanded previously) 
     // ctrl.resolveHandler = async (item: vscode.TestItem | undefined) => {
     //   try {
-    //     // ignore undefined, we build in background at startup via recreateRunHandlersAndProfilesAndWatchersAndReparse
+    //     // ignore undefined, we build in background at startup via recreateFunc
     //     // and we also rebuild via file watchers
     //     if (!item || !item.uri || item.uri?.scheme !== 'file')
     //       return;
@@ -186,14 +189,14 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (testConfig) {
           if (!testProjUri)
             throw new Error("testProjUri must be supplied when testConfig is supplied");
-          await recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, projectUris, junitWatcher, testProjUri);
+          await recreateFunc("configurationChangedHelper - testConfig", testProjUri);
           return;
         }
 
         // we don't know which workspace was affected (see comment on affectsConfiguration above), so just reparse all workspaces
         // (also, when a workspace is added/removed/renamed (forceRefresh), we need to clear down and reparse all test nodes 
         // to rebuild the top level nodes)
-        recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, projectUris, junitWatcher);
+        recreateFunc("configurationChangedHelper");
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
@@ -265,16 +268,11 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
     // kick off the junit watcher
     junitWatcher.startWatchingJunitFolder();
 
-    // get "project" uris, i.e. uris of workspace folders that contain .feature files
-    const projUris = await getProjectUris(true);
-    if (projUris.length === 0) {
-      // this should never happen as the extension should not activate if there is no .feature file
-      throw new Error("No workspaces with features found in workspace");
-    }
+    refreshFunc = refreshHandler();
+    recreateFunc = recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, junitWatcher);
 
+    await recreateFunc("runStartupTasks");
     logExtensionVersion(context);
-
-    await recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, projUris, junitWatcher);
 
     xRayLog(`PERF: async runStartupTasks took ${performance.now() - start} ms (if testing PERF timers, increase contentionTimeout)`);
   }
@@ -286,86 +284,127 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
 
 
 
-async function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData,
-  allProjectUris: vscode.Uri[], junitWatcher: JunitWatcher, projUri?: vscode.Uri,
-  recreateCancelToken?: vscode.CancellationToken): Promise<void> {
+function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData, junitWatcher: JunitWatcher) {
 
-  try {
-    const start = performance.now();
-    const multiRoot = allProjectUris.length > 1 ? true : false;
+  let inProgress = false; // stateful
 
-    // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project    
-    let projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
-    projectUris = projectUris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+  return (async (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken) => {
 
-    if (!projUri) {
-      // a project folder could have been removed, so get rid of everything
-      projMap.forEach(m => m.dispose());
-      projMap.clear();
+    // this is a heavy op
+    if (inProgress) {
+      xRayLog(`recreateRunHandlersAndProfilesAndWatchersAndReparse already in progress, caller: ${caller}`);
+      return;
     }
+    inProgress = true;
 
-    const wsFolders = vscode.workspace.workspaceFolders;
-    const nonProjFolders = wsFolders ? wsFolders.filter(f => !allProjectUris.some(p => urisMatch(p, f.uri))) : [];
+    try {
+      const start = performance.now();
 
-    // (if multiroot, we need nonProjectFolderWatchers, but if there's only one workspace folder, 
-    // then we don't need one because the extension is only activated in the first place if there is a .feature file)
-    if (multiRoot) {
+      if (!vscode.workspace.workspaceFolders)
+        throw new Error("No workspace folders found");
+      const multiRoot = vscode.workspace.workspaceFolders.length > 1 ? true : false;
+
+      const allProjectUris = await getProjectUris(true);
+
+      // if projUri is supplied, we only want to recreate run handlers/profiles and reparse for that project    
+      let projectUris = allProjectUris.filter(x => !projUri || urisMatch(x, projUri));
+      projectUris = projectUris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+
+      if (!projUri) {
+        // a project folder could have been removed, so get rid of everything
+        projMap.forEach(m => m.dispose());
+        projMap.clear();
+      }
+
+      const wsFolders = vscode.workspace.workspaceFolders;
+      const nonProjFolders = wsFolders ? wsFolders.filter(f => !allProjectUris.some(p => urisMatch(p, f.uri))) : [];
+      nonProjFolderWatchers.forEach(w => w.dispose());
+      nonProjFolderWatchers.length = 0;
       for (const nonProjFolder of nonProjFolders) {
-        const newProjectHandler = async (projUri: vscode.Uri) => {
-          projectUris = await getProjectUris(true);
-          await services.config.reloadSettings(projUri);
-          recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, projectUris, junitWatcher, projUri);
-          nonProjFolderWatcher.dispose();
-        }
-        const nonProjFolderWatcher = NonProjectFolderWatcher.create(nonProjFolder.uri, newProjectHandler);
+        const promoteHandler = promoteToProjectHandler();
+        const nonProjFolderWatcher = NonProjectWatcher.create(nonProjFolder.uri, promoteHandler);
         nonProjFolderWatchers.push(nonProjFolderWatcher);
       }
-    }
-
-    for (const projUri of projectUris) {
-
-      const ps = await services.config.getProjectSettings(projUri);
-
-      const map = projMap.get(ps.id);
-      if (map) {
-        map.dispose();
-        projMap.delete(ps.id);
-      }
-
-      const projCtrl = vscode.tests.createTestController(`behave-vsc.${ps.name}`, multiRoot ? "Feature Tests: " + ps.name : "Feature Tests");
-      // called by manual refresh button in test explorer
-      projCtrl.refreshHandler = async (cancelToken: vscode.CancellationToken) => {
-        try {
-          await services.config.reloadSettings(projUri);
-          recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, allProjectUris, junitWatcher, projUri, cancelToken);
-        }
-        catch (e: unknown) {
-          // entry point function (handler) - show error        
-          services.logger.popupError(e);
-        }
-      }
 
 
-      const folderRenameHandler = async (projUri: vscode.Uri) => {
+      for (const projUri of projectUris) {
+
         await services.config.reloadSettings(projUri);
-        recreateRunHandlersAndProfilesAndWatchersAndReparse(testData, allProjectUris, junitWatcher, projUri);
+        const ps = await services.config.getProjectSettings(projUri);
+
+        const map = projMap.get(ps.id);
+        if (map) {
+          map.dispose();
+          projMap.delete(ps.id);
+        }
+
+        const projCtrl = vscode.tests.createTestController(`behave-vsc.${ps.name}`, multiRoot ? "Feature Tests: " + ps.name : "Feature Tests");
+        // called by manual refresh button in test explorer
+        projCtrl.refreshHandler = refreshFunc;
+
+        const projWatcher = ProjectWatcher.create(ps, projCtrl, testData, featuresFolderOrStepsFolderRenamedHandler);
+        const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
+        const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
+
+        const projMapEntry = new ProjMapEntry(projCtrl, projWatcher, projRunProfiles, projRunHandler);
+        projMap.set(ps.id, projMapEntry);
+
+        await services.parser.parseFilesForProject(projUri, projCtrl, testData, "activate", true, cancelToken);
       }
 
-      const projWatcher = ProjectWatcher.create(ps, projCtrl, testData, folderRenameHandler);
-      const projRunHandler = createProjTestRunHandler(projCtrl, testData, junitWatcher);
-      const projRunProfiles = createRunProfilesForProject(ps, multiRoot, projCtrl, projRunHandler);
-
-      const projMapEntry = new ProjMapEntry(projCtrl, projWatcher, projRunProfiles, projRunHandler);
-      projMap.set(ps.id, projMapEntry);
-
-      await services.parser.parseFilesForProject(projUri, projCtrl, testData, "activate", true, recreateCancelToken);
+      xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
     }
+    catch (e: unknown) {
+      // this function is a (mostly) unawaited async function - show error         
+      services.logger.popupError(e);
+    }
+    finally {
+      inProgress = false;
+    }
+  });
 
-    xRayLog(`PERF: recreateRunHandlersAndProfilesAndWatchersAndReparse took  ${performance.now() - start} ms`);
+}
+
+
+function featuresFolderOrStepsFolderRenamedHandler() {
+  // fires on rename of features folders or steps folder, but 
+  // ALSO fires if the user moves the features folder from one workspace folder to another
+  recreateFunc("featuresFolderOrStepsFolderRenamedHandler");
+}
+
+
+function promoteToProjectHandler() {
+  return async (projUri: vscode.Uri, nonProjFolderWatcher: NonProjectWatcher) => {
+    try {
+      recreateFunc("promoteToProjectHandler", projUri);
+      nonProjFolderWatcher.dispose();
+    }
+    catch (e: unknown) {
+      // entry point function (handler) - show error       
+      services.logger.popupError(e);
+    }
   }
-  catch (e: unknown) {
-    // unawaited (except for integration tests) async function - show error       
-    services.logger.popupError(e);
+}
+
+
+function refreshHandler() {
+  let refreshing = false; // stateful
+
+  return async (cancelToken: vscode.CancellationToken) => {
+    try {
+      // we want one shared refresh for all project controllers, so use a stateful flag to prevent multiple refreshes
+      if (refreshing)
+        return;
+      refreshing = true;
+      await recreateFunc("refreshHandler", undefined, cancelToken);
+    }
+    catch (e: unknown) {
+      // entry point function (handler) - show error        
+      services.logger.popupError(e);
+    }
+    finally {
+      refreshing = false;
+    }
   }
 }
 

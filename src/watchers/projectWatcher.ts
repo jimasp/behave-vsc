@@ -3,9 +3,10 @@ import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
 import { deleteStepsAndStepMappingsForStepsFile } from '../parsers/stepMappings';
-import { getProjectUris, isStepsFile, urisMatch } from '../common/helpers';
+import { getProjectUris, isStepsFile, uriStartsWith, urisMatch } from '../common/helpers';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from '../config/settings';
+import { get } from 'http';
 
 
 export class ProjectWatcher {
@@ -21,12 +22,12 @@ export class ProjectWatcher {
   }
 
   public static create(ps: ProjectSettings, ctrl: vscode.TestController, testData: TestData,
-    folderRenameHandler: (projUri: vscode.Uri) => void): ProjectWatcher {
+    featuresOrStepsFolderRenameHandler: () => void): ProjectWatcher {
 
     // we don't want to watch the whole project as that would create loads of file watcher handles,
     // so we'll just watch the known features and steps folders
     const paths = ps.projRelativeFeatureFolders.concat(ps.projRelativeStepsFolders);
-    const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData, folderRenameHandler));
+    const folderWatchers = paths.map(projRelPath => FolderWatcher.create(ps, projRelPath, ctrl, testData, featuresOrStepsFolderRenameHandler));
     return new ProjectWatcher(folderWatchers);
   }
 }
@@ -46,50 +47,42 @@ class FolderWatcher {
   }
 
   public dispose() {
-    xRayLog("projectWatcher: disposing");
+    xRayLog("ProjectWatcher: disposing");
     this.#watcherEvents.forEach(e => e.dispose());
     this.#watcher.dispose();
   }
 
 
   public static create(ps: ProjectSettings, projRelPath: string, ctrl: vscode.TestController, testData: TestData,
-    folderRenameHandler: (projUri: vscode.Uri) => void): FolderWatcher {
+    featuresOrStepsFolderRenamedHandler: () => void): FolderWatcher {
 
     const pattern = new vscode.RelativePattern(ps.uri, projRelPath + "/**");
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-    const watcherEvents = FolderWatcher.#setWatcherEventHandlers(watcher, ps.uri, ctrl, testData);
+    const watcherEvents = FolderWatcher.#setWatcherEventHandlers(watcher, ps.uri, ctrl, testData, featuresOrStepsFolderRenamedHandler);
 
-    vscode.workspace.onDidRenameFiles((e) => {
-      // handles the features or steps folder itself being renamed/moved 
-      // (something this watcher can't do because its optimised to only watch the features/steps folders)
-      const fullPath = vscode.Uri.joinPath(ps.uri, projRelPath);
-      e.files.forEach(async (file) => {
-        if (urisMatch(file.oldUri, fullPath)) {
-          folderRenameHandler(ps.uri);
-          return;
-        }
-      });
-    });
+    // add extra handler for the features folders or steps folder themselves being deleted
+    // (the projectWatcher can't do this itself because its optimised to only watch inside the 
+    // features/steps folders, not the entire project)
 
-    vscode.workspace.onDidDeleteFiles((e) => {
-      // handles the features or steps folder itself being deleted
-      // (something this watcher can't do because its optimised to only watch the features/steps folders)
+    watcherEvents.push(vscode.workspace.onDidDeleteFiles(async (e) => {
       const fullPath = vscode.Uri.joinPath(ps.uri, projRelPath);
       e.files.forEach(async (file) => {
         if (urisMatch(file, fullPath)) {
-          folderRenameHandler(ps.uri);
+          featuresOrStepsFolderRenamedHandler();
           return;
         }
       });
-    });
+    }));
+
 
     return new FolderWatcher(watcher, watcherEvents);
   }
 
   static #setWatcherEventHandlers(watcher: vscode.FileSystemWatcher, projUri: vscode.Uri, ctrl: vscode.TestController,
-    testData: TestData): vscode.Disposable[] {
+    testData: TestData, featuresOrStepsFolderRenamedHandler: () => void): vscode.Disposable[] {
 
     const events: vscode.Disposable[] = [];
+
 
     // onDidDelete fires on: file/folder delete/move/rename
     // (bear in mind that an entire folder tree can renamed/moved in one go)            
@@ -144,9 +137,7 @@ class FolderWatcher {
         if (ps.projRelativeFeatureFolders.some(f => f === projRelPath) ||
           ps.projRelativeStepsFolders.some(f => f === projRelPath) ||
           ps.projRelativeBehaveWorkingDirPath === projRelPath) {
-          await getProjectUris(true);
-          await services.config.reloadSettings(projUri);
-          services.parser.parseFilesForProject(projUri, ctrl, testData, "reparseAsNeeded - knownFolder", false);
+          featuresOrStepsFolderRenamedHandler();
           return;
         }
 
