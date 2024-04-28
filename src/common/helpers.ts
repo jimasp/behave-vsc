@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as fg from 'fast-glob';
-import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
@@ -391,17 +390,6 @@ export async function findFeatureFoldersInWorkingDir(ps: ProjectSettings): Promi
   xRayLog(`PERF: findFeatureFolders(${ps.behaveWorkingDirUri.fsPath}) took ${end}ms`, ps.uri);
 
   return results;
-}
-
-
-export function isExcludedPath(ps: ProjectSettings, uri: vscode.Uri): boolean {
-  // this function must be FAST
-  for (const pattern of ps.excludedPathPatterns) {
-    if (minimatch(uri.path, pattern))
-      return true;
-  }
-  // specifically imported steps are not excluded
-  return isImportedStepFile(ps, uri);
 }
 
 
