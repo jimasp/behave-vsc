@@ -25,7 +25,8 @@ import { NonProjectWatcher } from './watchers/nonProjectWatcher';
 
 const projMap = new Map<string, ProjMapEntry>();
 const nonProjFolderWatchers: NonProjectWatcher[] = [];
-let recreateFunc: (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken) => Promise<void>;
+let recreateFunc: (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken,
+  testConfig?: vscode.WorkspaceConfiguration) => Promise<void>;
 let refreshFunc: (cancelToken: vscode.CancellationToken) => Promise<void>;
 
 
@@ -172,19 +173,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (!testConfig)
           services.logger.clearAllProjects();
 
-        const projectUris = wkspFoldersChanged ? await getProjectUris(true) : await getProjectUris();
-
-        for (const projUri of projectUris) {
-          if (testConfig) {
-            if (urisMatch(testProjUri!, projUri))
-              await services.config.reloadSettings(projUri, testConfig);
-            continue;
-          }
-
-          await services.config.reloadSettings(projUri);
-        }
-
-
         // code.workspace or settings.json configuration has now changed, so we need to reparse files
 
         // (in the case of a testConfig insertion we just reparse the supplied project to avoid issues 
@@ -192,7 +180,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         if (testConfig) {
           if (!testProjUri)
             throw new Error("testProjUri must be supplied when testConfig is supplied");
-          await recreateFunc("configurationChangedHelper - testConfig", testProjUri);
+          await recreateFunc("configurationChangedHelper - testConfig", testProjUri, undefined, testConfig);
           return;
         }
 
@@ -291,7 +279,7 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData,
 
   let inProgress = false; // stateful
 
-  return (async (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken) => {
+  return (async (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken, testConfig?: vscode.WorkspaceConfiguration) => {
 
     // this is a heavy op
     if (inProgress) {
@@ -329,10 +317,11 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData,
         nonProjFolderWatchers.push(nonProjFolderWatcher);
       }
 
+      console.log(testConfig);
 
       for (const projUri of projectUris) {
 
-        await services.config.reloadSettings(projUri);
+        await services.config.reloadSettings(projUri, testConfig);
         const ps = await services.config.getProjectSettings(projUri);
 
         const map = projMap.get(ps.id);
