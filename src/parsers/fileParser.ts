@@ -279,12 +279,17 @@ export class FileParser {
       if (!isAStepsFile && !isAFeatureFile)
         return;
 
-      if (!content)
+      if (content === undefined)
         content = await getContentFromFilesystem(fileUri);
 
       ps = await getProjectSettingsForFile(fileUri);
 
       const entry = getProjMapEntry(ps.uri);
+      // entry could be undefined if the user edits a file quickly during startup or other major reparse event
+      // in which case file save will trigger a reparse anyway or failing that a manual refresh
+      if (!entry)
+        return;
+
       const ctrl = entry.ctrl;
 
       if (isAStepsFile) {
@@ -416,10 +421,11 @@ export class FileParser {
 
       if (item.testItem.children.size === 0) {
         controller.items.delete(item.testItem.id);
-        deleteStepsAndStepMappingsForFeatureFile(uri);
       }
+      return;
     }
 
+    controller.items.delete(uriId(uri));
   }
 
 

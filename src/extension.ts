@@ -435,12 +435,10 @@ export class ProjMapEntry {
   }
 }
 
-export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry {
-  const entry = projMap.get(uriId(projUri));
-  if (!entry)
-    throw new Error("projMap not found");
-  return entry;
+export function getProjMapEntry(projUri: vscode.Uri): ProjMapEntry | undefined {
+  return projMap.get(uriId(projUri));
 }
+
 
 
 // public API (i.e. the activate function return type) is normally there to be called from other 
