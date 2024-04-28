@@ -284,7 +284,8 @@ export class FileParser {
 
       ps = await getProjectSettingsForFile(fileUri);
 
-      const ctrl = getProjMapEntry(ps.uri).ctrl;
+      const entry = getProjMapEntry(ps.uri);
+      const ctrl = entry.ctrl;
 
       if (isAStepsFile) {
         deleteStepsAndStepMappingsForStepsFile(fileUri);
@@ -406,18 +407,19 @@ export class FileParser {
     if (!await isFeatureFile(uri))
       throw new Error(`${caller}: ${uri.path} is not a feature file`);
 
-    if (!content)
-      return;
-
     const item = await this._getOrCreateFeatureTestItemAndParentFolderTestItemsForFeature(ps, content, testData,
       controller, uri, caller, firstRun);
+
     if (item) {
       xRayLog(`${caller}: parsing ${uri.path}`);
       await item.testFile.createScenarioTestItemsFromFeatureFileContent(ps, content, testData, controller, item.testItem, caller);
+
+      if (item.testItem.children.size === 0) {
+        controller.items.delete(item.testItem.id);
+        deleteStepsAndStepMappingsForFeatureFile(uri);
+      }
     }
-    else {
-      xRayLog(`${caller}: no scenarios found in ${uri.path}`);
-    }
+
   }
 
 

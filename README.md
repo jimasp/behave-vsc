@@ -347,9 +347,12 @@ The most important extension settings to be aware of are probably `behaveWorking
     ```
 
 - Step navigation is automatically enabled for your `steps` folder, but by using the `importedSteps` setting you can also enable step navigation for:
-  - imported step libraries in your project folder
-  - your own imported steps in your project folder
-  - (note that if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes)
+  - imported steps in your project folder that are not in your steps folder
+  - imported step libraries in your project folder  
+  
+  - Notes:
+    - you should try to use the lowest-level path so that file watchers are not watching hundreds of unrelated files
+    - if any path/regex is also included in a vscode `files.watcherExclude` setting, it will not have dynamic navigation updates on file/folder changes
 
   - Example:
 

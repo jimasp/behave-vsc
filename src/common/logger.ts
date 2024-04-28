@@ -15,7 +15,7 @@ export class Logger {
     }
 
     const projPaths = projUris.map(u => u.path);
-    if (projPaths.length < 2) {
+    if (projPaths.length === 1) {
       this.channels[projUris[0].path] = vscode.window.createOutputChannel("Behave VSC");
       return;
     }
