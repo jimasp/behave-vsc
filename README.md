@@ -274,12 +274,6 @@ The most important extension settings to be aware of are probably `behaveWorking
 
   - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can install external steps as a python package and use the `importedSteps` setting to enable navigation.
 
-- There is currently a bug in the MS python extension if you are using `unittest` for your python tests in a multiroot project and you hit the `>>` (Run Tests) button (or equivalent command) to execute all tests. This may cause your test run not to stop or not to update test results correctly. Workarounds are:
-
-  - a. Use `pytest` instead of `unittest` to run your tests (which supports running `unittest` tests out of the box), or
-  
-  - b. Do not use the `>>` button, i.e. run tests from a test tree node instead (e.g. `Python Tests` or `Feature Tests` separately).
-
 - There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
 
 - Individual test durations are taken from behave junit xml files, not actual execution time.

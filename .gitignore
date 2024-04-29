@@ -2,7 +2,7 @@ out
 dist
 node_modules
 *.tmp
-.mypy_cache
+.*_cache
 __pycache__
 .vscode-test
 **/.venv/
