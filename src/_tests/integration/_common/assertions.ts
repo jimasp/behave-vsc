@@ -268,6 +268,7 @@ export function assertExpectedResults(projName: string, results: QueueItem[] | u
     assert.equal(results.length, expectedTestRunSize, `${hint}results.length !== resultsLengthExpected`);
   }
   catch (assertErr: unknown) {
+    // note: you can also get here if you kill the vscode window while integration tests are running
     debugger; // eslint-disable-line no-debugger      
 
     throw new Error(`assertExpectedResults failed for ${projName} project: ${hint}\n${assertErr}`);

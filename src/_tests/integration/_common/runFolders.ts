@@ -3,7 +3,10 @@ import * as vscode from 'vscode';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getRunProfile, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import {
+  buildExpectedFriendlyCmdOrderedIncludes, checkExtensionIsReady, getRunProfile,
+  getTestProjectUri, replaceBehaveIni, setCleanup
+} from "./helpers";
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { logStore } from '../../runner';
@@ -22,6 +25,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   const consoleName = `runFolders ${projName}`;
   const projUri = await getTestProjectUri(api, projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
+  const cleanUp = setCleanup(consoleName, workDirUri);
   logStore.clearProjLogs(projUri);
   const projId = uriId(projUri);
 
@@ -32,7 +36,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
   const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
+  replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   try {
 
@@ -72,7 +76,7 @@ export async function runFolders(projName: string, isDebugRun: boolean, testExtC
     assertExpectedFriendlyCmdsForTogether(request, allTestItems, projUri, projName, scenarios, testExtConfig, runOptions, expectedResults);
   }
   finally {
-    await restoreBehaveIni(consoleName, workDirUri);
+    cleanUp();
   }
 }
 

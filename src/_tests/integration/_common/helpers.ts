@@ -77,29 +77,45 @@ export function getBehaveIniPaths(workDirUri: vscode.Uri) {
 }
 
 
-export async function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content?: string) {
+export function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content?: string) {
 	const paths = getBehaveIniPaths(workDirUri);
 	if (content === undefined) {
 		if (fs.existsSync(paths.behaveIniPath))
-			await fs.promises.unlink(paths.behaveIniPath);
+			fs.unlinkSync(paths.behaveIniPath);
 		return;
 	}
-	await fs.promises.writeFile(paths.behaveIniPath, content);
+	fs.writeFileSync(paths.behaveIniPath, content);
 	console.log(`${consoleName}: replaceBehaveIni wrote "${content}" to ${paths.behaveIniPath}`);
 }
 
 
-export async function restoreBehaveIni(consoleName: string, workDirUri: vscode.Uri) {
+function cleanUp(consoleName: string, workDirUri: vscode.Uri, exitHandler: () => void) {
 	const paths = getBehaveIniPaths(workDirUri);
 	if (fs.existsSync(paths.behaveIniPath)) {
-		await fs.promises.unlink(paths.behaveIniPath);
+		fs.unlinkSync(paths.behaveIniPath);
 		console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniPath}"`);
 	}
 	if (fs.existsSync(paths.behaveIniBakPath)) {
-		await fs.promises.copyFile(paths.behaveIniBakPath, paths.behaveIniPath);
+		fs.copyFileSync(paths.behaveIniBakPath, paths.behaveIniPath);
 		console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakPath}" to ${paths.behaveIniPath}`);
 		return;
 	}
+
+	// remove exit handler as no longer required
+	if (exitHandler)
+		process.off('exit', exitHandler);
+}
+
+export function setCleanup(consoleName: string, workDirUri: vscode.Uri) {
+	// cleanUp needs to be called from finally block to tidy up between 
+	// tests, but it but also needs to be called on process exit.
+	// so we'll set up the cleanUp function to be called on exit, but also 
+	// return the cleanUp function so it can be called from finally block.
+
+	//let cleanup: () => void = () => { };
+	const exitHandler = () => cleanUp(consoleName, workDirUri, exitHandler);
+	process.on('exit', exitHandler);
+	return exitHandler;
 }
 
 

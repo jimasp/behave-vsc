@@ -4,7 +4,10 @@ import * as path from 'path';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
-import { JS_OUTPUT_DIR, checkExtensionIsReady, getExpectedEnvVarsString, getRunProfile, getTestProjectUri, replaceBehaveIni, restoreBehaveIni } from "./helpers";
+import {
+  JS_OUTPUT_DIR, checkExtensionIsReady, getExpectedEnvVarsString,
+  getRunProfile, getTestProjectUri, replaceBehaveIni, setCleanup
+} from "./helpers";
 import { Expectations, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
@@ -20,7 +23,7 @@ import { logStore } from '../../runner';
 // This is different from the other tests of this type because the expected log output is pre-determined in Params rather than 
 // created using the helper functions in the code under test, (i.e. it ALSO checks the produced regexs are correct, not just 
 // that they work with behave and produce the expected results.)
-export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
+export async function runSelections(projName: string, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
   expectations: Expectations, selections: Selection[]): Promise<void> {
 
   // sanity check
@@ -30,17 +33,17 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
   }
 
   const api = await checkExtensionIsReady();
-  const projName = "project A";
   const consoleName = `runProjectASelections ${projName}`;
   const projUri = await getTestProjectUri(api, projName);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
+  const cleanUp = setCleanup(consoleName, workDirUri);
   const projId = uriId(projUri);
 
 
   testExtConfig.integrationTestRunUseCpExec = true;
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
+  replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   try {
     console.log(`${consoleName}: calling configurationChangedHandler`);
@@ -53,7 +56,7 @@ export async function runSelections(testExtConfig: TestWorkspaceConfig, behaveIn
     }
   }
   finally {
-    await restoreBehaveIni(consoleName, workDirUri);
+    cleanUp();
   }
 
 }

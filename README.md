@@ -42,11 +42,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ## Workspace/vscode requirements
 
 - No conflicting behave/gherkin/cucumber extension is enabled
-- Extension activation requires at least one `*.feature` file somewhere in the workspace
+- [Microsoft Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+- [behave 1.2.6](https://behave.readthedocs.io)
+- [Python](https://www.python.org/)
 - Compatible project directory structure(s)
-- [ms-python.python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) extension
-- [behave](https://behave.readthedocs.io)
-- [python](https://www.python.org/)
 
 ### Compatible project directory structures
 

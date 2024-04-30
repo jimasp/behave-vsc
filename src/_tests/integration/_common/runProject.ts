@@ -6,8 +6,8 @@ import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from './types';
 import { services } from '../../../common/services';
 import {
-  checkExtensionIsReady, getTestProjectUri, setLock, restoreBehaveIni, replaceBehaveIni, ACQUIRE,
-  RELEASE, buildExpectedFriendlyCmdOrderedIncludes, getRunProfile
+  checkExtensionIsReady, getTestProjectUri, setLock, replaceBehaveIni, ACQUIRE,
+  RELEASE, buildExpectedFriendlyCmdOrderedIncludes, getRunProfile, setCleanup
 } from "./helpers";
 import {
   assertWorkspaceSettingsAsExpected,
@@ -27,10 +27,10 @@ import { QueueItem } from '../../../extension';
 // ALSO: provides additional assertions about stepnavigation objects, project settings, etc. that are not included in other runners.
 //
 // NOTE THAT:
-// 1. if runParallel=true, then this function will run every feature in its own behave 
-// instance in parallel, otherwise it will run all features in one behave instance.
-// 2. if runMultiRootProjectsInParallel=true (i.e called from from "multiroot suite") then 
+// 1. if runMultiRootProjectsInParallel=true (i.e called from from "multiroot suite") then 
 // this function becomes re-entrant to run projects in parallel.
+// 2. if runParallel=true, then this function will run every feature in its own behave 
+// instance in parallel, otherwise it will run all features in one behave instance.
 //
 // When runMultiRootProjectsInParallel=true and this function is called from multiroot 
 // suite, this simulates a user quickly clicking the test explorer run button on each 
@@ -50,13 +50,12 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
 
   // ARRANGE
 
-  // get the extension api
   const api = await checkExtensionIsReady();
-
   const consoleName = `runProject ${projName}`;
   const projUri = await getTestProjectUri(api, projName);
   const projId = uriId(projUri);
   const workDirUri = vscode.Uri.joinPath(projUri, testExtConfig.get("behaveWorkingDirectory"));
+  const cleanUp = setCleanup(consoleName, workDirUri);
   logStore.clearProjLogs(projUri);
 
 
@@ -69,9 +68,9 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
   const runProfile = getRunProfile(projUri, testExtConfig, runOptions);
 
   // note that we cannot inject behave.ini like our test workspace config, because behave will always read it from disk
-  // (reparseAsNeeded doesn't reload when change the behave.ini file, if isIntegrationTestRun is set so we don't need this in the lock)
-  await replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
-
+  // (we don't need this in the lock section because if isIntegrationTestRun is set to true, then reparseAsNeeded doesn't reload settings when 
+  // we change the behave.ini file)
+  replaceBehaveIni(consoleName, workDirUri, behaveIni.content);
 
   try {
 
@@ -167,7 +166,7 @@ export async function runProject(projName: string, isDebugRun: boolean, testExtC
       assertExpectedFriendlyCmds(request, projUri, projName, expectedResults, testExtConfig, runOptions);
   }
   finally {
-    await restoreBehaveIni(consoleName, workDirUri);
+    cleanUp();
   }
 }
 

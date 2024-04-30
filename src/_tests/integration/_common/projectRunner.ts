@@ -50,7 +50,7 @@ export class TestProjectRunner {
 
   runSelectionSets = async (twConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni, expectations: Expectations, selections: Selection[]) => {
     console.log(`runSelectionSets ${this.projName}: ${JSON.stringify(twConfig)}`);
-    await runSelections(twConfig, behaveIni, expectations, selections);
+    await runSelections(this.projName, twConfig, behaveIni, expectations, selections);
   }
 }
 
