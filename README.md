@@ -476,7 +476,9 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
     ```
 
 - Notes on using a customRunner:
+  - You should first consider if you should do the work in an `environment.py` file, rather than in a script, as this is the standard way to set up your environment for behave.
   - The `scriptFile` must be a python file in the root of your behave working directory.
+  - The script should be lightweight. The script will be executed for each behave instance that is created by the extension. So a slow script will give poor performance.
   - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
   - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@django ...`.
   - The extension will monitor for junit file output if `waitForJUnitFiles` is true. Note that:
