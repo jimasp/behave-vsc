@@ -7,6 +7,7 @@ import { services } from '../common/services';
 import { getJunitProjRunDirUri } from '../watchers/junitWatcher';
 import { ProjectSettings } from '../config/settings';
 import { getJunitFeatureName } from '../behaveLogic';
+import { xRayLog } from '../common/logger';
 
 
 export type parseJunitFileResult = { junitContents: JunitContents, fsPath: string };
@@ -203,7 +204,7 @@ export function getProjQueueJunitFileMap(ps: ProjectSettings, run: vscode.TestRu
 
 
 export async function parseJunitFileAndUpdateTestResults(ps: ProjectSettings, run: vscode.TestRun, debug: boolean,
-  junitFileUri: vscode.Uri, filteredQueue: QueueItem[]): Promise<void> {
+  junitFileUri: vscode.Uri, queueItemsMatchingJunitUri: QueueItem[]): Promise<void> {
 
   if (!junitFileUri.fsPath.toLowerCase().endsWith(".xml"))
     throw new projError("junitFileUri must be an xml file", ps.uri);
@@ -213,7 +214,7 @@ export async function parseJunitFileAndUpdateTestResults(ps: ProjectSettings, ru
     junitXml = await getContentFromFilesystem(junitFileUri);
   }
   catch {
-    updateTestResultsForUnreadableJunitFile(ps, run, filteredQueue, junitFileUri);
+    updateTestResultsForUnreadableJunitFile(ps, run, queueItemsMatchingJunitUri, junitFileUri);
     return;
   }
 
@@ -226,28 +227,40 @@ export async function parseJunitFileAndUpdateTestResults(ps: ProjectSettings, ru
     throw new projError(`Unable to parse junit file ${junitFileUri.fsPath}`, ps.uri);
   }
 
+  const testcase = junitContents.testsuite.testcase;
+  if (!testcase) {
+    const feature = queueItemsMatchingJunitUri[0].scenario.featureName;
+    services.logger.logInfo(`Could not find any testcases in junit file "${junitFileUri.fsPath}", marking scenarios as untested for ` +
+      `feature ${feature}.`, ps.uri);
+    services.logger.showOutputWindow(ps.uri);
+    for (const qi of queueItemsMatchingJunitUri) {
+      updateTest(run, debug, { status: "untested", duration: 0 }, qi);
+    }
+    return;
+  }
 
-  for (const queueItem of filteredQueue) {
+
+  for (const queueItem of queueItemsMatchingJunitUri) {
 
     const fullFeatureName = getJunitFeatureName(ps, queueItem.scenario);
     const className = `${fullFeatureName}.${queueItem.scenario.featureName}`;
     const scenarioName = queueItem.scenario.scenarioName;
 
     // normal scenario
-    let queueItemResults = junitContents.testsuite.testcase.filter(tc =>
+    let queueItemResults = testcase.filter(tc =>
       tc.$.classname === className && tc.$.name === scenarioName
     );
 
     // scenario outline
     if (queueItemResults.length === 0) {
-      queueItemResults = junitContents.testsuite.testcase.filter(tc =>
+      queueItemResults = testcase.filter(tc =>
         tc.$.classname === className && tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @")) === scenarioName
       );
     }
 
     // scenario outline with <param> in scenario outline name
     if (queueItemResults.length === 0 && scenarioName.includes("<")) {
-      queueItemResults = junitContents.testsuite.testcase.filter(tc => {
+      queueItemResults = testcase.filter(tc => {
         const jScenName = tc.$.name.substring(0, tc.$.name.lastIndexOf(" -- @"));
         const rx = new RegExp(scenarioName.replace(/<.*>/g, ".*"));
         return tc.$.classname === className && rx.test(jScenName);
@@ -256,8 +269,13 @@ export async function parseJunitFileAndUpdateTestResults(ps: ProjectSettings, ru
 
 
     if (queueItemResults.length === 0) {
-      throw new Error(`could not match queueItem to junit result, when trying to match with $.classname="${className}", ` +
-        `$.name="${queueItem.scenario.scenarioName}" in file ${junitFileUri.fsPath}`);
+      services.logger.logInfo(`Could not find test result in file "${junitFileUri.fsPath}" for scenario "${scenarioName}" ` +
+        `of feature "${queueItem.scenario.featureName}". Marking scenario as untested.`, ps.uri);
+      xRayLog(`Could not find test result in file "${junitFileUri.fsPath}" matching with $.classname="${className}", ` +
+        `and $.name="${scenarioName}" (or $.name"="${scenarioName} --@" with/without "/<.*>/g"). `, ps.uri);
+      services.logger.showOutputWindow(ps.uri);
+      updateTest(run, debug, { status: "untested", duration: 0 }, queueItem);
+      continue;
     }
 
     let queueItemResult = queueItemResults[0];

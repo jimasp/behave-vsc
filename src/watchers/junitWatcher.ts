@@ -267,7 +267,7 @@ export class JunitWatcher {
 
     try {
 
-      const matches = this.#currentRuns.map(cr => {
+      const queueItemMapJunitUriMatches = this.#currentRuns.map(cr => {
         const filter = cr.queue.filter(m => uriId(m.junitFileUri) === uriId(uri));
         if (filter.length > 0) {
           if (matchedRun && cr !== matchedRun)
@@ -282,10 +282,10 @@ export class JunitWatcher {
         return;
 
       // one junit file is created per feature, so update all tests belonging to this feature
-      const matchedQueueItems = matches.map(m => m.queueItem);
-      const projSettings = matches[0].projSettings;
-      await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.projTestRun, matchedRun.debug, uri, matchedQueueItems);
-      for (const match of matches) {
+      const queueItemsMatchingJunitUri = queueItemMapJunitUriMatches.map(m => m.queueItem);
+      const projSettings = queueItemMapJunitUriMatches[0].projSettings;
+      await parseJunitFileAndUpdateTestResults(projSettings, matchedRun.projTestRun, matchedRun.debug, uri, queueItemsMatchingJunitUri);
+      for (const match of queueItemMapJunitUriMatches) {
         xRayLog(`junitWatcher: run ${matchedRun.projTestRun.name} - updateResult(${caller}) updated the result for ${match.queueItem.test.id}`);
         match.updated = true;
       }
