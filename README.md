@@ -39,9 +39,9 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - `Multi-root workspace`: a workspace that contains multiple workspace folders.
 - `Project`: within this readme, this is shorthand for "a workspace folder that contains feature files".
 
-## Workspace/vscode requirements
+## Workspace requirements
 
-- No conflicting behave/gherkin/cucumber extension is enabled
+- No conflicting behave/gherkin/cucumber extension is enabled in vscode
 - [Microsoft Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [behave 1.2.6](https://behave.readthedocs.io)
 - [Python](https://www.python.org/)
@@ -82,13 +82,13 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ---
 
-## Behave settings
+## Behave "paths" setting
 
-- If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your project tree to determine the feature folder(s). A better solution for large projects is to use a separate subfolder for behave tests and set `behaveWorkingDirectory` in the extension settings.
+- If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your entire project on startup to determine the feature folder(s). Note however that a better solution for large projects is to use a separate subfolder for behave tests and set `behaveWorkingDirectory` in the extension settings.
 
 ## Extension settings
 
-- Extension settings in this document should be prefixed with `behave-vsc.` in your `settings.json` file, e.g. `behave-vsc.env`.
+- Extension settings mentioned in this document should be prefixed with `behave-vsc.` in your `settings.json` file, e.g. `behaveWorkingDirectory` becomes `behave-vsc.behaveWorkingDirectory`.
 
 - For simple setups, the extension should work "out of the box", but there is plenty of customisation available via `settings.json`.
 The most important extension settings to be aware of are probably `behaveWorkingDirectory` and `justMyCode` for debug (via `settings.json` not `launch.json`).
@@ -229,7 +229,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Does restarting vscode solve your issue?
 
-- Does your workspace meet the [workspace/vscode requirements](#workspacevscode-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
+- Does your workspace meet the [workspace requirements](#workspace-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
 
 - Make sure the `paths` setting in your behave configuration file is correct.
 
@@ -451,6 +451,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
 
     ```json
     // settings.json
+    "behave-vsc.behaveWorkingDirectory": "django/mysite",
     "behave-vsc.runProfiles": [
       {
         "name": "behave-django",

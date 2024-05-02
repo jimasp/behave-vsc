@@ -39,7 +39,7 @@
 					"items": {
 						"type": "string"
 					},
-					"markdownDescription": "Additional arguments to pass to behave. Note that the extension does not validate these arguments, so it is possible to break the extension and/or behave.",
+					"markdownDescription": "Additional arguments to pass to behave (or your customRunner). Note that the extension does not validate these arguments, so it is possible to break the extension and/or behave.",
 					"examples": [
 						[
 							"-D",
@@ -95,7 +95,7 @@
 				"behave-vsc.runProfiles": {
 					"type": "array",
 					"scope": "resource",
-					"markdownDescription": "A list of run profiles, used to set tags and environment variables for test runs. Applies globally on demand to ALL projects in the workspace. See example in readme.",
+					"markdownDescription": "A list of run profiles. These can be used to set tags, args and environment variables on demand for test runs. Also allows you to provide a customRunner script. See examples in documentation.",
 					"items": {
 						"type": "object",
 						"required": [

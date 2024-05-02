@@ -64,7 +64,7 @@ export class ProjectSettings {
   public readonly name: string; // project name taken from folder (not necessarily unique in multi-root)
   public readonly uri: vscode.Uri; // project directory in uri form
   public readonly excludedPathPatterns: string[]; // paths specifically excluded from watching/parsing
-  public readonly projRelativeBehaveWorkingDirPath: string = "."; // "behaveWorkingDirectory" if set in settings.json, otherwise empty string
+  public readonly projRelativeBehaveWorkingDirPath: string = "."; // "behaveWorkingDirectory" if set in settings.json, otherwise "."
   public readonly behaveWorkingDirUri: vscode.Uri; // optional working directory (projRelativeBehaveWorkingDirPath in absolute uri form)
   // calculated after real work in create():
   public isValid = true; // set to false if the project paths are invalid  
