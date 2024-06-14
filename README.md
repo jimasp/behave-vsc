@@ -271,9 +271,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
-  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can install external steps as a python package and use the `importedSteps` setting to enable navigation.
-
-- There is currently a [bug](https://github.com/microsoft/vscode-extension-samples/issues/728) in vscode itself where a test will no longer play from within the editor window when you add spaces or autoformat a feature file. A workaround is to close the feature file and reopen it.
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can e.g. install a step library as a python package within your project folder and use the `importedSteps` setting to enable navigation for those steps.
 
 - Individual test durations are taken from behave junit xml files, not actual execution time.
 

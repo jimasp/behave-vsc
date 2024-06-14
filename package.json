@@ -198,7 +198,7 @@
 				"behave-vsc.xRay": {
 					"scope": "window",
 					"type": "boolean",
-					"markdownDescription": "Specifies whether extension errors have stack traces, and whether diagnostics and performance are logged in console. The console output is viewable via the vscode command `Developer: Toggle Developer Tools`. Diagnostic logs are noisy, and may have a small performance impact.",
+					"markdownDescription": "If true, extension errors will show in popup windows, stack traces will be added to error logs in the Behave VSC output window, and diagnostics and performance traces will be added to console output. The console output is viewable via the vscode command `Developer: Toggle Developer Tools`. Diagnostic logs are noisy, and may have a small performance impact.",
 					"default": false
 				}
 			}
