@@ -91,27 +91,27 @@ export class Logger {
   };
 
 
-  logError = (error: unknown, projUri: vscode.Uri, run?: vscode.TestRun) => {
+  logError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
 
     let errText = getErrorText(error);
     errText = errText.replace(/^Error: /, "");
     const text = "\nERROR: " + errText;
-    this.channels[projUri.path].appendLine(text);
-    this.channels[projUri.path].show(true);
+    if (projUri) {
+      this.channels[projUri.path].appendLine(text);
+      this.channels[projUri.path].show(true);
+    }
 
     if (run)
       run.appendOutput(text + "\r\n");
+
+    if (inDiagnosticMode() || !projUri) {
+      this._popup(text, projUri, run, LogType.error);
+    }
   }
 
 
   popupWarn = (text: string, projUri?: vscode.Uri, run?: vscode.TestRun) => {
     this._popup(text, projUri, run, LogType.warn);
-  }
-
-
-  popupError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
-    const text = getErrorText(error);
-    this._popup(text, projUri, run, LogType.error);
   }
 
 

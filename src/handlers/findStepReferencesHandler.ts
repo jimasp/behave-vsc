@@ -109,10 +109,10 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
     // entry point function (handler) - show error  
     try {
       const projUri = getParentProjectUri(fileUri);
-      services.logger.popupError(e, projUri);
+      services.logger.logError(e, projUri);
     }
     catch {
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
   }
 
@@ -131,7 +131,7 @@ export function prevStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.logger.popupError(e);
+    services.logger.logError(e);
   }
 }
 
@@ -141,6 +141,6 @@ export function nextStepReferenceHandler() {
   }
   catch (e: unknown) {
     // entry point function (handler) - show error   
-    services.logger.popupError(e);
+    services.logger.logError(e);
   }
 }

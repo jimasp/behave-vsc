@@ -66,7 +66,7 @@ export class JunitWatcher {
     }
     catch (e: unknown) {
       // unawaited async function (handler) - show error
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
   }
 
@@ -175,7 +175,7 @@ export class JunitWatcher {
     }
     catch (e: unknown) {
       // unawaited async function - show error
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
   }
 
@@ -295,7 +295,7 @@ export class JunitWatcher {
       const err = new Error(`junitWatcher error:${e as string}, caller:${caller}, file:${uri.fsPath}, run:${matchedRun?.projTestRun.name}`);
       matchedRun?.projTestRun.end();
       // entry point function (handler) - show error
-      services.logger.popupError(err);
+      services.logger.logError(err);
     }
 
   }

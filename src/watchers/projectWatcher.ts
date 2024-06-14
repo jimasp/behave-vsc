@@ -189,7 +189,7 @@ class FolderWatcher {
       }
       catch (e: unknown) {
         // caller is an unawaited entry point (event handler) without its own error handler (to avoid duplication) - show error
-        services.logger.popupError(e, projUri);
+        services.logger.logError(e, projUri);
       }
     }
 

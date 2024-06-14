@@ -115,7 +115,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.popupError(e);
+        services.logger.logError(e);
       }
     }));
 
@@ -140,7 +140,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
         }
         catch (e: unknown) {
           // entry point function (handler) - show error        
-          services.logger.popupError(e);
+          services.logger.logError(e);
         }
       }));
     });
@@ -194,7 +194,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       }
       catch (e: unknown) {
         // entry point function (handler) - show error        
-        services.logger.popupError(e);
+        services.logger.logError(e);
       }
     }
 
@@ -231,7 +231,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
   catch (e: unknown) {
     // entry point function (handler) - show error    
     if (services.config && services.logger) {
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
     else {
       // no logger yet, use vscode.window.showErrorMessage directly
@@ -272,7 +272,7 @@ async function runStartupTasks(context: vscode.ExtensionContext, testData: TestD
   }
   catch (e: unknown) {
     // unawaited async function - show error
-    services.logger.popupError(e);
+    services.logger.logError(e);
   }
 }
 
@@ -351,7 +351,7 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData,
     }
     catch (e: unknown) {
       // this function is a (mostly) unawaited async function - show error         
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
     finally {
       inProgress = false;
@@ -376,7 +376,7 @@ function promoteToProjectHandler() {
     }
     catch (e: unknown) {
       // entry point function (handler) - show error       
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
   }
 }
@@ -395,7 +395,7 @@ function refreshHandler() {
     }
     catch (e: unknown) {
       // entry point function (handler) - show error        
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
     finally {
       refreshing = false;

@@ -193,7 +193,7 @@ export class FileParser {
       // only log the first error (i.e. avoid logging the same error multiple times)
       if (!this._errored) {
         this._errored = true;
-        services.logger.popupError(e, projUri);
+        services.logger.logError(e, projUri);
       }
 
     }
@@ -299,7 +299,7 @@ export class FileParser {
     }
     catch (e: unknown) {
       // unawaited async func, show error
-      services.logger.popupError(e, ps ? ps.uri : undefined);
+      services.logger.logError(e, ps ? ps.uri : undefined);
     }
     finally {
       this._reparsingFile = false;

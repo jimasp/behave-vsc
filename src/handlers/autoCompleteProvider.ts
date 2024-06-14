@@ -64,10 +64,10 @@ export const autoCompleteProvider = {
       // entry point function (handler) - show error  
       try {
         const projUri = getParentProjectUri(document.uri);
-        services.logger.popupError(e, projUri);
+        services.logger.logError(e, projUri);
       }
       catch {
-        services.logger.popupError(e);
+        services.logger.logError(e);
       }
     }
   }

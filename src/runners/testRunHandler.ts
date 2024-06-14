@@ -74,7 +74,7 @@ export function createProjTestRunHandler(projCtrl: vscode.TestController, testDa
     }
     catch (e: unknown) {
       // entry point (handler) - show error
-      services.logger.popupError(e);
+      services.logger.logError(e);
     }
     finally {
       if (projTestRun) {
