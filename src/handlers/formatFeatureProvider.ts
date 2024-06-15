@@ -7,42 +7,57 @@ const oneIndent = /^\s*(Background:|Rule:|Scenario:|Scenario Outline:|Scenario T
 const twoIndent = /^\s*(Given|When|Then|And|But|Examples:).*/;
 const threeIndent = /^\s*\|.*/;
 const allIndents = [oneIndent, twoIndent, threeIndent].map(r => r.source).join("|");
-const indent = "\t";
+
 
 // this fires on "format document" or "format selection/paste" or "format on save"
 // (gherkin.language-configuration.json sets indentation used on typing out a feature file, e.g. pressing enter)
 export const formatFeatureProvider = {
-  async provideDocumentRangeFormattingEdits(document: vscode.TextDocument) {
+  async provideDocumentRangeFormattingEdits(document: vscode.TextDocument, range: vscode.Range,
+    options: vscode.FormattingOptions, cancelToken: vscode.CancellationToken): Promise<vscode.TextEdit[] | undefined> {
+
     try {
 
       const result = [];
-      let featFound = false;
-      const lines = getLines(document.getText());
-      let indent = "";
 
-      for (let lineNo = 0; lineNo < lines.length; lineNo++) {
-        const line = document.lineAt(lineNo).text;
+      const start = new vscode.Position(range.start.line, 0);
+      const end = new vscode.Position(range.end.line, document.lineAt(range.end.line).text.length);
+      const fullLines = new vscode.Range(start, end);
+      const selectedLines = getLines(document.getText(fullLines));
+
+      const { insertSpaces, tabSize } = options;
+      const indentChars = insertSpaces ? " ".repeat(tabSize) : "\t";
+      let indent = "";
+      let aboveFeatureLine = selectedLines.findIndex(l => /^\s*Feature:.*/.test(l)) > -1;
+      let lineIndex = -1;
+
+      for (let docLineNo = range.start.line; docLineNo <= range.end.line; docLineNo++) {
+        if (cancelToken.isCancellationRequested)
+          break;
+        lineIndex++;
+
+        const line = selectedLines[lineIndex];
 
         if (line.trim() === "") {
-          if (lineNo > 0) {
-            const before = document.lineAt(lineNo - 1).text;
+          if (docLineNo > 0) {
+            const before = document.lineAt(docLineNo - 1).text;
             if (before.trim() === '')
-              result.push(vscode.TextEdit.delete(new vscode.Range(new vscode.Position(lineNo - 1, 0), new vscode.Position(lineNo, line.length))));
+              result.push(vscode.TextEdit.delete(new vscode.Range(new vscode.Position(docLineNo - 1, 0), new vscode.Position(docLineNo, line.length))));
           }
           continue;
         }
 
-        if (!featFound) {
+        if (aboveFeatureLine) {
+          indent = "";
           const feat = /^\s*Feature:.*/;
           if (feat.test(line))
-            featFound = true;
+            aboveFeatureLine = false;
+        }
+        else {
+          indent = getIndent(indentChars, indent, lineIndex, selectedLines);
         }
 
-        if (featFound)
-          indent = getIndent(indent, lineNo, lines);
-
-        const replacement = getLF(indent, lineNo, lines) + line.replace(/^\s*/, indent).trimEnd();
-        result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length)), replacement));
+        const replacement = getLF(lineIndex, selectedLines) + line.replace(/^\s*/, indent).trimEnd();
+        result.push(new vscode.TextEdit(new vscode.Range(new vscode.Position(docLineNo, 0), new vscode.Position(docLineNo, line.length)), replacement));
       }
 
       return result;
@@ -62,7 +77,7 @@ export const formatFeatureProvider = {
 }
 
 
-function getLF(indent: string, lineNo: number, lines: string[]): string {
+function getLF(lineNo: number, lines: string[]): string {
 
   if (lineNo === 0)
     return "";
@@ -79,7 +94,7 @@ function getLF(indent: string, lineNo: number, lines: string[]): string {
 }
 
 
-function getIndent(currentIndent: string, lineNo: number, lines: string[]): string {
+function getIndent(indentChars: string, currentIndent: string, lineNo: number, lines: string[]): string {
 
   // NOTE: behaviour should be roughly consistent with 
   // gherkin.language-configuration.json (which is used for autoformat while typing). 
@@ -93,21 +108,21 @@ function getIndent(currentIndent: string, lineNo: number, lines: string[]): stri
     return "";
 
   if (oneIndent.test(line))
-    return indent;
+    return indentChars;
 
   if (twoIndent.test(line))
-    return indent.repeat(2);
+    return indentChars.repeat(2);
 
   if (threeIndent.test(line))
-    return indent.repeat(3);
+    return indentChars.repeat(3);
 
-  // unmatched, so must be a comment line, or a tag line, or a multiline string
-  return getNextIndent(currentIndent, lineNo, lines);
+  // unmatched, e.g. a comment line, or a tag line, or a multiline string
+  return getNextIndent(indentChars, currentIndent, lineNo, lines);
 }
 
 
 
-function getNextIndent(currentIndent: string, lineNum: number, lines: string[]): string {
+function getNextIndent(indentChars: string, currentIndent: string, lineNum: number, lines: string[]): string {
 
   let next = 0;
   for (let lineNo = lineNum + 1; lineNo < lines.length; lineNo++) {
@@ -121,6 +136,6 @@ function getNextIndent(currentIndent: string, lineNum: number, lines: string[]):
   if (next === 0)
     return currentIndent;
 
-  return getIndent(currentIndent, next, lines);
+  return getIndent(indentChars, currentIndent, next, lines);
 }
 
