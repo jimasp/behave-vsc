@@ -8,12 +8,12 @@
         },
         {
             "match": "^\\s*(\"\"\").*(\"\"\")",
-            "name": "comment.line"
+            "name": "string.quoted.triple"
         },
         {
             "begin": "^\\s*(\"\"\")",
             "end": "^\\s*(\"\"\")",
-            "name": "comment.line"
+            "name": "string.quoted.triple"
         },
         {
             "match": "^\\s*(@.*)",
@@ -30,7 +30,7 @@
                     "name": "markup.bold"
                 },
                 "2": {
-                    "name": "string"
+                    "name": "string.unquoted"
                 }
             }
         },
