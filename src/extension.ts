@@ -71,7 +71,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       vscode.commands.registerCommand(`behave-vsc.stepReferences.prev`, prevStepReferenceHandler),
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
       vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
-      vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
+      vscode.languages.registerDocumentRangeFormattingEditProvider({ language: 'gherkin' }, formatFeatureProvider),
       vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
     );
 
