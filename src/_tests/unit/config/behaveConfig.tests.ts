@@ -11,6 +11,7 @@ import { getNowAsFilesystemSafeIsoString } from '../../../common/helpers';
 
 
 const nowString = () => getNowAsFilesystemSafeIsoString();
+const sep = path.sep;
 
 
 suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
@@ -19,7 +20,7 @@ suite(`getBehaveConfigPaths - file order-of-precedence checks`, () => {
   let logger: any;
   const projUri = vscode.Uri.file(nowString());
   const workDirUri = vscode.Uri.file(projUri.fsPath + "/" + nowString());
-  const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "");
+  const workDirRelPath = workDirUri.fsPath.replace(projUri.fsPath + "/", "").replace(projUri.fsPath + "\\", "");
   const fileContent = ' [behave]\n  paths =features';
   const expRawPaths = ["features"];
   const expBehaveRelPaths = ["features"];
@@ -171,7 +172,8 @@ suite("getBehaveConfigPaths - basic paths checks 2", () => {
       const workDirRelPath = path.relative(projUri.fsPath, workDirUri.fsPath);
       const projectSettings = { uri: projUri, behaveWorkingDirUri: workDirUri, projRelativeBehaveWorkingDirPath: workDirRelPath } as ProjectSettings;
       const result = getBehaveConfigPaths(projectSettings);
-      const resPaths = workDirRelPath === "" ? ["z", "a", "m"] : [workDirRelPath + "/z", workDirRelPath + "/a", workDirRelPath + "/m"];
+      const workDirAndSep = workDirRelPath + sep;
+      const resPaths = workDirRelPath === "" ? ["z", "a", "m"] : [workDirAndSep + "z", workDirAndSep + "a", workDirAndSep + "m"];
       const resPathsText = `"${resPaths.join('", "')}"`;
       assert.deepStrictEqual(result.projRelBehaveConfigPaths, resPaths);
       assert(logger.logInfo.calledOnceWithExactly(`Behave config file "behave.ini" sets project-relative paths: ${resPathsText}`, projUri));
