@@ -230,7 +230,7 @@
 			{
 				"command": "behave-vsc.findStepReferences",
 				"key": "alt+f12",
-				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*\\/steps/ || bvsc_StepLibsActive)"
+				"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*[\\/\\\\]steps/ || bvsc_StepLibsActive)"
 			},
 			{
 				"command": "behave-vsc.stepReferences.next",
@@ -291,7 +291,7 @@
 				{
 					"command": "behave-vsc.findStepReferences",
 					"group": "navigation",
-					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*\\/steps/ || bvsc_StepLibsActive)"
+					"when": "!isInEmbeddedEditor && editorTextFocus && resourceExtname =~ /\\.py$/ && (resourceDirname =~ /.*[\\/\\\\]steps/ || bvsc_StepLibsActive)"
 				}
 			]
 		},

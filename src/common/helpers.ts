@@ -224,7 +224,7 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
   const ps = await getProjectSettingsForFile(fileUri);
 
   // if the file path is not within any of the projRelativeStepsFolders then it's not a steps file
-  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}/`)))
+  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(path.posix.join(ps.uri.path, relPath))))
     return false;
 
   // standard "/steps/" folder match
@@ -232,8 +232,7 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
     return true;
 
   // if the file path does not contain "/steps/" and we got this far, 
-  // then this must be a steps library folder,
-  // (steps library folders are always included in projRelativeStepsFolders)
+  // then check if it's a file inside an importedSteps (step library) folder
   const projSettings = await getProjectSettingsForFile(fileUri);
   return isImportedStepFile(projSettings, fileUri);
 }

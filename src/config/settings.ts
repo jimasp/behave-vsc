@@ -324,11 +324,11 @@ async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
     // set default paths for the projectWatcher to use so that if/when a user 
     // adds these folders to a new project they won't need to manually refresh
     ps.projRelativeFeatureFolders = [
-      path.join(ps.projRelativeBehaveWorkingDirPath, "features")
+      path.posix.join(ps.projRelativeBehaveWorkingDirPath, "features")
     ];
     ps.projRelativeStepsFolders = [
-      path.join(ps.projRelativeBehaveWorkingDirPath, "steps"),
-      path.join(ps.projRelativeBehaveWorkingDirPath, "features/steps")
+      path.posix.join(ps.projRelativeBehaveWorkingDirPath, "steps"),
+      path.posix.join(ps.projRelativeBehaveWorkingDirPath, "features/steps")
     ];
     ps.isValid = false; // invalid project
     return;
@@ -336,7 +336,7 @@ async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
 
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
 
-  const stepsFolder = path.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
+  const stepsFolder = path.posix.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
   const projRelStepsFolders = getStepLibraryStepPaths(ps);
 
   // NOTE: the order of the relativeStepsFolders determines which step folder step is used as the match for 
@@ -376,7 +376,7 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativ
   // no behave config paths set (or working dir is one of them) so we'll gather feature paths from disk
   const foldersContainingFeatureFiles = await findFeatureFoldersInWorkingDir(ps);
 
-  let projRelFeatureFolders = foldersContainingFeatureFiles.map(folder => path.join(ps.projRelativeBehaveWorkingDirPath, folder));
+  let projRelFeatureFolders = foldersContainingFeatureFiles.map(folder => path.posix.join(ps.projRelativeBehaveWorkingDirPath, folder));
 
   // add the config paths even if there are no feature files in those paths (yet)
   // (they don't have to exist yet as the watcher uses the project root)
