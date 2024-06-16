@@ -15,7 +15,7 @@
 				"behave-vsc.envVarOverrides": {
 					"scope": "resource",
 					"type": "object",
-					"deprecationMessage": "This setting is deprecated (renamed). Please use the \"env\" setting.",
+					"deprecationMessage": "This setting is deprecated (renamed). Please use the \"behave-vsc.env\" setting.",
 					"additionalProperties": {
 						"type": "string"
 					}
