@@ -1,6 +1,7 @@
+import * as os from "os";
 import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
 import { services } from "../common/services";
-import { cleanBehaveText } from '../common/helpers';
+import { cleanBehaveText, WIN_CMD_INTRO } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
 
@@ -26,11 +27,17 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     const env = { ...process.env, ...pr.env };
     const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
 
-    // on integration test runs ONLY, we sometimes use cp.exec 
-    // instead of cp.spawn, so that we can test the generated friendlyCmd executes correctly
+    // on integration test runs ONLY, we sometimes use cp.exec instead of cp.spawn, 
+    // so that we can test the generated friendlyCmd will execute correctly when run manually by the user
     if (services.config.isIntegrationTestRun && pr.projSettings.integrationTestRunUseCpExec) {
-      xRayLog("--- integration test running in exec mode ---")
-      cp = exec(friendlyCmd);
+      xRayLog("--- integration test running in exec mode ---");
+      if (os.platform() === "win32") {
+        const cmdWithoutIntro = friendlyCmd.replace(WIN_CMD_INTRO, "");
+        cp = exec(cmdWithoutIntro, { shell: 'powershell.exe' });
+      }
+      else {
+        cp = exec(friendlyCmd);
+      }
     }
     else {
       cp = spawn(pr.pythonExec, local_args, options);
