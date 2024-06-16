@@ -48,7 +48,7 @@
     - `code --install-extension amodio.tsl-problem-matcher`
 9. Install dependencies for the `use custom runner` example project venv:
     - `cd "example-projects/use custom runner"`
-    - `python3 -m venv .venv`
+    - `python -m venv .venv`
     - `pip install -r requirements.txt`
 10. Install behave 1.2.6 globally (most example projects do not have a venv):
     - Change to the root directory: `cd /` (or `cd \` on Windows)
