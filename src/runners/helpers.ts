@@ -3,6 +3,7 @@ import * as os from "os";
 import { ProjRun } from "./testRunHandler";
 import { QueueItem } from "../extension";
 import { ProjectSettings } from "../config/settings";
+import { WIN_CMD_INTRO } from "../common/helpers";
 
 
 
@@ -145,7 +146,7 @@ export function getFriendlyEnvVars(pr: ProjRun) {
 export function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
   let ps1 = "", ps2 = "";
   if (os.platform() === "win32") {
-    ps1 = `powershell commands:\n`;
+    ps1 = WIN_CMD_INTRO;
     ps2 = "& ";
   }
   return { ps1, ps2 };
