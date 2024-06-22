@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { Configuration } from '../../../config/configuration';
 import { ProjParseCounts } from '../../../parsers/fileParser';

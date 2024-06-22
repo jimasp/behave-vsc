@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { Configuration } from '../config/configuration';
 import { FileParser } from '../parsers/fileParser';
 import { Logger, xRayLog } from './logger';

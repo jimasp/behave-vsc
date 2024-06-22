@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from "../common/services";
 import { ProjectSettings, CustomRunner, RunProfile } from "../config/settings";
 import { Scenario, TestData, TestFile } from '../parsers/testFile';

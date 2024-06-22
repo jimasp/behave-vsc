@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as assert from 'assert';
+import vscode from 'vscode';
+import path from 'path';
+import fs from 'fs';
+import assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
 import { RunOptions, testGlobals } from './types';
@@ -70,34 +70,34 @@ export async function getTestProjectUri(api: IntegrationTestAPI, projName: strin
 }
 
 
-export function getBehaveIniPaths(workDirUri: vscode.Uri) {
-	const behaveIniPath = path.join(workDirUri.fsPath, 'behave.ini');
-	const behaveIniBakPath = path.join(workDirUri.fsPath, 'behave.ini.bak');
-	return { behaveIniPath, behaveIniBakPath };
+export function getBehaveIniFsPaths(workDirUri: vscode.Uri) {
+	const behaveIniFsPath = vscode.Uri.joinPath(workDirUri, 'behave.ini').fsPath;
+	const behaveIniBakFsPath = vscode.Uri.joinPath(workDirUri, 'behave.ini.bak').fsPath;
+	return { behaveIniFsPath, behaveIniBakFsPath };
 }
 
 
 export function replaceBehaveIni(consoleName: string, workDirUri: vscode.Uri, content?: string) {
-	const paths = getBehaveIniPaths(workDirUri);
+	const paths = getBehaveIniFsPaths(workDirUri);
 	if (content === undefined) {
-		if (fs.existsSync(paths.behaveIniPath))
-			fs.unlinkSync(paths.behaveIniPath);
+		if (fs.existsSync(paths.behaveIniFsPath))
+			fs.unlinkSync(paths.behaveIniFsPath);
 		return;
 	}
-	fs.writeFileSync(paths.behaveIniPath, content);
-	console.log(`${consoleName}: replaceBehaveIni wrote "${content}" to ${paths.behaveIniPath}`);
+	fs.writeFileSync(paths.behaveIniFsPath, content);
+	console.log(`${consoleName}: replaceBehaveIni wrote "${content}" to ${paths.behaveIniFsPath}`);
 }
 
 
 function cleanUp(consoleName: string, workDirUri: vscode.Uri, exitHandler: () => void) {
-	const paths = getBehaveIniPaths(workDirUri);
-	if (fs.existsSync(paths.behaveIniPath)) {
-		fs.unlinkSync(paths.behaveIniPath);
-		console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniPath}"`);
+	const paths = getBehaveIniFsPaths(workDirUri);
+	if (fs.existsSync(paths.behaveIniFsPath)) {
+		fs.unlinkSync(paths.behaveIniFsPath);
+		console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniFsPath}"`);
 	}
-	if (fs.existsSync(paths.behaveIniBakPath)) {
-		fs.copyFileSync(paths.behaveIniBakPath, paths.behaveIniPath);
-		console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakPath}" to ${paths.behaveIniPath}`);
+	if (fs.existsSync(paths.behaveIniBakFsPath)) {
+		fs.copyFileSync(paths.behaveIniBakFsPath, paths.behaveIniFsPath);
+		console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakFsPath}" to ${paths.behaveIniFsPath}`);
 		return;
 	}
 
@@ -237,7 +237,7 @@ export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceC
 
 
 export function getExampleProjectFolderAbsPath(exampleProjectFolderName: string): string {
-	const absPath = path.join(__dirname, "../../example-projects", exampleProjectFolderName)
+	const absPath = path.posix.join(__dirname, "../../example-projects", exampleProjectFolderName)
 		.replace(JS_OUTPUT_TESTS_DIR, "/");
 	return absPath;
 }

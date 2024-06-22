@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { ImportedSteps, ImportedStepsSetting, RunProfilesSetting } from '../../../config/settings';
 
 

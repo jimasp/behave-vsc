@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as vscode from 'vscode';
-import * as assert from 'assert';
+import vscode from 'vscode';
+import assert from 'assert';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, getScenarioTests, uriId } from '../../../common/helpers';
 import { Expectations, RunOptions, TestBehaveIni, TestResult } from './types';

@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from "../common/services";
 import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';

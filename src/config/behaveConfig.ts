@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
+import vscode from 'vscode';
+import path from 'path';
+import fs from 'fs';
 import { services } from '../common/services';
 import { BEHAVE_CONFIG_FILES_PRECEDENCE } from '../behaveLogic';
 import { ProjectSettings } from './settings';
@@ -35,7 +35,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
     // first, convert any absolute paths to relative paths
     let behaveWrkRelPath = path.isAbsolute(biniPath) ? path.relative(ps.behaveWorkingDirUri.fsPath, biniPath) : biniPath;
 
-    const projectRelPath = path.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
+    const projectRelPath = path.posix.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
       services.logger.logWarning(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
       continue;
@@ -64,7 +64,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
   // such that our logic does not differ from behave's in those functions, i.e. behaveWrkDirRelativeConfigPaths[0] and any looping order.
   relPaths = [...new Set(relPaths)];
 
-  const projRelPaths = relPaths.map(p => path.join(ps.projRelativeBehaveWorkingDirPath, p).replace(/^\.$/g, ""));
+  const projRelPaths = relPaths.map(p => path.posix.join(ps.projRelativeBehaveWorkingDirPath, p).replace(/^\.$/g, ""));
 
   if (projRelPaths.length > 0) {
     services.logger.logInfo(`Behave config file "${matchedConfigFile}" sets project-relative paths: ` +
@@ -89,7 +89,7 @@ function getBehavePathsFromConfigFile(ps: ProjectSettings) {
   // i.e. we can just break on the first file in the order that has a "paths" setting.  
 
   for (const configFile of BEHAVE_CONFIG_FILES_PRECEDENCE) {
-    const configFilePath = path.join(ps.behaveWorkingDirUri.fsPath, configFile);
+    const configFilePath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, configFile).fsPath;
     if (fs.existsSync(configFilePath)) {
       // TODO: for behave 1.2.7 we will also need to support pyproject.toml      
       if (configFile === "pyproject.toml")

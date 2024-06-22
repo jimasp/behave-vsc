@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import * as os from 'os';
-import * as xml2js from 'xml2js';
+import vscode from 'vscode';
+import os from 'os';
+import xml2js from 'xml2js';
 import { QueueItem } from "../extension";
 import { getContentFromFilesystem, showDebugWindow, WIN_MAX_PATH, projError } from '../common/helpers';
 import { services } from '../common/services';

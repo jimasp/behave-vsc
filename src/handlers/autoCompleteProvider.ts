@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { getProjectSettingsForFile, getParentProjectUri, sepr } from '../common/helpers';
 import { services } from '../common/services';
 import { featureFileStepRe } from "../parsers/featureParser";

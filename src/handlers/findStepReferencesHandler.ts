@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from "../common/services";
 import { uriId, getParentProjectUri, isStepsFile, openDocumentRange } from '../common/helpers';
 import { StepReference as StepReference, StepReferencesTree as StepReferencesTree } from './stepReferencesView';

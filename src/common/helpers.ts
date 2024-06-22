@@ -1,7 +1,7 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as fg from 'fast-glob';
+import vscode from 'vscode';
+import fs from 'fs';
+import path from 'path';
+import fg from 'fast-glob';
 import { performance } from 'perf_hooks';
 import { services } from "./services";
 import { Scenario, TestData } from '../parsers/testFile';
@@ -205,7 +205,7 @@ export const isFeatureFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
   // as per behave, ignore feature files that are not in in known feature folder locations
   const ps = await getProjectSettingsForFile(fileUri);
-  if (!ps.projRelativeFeatureFolders.some(relPath => fileUri.path.startsWith(`${ps.uri.path}/${relPath}`)))
+  if (!ps.projRelativeFeatureFolders.some(relPath => fileUri.path.startsWith(path.posix.join(ps.uri.path, relPath))))
     return false;
 
   return true;
@@ -488,9 +488,9 @@ export function getOptimisedFeatureParsingPaths(relativePaths: string[]): string
   */
   const splitPaths = relativePaths.map(path => path.split('/')).sort((a, b) => a.length - b.length);
   const shortPaths: string[][] = [];
-  for (const path of splitPaths) {
-    if (!shortPaths.some(sp => (path.join("/") + "/").startsWith(sp.join('/') + "/")))
-      shortPaths.push(path);
+  for (const sPath of splitPaths) {
+    if (!shortPaths.some(sp => (sPath.join("/") + "/").startsWith(sp.join('/') + "/")))
+      shortPaths.push(sPath);
   }
   return shortPaths.map(result => result.join('/')).sort((a, b) => a.localeCompare(b));
 }
@@ -584,7 +584,7 @@ export async function deleteDirectoryContentsOlderThanDays(dirPath: string, days
   const oneWeekAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   await Promise.all(files.map(async (file) => {
-    const filePath = path.join(dirPath, file);
+    const filePath = path.posix.join(dirPath, file);
     const stats = await fs.promises.stat(filePath);
 
     if (stats.mtime < oneWeekAgo) {

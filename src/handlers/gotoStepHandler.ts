@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from "../common/services";
 import { getParentProjectUri, isFeatureFile, openDocumentRange } from '../common/helpers';
 import { getStepFileStepForFeatureFileStep, waitOnReadyForStepsNavigation } from '../parsers/stepMappings';
