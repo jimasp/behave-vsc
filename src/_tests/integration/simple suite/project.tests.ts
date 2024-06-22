@@ -1,5 +1,5 @@
 import { TestProjectRunner } from "../_common/projectRunner";
-import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_common/types"
+import { noBehaveIni, noConfig, noRunOptions, parallelConfig } from "../_common/types.js"
 import { behaveIni, expectations, expectationsWithBehaveIni } from "./config";
 
 

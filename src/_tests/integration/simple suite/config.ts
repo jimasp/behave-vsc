@@ -1,5 +1,5 @@
 import { Expectations, RunOptions, TestBehaveIni } from "../_common/types";
-import { getExpectedCounts, getExpectedResults } from "./expectedResults"
+import { getExpectedCounts, getExpectedResults } from "./expectedResults.js"
 
 
 export const expectations: Expectations = {

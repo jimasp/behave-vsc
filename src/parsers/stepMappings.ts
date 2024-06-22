@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { sepr, uriId, urisMatch } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { deleteStepFilesStepsForFile, getStepFilesSteps, parseRepWildcard, StepFileStep } from './stepsParser';

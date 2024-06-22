@@ -1,5 +1,5 @@
 import { Expectations, TestBehaveIni } from "../_common/types";
-import { getExpectedCounts, getExpectedResults } from "./expectedResults"
+import { getExpectedCounts, getExpectedResults } from "./expectedResults.js"
 
 
 const expectedPaths = ["subfolder 1/subfolder 2/features", "subfolder 1/features", "subfolder 1/features2"];

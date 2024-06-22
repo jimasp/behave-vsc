@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from './common/services';
 import { BehaveTestData, Scenario, TestData } from './parsers/testFile';
 import {

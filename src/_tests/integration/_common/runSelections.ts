@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as vscode from 'vscode';
-import * as path from 'path';
+import os from 'os';
+import vscode from 'vscode';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
 import { services } from '../../../common/services';
@@ -24,7 +24,7 @@ import { logStore } from '../../runner';
 // created using the helper functions in the code under test, (i.e. it ALSO checks the produced regexs are correct, not just 
 // that they work with behave and produce the expected results.)
 export async function runSelections(projName: string, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
-  expectations: Expectations, selections: Selection[]): Promise<void> {
+  expectations: Expectations, selectionList: SelectionListEntry[]): Promise<void> {
 
   // sanity check
   if (testExtConfig.runParallel) {
@@ -51,6 +51,12 @@ export async function runSelections(projName: string, testExtConfig: TestWorkspa
     const expectedResults = expectations.getExpectedResultsFunc(projUri, services.config);
     const allTestItems = getTestItems(projId, api.getProjMapEntry(projUri).ctrl.items);
 
+
+    const selections = selectionList.map(x => {
+      const scenRegEx = os.platform() === "win32" ? x.expectedScenarioRegExPwrShl : x.expectedScenarioRegExPosix;
+      return new Selection(x.title, x.selection, x.expectedFeatureRegEx, scenRegEx);
+    });
+
     for (const selection of selections) {
       await runSelection(selection, consoleName, projUri, api, allTestItems, expectedResults, projName, testExtConfig);
     }
@@ -73,10 +79,16 @@ async function runSelection(params: Selection, consoleName: string, projUri: vsc
   const requestItems: vscode.TestItem[] = [];
   logStore.clearProjLogs(projUri);
 
+  const getAbsPath = (relPath: string) => {
+    const dirUri = vscode.Uri.file(__dirname);
+    const repPath = vscode.Uri.joinPath(dirUri, "../../../..", relPath).path.replace(JS_OUTPUT_DIR, "/");
+    return repPath;
+  }
+
   const selectedTestIds = params.selection.map(id => {
     if (!id.includes(".feature")) {
       // folder
-      const absPath = path.join(__dirname, "../../../..", id).replace(JS_OUTPUT_DIR, "/");
+      const absPath = getAbsPath(id);
       return uriId(vscode.Uri.file(absPath));
     }
 
@@ -84,7 +96,7 @@ async function runSelection(params: Selection, consoleName: string, projUri: vsc
     const split = id.split(".feature");
     const featurePath = split[0] + ".feature";
     const slashScenarioName = split[1];
-    const absPath = path.join(__dirname, "../../../..", featurePath).replace(JS_OUTPUT_DIR, "/");
+    const absPath = getAbsPath(featurePath);
     return uriId(vscode.Uri.file(absPath)) + slashScenarioName;
   });
 
@@ -157,11 +169,21 @@ function assertExpectedFriendlyCmd(params: Selection, projUri: vscode.Uri, projN
 }
 
 
-export interface Selection {
-  title: string;
-  selection: string[];
-  expectedFeatureRegEx: string;
-  expectedScenarioRegEx: string;
+class Selection {
+  constructor(
+    public readonly title: string,
+    public readonly selection: string[],
+    public readonly expectedFeatureRegEx: string,
+    public readonly expectedScenarioRegEx: string
+  ) { }
 }
 
+
+export interface SelectionListEntry {
+  title: string;
+  selection: string[];
+  expectedFeatureRegEx: string,
+  expectedScenarioRegExPosix: string;
+  expectedScenarioRegExPwrShl: string;
+}
 

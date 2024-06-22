@@ -1,6 +1,6 @@
 
-import * as vscode from 'vscode';
-import * as fs from 'fs';
+import vscode from 'vscode';
+import fs from 'fs';
 import { uriId } from '../common/helpers';
 import { services } from '../common/services';
 import { xRayLog, LogType } from '../common/logger';

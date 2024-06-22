@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as vscode from 'vscode';
+import path from 'path';
+import vscode from 'vscode';
 import { services } from './common/services';
 import { ProjectSettings } from './config/settings';
 import { Scenario } from './parsers/testFile';
@@ -89,5 +89,5 @@ export async function getBaseDirPath(ps: ProjectSettings, behaveWrkDirRelativeCo
   xRayLog(`PERF: getRelativeBaseDirPath() took ${waited}ms`, ps.uri);
 
   // adjust basedir path to a behave-working-dir-relative path
-  return path.relative(ps.behaveWorkingDirUri.fsPath, new_base_dir) || ".";
+  return path.posix.relative(ps.behaveWorkingDirUri.path, vscode.Uri.file(new_base_dir).path) || ".";
 }

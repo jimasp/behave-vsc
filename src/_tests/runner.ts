@@ -1,7 +1,7 @@
-import * as path from 'path';
-import * as Mocha from 'mocha';
-import * as vscode from 'vscode';
-import * as inspector from 'inspector';
+import path from 'path';
+import Mocha from 'mocha';
+import vscode from 'vscode';
+import inspector from 'inspector';
 import { globSync } from 'glob';
 import { services } from '../common/services';
 import { testGlobals } from './integration/_common/types';

@@ -1,7 +1,7 @@
-import * as assert from 'assert';
-import * as sinon from 'sinon';
-import * as vscode from 'vscode';
-import * as mockFs from 'mock-fs';
+import assert from 'assert';
+import sinon from 'sinon';
+import vscode from 'vscode';
+import mockFs from 'mock-fs';
 import * as helpers from '../../../common/helpers';
 import { ProjectSettings } from '../../../config/settings';
 import {

@@ -2,14 +2,14 @@ import path = require("path");
 import { Expectations, TestBehaveIni } from "../_common/types";
 import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig";
 import { getExpectedCountsWithoutBehaveIni, getExpectedResultsWithoutBehaveIni } from "./expectedResultsWithoutBehaveIni";
-import { getExpectedCountsWith2PathBehaveIni, getExpectedResultsWith2PathBehaveIni } from "./expectedResultsWith2PathBehaveIni"
+import { getExpectedCountsWith2PathBehaveIni, getExpectedResultsWith2PathBehaveIni } from "./expectedResultsWith2PathBehaveIni.js"
 import { getExpectedCountsWith3PathBehaveIni, getExpectedResultsWith3PathBehaveIni } from "./expectedResultsWith3PathBehaveIni";
 import { getExampleProjectFolderAbsPath } from "../_common/helpers";
 
 
 const absPathProjRoot = getExampleProjectFolderAbsPath("working dir");
-const absPathWorkRoot = path.join(absPathProjRoot, "working folder");
-const absPathFeatures = path.join(absPathWorkRoot, "features");
+const absPathWorkRoot = path.posix.join(absPathProjRoot, "working folder");
+const absPathFeatures = path.posix.join(absPathWorkRoot, "features");
 
 
 export const wsConfig = new TestWorkspaceConfig({

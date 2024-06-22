@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { getParentProjectUri, getLines } from '../common/helpers';
 import { services } from '../common/services';
 

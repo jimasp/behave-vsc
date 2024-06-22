@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
-import * as os from "os";
+import vscode from "vscode";
+import os from "os";
 import { ProjRun } from "./testRunHandler";
 import { QueueItem } from "../extension";
 import { ProjectSettings } from "../config/settings";
@@ -96,9 +96,12 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
 
 
 export function getPipedScenarioNamesRegex(selectedScenarios: QueueItem[], friendly: boolean) {
+
+  const shell = os.platform() === "win32" ? "powershell" : "posix";
+
   const scenarioNames: string[] = [];
   selectedScenarios.forEach(x => {
-    scenarioNames.push(getScenarioNameRegEx(x.scenario.scenarioName, x.scenario.isOutline, friendly));
+    scenarioNames.push(getScenarioNameRegEx(x.scenario.scenarioName, x.scenario.isOutline, friendly, shell));
   });
   // sort the scenario names for consistency (testability)
   scenarioNames.sort((a, b) => a.localeCompare(b));
@@ -107,22 +110,36 @@ export function getPipedScenarioNamesRegex(selectedScenarios: QueueItem[], frien
 }
 
 
-function getScenarioNameRegEx(scenarioName: string, isOutline: boolean, friendly: boolean) {
+function getScenarioNameRegEx(scenarioName: string, isOutline: boolean, friendly: boolean, shell: string) {
+
+  const PS = shell === "powershell";
 
   // double-escape backslashes
-  scenarioName = scenarioName.replace(/\\/g, friendly ? '\\\\\\\\' : "\\\\");
+  scenarioName = scenarioName.replace(/\\/g, friendly && !PS ? '\\\\\\\\' : "\\\\");
+
   // double-escape $ to stop expansion inside quotes
-  scenarioName = scenarioName.replace(/\$/g, friendly ? '\\\\$' : "\\$");
-  // escape double quotes and regex special characters
-  scenarioName = scenarioName.replace(/["`!.*+?^{}()|[\]]/g, '\\$&');
+  scenarioName = scenarioName.replace(/\$/g, friendly && !PS ? '\\\\$' : "\\$");
+
+  // escape regex special characters
+  scenarioName = scenarioName.replace(/[!.*+?^{}()|[\]]/g, '\\$&');
+
+  // escape double quotes and backticks
+  if (friendly && PS) {
+    scenarioName = scenarioName.replace(/`/g, '``');
+    scenarioName = scenarioName.replace(/"/g, '`\\`"');
+  }
+  else {
+    scenarioName = scenarioName.replace(/["`]/g, '\\$&');
+  }
 
   // scenario outline with a <param> in its name
   if (isOutline && scenarioName.includes("<"))
     scenarioName = scenarioName.replace(/<.*>/g, ".*");
 
   // complete the regex
-  const term = friendly ? "\\$" : "$";
+  const term = !friendly ? "$" : PS ? "`$" : "\\$";
   scenarioName = "^" + scenarioName + (isOutline ? " -- @" : term);
+
   return scenarioName;
 }
 

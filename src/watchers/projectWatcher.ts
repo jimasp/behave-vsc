@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { services } from "../common/services";
 import { xRayLog, LogType } from '../common/logger';
 import { TestData } from '../parsers/testFile';
@@ -64,9 +64,9 @@ class FolderWatcher {
     // features/steps folders, not the entire project)
 
     watcherEvents.push(vscode.workspace.onDidDeleteFiles(async (e) => {
-      const fullPath = vscode.Uri.joinPath(ps.uri, projRelPath);
+      const fullPathUri = vscode.Uri.joinPath(ps.uri, projRelPath);
       e.files.forEach(async (file) => {
-        if (urisMatch(file, fullPath)) {
+        if (urisMatch(file, fullPathUri)) {
           featuresOrStepsFolderRenamedHandler();
           return;
         }

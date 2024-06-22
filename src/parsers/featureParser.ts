@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { ProjectSettings } from "../config/settings";
 import { uriId, sepr, basename, getLines, getParentProjectUri } from '../common/helpers';
 import { xRayLog } from '../common/logger';

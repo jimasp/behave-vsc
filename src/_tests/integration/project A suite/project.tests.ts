@@ -1,7 +1,7 @@
 import { TestProjectRunner } from "../_common/projectRunner";
 import { noRunOptions } from "../_common/types";
 import { behaveIni, expectations, wsConfig } from "./config";
-import { selections } from "./selections";
+import { selectionList } from "./selections";
 
 
 
@@ -21,8 +21,8 @@ suite(`higher steps folder suite: project.tests`, () => {
   test("runSubsetOfScenariosForEachFeature", async () =>
     await testProjectRunner.runSubsetOfScenariosForEachFeature(wsConfig, behaveIni, noRunOptions, expectations, true));
 
-  // selection sets are currently only tested here (so don't delete this)
+  // selection sets are currently ONLY tested in Project A (so don't delete this test!)
   test("runSelectionSets", async () =>
-    await testProjectRunner.runSelectionSets(wsConfig, behaveIni, expectations, selections));
+    await testProjectRunner.runSelectionSets(wsConfig, behaveIni, expectations, selectionList));
 });
 

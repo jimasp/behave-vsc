@@ -1,6 +1,6 @@
-import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig"
-import { Expectations, RunOptions, TestBehaveIni } from "../_common/types"
-import { getExpectedCounts } from "./expectedResults"
+import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig.js"
+import { Expectations, RunOptions, TestBehaveIni } from "../_common/types.js"
+import { getExpectedCounts } from "./expectedResults.js"
 
 
 

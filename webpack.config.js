@@ -56,6 +56,10 @@ const extensionConfig = {
     ],
   },
 
+  stats: {
+    errorDetails: true
+  }
+
 };
 
 module.exports = [extensionConfig];

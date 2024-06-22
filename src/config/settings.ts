@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+import vscode from 'vscode';
+import fs from 'fs';
+import path from 'path';
 import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
@@ -251,7 +251,7 @@ function getValidUserRunProfiles(projUri: vscode.Uri, behaveWorkingDirUri: vscod
             `"customRunner.scriptFile" cannot contain a path, only a filename.`, projUri);
           continue;
         }
-        const fullPath = path.join(behaveWorkingDirUri.fsPath, script);
+        const fullPath = vscode.Uri.joinPath(behaveWorkingDirUri, script).fsPath;
         if (!pathExistsSync(fullPath)) {
           services.logger.logWarning(`Invalid runProfiles setting "${profile.name}" ignored: ` +
             `"customRunner.scriptFile" path "${fullPath}" does not exist.`, projUri);
@@ -335,6 +335,7 @@ async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
   }
 
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
+  console.log(projRelFeatureFolders);
 
   const stepsFolder = path.posix.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
   const projRelStepsFolders = getStepLibraryStepPaths(ps);

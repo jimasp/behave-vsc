@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import vscode from 'vscode';
 import { parseFeatureContent } from './featureParser';
 import { uriId, isFeatureFile } from '../common/helpers';
 import { ProjectSettings } from "../config/settings";

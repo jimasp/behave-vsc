@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
+import vscode from 'vscode';
+import fs from 'fs';
 import { performance } from 'perf_hooks';
 import { services } from "../common/services";
 import { ProjectSettings } from "../config/settings";

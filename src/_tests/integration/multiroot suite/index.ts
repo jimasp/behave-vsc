@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import vscode from "vscode";
 import { runner } from "../../runner";
 import { testGlobals } from "../_common/types";
 

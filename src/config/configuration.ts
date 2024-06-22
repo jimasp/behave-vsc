@@ -1,5 +1,5 @@
-import * as os from 'os';
-import * as vscode from 'vscode';
+import os from 'os';
+import vscode from 'vscode';
 import { uriId } from '../common/helpers';
 import { ProjectSettings, InstanceSettings } from './settings';
 import { services } from '../common/services';
