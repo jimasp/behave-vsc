@@ -1,4 +1,4 @@
-import * as os from "os";
+import os from "os";
 import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
 import { services } from "../common/services";
 import { cleanBehaveText, WIN_CMD_INTRO } from '../common/helpers';
