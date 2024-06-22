@@ -47,7 +47,7 @@ export class JunitWatcher {
     if (services.config.isIntegrationTestRun) {
       xRayLog("Integration test run complete.\n");
       xRayLog('NOTE: if next line says "canceled" (sic) or "Channel has been closed" AND you did not stop the run, then check for ' +
-        'any previous errors that stopped the run early.')
+        'any previous errors that stopped the run early. NOTE that any such error might not be from this extension.')
     }
   }
 
