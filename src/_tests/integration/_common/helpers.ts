@@ -91,11 +91,11 @@ function cleanUp(consoleName: string, workDirUri: vscode.Uri, exitHandler: () =>
 	const paths = getBehaveIniFsPaths(workDirUri);
 	if (fs.existsSync(paths.behaveIniFsPath)) {
 		fs.unlinkSync(paths.behaveIniFsPath);
-		console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniFsPath}"`);
+		// console.log(`${consoleName}: restoreBehaveIni removed "${paths.behaveIniFsPath}"`);
 	}
 	if (fs.existsSync(paths.behaveIniBakFsPath)) {
 		fs.copyFileSync(paths.behaveIniBakFsPath, paths.behaveIniFsPath);
-		console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakFsPath}" to ${paths.behaveIniFsPath}`);
+		// console.log(`${consoleName}: restoreBehaveIni copied "${paths.behaveIniBakFsPath}" to ${paths.behaveIniFsPath}`);
 		return;
 	}
 
