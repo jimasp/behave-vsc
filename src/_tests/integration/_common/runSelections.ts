@@ -12,6 +12,7 @@ import { Expectations, TestBehaveIni, TestResult } from "./types";
 import { assertExpectedResults, assertLogExists, standardisePath } from "./assertions";
 import { IntegrationTestAPI } from '../../../extension';
 import { logStore } from '../../runner';
+import { Shell } from '../../../config/settings';
 
 
 
@@ -53,7 +54,9 @@ export async function runSelections(projName: string, testExtConfig: TestWorkspa
 
 
     const selections = selectionList.map(x => {
-      const scenRegEx = os.platform() === "win32" ? x.expectedScenarioRegExPwrShl : x.expectedScenarioRegExPosix;
+      const scenRegEx = services.config.instanceSettings.shell === Shell.powershell
+        ? x.expectedScenarioRegExPwrShl
+        : x.expectedScenarioRegExPosix;
       return new Selection(x.title, x.selection, x.expectedFeatureRegEx, scenRegEx);
     });
 

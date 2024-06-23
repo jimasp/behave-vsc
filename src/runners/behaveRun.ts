@@ -1,9 +1,9 @@
-import os from "os";
 import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
 import { services } from "../common/services";
-import { cleanBehaveText, WIN_CMD_INTRO } from '../common/helpers';
+import { cleanBehaveText, PWRSHELL_CMD_INTRO } from '../common/helpers';
 import { xRayLog } from '../common/logger';
 import { ProjRun } from './testRunHandler';
+import { Shell } from "../config/settings";
 
 
 
@@ -31,8 +31,8 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
     // so that we can test the generated friendlyCmd will execute correctly when run manually by the user
     if (services.config.isIntegrationTestRun && pr.projSettings.integrationTestRunUseCpExec) {
       xRayLog("--- integration test running in exec mode ---");
-      if (os.platform() === "win32") {
-        const cmdWithoutIntro = friendlyCmd.replace(WIN_CMD_INTRO, "");
+      if (services.config.instanceSettings.shell === Shell.powershell) {
+        const cmdWithoutIntro = friendlyCmd.replace(PWRSHELL_CMD_INTRO, "");
         cp = exec(cmdWithoutIntro, { shell: 'powershell.exe' });
       }
       else {

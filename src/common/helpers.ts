@@ -14,8 +14,8 @@ const vwfs = vscode.workspace.fs;
 export type TestCounts = { nodeCount: number, testCount: number };
 
 export const WIN_MAX_PATH = 259; // 256 + 3 for "C:\", see https://superuser.com/a/1620952
-export const WIN_MAX_CMD = 8191; // 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
-export const WIN_CMD_INTRO = "powershell commands:\n";
+export const WIN_CMD_MAX_LEN = 8191; // (cmd, not powershell) 8192 - 1, see https://docs.microsoft.com/en-us/windows/win32/procthread/command-line-limitation
+export const PWRSHELL_CMD_INTRO = "powershell commands:\n";
 export const THIN_SPACE = "\u200A"; // hair space
 export const HAIR_SPACE = "\u2009"; // thin space
 

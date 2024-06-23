@@ -1,6 +1,7 @@
-import vscode from 'vscode';
+import os from 'os';
 import fs from 'fs';
 import path from 'path';
+import vscode from 'vscode';
 import {
   getWorkspaceFolder,
   normaliseUserSuppliedRelativePath,
@@ -27,6 +28,7 @@ export class InstanceSettings {
   // (in a multi-root workspace they will be read from *.code-workspace, and greyed-out and disabled in settings.json)
   public readonly runMultiRootProjectsInParallel: boolean;
   public readonly xRay: boolean;
+  public readonly shell: Shell;
 
   constructor(wsConfig: vscode.WorkspaceConfiguration) {
     xRayLog("constructing InstanceSettings");
@@ -45,6 +47,9 @@ export class InstanceSettings {
       throw new Error("xRay is undefined");
     this.xRay = xRayCfg;
 
+    // hardcoded, just leaves open the possibility of supporting user-choice of shell in future 
+    // (but that would need extra tests)
+    this.shell = os.platform() === "win32" ? Shell.powershell : Shell.posix;
   }
 }
 
@@ -554,3 +559,8 @@ export class RunProfile implements IRunProfile {
 }
 
 export type RunProfilesSetting = IRunProfile[];
+
+export enum Shell {
+  "posix",
+  "powershell"
+}

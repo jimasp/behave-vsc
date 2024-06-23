@@ -1,9 +1,9 @@
 import vscode from "vscode";
-import os from "os";
 import { ProjRun } from "./testRunHandler";
 import { QueueItem } from "../extension";
-import { ProjectSettings } from "../config/settings";
-import { WIN_CMD_INTRO } from "../common/helpers";
+import { ProjectSettings, Shell } from "../config/settings";
+import { PWRSHELL_CMD_INTRO as PWRSHELL_CMD_INTRO } from "../common/helpers";
+import { services } from "../common/services";
 
 
 
@@ -97,11 +97,9 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
 
 export function getPipedScenarioNamesRegex(selectedScenarios: QueueItem[], friendly: boolean) {
 
-  const shell = os.platform() === "win32" ? "powershell" : "posix";
-
   const scenarioNames: string[] = [];
   selectedScenarios.forEach(x => {
-    scenarioNames.push(getScenarioNameRegEx(x.scenario.scenarioName, x.scenario.isOutline, friendly, shell));
+    scenarioNames.push(getScenarioNameRegEx(x.scenario.scenarioName, x.scenario.isOutline, friendly));
   });
   // sort the scenario names for consistency (testability)
   scenarioNames.sort((a, b) => a.localeCompare(b));
@@ -110,9 +108,9 @@ export function getPipedScenarioNamesRegex(selectedScenarios: QueueItem[], frien
 }
 
 
-function getScenarioNameRegEx(scenarioName: string, isOutline: boolean, friendly: boolean, shell: string) {
+function getScenarioNameRegEx(scenarioName: string, isOutline: boolean, friendly: boolean) {
 
-  const PS = shell === "powershell";
+  const PS = services.config.instanceSettings.shell === Shell.powershell;
 
   // double-escape backslashes
   scenarioName = scenarioName.replace(/\\/g, friendly && !PS ? '\\\\\\\\' : "\\\\");
@@ -148,12 +146,12 @@ export function getFriendlyEnvVars(pr: ProjRun) {
 
   let envVarString = "";
   for (const [name, value] of Object.entries(pr.env)) {
-    envVarString += os.platform() === "win32" ?
+    envVarString += services.config.instanceSettings.shell === Shell.powershell ?
       typeof value === "number" ? `$Env:${name}=${value}\n` : `$Env:${`${name}="${value.replaceAll('"', '""')}"`}\n` :
       typeof value === "number" ? `${name}=${value} ` : `${name}="${value.replaceAll('"', '\\"')}" `;
   }
 
-  if (envVarString !== "" && os.platform() !== "win32")
+  if (envVarString !== "" && services.config.instanceSettings.shell === Shell.posix)
     envVarString = "env " + envVarString;
 
   return envVarString;
@@ -162,8 +160,8 @@ export function getFriendlyEnvVars(pr: ProjRun) {
 
 export function getPSCmdModifyIfWindows(): { ps1: string, ps2: string } {
   let ps1 = "", ps2 = "";
-  if (os.platform() === "win32") {
-    ps1 = WIN_CMD_INTRO;
+  if (services.config.instanceSettings.shell === Shell.powershell) {
+    ps1 = PWRSHELL_CMD_INTRO;
     ps2 = "& ";
   }
   return { ps1, ps2 };
