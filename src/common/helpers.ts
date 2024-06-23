@@ -234,8 +234,7 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
   // if the file path does not contain "/steps/" and we got this far, 
   // then check if it's a file inside an importedSteps (step library) folder
-  const projSettings = await getProjectSettingsForFile(fileUri);
-  return isImportedStepFile(projSettings, fileUri);
+  return isImportedStepFile(ps, fileUri);
 }
 
 
@@ -245,7 +244,7 @@ const isImportedStepFile = (ps: ProjectSettings, fileUri: vscode.Uri): boolean =
   let stepLibMatch: StepImport | undefined;
   let currentMatchLen = 0, lenPath = 0;
 
-  const relPath = path.relative(ps.uri.fsPath, fileUri.fsPath);
+  const relPath = path.posix.relative(ps.uri.path, fileUri.path);
 
   // check if filePath is inside a matching folder
   for (const stepLib of ps.importedSteps) {

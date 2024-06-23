@@ -193,7 +193,7 @@ feature file formatting is provided by:
 
 ---
 
-## Troubleshooting
+## Troubleshooting development
 
 - See troubleshooting section in the main [README](README.md#troubleshooting) for non-development issues.  
 - ***Most extension development problems can be resolved by:***
@@ -208,15 +208,16 @@ feature file formatting is provided by:
   - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
   - Have you made any changes yourself? Does e.g. a fresh clone work without your changes?
   - If extension integration tests get stuck while they are running a debug behave test run, remember to also disable all breakpoints in the *host* vscode environment.
+  - Rebuild: Delete (terminate) the "watch" terminal window(s) and then afterwards restart the build/watch with e.g. `Ctrl+Shift+B`. This should delete the `out` and `dist` folders and rebuild.
 - Debugging:
-  - If you can't see the value of a variable, try setting `minimize: false`, delete the "watch" terminal window(s) and then afterwards restart it with `Ctrl+Shift+B`, if that doesn't work then manually delete the `out` and `dist` folders and repeat.
+  - If you can't see the value of a variable when debugging, you may need to perform a rebuild.
   - If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
   - If an exception is not bubbling, see [Exception handling](#exception-handling).
   - If you get an error running a "Debug: ..." target, try setting a breakpoint at the start of the `activate()` function.
   - If you get an error running a "Integration Tests: ..." target, try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
   - If you don't hit either above two function breakpoints, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
   - Delete all breakpoints from both source *and* host environments if *any* of the following occur:
-    - If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case delete the "watch" terminal window(s) and then afterwards restart it with `Ctrl+Shift+B` - this will run `rimraf out/ dist/`).
+    - If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case do a rebuild).
     - If `npm run test` fails on the command line due to a timeout.
     - If a "Integration Tests: ..." test fails during debugging due to a timeout.
   - It's rare (i.e. it's normally one of the above issues, not this) but there are a few lines that you can never set a breakpoint on, e.g. something like `await mypromises`. If this happens, then when you start debugging you will see vscode move the breakpoint to the next line that it can break on.
