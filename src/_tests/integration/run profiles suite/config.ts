@@ -165,7 +165,7 @@ export const wsConfig = new TestWorkspaceConfig({
       },
       "args": {
         "list": [
-          "--tags=tag1,@tag2"
+          "--tags=tag1,tag2"
         ],
       },
     },

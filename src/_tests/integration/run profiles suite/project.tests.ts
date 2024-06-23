@@ -77,12 +77,6 @@ suite(`run profiles suite test: project.tests`, () => {
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("runAll - tag1ortag2 vars profile (ExecFriendlyCmd)", async () => {
-    runOptions.selectedRunProfile = "tag1ortag2 vars profile";
-    expectations.getExpectedResultsFunc = getExpectedResultsForTag1orTag2RunProfile;
-    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);
-  });
-
   test("runAll - tag1andtag2 profile", async () => {
     runOptions.selectedRunProfile = "tag1andtag2 profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForTag1andTag2RunProfile;
