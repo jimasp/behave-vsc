@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import vscode from 'vscode';
-import path from 'path';
 import fs from 'fs';
 import assert from 'assert';
 import { performance } from 'perf_hooks';
@@ -12,7 +11,6 @@ import { getFriendlyEnvVars, getOptimisedFeaturePathsRegEx, getPipedScenarioName
 import { ProjRun } from '../../../runners/testRunHandler';
 
 export const JS_OUTPUT_DIR = "/out/";
-export const JS_OUTPUT_TESTS_DIR = "/out/_tests/";
 
 
 let lockVal = "";
@@ -236,17 +234,13 @@ export function getRunProfile(projUri: vscode.Uri, testExtConfig: TestWorkspaceC
 }
 
 
-export function getExampleProjectFolderAbsPath(exampleProjectFolderName: string): string {
-	const absPath = path.posix.join(__dirname, "../../example-projects", exampleProjectFolderName)
-		.replace(JS_OUTPUT_TESTS_DIR, "/");
-	return absPath;
-}
-
 
 export function getExampleProjectFolderUri(exampleProjectFolderName: string) {
-	const absPath = getExampleProjectFolderAbsPath(exampleProjectFolderName);
-	const uri = vscode.Uri.file(absPath);
-	return uri;
+	const thisUri = vscode.Uri.file(__dirname);
+	const exampleProjectFoldersUri = vscode.Uri.joinPath(thisUri, "../../../../example-projects");
+	const exampleProjectFolderUri = vscode.Uri.joinPath(exampleProjectFoldersUri, exampleProjectFolderName);
+	assert(fs.existsSync(exampleProjectFolderUri.fsPath));
+	return exampleProjectFolderUri;
 }
 
 

@@ -1,15 +1,17 @@
-import path = require("path");
+import path from 'path';
+import vscode from 'vscode';
 import { Expectations, TestBehaveIni } from "../_common/types";
 import { TestWorkspaceConfig } from "../_common/testWorkspaceConfig";
 import { getExpectedCountsWithoutBehaveIni, getExpectedResultsWithoutBehaveIni } from "./expectedResultsWithoutBehaveIni";
 import { getExpectedCountsWith2PathBehaveIni, getExpectedResultsWith2PathBehaveIni } from "./expectedResultsWith2PathBehaveIni.js"
 import { getExpectedCountsWith3PathBehaveIni, getExpectedResultsWith3PathBehaveIni } from "./expectedResultsWith3PathBehaveIni";
-import { getExampleProjectFolderAbsPath } from "../_common/helpers";
+import { getExampleProjectFolderUri } from "../_common/helpers";
 
 
-const absPathProjRoot = getExampleProjectFolderAbsPath("working dir");
-const absPathWorkRoot = path.posix.join(absPathProjRoot, "working folder");
-const absPathFeatures = path.posix.join(absPathWorkRoot, "features");
+const projUri = getExampleProjectFolderUri("working dir");
+const absPathProj = getExampleProjectFolderUri("working dir").fsPath;
+const absPathWorkRoot = vscode.Uri.joinPath(projUri, "working folder").fsPath;
+const absPathFeatures = path.join(absPathWorkRoot, "features");
 
 
 export const wsConfig = new TestWorkspaceConfig({
@@ -39,7 +41,7 @@ export const expectationsWith2RelPathsBehaveIni: Expectations = {
   expectedRawBehaveConfigPaths: ["features", "."],
   expectedProjRelativeBehaveWorkingDirPath: "working folder",
   expectedBaseDirPath: "features",
-  expectedProjRelativeFeatureFolders: ["working folder"], // 1 folder due to getOptimisedFeaturePaths (one path is the parent of the other)
+  expectedProjRelativeFeatureFolders: ["working folder"], // 1 folder due to getOptimisedFeatureParsingPaths (one path is the parent of the other)
   expectedProjRelativeStepsFolders: ["working folder/features/steps"],
   getExpectedCountsFunc: getExpectedCountsWith2PathBehaveIni,
   getExpectedResultsFunc: getExpectedResultsWith2PathBehaveIni,
@@ -53,7 +55,7 @@ export const expectationsWith3RelPathsBehaveIni: Expectations = {
   expectedRawBehaveConfigPaths: ["features", ".", ".."],
   expectedProjRelativeBehaveWorkingDirPath: "working folder",
   expectedBaseDirPath: "features",
-  expectedProjRelativeFeatureFolders: ["", "working folder"], // 2 folders due to getOptimisedFeaturePaths
+  expectedProjRelativeFeatureFolders: ["", "working folder"], // 2 folders due to getOptimisedFeatureParsingPaths
   expectedProjRelativeStepsFolders: ["working folder/features/steps"],
   getExpectedCountsFunc: getExpectedCountsWith3PathBehaveIni,
   getExpectedResultsFunc: getExpectedResultsWith3PathBehaveIni,
@@ -61,14 +63,14 @@ export const expectationsWith3RelPathsBehaveIni: Expectations = {
 
 
 export const behaveIniWith3AbsPathsSetting: TestBehaveIni = {
-  content: `[behave]\npaths=${absPathFeatures}\n\t${absPathWorkRoot}\n\t${absPathProjRoot}`
+  content: `[behave]\npaths=${absPathFeatures}\n\t${absPathWorkRoot}\n\t${absPathProj}`
 }
 
 export const expectationsWith3AbsPathsBehaveIni: Expectations = {
-  expectedRawBehaveConfigPaths: [absPathFeatures, absPathWorkRoot, absPathProjRoot],
+  expectedRawBehaveConfigPaths: [absPathFeatures, absPathWorkRoot, absPathProj],
   expectedProjRelativeBehaveWorkingDirPath: "working folder",
   expectedBaseDirPath: "features",
-  expectedProjRelativeFeatureFolders: ["", "working folder"], // 2 folders due to getOptimisedFeaturePaths
+  expectedProjRelativeFeatureFolders: ["", "working folder"], // 2 folders due to getOptimisedFeatureParsingPaths
   expectedProjRelativeStepsFolders: ["working folder/features/steps"],
   getExpectedCountsFunc: getExpectedCountsWith3PathBehaveIni,
   getExpectedResultsFunc: getExpectedResultsWith3PathBehaveIni,

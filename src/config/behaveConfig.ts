@@ -33,20 +33,20 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
       biniPath = path.dirname(biniPath);
 
     // first, convert any absolute paths to relative paths
-    let behaveWrkRelPath = path.isAbsolute(biniPath) ? path.relative(ps.behaveWorkingDirUri.fsPath, biniPath) : biniPath;
+    let pathRelToBehaveWrkDirPath = path.isAbsolute(biniPath) ? path.relative(ps.behaveWorkingDirUri.fsPath, biniPath) : biniPath;
 
-    const projectRelPath = path.posix.join(ps.projRelativeBehaveWorkingDirPath, behaveWrkRelPath);
+    const projectRelPath = path.join(ps.projRelativeBehaveWorkingDirPath, pathRelToBehaveWrkDirPath);
     if (projectRelPath.startsWith("..") || path.isAbsolute(projectRelPath)) {
       services.logger.logWarning(`Ignoring path "${biniPath}" in config file ${matchedConfigFile} because it is outside the project.`, ps.uri);
       continue;
     }
 
     // use "" for consistency with behaviour elsewhere (i.e. path.relative() and path.replace())
-    if (behaveWrkRelPath === "." || behaveWrkRelPath === "./")
-      behaveWrkRelPath = "";
+    if (pathRelToBehaveWrkDirPath === "." || pathRelToBehaveWrkDirPath === "./")
+      pathRelToBehaveWrkDirPath = "";
 
     // check path exists
-    const fsPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, behaveWrkRelPath).fsPath;
+    const fsPath = vscode.Uri.joinPath(ps.behaveWorkingDirUri, pathRelToBehaveWrkDirPath).fsPath;
     if (!fs.existsSync(fsPath)) {
       services.logger.logWarning(`Ignoring invalid path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
     }
@@ -55,7 +55,7 @@ export function getBehaveConfigPaths(ps: ProjectSettings): BehaveConfigPaths {
         services.logger.logWarning(`Ignoring non-directory path "${biniPath}" in config file ${matchedConfigFile}.`, ps.uri);
         continue;
       }
-      relPaths.push(behaveWrkRelPath);
+      relPaths.push(pathRelToBehaveWrkDirPath);
     }
   }
 
@@ -142,19 +142,21 @@ function getBehavePathsFromIniContents(iniFileContents: string): string[] | null
   // paths  =features
   //
 
-  const normalisePath = (p: string) => {
-    if (p.startsWith("./"))
-      return p.slice(2);
-    return p.replaceAll("/./", "/");
+  const normalisePath = (path: string) => {
+    if (path.startsWith("./") || path.startsWith(".\\"))
+      return path.slice(2);
+    path = path.replaceAll("/./", "/").replaceAll("\\.\\", "\\");
+    return path;
   }
 
+  iniFileContents = iniFileContents.replaceAll("\r", "");
   const lines = iniFileContents.split('\n');
   let currentSection = '';
   let paths: string[] | null = null;
 
   for (let line of lines) {
     line = line.trim();
-    if (line.startsWith('#') || line.startsWith(';'))
+    if (!line || line.startsWith('#') || line.startsWith(';'))
       continue;
 
     if (line.startsWith('[') && line.endsWith(']')) {

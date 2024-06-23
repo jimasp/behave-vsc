@@ -340,7 +340,6 @@ async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
   }
 
   const projRelFeatureFolders = await getProjectRelativeFeatureFolders(ps, projRelBehaveConfigPaths);
-  console.log(projRelFeatureFolders);
 
   const stepsFolder = path.posix.join(ps.projRelativeBehaveWorkingDirPath, baseDirPath, "steps");
   const projRelStepsFolders = getStepLibraryStepPaths(ps);
