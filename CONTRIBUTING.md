@@ -52,15 +52,17 @@
     - `.venv/Scripts/activate`
     - `pip install -r requirements.txt`
     - if you are on Windows, you will need to either set the python interpreter path manually for the `use custom runner` project, or update `example-projects\use custom runner\settings.json` to `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"`
-10. Install behave 1.2.6 globally (most example projects do not have a venv):
+10. Install pytest (any version) globally
+    - `pip install pytest`
+11. Install behave 1.2.6 globally (most example projects do not have a venv):
     - Change to the root directory: `cd /` (or `cd \` on Windows)
     - `pip install behave==1.2.6`
     - Ensure that this global command works from the root directory: `"python" -m behave --version` (include the quotes)
-11. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
+12. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
     - `cd <mysourcedir>/behave-vsc`
     - `npm run test`
     - If any of the tests fail, double-check the steps above and look for red text in the output starting from the top and working down. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
-12. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
+13. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 
 ---
 
