@@ -42,7 +42,9 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	}
 
 	const start = performance.now()
-	for (let i = 0; i < 300; i++) { // (generous for the sake of debugging)
+	// (generous timeout on lock for the sake of debugging and also multiroot test runs can mean be slow on low-spec PCs 
+	// and other projects may grab the lock meaning one unlucky project may get stuck waiting a while)
+	for (let i = 0; i < 500; i++) {
 		if (!lockVal)
 			break;
 		console.log(`${consoleName}: setLock waiting for ${lockVal} to release lock`);
@@ -51,7 +53,7 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	const waited = performance.now() - start;
 
 	if (lockVal) {
-		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for all projects to initialise`);
+		throw new Error(`${consoleName}: setLock timed out after ${waited} waiting for lock`);
 	}
 	else if (acquireOrRelease === ACQUIRE) {
 		lockVal = consoleName;
