@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import vscode from 'vscode';
 import fs from 'fs';
+import path from 'path';
 import assert from 'assert';
 import { performance } from 'perf_hooks';
 import { IntegrationTestAPI, QueueItem } from '../../../extension';
@@ -185,7 +186,8 @@ export function buildExpectedFriendlyCmdOrderedIncludes(projUri: vscode.Uri,
 
 	const envVarsString = getExpectedEnvVarsString(projUri, testExtConfig, runOptions);
 	const argsString = getExpectedArgsString(projUri, testExtConfig, runOptions);
-	const workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
+	let workingFolder = testExtConfig.get("behaveWorkingDirectory") as string;
+	workingFolder = workingFolder.replaceAll("/", path.sep);
 
 	let customRunner: CustomRunner | undefined = undefined;
 	if (runOptions.selectedRunProfile) {

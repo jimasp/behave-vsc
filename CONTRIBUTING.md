@@ -49,7 +49,9 @@
 9. Install dependencies for the `use custom runner` example project venv:
     - `cd "example-projects/use custom runner"`
     - `python -m venv .venv`
+    - `.venv/Scripts/activate`
     - `pip install -r requirements.txt`
+    - if you are on Windows, you will need to either set the python interpreter path manually for the `use custom runner` project, or update `example-projects\use custom runner\settings.json` to `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"`
 10. Install behave 1.2.6 globally (most example projects do not have a venv):
     - Change to the root directory: `cd /` (or `cd \` on Windows)
     - `pip install behave==1.2.6`
