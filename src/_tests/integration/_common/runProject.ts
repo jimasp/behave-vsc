@@ -27,10 +27,12 @@ import { QueueItem } from '../../../extension';
 // ALSO: provides additional assertions about stepnavigation objects, project settings, etc. that are not included in other runners.
 //
 // NOTE THAT:
-// 1. if runMultiRootProjectsInParallel=true (i.e called from from "multiroot suite") then 
+// if runMultiRootProjectsInParallel=true (i.e called from from "multiroot suite") then 
 // this function becomes re-entrant to run projects in parallel.
-// 2. if runParallel=true, then this function will run every feature in its own behave 
-// instance in parallel, otherwise it will run all features in one behave instance.
+//
+// Because this function is re-entrant, locks are used to ensure that parsing is only happening 
+// for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
+// (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
 //
 // When runMultiRootProjectsInParallel=true and this function is called from multiroot 
 // suite, this simulates a user quickly clicking the test explorer run button on each 
@@ -38,13 +40,10 @@ import { QueueItem } from '../../../extension';
 // then another and then another, (i.e. staggered) - they do not have to wait for the first to complete. 
 // (More likely they will just click run all, but testing staggered will be enough to cover both options anyway.)
 //
-// When the file multiroot suite/index.ts is run (which will test staggered/parallel project runs) this
-// function will run in parallel with ITSELF (but as per the promises in that file, only one at a time for 
+// When the file multiroot suite/index.ts is run (which will test staggered project runs) this
+// function will run in parallel with ITSELF (but as per the promises in index.ts, only one at a time for 
 // a given project: so for example projects A/B/Simple can run in parallel, but not e.g. A/A).
 //
-// Because this function is re-entrant, locks are used to ensure that parsing is only happening 
-// for one project at a time, as reloading configuration causes the extension to kick off reparses for all projects. 
-// (Under normal (non-test) running, you can't kick off a behave test run while reparsing is in progress.)
 export async function runProject(projName: string, isDebugRun: boolean, testExtConfig: TestWorkspaceConfig, behaveIni: TestBehaveIni,
   runOptions: RunOptions, expectations: Expectations, execFriendlyCmd = false, checkFriendlyCmdLogs = true): Promise<void> {
 

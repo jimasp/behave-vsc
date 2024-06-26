@@ -42,8 +42,9 @@ export async function setLock(consoleName: string, acquireOrRelease: string) {
 	}
 
 	const start = performance.now()
-	// (generous timeout on lock for the sake of debugging and also multiroot test runs can mean be slow on low-spec PCs 
-	// and other projects may grab the lock meaning one unlucky project may get stuck waiting a while)
+	// generous timeout on lock for the sake of debugging, also multiroot test runs can be
+	// slow on low-spec PCs or runners, and one unlucky project may get stuck 
+	// waiting on a lock while others grab the lock before it
 	for (let i = 0; i < 500; i++) {
 		if (!lockVal)
 			break;
