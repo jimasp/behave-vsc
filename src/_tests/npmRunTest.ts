@@ -28,6 +28,7 @@ async function npmRunTest() {
     const [cliPath, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath);
     const result = cp.spawnSync(cliPath, [...args, "--install-extension", "ms-python.python"], {
       encoding: 'utf-8',
+      shell: true,
       stdio: 'inherit',
     });
     if (result.error)
@@ -47,6 +48,8 @@ async function npmRunTest() {
 
 
     // 2. start the multiroot project and run each multi.test.ts file
+    const pathx = path.resolve(__dirname, './integration/multiroot suite/index');
+    console.log(pathx);
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
