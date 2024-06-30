@@ -43,18 +43,16 @@ async function npmRunTest() {
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath: path.resolve(__dirname, './unit/index'),
-      launchArgs: ["unit tests (no workspace)"]
+      launchArgs: [`"unit tests (no workspace)"`]
     });
 
 
     // 2. start the multiroot project and run each multi.test.ts file
-    const pathx = path.resolve(__dirname, './integration/multiroot suite/index');
-    console.log(pathx);
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
-      extensionTestsPath: path.resolve(__dirname, './integration/multiroot suite/index'),
-      launchArgs: ["example-projects/multiroot.code-workspace"]
+      extensionTestsPath: '"' + path.resolve(__dirname, './integration/multiroot suite/index') + '"',
+      launchArgs: [`"example-projects/multiroot.code-workspace"`]
     });
 
 
@@ -68,11 +66,11 @@ async function npmRunTest() {
         continue;
       }
       const projFolderName = folder.replace(" suite", "");
-      const projectLaunchArgs = [`example-projects/${projFolderName}`];
+      const projectLaunchArgs = [`"example-projects/${projFolderName}"`];
       await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath,
-        extensionTestsPath: projectTests,
+        extensionTestsPath: '"' + projectTests + '"',
         launchArgs: projectLaunchArgs
       });
     }
