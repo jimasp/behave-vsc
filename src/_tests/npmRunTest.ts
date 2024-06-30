@@ -1,12 +1,16 @@
 import cp from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import {
   downloadAndUnzipVSCode,
   resolveCliArgsFromVSCodeExecutablePath,
   runTests
 } from '@vscode/test-electron';
 
+
+
+npmRunTest();
 
 
 // this code handles `npm run test` or `npm run testinsiders`
@@ -35,15 +39,27 @@ async function npmRunTest() {
       throw result.error;
 
 
+
+
+
     console.log("starting test run...");
 
+
+    // replace platform-specific settings
+    const exampleProjectsFolderPath = path.resolve(__dirname, '../../example-projects');
+    const exampleProjectFolders = await fs.promises.readdir(exampleProjectsFolderPath);
+
+    for (const projFolder of exampleProjectFolders) {
+      const projFolderPath = path.join(exampleProjectsFolderPath, projFolder);
+      updateSettingsJsonForPlatform(projFolderPath);
+    }
 
     // 1. run unit tests
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath: path.resolve(__dirname, './unit/index'),
-      launchArgs: [`"unit tests (no workspace)"`]
+      launchArgs: ["unit tests (no workspace)"]
     });
 
 
@@ -52,7 +68,7 @@ async function npmRunTest() {
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath: '"' + path.resolve(__dirname, './integration/multiroot suite/index') + '"',
-      launchArgs: [`"example-projects/multiroot.code-workspace"`]
+      launchArgs: ["example-projects/multiroot.code-workspace"]
     });
 
 
@@ -67,6 +83,8 @@ async function npmRunTest() {
       }
       const projFolderName = folder.replace(" suite", "");
       const projectLaunchArgs = [`"example-projects/${projFolderName}"`];
+
+
       await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath,
@@ -84,4 +102,38 @@ async function npmRunTest() {
 }
 
 
-npmRunTest();
+function updateSettingsJsonForPlatform(projectPath: string) {
+
+  try {
+    // Read the settings.json file if there is one
+    const settingsPath = path.join(projectPath, ".vscode", "settings.json");
+    if (!fs.existsSync(settingsPath))
+      return;
+
+    const settings = fs.readFileSync(settingsPath, { encoding: "utf8" });
+    console.log(`parsing ${settingsPath}`)
+    const settingsJson = JSON.parse(settings);
+
+    if (!settingsJson["python.defaultInterpreterPath"] || !settingsJson["python.defaultInterpreterPath"].includes(".venv"))
+      return;
+
+    // Modify the python.defaultInterpreterPath attribute if there is one    
+    if (os.platform() === 'win32') {
+      settingsJson["python.defaultInterpreterPath"] = ".venv\\Scripts\\python.exe";
+    }
+    else {
+      settingsJson["python.defaultInterpreterPath"] = ".venv/bin/python";
+    }
+
+    console.log(`Updating ${settingsPath}`);
+    fs.writeFileSync(settingsPath, JSON.stringify(settingsJson, null, 2), { encoding: 'utf8' });
+    console.log(`Sucessfully updated ${settingsPath}`);
+
+  }
+  catch (error) {
+    throw new Error('Failed to update settings.json:' + error);
+  }
+
+}
+
+

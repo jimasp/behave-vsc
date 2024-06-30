@@ -448,7 +448,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
 - You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable:
 
     ```json
-    // settings.json
+    // settings.json snippet
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
     "behave-vsc.runProfiles": [
       {
@@ -463,13 +463,13 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           "list": [
             "--keepdb",
             "--tags=@django"            
-          ],           
+          ]    
         },
         "customRunner": {
             "scriptFile": "manage.py",
             "waitForJUnitFiles": true
         }
-      },
+      }
     ]
     ```
 

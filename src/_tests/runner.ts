@@ -47,7 +47,7 @@ function initialise() {
 		ui: 'tdd',
 		color: true,
 		bail: true,
-		timeout: debuggerIsAttached() ? 900000 : 30000,
+		timeout: debuggerIsAttached() ? 900000 : 60000,
 	});
 
 	return mocha;

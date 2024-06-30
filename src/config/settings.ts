@@ -494,6 +494,8 @@ export type RunProfileArgsSetting = {
 }
 
 export type StepImport = {
+  // key-value pair so that we can append the first part to projRelativeStepsFolders
+  // then use the second part for a regex match on a file event to check if its a match  
   relativePath: string;
   stepFilesRx: string;
 }

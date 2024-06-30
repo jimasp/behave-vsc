@@ -2,13 +2,13 @@
     "behave-vsc.xRay": true,
     "behave-vsc.env": {
         "var1": "ENV-var1",
-        "var3": "ENV-var3",
+        "var3": "ENV-var3"
     },
     "behave-vsc.args": [
         "-D",
         "foo=bar",
         "-D",
-        "fizz=buzz",
+        "fizz=buzz"
     ],
     "behave-vsc.runProfiles": [
         {
@@ -16,14 +16,14 @@
             "promptForTags": true,
             "env": {
                 "vars": {
-                    "profile": "prompt for tags",
+                    "profile": "prompt for tags"
                 }
             },
             "args": {
                 "list": [
                     "--tags=@another_tag"
                 ]
-            },
+            }
         },
         {
             "name": "qu'oted\"tag and qu'oted\"env profile",
@@ -38,14 +38,14 @@
                 "list": [
                     "--tags=@qu'oted\"tag"
                 ]
-            },
+            }
         },
         {
             "name": "inherit args and envs profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "inherit args and envs profile",
+                    "profile": "inherit args and envs profile"
                 }
             },
             "args": {
@@ -55,7 +55,7 @@
                     "-D",
                     "d2=val2"
                 ]
-            },
+            }
         },
         {
             "name": "do NOT inherit args and envs profile",
@@ -64,29 +64,29 @@
                 "inherit": false,
                 "vars": {
                     "profile": "do NOT inherit args and envs profile",
-                    "var1": "do NOT inherit",
+                    "var1": "do NOT inherit"
                 }
             },
             "args": {
                 "inherit": false,
                 "list": [
                     "-D",
-                    "do=NOT inherit",
+                    "do=NOT inherit"
                 ]
-            },
+            }
         },
         {
             "name": "no args profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "no args profile",
+                    "profile": "no args profile"
                 }
             },
             "args": {
                 "inherit": false,
                 "list": []
-            },
+            }
         },
         {
             "name": "stage2 profile",
@@ -96,20 +96,20 @@
                     "profile": "stage2 profile",
                     "BEHAVE_STAGE": "stage2"
                 }
-            },
+            }
         },
         {
             "name": "tag1 profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "tag1 profile",
+                    "profile": "tag1 profile"
                 }
             },
             "args": {
                 "list": [
                     "--tags=tag1"
-                ],
+                ]
             }
         },
         {
@@ -141,8 +141,8 @@
             "args": {
                 "list": [
                     "--tags=@tag2"
-                ],
-            },
+                ]
+            }
         },
         {
             "name": "tag1ortag2 vars profile",
@@ -157,56 +157,56 @@
             "args": {
                 "list": [
                     "--tags=tag1,tag2"
-                ],
-            },
+                ]
+            }
         },
         {
             "name": "tag1andtag2 profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "tag1andtag2 profile",
+                    "profile": "tag1andtag2 profile"
                 }
             },
             "args": {
                 "list": [
                     "--tags=tag1",
                     "--tags=tag2"
-                ],
-            },
+                ]
+            }
         },
         {
             "name": "tag1ortag2andtag3 profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "tag1ortag2andtag3 profile",
+                    "profile": "tag1ortag2andtag3 profile"
                 }
             },
             "args": {
                 "list": [
                     "--tags=tag1,tag2",
                     "--tags=tag3"
-                ],
-            },
+                ]
+            }
         },
         {
             "name": "nottag1andnottag2 profile",
             "promptForTags": false,
             "env": {
                 "vars": {
-                    "profile": "nottag1andnottag2 profile",
+                    "profile": "nottag1andnottag2 profile"
                 }
             },
             "args": {
                 "list": [
                     "--tags=~tag1",
                     "--tags=-tag2"
-                ],
-            },
+                ]
+            }
         }
     ],
     "mypy-type-checker.ignorePatterns": [
         ".*"
-    ],
+    ]
 }

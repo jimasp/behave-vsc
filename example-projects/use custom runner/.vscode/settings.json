@@ -10,12 +10,12 @@
                 "list": [
                     "--keepdb",
                     "--tags=~@myscript"
-                ],
+                ]
             },
             "customRunner": {
                 "scriptFile": "manage.py",
                 "waitForJUnitFiles": true
-            },
+            }
         },
         {
             "name": "behave-django runner profile - do not wait for results",
@@ -23,12 +23,12 @@
             "args": {
                 "list": [
                     "--tags=~@myscript"
-                ],
+                ]
             },
             "customRunner": {
                 "scriptFile": "manage.py",
                 "waitForJUnitFiles": false
-            },
+            }
         },
         {
             "name": "myscript - wait for results",
@@ -36,18 +36,18 @@
             "env": {
                 "vars": {
                     "profile": "myscript"
-                },
+                }
             },
             "args": {
                 "list": [
                     "--tags=@myscript"
-                ],
+                ]
             },
             "customRunner": {
                 "scriptFile": "myscript.py",
                 "waitForJUnitFiles": true
-            },
-        },
+            }
+        }
     ],
     "mypy-type-checker.ignorePatterns": [
         ".*"
