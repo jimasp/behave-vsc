@@ -244,7 +244,7 @@ const isImportedStepFile = (ps: ProjectSettings, fileUri: vscode.Uri): boolean =
   let stepLibMatch: StepImport | undefined;
   let currentMatchLen = 0, lenPath = 0;
 
-  const relPath = path.posix.relative(ps.uri.path, fileUri.path);
+  const relPath = getRelativePosixPath(ps.uri.path, fileUri.path);
 
   // check if filePath is inside a matching folder
   for (const stepLib of ps.importedSteps) {
@@ -534,6 +534,15 @@ export function showDebugWindow() {
   vscode.commands.executeCommand("workbench.debug.action.toggleRepl");
 }
 
+export function getRelativePosixPath(fromPath: string, toPath: string) {
+  // we don't use path.posix.relative because that fails due to the "\c:\" vs "\C:\" problem with vscode.Uri.path
+  const rel = path.relative(fromPath, toPath);
+  return toPosixPath(rel);
+}
+
+export function toPosixPath(sysPath: string): string {
+  return path.posix.join(...sysPath.split(path.sep));
+}
 
 export function basename(uri: vscode.Uri): string {
   const basename = uri.path.split("/").pop();
