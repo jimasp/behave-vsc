@@ -205,7 +205,7 @@ export const isFeatureFile = async (fileUri: vscode.Uri): Promise<boolean> => {
 
   // as per behave, ignore feature files that are not in in known feature folder locations
   const ps = await getProjectSettingsForFile(fileUri);
-  if (!ps.projRelativeFeatureFolders.some(relPath => fileUri.path.startsWith(path.posix.join(ps.uri.path, relPath))))
+  if (!ps.projRelativeFeatureFolders.some(relPath => fileUri.fsPath.startsWith(path.join(ps.uri.fsPath, relPath))))
     return false;
 
   return true;
@@ -225,7 +225,7 @@ export const isStepsFile = async (fileUri: vscode.Uri): Promise<boolean> => {
   const ps = await getProjectSettingsForFile(fileUri);
 
   // if the file path is not within any of the projRelativeStepsFolders then it's not a steps file
-  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.path.startsWith(path.posix.join(ps.uri.path, relPath))))
+  if (!ps.projRelativeStepsFolders.some(relPath => fileUri.fsPath.startsWith(path.join(ps.uri.fsPath, relPath))))
     return false;
 
   // standard "/steps/" folder match
