@@ -282,8 +282,8 @@ function getValidImportedSteps(projUri: vscode.Uri, importedStepsCfg: ImportedSt
     const importedSteps: ImportedSteps = [];
     const stepImps = new Map(Object.entries(importedStepsCfg));
     for (const stepLibrary of stepImps) {
-      const tKey = stepLibrary[0].trim().replace(/\\/g, "/");
-      const tValue = stepLibrary[1].trim().replace(/\\/g, "/");
+      const tKey = normaliseUserSuppliedRelativePath(stepLibrary[0].trim());
+      const tValue = normaliseUserSuppliedRelativePath(stepLibrary[1].trim());
       if (tKey === "") {
         services.logger.logWarning("behave-vsc.importedSteps key (i.e. the project relative path) cannot be an empty string", projUri);
         continue;
@@ -407,7 +407,8 @@ function getStepLibraryStepPaths(ps: ProjectSettings): string[] {
   const stepLibraryPaths: string[] = [];
 
   for (const stepLibrary of ps.importedSteps) {
-    const relativePath = normaliseUserSuppliedRelativePath(stepLibrary.relativePath);
+
+    const relativePath = stepLibrary.relativePath;
 
     if (!relativePath) {
       // the path is required as it is used to set the watcher path

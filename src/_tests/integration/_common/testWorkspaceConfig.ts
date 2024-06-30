@@ -1,5 +1,6 @@
 import vscode from 'vscode';
 import { ImportedSteps, ImportedStepsSetting, RunProfilesSetting } from '../../../config/settings';
+import { normaliseUserSuppliedRelativePath } from '../../../common/helpers';
 
 
 
@@ -210,8 +211,8 @@ function convertimportedStepsToExpectedArray(importedSteps: ImportedStepsSetting
 	const arr: ImportedSteps = [];
 	if (importedSteps) {
 		for (const key in importedSteps) {
-			const tKey = key.trim().replace(/\\/g, "/");
-			const tValue = importedSteps[key].trim().replace(/\\/g, "/");
+			const tKey = normaliseUserSuppliedRelativePath(key.trim());
+			const tValue = normaliseUserSuppliedRelativePath(importedSteps[key].trim());
 			arr.push({ relativePath: tKey, stepFilesRx: tValue });
 		}
 	}
