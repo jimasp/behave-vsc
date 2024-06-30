@@ -578,21 +578,21 @@ export async function deleteDirectoryContents(dirPath: string, errorIfDirMissing
   await fs.promises.rm(dirPath, { recursive: true, force: true });
 }
 
-export async function deleteDirectoryContentsOlderThanDays(dirPath: string, days: number, errorIfDirMissing: boolean) {
-  const exists = pathExistsSync(dirPath);
+export async function deleteDirectoryContentsOlderThanDays(fsPath: string, days: number, errorIfDirMissing: boolean) {
+  const exists = pathExistsSync(fsPath);
   if (!exists) {
     if (errorIfDirMissing)
-      throw new Error(`Directory not found: ${dirPath}`);
+      throw new Error(`Directory not found: ${fsPath}`);
     return;
   }
 
-  xRayLog(`Deleting directory contents: ${dirPath}`);
+  xRayLog(`Deleting directory contents: ${fsPath}`);
 
-  const files = await fs.promises.readdir(dirPath);
+  const files = await fs.promises.readdir(fsPath);
   const oneWeekAgo = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   await Promise.all(files.map(async (file) => {
-    const filePath = path.posix.join(dirPath, file);
+    const filePath = path.join(fsPath, file);
     const stats = await fs.promises.stat(filePath);
 
     if (stats.mtime < oneWeekAgo) {
