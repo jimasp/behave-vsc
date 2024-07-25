@@ -92,7 +92,7 @@
 10. Tips:
     - You can relaunch the extension from the debug toolbar in the source vscode environment after changing extension code. Alternatively, you can reload (`Ctrl+R`) the vscode host environment to load your changes.
     - If for some reason you need to have "uncaught exceptions" enabled in the source vscode environment, then note that this will cause you to step into external code.
-11. See the [Troubleshooting](#troubleshooting) section if you are having trouble debugging
+11. See the [Troubleshooting development](#troubleshooting-development) section if you are having trouble debugging
 
 ## Debugging with your own host project
 
@@ -100,7 +100,7 @@
 - Open `.vscode/launch.json` in the extension repo project and change the `args` setting that contains `"${workspaceFolder}/../my-project"` to repoint it at your project path.
 - Then it's the same steps as above, just click "Debug - MY workspace".
 - You probably want to enable `behave-vsc.xRay` in your settings.json so you get diagnostic logs in debug console in the source environment.
-- See the [Troubleshooting](#troubleshooting) section if you are having trouble debugging
+- See the [Troubleshooting development](#troubleshooting-development) section if you are having trouble debugging
 
 ---
 
@@ -125,7 +125,7 @@ OR
 If you want to add a test, they should go somewhere in `src/test`.
     - The provided test runner will only consider files matching the name pattern `**.test.ts`.
     - You can create folders inside the `test` folder to structure your tests.
-7. See the [Troubleshooting](#troubleshooting) section if you are having trouble debugging
+7. See the [Troubleshooting development](#troubleshooting-development) section if you are having trouble debugging
 
 ---
 
@@ -235,15 +235,15 @@ feature file formatting is provided by:
 ### Guidelines
 
 - Always consider performance. This is arguably the most important concern for any editor plugin. (Remember to look out for background (unawaited) functions taking too long or using too much CPU/memory. Use `performance.now` and `xRayLog` to log timings where needed.)
-- Always consider cross-platform, i.e. 
-   - Consider that windows max path is 259 characters, windows max command line length is 8191 characters
-   - For consistency, use `uri.path` internally and `/` as the path separator in code, but use e.g. `myuri.fsPath` for direct filesystem operations or filesystem path comparisons. 
-   - Consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.) 
-   - Windows paths can be converted to either `\c:\` or `\C:\` when using `.path`, consequently - use `getUriMatchString()` or `urisMatch()` to compare uris do not use `uri.path`, also do not use `startsWith` to compare relative paths when using `.path`.
-   - Consider OS drive/path separators, e.g. `C:\...` vs `/home/...`. 
-   - Use `getPosixRelativePath` for relative paths. You can use `relativePattern` for file searches. 
-   - Try to use `vscode.Uri.joinPath` instead where possible, do not use `path.join` if you are using `.path` (you can use it with `.fsPath` but `joinPath` is preferred).
-   - Line-endings always use `\n`
+- Always consider cross-platform, i.e.
+  - Consider that windows max path is 259 characters, windows max command line length is 8191 characters
+  - For consistency, use `uri.path` internally and `/` as the path separator in code, but use e.g. `myuri.fsPath` for direct filesystem operations or filesystem path comparisons.
+  - Consider `/` vs `\` in any pattern matching/replaces etc. (Where possible vscode/node converts `\`to `/` internally for consistency, e.g. with `uri.path`.)
+  - Windows paths can be converted to either `\c:\` or `\C:\` when using `.path`, consequently - use `getUriMatchString()` or `urisMatch()` to compare uris do not use `uri.path`, also do not use `startsWith` to compare relative paths when using `.path`.
+  - Consider OS drive/path separators, e.g. `C:\...` vs `/home/...`.
+  - Use `getPosixRelativePath` for relative paths. You can use `relativePattern` for file searches.
+  - Try to use `vscode.Uri.joinPath` instead where possible, do not use `path.join` if you are using `.path` (you can use it with `.fsPath` but `joinPath` is preferred).
+  - Line-endings always use `\n`
 - Always consider multi-root workspaces, i.e. there can be different project settings per project folder, window (instance) settings can be changed in a `*.code-workspace` file, output channels are per project folder (to stop parallel test runs being merged and to make info and warnings contextual), project folders may be added/removed by the user at run time requiring reload of the test tree, etc.
 - YAGNI - don't be tempted to add new extension functionality the majority of people don't need. More code means more stuff that can break and/or lead to slower performance. Edge-case capabilities should be in forked repos. (If you think it's a *common* concern for users, then please submit a feature request issue or PR.) Also consider that any new functionality needs lots of testing, automated tests if possible, and readme updates.
 - The user should get the same results if they run the outputted behave command manually. Don't attempt to modify/intercept or overcome any limitations of standard behave behaviour. If the outputted command does not result in the same behaviour as running it in the extension, then this is a bug.
