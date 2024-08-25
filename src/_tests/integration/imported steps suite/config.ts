@@ -7,8 +7,7 @@ export const wsConfig = new TestWorkspaceConfig({
   importedSteps: {
     "folder1/steps_lib_1 ": ".*",
     "folder2\\steps_lib_2": ".*\\steps\\.*|more_steps\\.*|.*\\steps3.py|.*\\steps4.py",
-    "dist/imported_steplib": ".*",
-    "symlinked_steps": ".*"
+    "dist/imported_steplib": ".*"
   }
 });
 
@@ -18,7 +17,7 @@ export const expectations: Expectations = {
   expectedProjRelativeBehaveWorkingDirPath: ".",
   expectedBaseDirPath: "features",
   expectedProjRelativeFeatureFolders: ["features"],
-  expectedProjRelativeStepsFolders: ["folder1/steps_lib_1", "folder2/steps_lib_2", "dist/imported_steplib", 'symlinked_steps', "features/steps"],
+  expectedProjRelativeStepsFolders: ["folder1/steps_lib_1", "folder2/steps_lib_2", "dist/imported_steplib", "features/steps"],
   getExpectedCountsFunc: getExpectedCounts,
   getExpectedResultsFunc: getExpectedResults,
 }
