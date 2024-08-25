@@ -4,9 +4,9 @@ import { TestResult } from "../_common/types";
 export function getExpectedCounts(): ProjParseCounts {
   const testCount = getExpectedResults().length;
   return {
-    tests: { nodeCount: 6, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 8,
-    stepFileStepsExceptCommentedOut: 9, featureFileStepsExceptCommentedOut: 9, stepMappings: 9
+    tests: { nodeCount: 5, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 7,
+    stepFileStepsExceptCommentedOut: 8, featureFileStepsExceptCommentedOut: 8, stepMappings: 8
   };
 }
 
@@ -76,23 +76,6 @@ export const getExpectedResults = (): TestResult[] => {
       test_parent: '.../imported steps/features/basic.feature',
       test_uri: '.../imported steps/features/basic.feature',
     }),
-
-    new TestResult({
-      scenario_featureFileRelativePath: 'features/basic.feature',
-      scenario_featureName: 'Basic',
-      scenario_getLabel: 'step reference check for symbolic link folder',
-      scenario_isOutline: false,
-      scenario_result: 'passed',
-      scenario_scenarioName: 'step reference check for symbolic link folder',
-      test_children: undefined,
-      test_description: undefined,
-      test_error: undefined,
-      test_id: '.../imported steps/features/basic.feature/step reference check for symbolic link folder',
-      test_label: 'step reference check for symbolic link folder',
-      test_parent: '.../imported steps/features/basic.feature',
-      test_uri: '.../imported steps/features/basic.feature',
-    }),
-
 
   ];
 
