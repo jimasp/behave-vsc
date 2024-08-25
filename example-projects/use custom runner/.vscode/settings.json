@@ -1,4 +1,5 @@
 {
+    // on windows, use ".venv\\Scripts\\python.exe" (this is updated automatically when you run integration tests)
     "python.defaultInterpreterPath": ".venv/bin/python",
     "behave-vsc.xRay": true,
     "behave-vsc.behaveWorkingDirectory": "django/mysite",
