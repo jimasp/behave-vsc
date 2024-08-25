@@ -1,56 +1,55 @@
 {
-    // on windows, use ".venv\\Scripts\\python.exe" (this is updated automatically when you run integration tests)
-    "python.defaultInterpreterPath": ".venv/bin/python",
-    "behave-vsc.xRay": true,
-    "behave-vsc.behaveWorkingDirectory": "django/mysite",
-    "behave-vsc.runProfiles": [
-        {
-            "name": "behave-django runner profile - wait for results",
-            "promptForTags": false,
-            "args": {
-                "list": [
-                    "--keepdb",
-                    "--tags=~@myscript"
-                ]
-            },
-            "customRunner": {
-                "scriptFile": "manage.py",
-                "waitForJUnitFiles": true
-            }
-        },
-        {
-            "name": "behave-django runner profile - do not wait for results",
-            "promptForTags": false,
-            "args": {
-                "list": [
-                    "--tags=~@myscript"
-                ]
-            },
-            "customRunner": {
-                "scriptFile": "manage.py",
-                "waitForJUnitFiles": false
-            }
-        },
-        {
-            "name": "myscript - wait for results",
-            "promptForTags": false,
-            "env": {
-                "vars": {
-                    "profile": "myscript"
-                }
-            },
-            "args": {
-                "list": [
-                    "--tags=@myscript"
-                ]
-            },
-            "customRunner": {
-                "scriptFile": "myscript.py",
-                "waitForJUnitFiles": true
-            }
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "behave-vsc.xRay": true,
+  "behave-vsc.behaveWorkingDirectory": "django/mysite",
+  "behave-vsc.runProfiles": [
+    {
+      "name": "behave-django runner profile - wait for results",
+      "promptForTags": false,
+      "args": {
+        "list": [
+          "--keepdb",
+          "--tags=~@myscript"
+        ]
+      },
+      "customRunner": {
+        "scriptFile": "manage.py",
+        "waitForJUnitFiles": true
+      }
+    },
+    {
+      "name": "behave-django runner profile - do not wait for results",
+      "promptForTags": false,
+      "args": {
+        "list": [
+          "--tags=~@myscript"
+        ]
+      },
+      "customRunner": {
+        "scriptFile": "manage.py",
+        "waitForJUnitFiles": false
+      }
+    },
+    {
+      "name": "myscript - wait for results",
+      "promptForTags": false,
+      "env": {
+        "vars": {
+          "profile": "myscript"
         }
-    ],
-    "mypy-type-checker.ignorePatterns": [
-        ".*"
-    ]
+      },
+      "args": {
+        "list": [
+          "--tags=@myscript"
+        ]
+      },
+      "customRunner": {
+        "scriptFile": "myscript.py",
+        "waitForJUnitFiles": true
+      }
+    }
+  ],
+  "mypy-type-checker.ignorePatterns": [
+    ".*"
+  ]
 }
