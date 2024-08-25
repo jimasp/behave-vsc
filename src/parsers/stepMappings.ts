@@ -149,7 +149,9 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   }
 
   let textWithoutType = featureFileStep.textWithoutType;
-  if (textWithoutType.endsWith(":")) // behave will match e.g. "Given some table:" to "Given some table"
+  // behave will match e.g. "Given some table:" to "Given some table" 
+  // (but behave will NOT match "Given some table:" to "Given some table:")
+  if (textWithoutType.endsWith(":"))
     textWithoutType = textWithoutType.slice(0, -1);
 
   let exactMatch = findExactMatch(textWithoutType, featureFileStep.stepType);
