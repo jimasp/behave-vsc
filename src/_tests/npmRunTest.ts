@@ -82,7 +82,7 @@ async function npmRunTest() {
         continue;
       }
       const projFolderName = folder.replace(" suite", "");
-      const projectLaunchArgs = [`"example-projects/${projFolderName}"`];
+      const projectLaunchArgs = [resolveLaunchArgsForPlatform(`example-projects/${projFolderName}`)];
 
 
       await runTests({
@@ -100,6 +100,14 @@ async function npmRunTest() {
     process.exit(1);
   }
 }
+
+
+function resolveLaunchArgsForPlatform(launchArgs: string) {
+  if (os.platform() !== 'win32')
+    return launchArgs;
+  return '"' + launchArgs + '"';
+}
+
 
 
 function resolveExtensionTestPathForPlatform(extTestPath: string) {
