@@ -58,7 +58,7 @@ async function npmRunTest() {
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
-      extensionTestsPath: path.resolve(__dirname, './unit/index'),
+      extensionTestsPath: resolveExtensionTestPathForPlatform('./unit/index'),
       launchArgs: ["unit tests (no workspace)"]
     });
 
@@ -67,7 +67,7 @@ async function npmRunTest() {
     await runTests({
       vscodeExecutablePath,
       extensionDevelopmentPath,
-      extensionTestsPath: '"' + path.resolve(__dirname, './integration/multiroot suite/index') + '"',
+      extensionTestsPath: resolveExtensionTestPathForPlatform('./integration/multiroot suite/index'),
       launchArgs: ["example-projects/multiroot.code-workspace"]
     });
 
@@ -88,7 +88,7 @@ async function npmRunTest() {
       await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath,
-        extensionTestsPath: '"' + projectTests + '"',
+        extensionTestsPath: resolveExtensionTestPathForPlatform(projectTests),
         launchArgs: projectLaunchArgs
       });
     }
@@ -99,6 +99,14 @@ async function npmRunTest() {
     console.error('Failed to run tests, ', err);
     process.exit(1);
   }
+}
+
+
+function resolveExtensionTestPathForPlatform(extTestPath: string) {
+  const resPath = path.resolve(__dirname, extTestPath);
+  if (os.platform() !== 'win32')
+    return resPath;
+  return '"' + resPath + '"';
 }
 
 
