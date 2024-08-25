@@ -283,11 +283,6 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Remember that if present, your `environment.py` file must be a sibling of your `steps` folder.
 
-- Note that the extension ignores files that match the paths in the following settings (and their default values):
-  - `files.exclude`
-  - `files.watcherExclude`
-  - `search.exclude`
-
 - If your behave working directory is not the same as your project directory, then you can set the `behaveWorkingDirectory` to specify a project-relative path to the behave working directory. In terms of feature/step autodiscovery, this will then make the working directory act as the project root. Alternatively, you can set the `paths` setting in a behave config file in your project-root.
 
   - Example:
@@ -337,13 +332,13 @@ The most important extension settings to be aware of are probably `behaveWorking
     }
     ```
 
-- Step navigation is automatically enabled for your `steps` folder, but by using the `importedSteps` setting you can also enable step navigation for:
-  - imported steps in your project folder that are not in your steps folder
-  - imported step libraries in your project folder  
+- Step navigation is automatically enabled for your `steps` folder, but by using the `importedSteps` setting you can also enable step navigation for other locations within your project folder:
+  - imported packages within your project folder's virtual environment folder e.g. `.venv/my_step_lib`
+  - imported steps in your project folder that are not in your steps folder, e.g. a symbolic link folder
   
   - Notes:
     - you should try to use the lowest-level path so that file watchers are not watching hundreds of unrelated files
-    - if any imported step path/regex is also matched by the vscode `files.watcherExclude` setting or its default values (`.venv` etc.) it will not have dynamic navigation updates on file/folder changes
+    - if any imported step path/regex is also matched by the vscode `files.watcherExclude` setting or its default values (`.venv` etc.) then it will parse the steps on load, but it will not have dynamic navigation updates on file/folder changes
 
   - Example:
 
@@ -351,8 +346,8 @@ The most important extension settings to be aware of are probably `behaveWorking
     // settings.json
     {
       "behave-vsc.importedSteps": {
-          // project-relative path : regex (not glob)
-          "my_steps_lib" : ".*"
+          // project-relative path : NOTE regex (not glob)
+          "my_steps_lib" : ".*.py"
       },
       "behave-vsc.justMyCode": false
     }

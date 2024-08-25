@@ -396,6 +396,8 @@ export function getExcludedPathPatterns(projUri: vscode.Uri): string[] {
 
   const defaultExcludes = [
     "**/.git",
+    "**/.svn",
+    "**/.hg/store",
     "**/.DS_Store",
     "**/node_modules",
     "**/bower_components",
@@ -418,7 +420,7 @@ export function getExcludedPathPatterns(projUri: vscode.Uri): string[] {
   const projConfig = vscode.workspace.getConfiguration(undefined, projUri);
 
   const excPatterns: { [key: string]: boolean; } = {
-    // these 3 have BOTH defaults provided by vscode AND the user's own settings.json exclusions
+    // these 3 have defaults provided by BOTH vscode AND the user's own settings.json exclusions
     ...projConfig.get('files.exclude'),
     ...projConfig.get('files.watcherExclude'),
     ...projConfig.get('search.exclude'),

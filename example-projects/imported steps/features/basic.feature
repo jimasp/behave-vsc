@@ -14,8 +14,13 @@ Feature: Basic
    Scenario: run a skipped test using importedSteps
       Given we have another step
 
+   Scenario: step reference check for symbolic link folder
+      Given we have an imported steplibrary in a symlink folder   
+
    # This should give us BLUE text below (step navigation enabled) because although "dist" is an 
    # excluded path, it is specifically included as a stepImport in settings.json
    # (step references count will also be checked by integration test)
    Scenario: step reference check for excluded path importedSteps
       Given we have an imported steplibrary in an excluded folder
+
+

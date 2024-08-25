@@ -1,5 +1,6 @@
 from behave import *
 
-@given("we have another step")
+@then("we will see the result")
+@then("we will *see* the result")
 def step_res(context):
     assert 1 == 1
