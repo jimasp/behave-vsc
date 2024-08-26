@@ -1,6 +1,6 @@
 Feature: Run Profiles Feature
 
-   @tag1 @tag2 @tag3 @qu'oted"tag
+   @tag1 @tag2 @tag3
    Scenario: all tags - success - check tags and envvars and userdata
       Given we have run profiles
       Then envvars are as expected

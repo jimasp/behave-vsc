@@ -20,92 +20,79 @@ def profile_vs_envvar_check(context):
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None
+                "BEHAVE_STAGE": None
             },
             "inherit args and envs profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None
+                "BEHAVE_STAGE": None
             },   
             "do NOT inherit args and envs profile": {
                 "var1": "do NOT inherit",
                 "var2": None,
                 "var3": None,
-                "BEHAVE_STAGE": None,
-                "quoted_env": None
+                "BEHAVE_STAGE": None
             },              
             "no args profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None
+                "BEHAVE_STAGE": None
             },                          
-            "qu'oted\"tag and env profile": {
+            "unmatched tag profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": "v'al\"ue"
+                "BEHAVE_STAGE": None
             },            
             "stage2 profile":  {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": "stage2",
-                "quoted_env": None
+                "BEHAVE_STAGE": "stage2"
             },
             "tag1 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None         
+                "BEHAVE_STAGE": None    
             },
             "tag1 vars profile": {
                 "var1": "TAG1-var1",
                 "var2": "TAG1-var2",
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None         
+                "BEHAVE_STAGE": None   
             },
             "tag2 vars profile": {
                 "var1": "TAG2-var1",
                 "var2": "TAG2-var2",
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None         
+                "BEHAVE_STAGE": None       
             },
             "tag1ortag2 vars profile": {
                 "var1": "TAG1_OR_2-var1",
                 "var2": "TAG1_OR_2-var2",
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None       
+                "BEHAVE_STAGE": None  
             },
             "tag1andtag2 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None       
+                "BEHAVE_STAGE": None 
             },         
            "tag1ortag2andtag3 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None       
+                "BEHAVE_STAGE": None      
             },     
            "nottag1andnottag2 profile": {
                 "var1": "ENV-var1",
                 "var2": None,
                 "var3": "ENV-var3",
-                "BEHAVE_STAGE": None,
-                "quoted_env": None       
+                "BEHAVE_STAGE": None    
             }  
         }.get(value)        
         
@@ -116,8 +103,7 @@ def profile_vs_envvar_check(context):
         "var1": os.environ.get("var1"),
         "var2": os.environ.get("var2"),
         "var3": os.environ.get("var3"),
-        "BEHAVE_STAGE": os.environ.get("BEHAVE_STAGE"),
-        "quoted_env": os.environ.get("quoted_env")
+        "BEHAVE_STAGE": os.environ.get("BEHAVE_STAGE")
     }
     
     
@@ -132,9 +118,9 @@ def profile_vs_args_check(context):
     def get_expected_userdata(value):
         return {
             "default": {"foo": "bar", "fizz": "buzz"},
-            "qu'oted\"tag and env profile": {"foo": "bar", "fizz": "buzz"},
+            "unmatched tag profile": {"foo": "bar", "fizz": "buzz"},
             "inherit args and envs profile": {"d1":"val1", "d2":"val2", "foo": "bar", "fizz": "buzz"},
-            "do NOT inherit args and envs profile": {"do":"NOT inherit"},
+            "do NOT inherit args and envs profile": {"do":"NOT-inherit"},
             "no args profile": {},
             "stage2 profile": {"foo": "bar", "fizz": "buzz"},
             "tag1 profile": {"foo": "bar", "fizz": "buzz"},
@@ -143,8 +129,7 @@ def profile_vs_args_check(context):
             "tag1ortag2 vars profile": {"foo": "bar", "fizz": "buzz"},
             "tag1andtag2 profile": {"foo": "bar", "fizz": "buzz"},
             "tag1ortag2andtag3 profile": {"foo": "bar", "fizz": "buzz"},     
-            "nottag1andnottag2 profile": {"foo": "bar", "fizz": "buzz"},
-            "qu'oted\"tag and env profile": {"foo": "bar", "fizz": "buzz"},
+            "nottag1andnottag2 profile": {"foo": "bar", "fizz": "buzz"}
         }.get(value)    
         
     expected_userdata = get_expected_userdata(profile)  

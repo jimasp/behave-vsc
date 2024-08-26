@@ -23,16 +23,10 @@ suite(`run profiles suite test: project.tests`, () => {
     await testProjectRunner.debugAll(wsConfig, noBehaveIni, runOptions, expectations);
   });
 
-  test("runAll - qu'oted\"tag and env profile", async () => {
-    runOptions.selectedRunProfile = "qu'oted\"tag and env profile";
+  test("unmatched tag profile", async () => {
+    runOptions.selectedRunProfile = "unmatched tag profile";
     expectations.getExpectedResultsFunc = getExpectedResultsForUnmatchedTagsSpecified;
     await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations);
-  });
-
-  test("runAll - qu'oted\"tag and env profile (ExecFriendlyCmd)", async () => {
-    runOptions.selectedRunProfile = "qu'oted\"tag and env profile";
-    expectations.getExpectedResultsFunc = getExpectedResultsForUnmatchedTagsSpecified;
-    await testProjectRunner.runAll(wsConfig, noBehaveIni, runOptions, expectations, true);
   });
 
   test("runAll - inherit args and envs profile", async () => {

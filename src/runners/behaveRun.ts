@@ -40,8 +40,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
       }
     }
     else {
-      // we prefer spawn for normal runs as it's more efficient than exec (and also streams its output as it goes)
-      args = args.map(a => a.replace(/\\"/g, '"').replace(/\\'/g, "'"));
+      // we prefer spawn for normal runs as it's more efficient than exec (and also streams its output as it goes)      
       cp = spawn(pr.pythonExec, args, options);
     }
 

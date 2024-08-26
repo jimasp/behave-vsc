@@ -240,7 +240,7 @@ export const getExpectedResultsForUnmatchedTagsSpecified = (): TestResult[] => {
       scenario_featureName: 'Run Profiles Feature',
       scenario_getLabel: 'all tags - success - check tags and envvars and userdata',
       scenario_isOutline: false,
-      scenario_result: 'passed',
+      scenario_result: 'skipped',
       scenario_scenarioName: 'all tags - success - check tags and envvars and userdata',
       test_children: undefined,
       test_description: undefined,

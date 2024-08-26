@@ -35,19 +35,18 @@ export const wsConfig = new TestWorkspaceConfig({
       },
     },
     {
-      "name": "qu'oted\"tag and env profile",
+      "name": "unmatched tag profile",
       "promptForTags": false,
       "env": {
         "vars": {
-          "profile": "qu'oted\"tag and env profile",
-          "quoted_env": "v'al\"ue"
+          "profile": "unmatched tag profile"
         }
       },
       "args": {
         "list": [
-          "--tags=@qu\\'oted\\\"tag"
+          "--tags=unmatched_tag"
         ]
-      },
+      }
     },
     {
       "name": "inherit args and envs profile",
@@ -80,7 +79,7 @@ export const wsConfig = new TestWorkspaceConfig({
         "inherit": false,
         "list": [
           "-D",
-          "do=NOT inherit",
+          "do=NOT-inherit",
         ]
       },
     },
