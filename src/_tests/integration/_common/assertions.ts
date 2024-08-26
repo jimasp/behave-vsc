@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert, { AssertionError } from "assert";
 import vscode from "vscode";
 import { Configuration } from "../../../config/configuration";
 import { IntegrationTestAPI, QueueItem } from "../../../extension";
@@ -58,10 +58,21 @@ export async function assertWorkspaceSettingsAsExpected(projUri: vscode.Uri, pro
       JSON.stringify(new RunProfile(p.name, projUri, p.promptForTags, p.env, p.args, p.customRunner)));
     assert.deepStrictEqual(actualProfiles, expectedProfiles, `${projName} project: runProfiles`);
   }
-  catch (assertErr: unknown) {
+  catch (err: unknown) {
     debugger; // eslint-disable-line no-debugger      
 
-    throw new Error(`assertWorkspaceSettingsAsExpected failed for ${projName} project:\n${assertErr}`);
+    let conflict = "";
+    if (err instanceof AssertionError) {
+      conflict += "Message: " + err.message + "\n";
+      conflict += "Generated Message: " + err.generatedMessage + "\n";
+      conflict += "Operator: " + err.operator + "\n";
+      conflict += "Name: " + err.name + "\n";
+      conflict += "Cause: " + err.cause + "\n";
+      conflict += "Expected: " + err.expected + "\n";
+      conflict += "Actual: " + err.actual + "\n";
+    }
+
+    throw new Error(`assertWorkspaceSettingsAsExpected failed for ${projName} project:\nError:${err}\n${conflict}`);
   }
 }
 

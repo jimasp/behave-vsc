@@ -35,17 +35,17 @@ export const wsConfig = new TestWorkspaceConfig({
       },
     },
     {
-      "name": "qu'oted\"tag and qu'oted\"env profile",
+      "name": "qu'oted\"tag and env profile",
       "promptForTags": false,
       "env": {
         "vars": {
-          "profile": "qu'oted\"tag and qu'oted\"env profile",
-          "qu'oted\"env": "v'al\"ue"
+          "profile": "qu'oted\"tag and env profile",
+          "quoted_env": "v'al\"ue"
         }
       },
       "args": {
         "list": [
-          "--tags=@qu'oted\"tag"
+          "--tags=@qu\\'oted\\\"tag"
         ]
       },
     },

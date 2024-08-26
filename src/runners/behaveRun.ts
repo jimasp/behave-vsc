@@ -1,4 +1,4 @@
-import { ChildProcess, spawn, exec, SpawnOptions } from 'child_process';
+import { ChildProcess, spawn, exec, ExecOptions } from 'child_process';
 import { services } from "../common/services";
 import { cleanBehaveText, PWRSHELL_CMD_INTRO } from '../common/helpers';
 import { xRayLog } from '../common/logger';
@@ -12,20 +12,19 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
   let cp: ChildProcess;
   const cancellationHandler = pr.projTestRun.token.onCancellationRequested(() => cp?.kill());
   const projUri = pr.projSettings.uri;
-  const local_args = [...args];
 
   try {
 
     if (pr.customRunner)
-      local_args.unshift(pr.customRunner.scriptFile, "behave");
+      args.unshift(pr.customRunner.scriptFile, "behave");
     else
-      local_args.unshift("-m", "behave");
+      args.unshift("-m", "behave");
 
-    xRayLog(`Starting behave with cmd: "${pr.pythonExec}" ${local_args.join(" ")}` +
+    xRayLog(`Starting behave with cmd: "${pr.pythonExec}" ${args.join(" ")}` +
       `\n\nworking directory: "${projUri.fsPath}"\nenv var overrides: ${JSON.stringify(pr.env)}`, projUri);
 
     const env = { ...process.env, ...pr.env };
-    const options: SpawnOptions = { cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
+    const options: ExecOptions = { shell: undefined, cwd: pr.projSettings.behaveWorkingDirUri.fsPath, env: env };
 
     // on integration test runs ONLY, we sometimes use cp.exec instead of cp.spawn, 
     // so that we can test the generated friendlyCmd will execute correctly when run manually by the user
@@ -33,14 +32,17 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
       xRayLog("--- integration test running in exec mode ---");
       if (services.config.instanceSettings.shell === Shell.powershell) {
         const cmdWithoutIntro = friendlyCmd.replace(PWRSHELL_CMD_INTRO, "");
-        cp = exec(cmdWithoutIntro, { shell: 'powershell.exe' });
+        options.shell = 'powershell.exe';
+        cp = exec(cmdWithoutIntro, options);
       }
       else {
-        cp = exec(friendlyCmd);
+        cp = exec(friendlyCmd, options);
       }
     }
     else {
-      cp = spawn(pr.pythonExec, local_args, options);
+      // we prefer spawn for normal runs as it's more efficient than exec (and also streams its output as it goes)
+      args = args.map(a => a.replace(/\\"/g, '"').replace(/\\'/g, "'"));
+      cp = spawn(pr.pythonExec, args, options);
     }
 
     if (!cp.pid) {
@@ -48,7 +50,7 @@ export async function runBehaveInstance(pr: ProjRun, args: string[], friendlyCmd
       return;
     }
 
-    // if parallel mode, use a buffer so logs gets written out in a human-readable order
+    // if parallel mode, we use a buffer so logs gets written out in a human-readable order
     const asyncBuff: string[] = [];
     const log = (str: string) => {
       if (!str)
