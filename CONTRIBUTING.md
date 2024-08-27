@@ -20,17 +20,7 @@
 - It is assumed that you have already installed git and Python 3.x.x
 - Example commands given for installing external software (nvm, node, python) were correct at the time of writing, but these are likely to go out of date. For external software, you should always check the latest instructions on the official websites.
 
-1. Install node (via nvm) if you don't have it.
-    - Linux (bash assumed):
-        - `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash` (command for latest nvm version can be found [here](https://github.com/nvm-sh/nvm#install--update-script))
-        - `source ~/.bashrc && source ~/.bash_profile && source ~/.profile`
-        - `nvm install --lts`
-        - `nvm use --lts`
-    - Windows:
-        - Use the installer [here](https://github.com/coreybutler/nvm-windows/releases)
-        - Open a fresh **new** administrator command prompt
-        - `nvm install latest`
-        - `nvm use latest`
+1. Install `node` (via [asdf](https://asdf-vm.com) or [nvm](https://github.com/nvm-sh/nvm)) if you don't have it.
 2. Open visual studio code
 3. Disable or uninstall the marketplace version of the extension (otherwise you will have two instances of the extension running, and associated side effects)
 4. Close visual studio code
