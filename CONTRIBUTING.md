@@ -25,33 +25,49 @@
 3. Disable or uninstall the marketplace version of the extension (otherwise you will have two instances of the extension running, and associated side effects)
 4. Close visual studio code
 5. Open a command line window, go to your source folder, and clone the extension source code, example:
-    - `cd <mysourcedir>`
-    - `git clone https://github.com/jimasp/behave-vsc.git`
+    - ```bash
+      cd <mysourcedir>`
+      git clone https://github.com/jimasp/behave-vsc.git
+      ```
 6. Change to the cloned directory, and install required node packages:
-    - `cd <mysourcedir>/behave-vsc`
-    - `npm install`
+    - ```bash
+      cd <mysourcedir>/behave-vsc
+      npm install
+      ```
 7. Install the pre-commit hook (linux/mac only):
-    - `cp .git_hooks/* .git/hooks/ && chmod +x .git/hooks/*`
+    - ```bash
+      cp .git_hooks/* .git/hooks/ && chmod +x .git/hooks/*
+      ```
 8. Install required extensions for developing the extension:  
-    - `code --install-extension ms-python.python` (if not already installed)
-    - `code --install-extension dbaeumer.vscode-eslint`
-    - `code --install-extension amodio.tsl-problem-matcher`
-9. Install dependencies for the `use custom runner` example project venv:
-    - `cd "example-projects/use custom runner"`
-    - `python -m venv .venv`
-    - `.venv/Scripts/activate`
-    - `pip install -r requirements.txt`
-    - if you are on Windows, you will need to either set the python interpreter path manually for the `use custom runner` project, or update `example-projects\use custom runner\settings.json` to `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"`
+    - ```bash
+      code --install-extension ms-python.python
+      code --install-extension dbaeumer.vscode-eslint
+      code --install-extension amodio.tsl-problem-matcher
+      ```
+9. Install behave 1.2.6 globally (most example projects do not have a venv):
+    - ```bash
+      pip install behave==1.2.6`
+      "python" -m behave --version 
+      ```
 10. Install pytest (any version) globally
-    - `pip install pytest`
-11. Install behave 1.2.6 globally (most example projects do not have a venv):
-    - Change to the root directory: `cd /` (or `cd \` on Windows)
-    - `pip install behave==1.2.6`
-    - Ensure that this global command works from the root directory: `"python" -m behave --version` (include the quotes)
+    - ```bash
+      pip install pytest
+      ```
+11. Install dependencies for the `use custom runner` example project venv:
+    - ```bash
+      cd "example-projects/use custom runner"
+      python -m venv .venv
+      ".venv/Scripts/activate"
+      pip install -r requirements.txt
+      deactivate
+      ```
+    - `npm run test` will do this automatically when you run it in the next step, but otherwise if you are on Windows then you will need to update `example-projects\use custom runner\settings.json` to contain `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"`, (for Linux this setting is `.venv/bin/python`).
 12. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
-    - `cd <mysourcedir>/behave-vsc`
-    - `npm run test`
-    - If any of the tests fail, double-check the steps above and look for red text in the output starting from the top and working down. Otherwise, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
+  - ```bash 
+      cd <mysourcedir>/behave-vsc
+      npm run test
+    ```
+  - If any of the tests fail, double-check the steps above and look for red text in the output starting from the bottom and working your way up. Alternatively, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
 13. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 
 ---
