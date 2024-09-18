@@ -25,50 +25,68 @@
 3. Disable or uninstall the marketplace version of the extension (otherwise you will have two instances of the extension running, and associated side effects)
 4. Close visual studio code
 5. Open a command line window, go to your source folder, and clone the extension source code, example:
-    - ```bash
-      cd <mysourcedir>`
-      git clone https://github.com/jimasp/behave-vsc.git
-      ```
-6. Change to the cloned directory, and install required node packages:
-    - ```bash
-      cd <mysourcedir>/behave-vsc
-      npm install
-      ```
-7. Install the pre-commit hook (linux/mac only):
-    - ```bash
-      cp .git_hooks/* .git/hooks/ && chmod +x .git/hooks/*
-      ```
-8. Install required extensions for developing the extension:  
-    - ```bash
-      code --install-extension ms-python.python
-      code --install-extension dbaeumer.vscode-eslint
-      code --install-extension amodio.tsl-problem-matcher
-      ```
-9. Install behave 1.2.6 globally (most example projects do not have a venv):
-    - ```bash
-      pip install behave==1.2.6`
-      "python" -m behave --version 
-      ```
-10. Install pytest (any version) globally
-    - ```bash
-      pip install pytest
-      ```
-11. Install dependencies for the `use custom runner` example project venv:
-    - ```bash
-      cd "example-projects/use custom runner"
-      python -m venv .venv
-      ".venv/Scripts/activate"
-      pip install -r requirements.txt
-      deactivate
-      ```
-    - `npm run test` will do this automatically when you run it in the next step, but otherwise if you are on Windows then you will need to update `example-projects\use custom runner\settings.json` to contain `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"`, (for Linux this setting is `.venv/bin/python`).
-12. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
-  - ```bash 
-      cd <mysourcedir>/behave-vsc
-      npm run test
+
+    ```bash
+    cd <my-source-directory>
+    git clone https://github.com/jimasp/behave-vsc.git
     ```
-  - If any of the tests fail, double-check the steps above and look for red text in the output starting from the bottom and working your way up. Alternatively, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
-13. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
+
+6. Change to the cloned directory, and install required node packages:
+
+    ```bash
+    cd <my-source-directory>/behave-vsc
+    npm install
+    ```
+
+7. Install the pre-commit hook (linux/mac only):
+
+    ```bash
+    cp .git_hooks/* .git/hooks/ && chmod +x .git/hooks/*
+    ```
+
+8. Install required extensions for developing the extension:
+
+    ```bash
+    code --install-extension ms-python.python
+    code --install-extension dbaeumer.vscode-eslint
+    code --install-extension amodio.tsl-problem-matcher
+    ```
+
+9. Install behave 1.2.6 globally (most example projects do not have a venv):
+
+    ```bash
+    pip install behave==1.2.6`
+    "python" -m behave --version 
+    ```
+
+10. Install pytest (any version) globally
+
+    ```bash
+    pip install pytest
+    ```
+
+11. Install dependencies for the `use custom runner` example project venv:
+
+    ```bash
+    cd "example-projects/use custom runner"
+    python -m venv .venv
+    ".venv/Scripts/activate"
+    pip install -r requirements.txt
+    deactivate
+    ```
+
+12. `npm run test` will do this automatically when you run it in the next step, but otherwise if you are on Windows then you will need to update `example-projects\use custom runner\settings.json` to contain `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"` (for Linux this setting is `.venv/bin/python`).
+
+13. Change back to your repo directory. Check that all tests pass BEFORE opening visual studio code. This will confirm your environment is set up correctly before you start development.
+
+    - ```bash
+      cd <my-source-directory>/behave-vsc
+      npm run test
+      ```
+
+    If any of the tests fail, double-check the steps above and look for red text in the output starting from the bottom and working your way up. Alternatively, you can debug them - see [Debugging integration tests](#debugging-integration-tests).
+
+14. Note - if at any point you perform a `git clean`, or pull a new version of the source code, or switch branch, you will need to run `npm install` again.
 
 ---
 
@@ -375,15 +393,15 @@ Example: if you changed anything that affects any of step navigation/feature fil
   - F. in file explorer UI, rename the `group1_features` folder to `group1_features_foo`,
     - in the test UI filter by `group1`, check that the folder is renamed and not duplicated
     - check the renamed feature group folder runs from test ui tree
-    - open one of the `group1_features_foo` feature files, right-click on a step check in , check `Go to Step Definition" works
-  - G. delete `group1_features_foo/outline_success.feature` file, check it gets removed from `group1_features_foo` in the test tree
-  - H. in file explorer UI, create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foobar` and the first scenario, copy/paste that text into `scen_copy.feature` and then in the test UI check that a second `Foobar` feature gets added to the test tree under `group1_features_foo`
-  - I. in file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
-  - J. in the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
-  - K. in the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
+    - open one of the `group1_features_foo` feature files, right-click on a step check in , check `Go to Step Definition" works.
+  - G. rename `behave tests/some tests/steps/shared.py` to `shared_foo.py`, then open the file, right-click on a step function and `Find All Step References`, check it still finds the references in the feature files.
+  - H. delete `group1_features_foo/outline_success.feature` file, check it gets removed from `group1_features_foo` in the test tree
+  - I. in file explorer UI, create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foobar` and the first scenario, copy/paste that text into `scen_copy.feature` and then in the test UI check that a second `Foobar` feature gets added to the test tree under `group1_features_foo`
+  - J. in file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
+  - K. in the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
+  - L. in the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
     - `-i "behave tests/some tests/group1_features_foo/outline_mixed.feature$" -n "^Blenders Success ".*" -- @|^Blenders Success .* -- @"`
     - `-i "behave tests/some tests/group1_features_foo/foo.table.feature$|behave tests/some tests/group1_features_foo/textblock.feature$"`
-  - L. in the
 
 - SWITCHING to `project B`:
 
