@@ -437,7 +437,11 @@ async function logSettings(winSettings: InstanceSettings, ps: ProjectSettings, p
   const windowSettingsDic: { [name: string]: string; } = {};
   const winEntries = Object.entries(winSettings).sort(([a], [b]) => a.localeCompare(b));
   winEntries.forEach(([key, value]) => {
-    if (!key.startsWith("_")) {
+    if (key === "shell") {
+      //windowSettingsDic[key] = Shell[value]; shell is hardcoded atm
+      return;
+    }
+    if (!key.startsWith("_") && key !== "shell") {
       windowSettingsDic[key] = value;
     }
   });
