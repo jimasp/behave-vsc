@@ -2,7 +2,7 @@
     "behave-vsc.xRay": true,
     "behave-vsc.importedSteps": {
         "folder1/steps_lib_1 ": ".*",
-        "folder2\\steps_lib_2": ".*\\steps\\.*|more_steps\\.*|.*\\steps3.py|.*\\steps4.py",
+        "folder2\\steps_lib_2": ".*/steps\\.*|more_steps\\.*|.*/steps3.py|.*\\steps4.py",
         "dist/imported_steplib": ".*"
     },
     "mypy-type-checker.ignorePatterns": [
