@@ -319,7 +319,7 @@ The most important extension settings to be aware of are probably `behaveWorking
             web_features
       ```
 
-- If you have any issues with relative imports then you can set a `PYTHONPATH` environment variable for behave execution using the `env` setting. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you will need to include all required paths in your `env` setting, e.g. `"PYTHONPATH": "src/lib1:src/lib2:myfolder"`".
+- If you have any issues with relative imports then you can set a `PYTHONPATH` environment variable for behave execution using the `env` setting. Note that these do not expand, (i.e. you cannot use `${PYTHONPATH}` on Linux or `%PYTHONPATH%` on Windows), so you need a literal path in your `env` setting, e.g. `"PYTHONPATH": "lib/python"`".
 
   - Example:
 
@@ -431,6 +431,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   - The `runProfile.args.list` is concatentated to `behave-vsc.args` if `inherit` is true, otherwise the `runProfile.args` will override `behave-vsc.args` when the profile is actively running.
   - The `runProfile.env.vars` is concatentated to `behave-vsc.env` if `inherit` is true, otherwise the `runProfile.env` will override `behave-vsc.env` when the profile is actively running.  
   - If `promptForTags` is true, then the user will be prompted to enter tags when the profile is run. Note that the tags entered will be in addition to any tags specified in `runProfile.args.list` (and `behave-vsc.args` if inherited).
+  - Don't forget that you can also use negative tags, e.g. `--tags=~@tagA` to exclude a tag.  
   - Regarding environment variables in `runProfiles`:
     - You can use an environment variable for a high level of customisation when reading it in your steps files, e.g. `os.environ["myvar"]`.
       - in your `environment.py` (or `mystage_environment.py`) file:
@@ -454,15 +455,15 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
             "FOO": "bar"
           }
         },        
-        "args": { 
+        "args": {
           "list": [
             "--keepdb",
-            "--tags=@django"            
-          ]    
+            "--tags=@mytag"
+          ]
         },
         "customRunner": {
-            "scriptFile": "manage.py",
-            "waitForJUnitFiles": true
+          "scriptFile": "manage.py",
+          "waitForJUnitFiles": true
         }
       }
     ]
@@ -474,12 +475,12 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   - The `scriptFile` must be a python file in the root of your behave working directory.
   - The script should be lightweight. The script will be executed for each behave instance that is created by the extension. So a slow script will give poor performance.
   - The customRunner can be set as your default run profile via `Select Default Profile` in the test explorer. This is useful when you are repeatedly running the same custom script.
-  - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@django ...`.
+  - The command becomes: `python <script> behave <your_args> <extension_behave_args>`, so in the above example it would create the command line like `python manage.py behave --keepdb --tags=@mytag ...`.
   - The extension will monitor for junit file output if `waitForJUnitFiles` is true. Note that:
     - If true, the extension will expect junit files to have the exact same filenames/content content that behave would create when executed on its own in the `behaveWorkingDirectory` (or project root if this is not specified).
-    - If false, the extension will fire-and-forget the script and test results will be unchanged from any previous run where junit files were present.
+    - If false, the extension will fire-and-forget the script and test results in the UI will be unchanged from any previous run where junit files were present.
   - If you are having trouble with your script, start by putting a breakpoint on the first line of code in your script (e.g. the first `import` statement), then debug a single scenario.  
-  - Debugging behave steps will only be possible for a customRunner if behave is imported into your script. Example:
+  - Debugging behave steps will only be possible for a customRunner if behave is imported into your script. For example your initial script might look like this:
   
   ```python
   import sys
