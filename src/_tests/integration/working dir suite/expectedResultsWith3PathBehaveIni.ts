@@ -4,9 +4,9 @@ import { TestResult } from "../_common/types";
 export function getExpectedCountsWith3PathBehaveIni(): ProjParseCounts {
   const testCount = getExpectedResultsWith3PathBehaveIni().length;
   return {
-    tests: { nodeCount: 16, testCount: testCount },
+    tests: { nodeCount: 17, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 5, stepFilesExceptEmptyOrCommentedOut: 1,
-    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 19, stepMappings: 19
+    stepFileStepsExceptCommentedOut: 7, featureFileStepsExceptCommentedOut: 22, stepMappings: 22
   };
 }
 
@@ -124,6 +124,22 @@ export const getExpectedResultsWith3PathBehaveIni = (): TestResult[] => {
       test_label: 'run a successful test',
       test_parent: '.../working dir/working folder/features/sub1/sub2/sub2.feature',
       test_uri: '.../working dir/working folder/features/sub1/sub2/sub2.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'working folder/features/work.features.feature',
+      scenario_featureName: 'Work',
+      scenario_getLabel: 'run a relative file test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a relative file test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../working dir/working folder/features/work.features.feature/run a relative file test',
+      test_label: 'run a relative file test',
+      test_parent: '.../working dir/working folder/features/work.features.feature',
+      test_uri: '.../working dir/working folder/features/work.features.feature',
     }),
 
   ];

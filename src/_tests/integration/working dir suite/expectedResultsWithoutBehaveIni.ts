@@ -4,9 +4,9 @@ import { TestResult } from "../_common/types";
 export function getExpectedCountsWithoutBehaveIni(): ProjParseCounts {
   const testCount = getExpectedResultsWithoutBehaveIni().length;
   return {
-    tests: { nodeCount: 10, testCount: testCount },
+    tests: { nodeCount: 11, testCount: testCount },
     featureFilesExceptEmptyOrCommentedOut: 3, stepFilesExceptEmptyOrCommentedOut: 1,
-    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 13, stepMappings: 13
+    stepFileStepsExceptCommentedOut: 7, featureFileStepsExceptCommentedOut: 16, stepMappings: 16
   };
 }
 
@@ -92,6 +92,22 @@ export const getExpectedResultsWithoutBehaveIni = (): TestResult[] => {
       test_label: 'run a successful test',
       test_parent: '.../working dir/working folder/features/sub1/sub2/sub2.feature',
       test_uri: '.../working dir/working folder/features/sub1/sub2/sub2.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: 'working folder/features/work.features.feature',
+      scenario_featureName: 'Work',
+      scenario_getLabel: 'run a relative file test',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'run a relative file test',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../working dir/working folder/features/work.features.feature/run a relative file test',
+      test_label: 'run a relative file test',
+      test_parent: '.../working dir/working folder/features/work.features.feature',
+      test_uri: '.../working dir/working folder/features/work.features.feature',
     }),
 
   ];
