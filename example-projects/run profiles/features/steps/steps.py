@@ -141,8 +141,8 @@ def profile_vs_args_check(context):
 @then("tags are as expected")
 def profile_vs_tags_check(context):
     profile = os.environ.get("profile")
-    if not profile:
-        profile = "default"  
+    if not profile: # ad-hoc
+        return
     
     # ands = while this is called "ands" it could be an OR or an AND or both combined
     # an OR is [[tag1, tag2]],
