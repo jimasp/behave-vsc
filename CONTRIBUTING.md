@@ -70,9 +70,11 @@
     ```bash
     cd "example-projects/use custom runner"
     python -m venv .venv
-    ".venv/Scripts/activate"
+    ".venv\Scripts\activate" # if on windows
+    .venv/bin/activate # if on linux
     pip install -r requirements.txt
     deactivate
+    cd ../..
     ```
 
 12. `npm run test` will do this automatically when you run it in the next step, but otherwise if you are on Windows then you will need to update `example-projects\use custom runner\settings.json` to contain `"python.defaultInterpreterPath": ".venv\\Scripts\\python.exe"` (for Linux this setting is `.venv/bin/python`).

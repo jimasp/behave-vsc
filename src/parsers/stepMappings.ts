@@ -120,7 +120,7 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
     }
   }
 
-  const findParamsMatch = (textWithoutType: string, stepType: string) => {
+  const findParamsMatch = (textWithoutType: string, stepType: string): Map<string, StepFileStep> => {
     const matchText = stepType + sepr + textWithoutType;
     const matches = new Map<string, StepFileStep>();
     for (const [key, value] of paramsSteps) {
@@ -169,7 +169,7 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
 
   // got single parameters match - return it
   if (paramsMatches.size === 1)
-    return paramsMatches.values().next().value;
+    return paramsMatches.values().next().value as StepFileStep;
 
   // more than one parameters match - get longest matched key      
   if (paramsMatches.size > 1) {
