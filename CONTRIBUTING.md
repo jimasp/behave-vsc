@@ -242,13 +242,16 @@ feature file formatting is provided by:
   - If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
   - If an exception is not bubbling, see [Exception handling](#exception-handling).
   - If you get an error running a "Debug: ..." target, try setting a breakpoint at the start of the `activate()` function.
-  - If you get an error running a "Integration Tests: ..." target, try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
+  - If you get an error running an "Integration Tests: ..." target, try setting a breakpoint at the start of the `runAllTestsAndAssertTheResults()` function.
   - If you don't hit either above two function breakpoints, try putting a breakpoint at the very first (import) line of every `.ts` file and see if it jumps out of debugging, e.g. is there a node module import/webpack issue?
   - Delete all breakpoints from both source *and* host environments if *any* of the following occur:
     - If you don't hit a breakpoint that you're sure you should be hitting. (This could also be down to sourcemaps and breakpoints being out of sync, in which case do a rebuild).
     - If `npm run test` fails on the command line due to a timeout.
     - If a "Integration Tests: ..." test fails during debugging due to a timeout.
   - It's rare (i.e. it's normally one of the above issues, not this) but there are a few lines that you can never set a breakpoint on, e.g. something like `await mypromises`. If this happens, then when you start debugging you will see vscode move the breakpoint to the next line that it can break on.
+  - If all else fails:
+    - Try manually deleting the `out` and `dist` folders, then rebuild.
+    - If that doesn't work, temporarily set `minimize: false` in `webpack.config`, then rebuild.
 
 ---
 
