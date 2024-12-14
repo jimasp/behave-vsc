@@ -318,9 +318,14 @@ Note that again, depending on the nature of the change, you will want to run the
 
 #### 1. Run automated tests
 
-(approx time required: 3m)
+(approx time required: 10m)
 
 Note that the automated tests are currently quite primitive and *only* verify the most important functionality, i.e. behave test results and step references. They do not verify other built-in convenience features like automatic feature file reparsing, file autoformatting, autocompletion, syntax highlighting, etc. which should be tested manually if you have touched those or related areas. The automated tests also do not test how the behave command is built up to match user test selection, so again if you have changed that you will need to test it manually.
+
+- IMPORTANT:
+  - Make sure you do NOT have the marketplace version of the extension installed
+  - If you have any changes you want to save, then e.g. **`git add .` and `git commit -m` your changes** before going further.
+  - Consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 
 - First to make sure the tests are running with a clean environment, ***make sure you have committed all your changes***, then run the following commands:
   
@@ -342,49 +347,55 @@ Note that the automated tests are currently quite primitive and *only* verify th
 
 (approx time required: 10m)
 
-- *Make sure you do NOT have the marketplace version of the extension installed*
-- a. start `Debug: multiroot workspace`, then in the test UI (i.e. the side panel), in `project A`:
-- b. clear all test results, run a single scenario in `project A` from the test UI
-- c. clear all test results, debug a single scenario in `project A` from the test UI
-- d. clear all test results, run a single scenario in `project A` from the > button inside the feature file
-- e. clear all test results, debug a single scenario in `project A` right click the > button inside the feature file
-- f. clear all test results, run a feature in `project A` from the >> button inside the feature file
-- g. clear all test results, debug a feature in `project A` right click the >> button inside the feature file
-- h. clear all test results, run `Feature Tests` node, check success/fail/skip across all projects are as expected
-- i. clear all test results, run `project A/nested1` node, expand the nested nodes, check success/fail/skip
-- i. clear all test results, run `project B/nested` node, expand the nested nodes, check success/fail/skip
-- j. clear all test results, collapse all tests, run `Feature Tests` node and check that the run stop button works (this may not react immediately, but you should only have to press it once to stop the test run)
-- k. clear all test results, debug `Feature Tests` node, click back to the testing panel, and check that the run stop (not the
-debug stop) button works
-- l. clear all test results, debug a `Project A` node, check that the debug stop button works - you should only have to press it once
-- m. clear all test results, in the file explorer go to `project A/behave tests/some tests/steps/shared.py` set a breakpoint in `step_inst` function on the `pass` line, debug a single scenario in `project A` and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
-- n. remove the breakpoint. clear all test results, start a debug run of `group 1 features` and check that the debug stop button works
-- o. start a debug run of unit tests (not feature tests) and check that debug stop button works
-- p. go to any feature file, check that `go to step` works using `F12`
-- q. in the steps file that just opened, check that `find all step references` works using `ALT`+`F12`, then check that `F4` and `Shift`+`F4` navigate the references list
+- IMPORTANT:
+  - Make sure you do NOT have the marketplace version of the extension installed
+  - If you have any changes you want to save, then e.g. **`git add .` and `git commit -m` your changes** before going further.
+  - Consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
+  
+- Launch `Debug: multiroot` via the Run and Debug button, then in the test UI (i.e. the side panel)
+  - then in `project A`:
+    - clear all test results, run a single scenario in `project A` from the test UI
+    - clear all test results, debug a single scenario in `project A` from the test UI
+    - clear all test results, run a single scenario in `project A` from the > button inside the feature file
+    - clear all test results, debug a single scenario in `project A` right click the > button inside the feature file
+    - clear all test results, run a feature in `project A` from the >> button inside the feature file
+    - clear all test results, debug a feature in `project A` right click the >> button inside the feature file
+    - clear all test results, run `project A/nested1` node, expand the nested nodes, check success/fail/skip
+    - clear all test results, run `project B/nested` node, expand the nested nodes, check success/fail/skip
+    - clear all test results, at top of test explorer, click the dropdown arrow next to the >> button, then scroll to the bottom and click `Select default profile` then deselect `use custom runner proj: all features` and select `use custom runner prj: behave-django runner profile - wait for results`, then click the >> button at the top of the test explorer, then check success/fail/skip across ALL projects are as expected
+    - clear all test results, collapse all tests, click the >> button at the top of the test explorer, and then check that the run stop button works (this may not react immediately, but you should only have to press it once to stop the test run)
+    - clear all test results, click the debug all tests button at the top of the test explorer, then go back to the test explorer, and check that the run stop (not the debug stop) button works, and check that the run stop (not the debug stop) button works (this may not react immediately, but you should only have to press it once to stop the test run)
+    - clear all test results, debug a `project A` node, check that the debug stop button works - you should only have to press it once
+    - clear all test results, in the file explorer go to `project A/behave tests/some tests/steps/shared.py` set a breakpoint in `step_inst` function on the `pass` line, debug a single scenario in `project A` and check it stops on the breakpoint, play it through and check the test result is updated in the test UI tree
+    - remove the breakpoint. clear all test results, start a debug run of `group 1 features` and check that the debug stop button works
+    - start a debug run of python tests (unit tests, not feature tests) and check that debug stop button works
+    - go to any feature file, check that `go to step` works using `F12`
+    - in the steps file that just opened, check that `find all step references` works using `ALT`+`F12`, then check that `F4` and `Shift`+`F4` navigate the references list
 
 #### 3. Run *change-specific* manual UI tests
 
 (varies, but approx time required for the below checks: 20m)
 
-After running automated tests and the manual UI tests in (2) above, then if you made a change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected areas*.
+After running automated tests and the manual UI tests in (2) above, then if you made a code change that affects anything other than behave test results then you'll want to run some further manual tests of the *affected UI areas*.
 
 Example: if you changed anything that affects any of step navigation/feature file parsing/step file parsing/filesystem watchers/instance or project settings, then you'd want to run these manual tests as a minimum:
 
-- i.  IMPORTANT:
-  - a. *Make sure you do NOT have the marketplace version of the extension installed*
-  - b. if you have any changes you want to save, then e.g. **`git add .` and `git commit -m` your changes** before going further.
-- ii. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
-- ii. start `Debug: multiroot workspace`
+- IMPORTANT:
+  - Make sure you do NOT have the marketplace version of the extension installed
+  - If you have any changes you want to save, then e.g. **`git add .` and `git commit -m` your changes** before going further.
+  - Consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 
-- Then in `Feature tests: project A prj`:
+- Launch `Debug: multiroot` via the Run and Debug button
 
-  - Type the word `given` in the feature file, check that the autocompletion list appears
-  - Edit the `behave_tests/some_tests/group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foobar`, then:
+- Then, in `Feature tests: project A prj`:
+
+  - Edit the `behave_tests/some_tests/group1_features/basic.feature` file
+  - Type the word `Given` in the feature file after any `Scenario` line, and check that the autocompletion list appears
+  - Change the name of the `Feature: Basic` to `Feature: Foobar`, then:
     - clear all test results in the test explorer UI
     - check you can run the renamed feature from inside the feature file using the >> button
-    - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
-    - type in "Basic" in the test explorer UI filter box, check the old feature name only appears for project B (not project A)
+    - right click the tickmark at the top of the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
+    - At the top of the test explorer UI in the filter box type in "Basic", check the old feature name is not found in project A
     - type in "Foobar" and click the >> run tests button at the top of the test explorer UI, then delete the "Foo" filter and check that only the Foobar tests ran
   - Edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo`, then:
     - check you can run the changed scenario from inside the feature file
@@ -453,13 +464,13 @@ Example: if you changed anything that affects any of step navigation/feature fil
 
 - AND:
 
- - First make sure you have the correct python interpreter set for the `Use custom runner prj` `.venv\Scripts\Python.exe` on windows or `.venv/bin/python` on Linux, then:
-  - In the test explorer, right-click on `Feature tests: use custom runner`
-    - `Execute using profile` > `use custom runner: behave-django runner profile - wait for results`
-    - check results are as expected
-  - In the test explorer, right-click on `Feature tests: use custom runner`      
-    - `Execute using profile` > `use custom runner: myscript - wait for results`
-    - check results are as expected
+- First make sure you have the correct python interpreter set for the `Use custom runner prj` `.venv\Scripts\Python.exe` on windows or `.venv/bin/python` on Linux, then:
+- In the test explorer, right-click on `Feature tests: use custom runner`
+  - `Execute using profile` > `use custom runner: behave-django runner profile - wait for results`
+  - check results are as expected
+- In the test explorer, right-click on `Feature tests: use custom runner`
+  - `Execute using profile` > `use custom runner: myscript - wait for results`
+  - check results are as expected
 
 - LASTLY:
 
