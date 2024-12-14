@@ -223,19 +223,21 @@ The most important extension settings to be aware of are probably `behaveWorking
   
 ### Otherwise
 
+- Does your workspace meet the [workspace requirements](#workspace-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
+
+- Make sure the `paths` setting in your behave configuration file is correct.
+
+- Have you set the correct python interpreter path in vscode?
+
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
+
 - Are there any warnings or errors in the Behave VSC output window? (Also try restarting vscode and looking at the Behave VSC output window immediately after startup.)
 
 - Does refreshing the test explorer solve your issue?
 
 - Does restarting vscode solve your issue?
 
-- Does your workspace meet the [workspace requirements](#workspace-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
-
-- Make sure the `paths` setting in your behave configuration file is correct.
-
 - If your project is not a simple set up, have you read the [advanced project configuration](#advanced-project-configuration)?
-
-- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
 - Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
 
