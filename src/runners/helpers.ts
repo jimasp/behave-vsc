@@ -25,7 +25,7 @@ export function getOptimisedFeaturePathsRegEx(pr: ProjRun, scenarioQueueItems: Q
   }
 
   // runParallel only runs one feature at a time, so we can simply use the single featuresPath to create the regex
-  if (pr.projSettings.runParallel)
+  if (pr.projSettings.runParallel && !pr.debug)
     return getRegEx(scenarioQueueItems[0].scenario.featureFileProjectRelativePath);
 
 

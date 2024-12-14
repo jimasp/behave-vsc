@@ -54,9 +54,6 @@ export async function runOrDebugFeatures(pr: ProjRun, scenarioQueueItems: QueueI
 
   try {
 
-    if (pr.projSettings.runParallel && pr.debug)
-      throw new Error("running parallel debug is not supported");
-
     const featurePathsPattern = getOptimisedFeaturePathsRegEx(pr, scenarioQueueItems);
     const friendlyEnvVars = getFriendlyEnvVars(pr);
     const { ps1, ps2 } = getPSCmdModifyIfWindows();
@@ -96,9 +93,6 @@ export async function runOrDebugFeatureWithSelectedScenarios(pr: ProjRun, select
   // (if we are in parallelMode, then up the stack this will be called without await)
 
   try {
-
-    if (pr.projSettings.runParallel && pr.debug)
-      throw new Error("running parallel debug is not supported");
 
     const friendlyArgsPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, true);
     const argsPipedScenarioNames = getPipedScenarioNamesRegex(selectedScenarioQueueItems, false);

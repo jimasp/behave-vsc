@@ -294,7 +294,7 @@ async function runFeaturesTogether(pr: ProjRun) {
 async function runFeaturesParallel(pr: ProjRun) {
 
   if (pr.debug)
-    throw new Error("runParallel should not be called with debug=true");
+    throw new Error("runFeaturesParallel should never be called with pr.debug=true");
 
   xRayLog(`runFeaturesParallel`, pr.projSettings.uri);
 
