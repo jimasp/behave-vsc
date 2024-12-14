@@ -35,6 +35,7 @@
 					]
 				},
 				"behave-vsc.args": {
+					"scope": "resource",
 					"type": "array",
 					"items": {
 						"type": "string"

@@ -377,47 +377,48 @@ Example: if you changed anything that affects any of step navigation/feature fil
 - ii. consider if you need to clean up for valid testing (e.g. check the output of `git clean -fdn`)
 - ii. start `Debug: multiroot workspace`
 
-- Then in `project A`:
-  - A. type the word `given` in the feature file, check that the autocompletion list appears
-  - B. edit the `behave_tests/some_tests/group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foobar`, then:
+- Then in `Feature tests: project A prj`:
+
+  - Type the word `given` in the feature file, check that the autocompletion list appears
+  - Edit the `behave_tests/some_tests/group1_features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Foobar`, then:
     - clear all test results in the test explorer UI
     - check you can run the renamed feature from inside the feature file using the >> button
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
     - type in "Basic" in the test explorer UI filter box, check the old feature name only appears for project B (not project A)
     - type in "Foobar" and click the >> run tests button at the top of the test explorer UI, then delete the "Foo" filter and check that only the Foobar tests ran
-  - C. edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo`, then:
+  - Edit `group1_features/outline_success.feature` file, change the name of `Scenario Outline: Blend Success` to `Scenario Outline: Foo`, then:
     - check you can run the changed scenario from inside the feature file
     - disable raised exceptions if required, open `behave_tests/some_tests/environment.py` and put a breakpoint on the `if "skip` line
     - back in the `outline_success.feature` file, right click the > button and "Debug Test" check you can debug the renamed scenario from inside the feature file
     - in the feature file, right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed scenario outline
-  - D. using the source control UI, open a diff comparison on any feature file you changed (leave the associated feature file open in another tab, and open the non-diff tab). now close the vscode host environment, open it again by starting `Debug: multiroot workspace`, check that while having the previous feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
-  - E. in file explorer UI, rename the `table.feature` file to `foo.table.feature` (i.e. rename the file itself)
+  - Using the source control UI, open a diff comparison on any feature file you changed (leave the associated feature file open in another tab, and open the non-diff tab). now close the vscode host environment, open it again by starting `Debug: multiroot workspace`, check that while having the previous feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
+  - In file explorer UI, rename the `table.feature` file to `foo.table.feature` (i.e. rename the file itself)
     - in the test UI tree, filter by "table" and check that under project A only one `Table feature` appears
     - check that the feature from the renamed file runs from the test UI
     - clear all test results, and check that renamed feature runs from inside the feature file using the >> button
-  - F. in file explorer UI, rename the `group1_features` folder to `group1_features_foo`,
+  - In file explorer UI, rename the `group1_features` folder to `group1_features_foo`,
     - in the test UI filter by `group1`, check that the folder is renamed and not duplicated
     - check the renamed feature group folder runs from test ui tree
     - open one of the `group1_features_foo` feature files, right-click on a step check in , check `Go to Step Definition" works.
-  - G. rename `behave tests/some tests/steps/shared.py` to `shared_foo.py`, then open the file, right-click on a step function and `Find All Step References`, check it still finds the references in the feature files.
-  - H. delete `group1_features_foo/outline_success.feature` file, check it gets removed from `group1_features_foo` in the test tree
+  - Rename `behave tests/some tests/steps/shared.py` to `shared_foo.py`, then open the file, right-click on a step function and `Find All Step References`, check it still finds the references in the feature files.
+  - Delete `group1_features_foo/outline_success.feature` file, check it gets removed from `group1_features_foo` in the test tree
   - I. in file explorer UI, create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foobar` and the first scenario, copy/paste that text into `scen_copy.feature` and then in the test UI check that a second `Foobar` feature gets added to the test tree under `group1_features_foo`
-  - J. in file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
-  - K. in the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
-  - L. in the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
+  - In file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
+  - In the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
+  - In the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
     - `-i "behave tests/some tests/group1_features_foo/outline_mixed.feature$" -n "^Blenders Success ".*" -- @|^Blenders Success .* -- @"`
     - `-i "behave tests/some tests/group1_features_foo/foo.table.feature$|behave tests/some tests/group1_features_foo/textblock.feature$"`
 
-- SWITCHING to `project B`:
+- SWITCHING to `Feature tests: project B prj`:
 
-  - A. edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Boo`, then:
+  - Edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Boo`, then:
     - clear all test results in the test explorer UI
     - check you can run the renamed feature from inside the feature file using the >> button
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
-  - B. in file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
-  - C. in file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition` for a step in that file
-  - D. in file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` project are returned
-  - E. in the `Step references` window, look at the `textblock.feature` file references:
+  - In file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
+  - In file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition` for a step in that file
+  - In file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` project are returned
+  - In the `Step references` window, look at the `textblock.feature` file references:
     - also note the number of results at the top of the `Step references` window (`x results in y files`)
     - click on one of the `textblock.feature` results, then comment out the line you are taken to
     - check that the reference window automatically refreshes to remove the reference (the results count should decrement)
@@ -427,28 +428,40 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check you can `F4` and `Shift`+`F4` through the step references for `textblock.feature`
     - save the file
     - in the file explorer UI, copy/paste the `textblock.feature` file itself into the `features/grouped` folder to create a `textblock copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `textblock copy.feature` (and the results count increases by the amount of scenarios in the file)
-  - F. in the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has moved and the original query is for the now blank line number.)
+  - In the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has moved and the original query is for the now blank line number.)
     - right-click and `Find all Step References` on the `def step_inst(context):` line and check it finds all step references again.
     - try clicking on a reference to check it navigates correctly
-  - G. F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
-  - H. comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
-  - I. in the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
-  - J. in the test ui, in `grouped` select `Duplicate` and `Table feature`, then under `Mixed outline` select `Blenders Success` and `Blenders Fail` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
+  - F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
+  - Comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
+  - In the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
+  - In the test ui, in `grouped` select `Duplicate` and `Table feature`, then under `Mixed outline` select `Blenders Success` and `Blenders Fail` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
   - `-i "features/grouped/outline_mixed.feature" -n "^Blenders Fail -- @|^Blenders Success -- @"`
   - `-i "features/grouped/duplicate.feature$"`
   - `-i "features/grouped/table.feature$"`
 
 - THEN:
 
-  - X. go to the output window `Behave VSC: project A`
-  - Y. in the file explorer UI, right click `project A` workspace folder (e.g. "project A") and click `Remove folder from workspace`.
+  - Go to the output window `Behave VSC: project A`
+  - In the file explorer UI, right click `project A` workspace folder (e.g. "project A") and click `Remove folder from workspace`.
     - the original `project A` output window should close
     - check there are no error windows pop up. check that the dropdown has output windows for `Behave VSC: simple` and `Behave VSC: project B`(but not `project A`).
     - in the test UI, check that tests run as expected from `simple` and `project B`
     - check that tests show their output in the output windows `Behave VSC: project B` and `Behave VSC: simple`
-  - Z. click vscode's "File" menu and "Add folder to workspace...", double click `project A` to add it back.
+  - Click vscode's "File" menu and "Add folder to workspace...", double click `project A` to add it back.
     - check that you have output windows `Behave VSC: project A`, `Behave VSC: project B` and `Behave VSC: simple` (sometimes vscode can glitch and duplicate dropdown items temporarily, but selecting an item from the dropdown should remove any duplicates)
     - check that tests run from `simple` and `project B` and update their output windows
 
-- Lastly, we need to undo the file changes created by these manual tests
-  - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`
+- AND:
+
+ - First make sure you have the correct python interpreter set for the `Use custom runner prj` `.venv\Scripts\Python.exe` on windows or `.venv/bin/python` on Linux, then:
+  - In the test explorer, right-click on `Feature tests: use custom runner`
+    - `Execute using profile` > `use custom runner: behave-django runner profile - wait for results`
+    - check results are as expected
+  - In the test explorer, right-click on `Feature tests: use custom runner`      
+    - `Execute using profile` > `use custom runner: myscript - wait for results`
+    - check results are as expected
+
+- LASTLY:
+
+  - We need to undo the file changes created by these manual tests
+    - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`
