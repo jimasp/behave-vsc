@@ -28,6 +28,7 @@ const nonProjFolderWatchers: NonProjectWatcher[] = [];
 let recreateFunc: (caller: string, projUri?: vscode.Uri, cancelToken?: vscode.CancellationToken,
   testConfig?: vscode.WorkspaceConfiguration) => Promise<void>;
 let refreshFunc: (cancelToken: vscode.CancellationToken) => Promise<void>;
+let changeDocCts = new vscode.CancellationTokenSource();
 
 
 export function deactivate() {
@@ -130,6 +131,20 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
       // d. to keep stepmappings in sync in case user clicks go to step def/ref before file save
       context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(async (event) => {
         try {
+          // cancel previous processing if still running
+          if (changeDocCts) {
+            changeDocCts.cancel();
+            changeDocCts.dispose();
+          }
+          changeDocCts = new vscode.CancellationTokenSource();
+          const cancelToken = changeDocCts.token;
+
+          // sleep a little to stop multiple sequential calls when typing
+          // (otherwise we would kill performance in projects with large numbers of feature/steps files)
+          await new Promise(t => setTimeout(t, 200));
+          if (cancelToken.isCancellationRequested)
+            return;
+
           const uri = event.document.uri;
           const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
           if (!workspaceFolder)
