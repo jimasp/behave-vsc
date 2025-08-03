@@ -51,7 +51,7 @@
 		},
 		{
 			"path": "./handle incorrect paths",
-			"name": "handle incorrect paths (show warning in popup when run)"
+			"name": "handle incorrect paths (show warning in output window on startup)"
 		},
 		{
 			"path": "./handle unconfigured paths",

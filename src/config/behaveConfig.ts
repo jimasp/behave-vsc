@@ -116,7 +116,7 @@ function getBehavePathsFromConfigFile(ps: ProjectSettings) {
 
 function getBehavePathsFromIniContents(iniFileContents: string): string[] | null {
 
-  // WE HAVE TO FOLLOW BEHAVE'S OWN PATHS BEHAVIOUR HERE
+  // WE MUST FOLLOW BEHAVE'S OWN PATHS BEHAVIOUR HERE
   // (see "read_configuration" in behave's source code)
   //
   // example ini file #1 - becomes []

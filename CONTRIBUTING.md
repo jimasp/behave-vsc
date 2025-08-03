@@ -283,7 +283,7 @@ feature file formatting is provided by:
 - Avoid anything that might break on someone else's machine - for example don't rely on bash/cmd, installed programs etc.
 - While the extension is not internationalised, `Date()` should be avoided, except for `Date().toISOString()` for user output. The `performance` library is used for timings.
 - Encoding (use `utf8`).
-- Look out for race conditions. You can have e.g. 3 projects running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with a multiroot workspace if possible, like the example one provided with this source code.)
+- Look out for race conditions. You can have e.g. 3 projects running in parallel, and in turn they could all be running parallel tests. (It's a good idea to do all your coding/testing with the multiroot workspace if possible, like the example one provided with this source code.)
 - Consider multiple instances of vscode, where the extension could be running twice or more on the same machine. For example, run names have unique ids, so you can be sure they are unique to the vscode instance as well as the project.
 - Also see [General development notes](#general-development-notes) below.
 
@@ -402,7 +402,7 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - disable raised exceptions if required, open `behave_tests/some_tests/environment.py` and put a breakpoint on the `if "skip` line
     - back in the `outline_success.feature` file, right click the > button and "Debug Test" check you can debug the renamed scenario from inside the feature file
     - in the feature file, right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed scenario outline
-  - Using the source control UI, open a diff comparison on any feature file you changed (leave the associated feature file open in another tab, and open the non-diff tab). now close the vscode host environment, open it again by starting `Debug: multiroot workspace`, check that while having the previous feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
+  - Using the source control UI in vscode, open a diff comparison on any feature file you changed (leave the associated feature file open in another tab, and open the non-diff tab). Now close the vscode host environment, open it again by starting `Debug: multiroot`, check that while having the previous feature file open on start up, you can run a scenario from inside the feature file (the normal feature file that is open, not the diff view)
   - In file explorer UI, rename the `table.feature` file to `foo.table.feature` (i.e. rename the file itself)
     - in the test UI tree, filter by "table" and check that under project A only one `Table feature` appears
     - check that the feature from the renamed file runs from the test UI
@@ -410,25 +410,25 @@ Example: if you changed anything that affects any of step navigation/feature fil
   - In file explorer UI, rename the `group1_features` folder to `group1_features_foo`,
     - in the test UI filter by `group1`, check that the folder is renamed and not duplicated
     - check the renamed feature group folder runs from test ui tree
-    - open one of the `group1_features_foo` feature files, right-click on a step check in , check `Go to Step Definition" works.
+    - open one of the `group1_features_foo` feature files, right-click on a step and check "Go to Step Definition" works.
   - Rename `behave tests/some tests/steps/shared.py` to `shared_foo.py`, then open the file, right-click on a step function and `Find All Step References`, check it still finds the references in the feature files.
   - Delete `group1_features_foo/outline_success.feature` file, check it gets removed from `group1_features_foo` in the test tree
-  - I. in file explorer UI, create a new feature file `scen_copy.feature`, then go to `basic.feature` and copy the `Feature: Foobar` and the first scenario, copy/paste that text into `scen_copy.feature` and then in the test UI check that a second `Foobar` feature gets added to the test tree under `group1_features_foo`
+  - I. in file explorer UI, create a new feature file `scen_copy.feature` under `group1_features_foo`, then go to `basic.feature` and copy the `Feature: Foobar` and the first scenario, copy/paste that text into `scen_copy.feature` and then in the test UI check that a second `Foobar` feature gets added to the test tree under `group1_features_foo`
   - In file explorer UI, copy and paste the `scen_copy.feature` feature file itself into the same `group1_features_foo` folder, and and then in the test UI check the feature gets added to the test tree, i.e. you should see three `Foobar` features
-  - In the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command parameter is: `-i "behave tests/some tests/group2_features/"`
-  - In the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>` and `Blenders Success "<thing>"`, then select `Table feature`, `Text block`. run the tests then open the `Behave VSC: project A` output window and check that the behave commands have their `i/n` parameters set as follows:
+  - In the test ui, remove the filter, run `group2_features`. open the `Behave VSC: project A` output window and check that the behave command -i parameter is: `-i "behave tests/some tests/group2_features/"`
+  - In the test ui, in `group1_features_foo` under `Mixed outline` select `Blenders Success <thing>`, then also select `Table feature`, and also `Text block`. run the tests from the Test UI by clicking the run icon against one of the selected tests then open the `Behave VSC: project A` output window and check that the 2x behave commands have their `i/n` parameters set as follows:
     - `-i "behave tests/some tests/group1_features_foo/outline_mixed.feature$" -n "^Blenders Success ".*" -- @|^Blenders Success .* -- @"`
     - `-i "behave tests/some tests/group1_features_foo/foo.table.feature$|behave tests/some tests/group1_features_foo/textblock.feature$"`
 
 - SWITCHING to `Feature tests: project B prj`:
 
   - Edit the `features/basic.feature` file, change the name of the `Feature: Basic` to `Feature: Boo`, then:
-    - clear all test results in the test explorer UI
+    - clear all test results in the test explorer UI and collapse all tests
     - check you can run the renamed feature from inside the feature file using the >> button
     - right click the > button inside the feature file and click "Reveal in test explorer", check the test UI tree shows the renamed feature
   - In file explorer UI, open the `features/goto_step.feature` feature file and right click on one of the `wrapped step` steps near the bottom of the file and `Go to Step Definition"`. check it goes to the correct definition in the `goto_step.feature.py` file
   - In file explorer UI, rename the `features/goto_step.feature` file to `goto_step_foo.feature` and check you can still use `Go to Step Definition` for a step in that file
-  - In file explorer UI, open `features\steps\__init__.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` project are returned
+  - In file explorer UI, open `features\steps\shared.py`, go to the line `def step_inst(context):` and right-click and `Find All Step References` and check that only hits from the `project B` project are returned (if you hover on the feature a tooltip will show the path)
   - In the `Step references` window, look at the `textblock.feature` file references:
     - also note the number of results at the top of the `Step references` window (`x results in y files`)
     - click on one of the `textblock.feature` results, then comment out the line you are taken to

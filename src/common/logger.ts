@@ -48,64 +48,67 @@ export class Logger {
     }
   };
 
+  appendLineToChannel = (projPath: string, text: string, showChannelOutputWindow: boolean = false) => {
+    // startup protection in case channnels not yet created
+    if (!this.channels[projPath])
+      return;
+    this.channels[projPath].appendLine(text);
+    if (showChannelOutputWindow)
+      this.channels[projPath].show();
+  }
+
+  appendToTestRunOutput = (run: vscode.TestRun | undefined, text: string, lineFeed: boolean = true) => {
+    const lf = lineFeed ? "\r\n" : "";
+    if (run)
+      run.appendOutput(text + lf);
+  }
+
 
   logInfoAllProjects = (text: string, run?: vscode.TestRun) => {
     xRayLog(text);
 
     for (const projPath in this.channels) {
-      this.channels[projPath].appendLine(text);
+      this.appendLineToChannel(projPath, text);
     }
 
-    if (run)
-      run.appendOutput(text + "\r\n");
+    this.appendToTestRunOutput(run, text);
   };
 
 
   logInfo = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text);
-
-    this.channels[projUri.path].appendLine(text);
-    if (run)
-      run.appendOutput(text + "\r\n");
+    this.appendLineToChannel(projUri.path, text);
+    this.appendToTestRunOutput(run, text);
   };
+
 
   // log info without a line feed (used for logging behave output)
   logInfoNoLF = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text);
-
-    this.channels[projUri.path].append(text);
-    if (run)
-      run.appendOutput(text);
+    this.appendLineToChannel(projUri.path, text);
+    this.appendToTestRunOutput(run, text, false);
   };
 
 
   logWarning = (text: string, projUri: vscode.Uri, run?: vscode.TestRun) => {
     xRayLog(text, projUri, LogType.warn);
-
-    text = "\nWARNING: " + text;
-    this.channels[projUri.path].appendLine(text);
-    this.channels[projUri.path].show(true);
-
-    if (run)
-      run.appendOutput(text + "\r\n");
+    const warningText = "\nWARNING: " + text;
+    this.appendLineToChannel(projUri.path, warningText, true);
+    this.appendToTestRunOutput(run, warningText);
   };
 
 
   logError = (error: unknown, projUri?: vscode.Uri | undefined, run?: vscode.TestRun) => {
-
     let errText = getErrorText(error);
     errText = errText.replace(/^Error: /, "");
-    const text = "\nERROR: " + errText;
-    if (projUri) {
-      this.channels[projUri.path].appendLine(text);
-      this.channels[projUri.path].show(true);
-    }
+    errText = "\nERROR: " + errText;
+    this.appendToTestRunOutput(run, errText);
 
-    if (run)
-      run.appendOutput(text + "\r\n");
+    if (projUri)
+      this.appendLineToChannel(projUri.path, errText, true);
 
     if (inDiagnosticMode() || !projUri) {
-      this._popup(text, projUri, run, LogType.error);
+      this._popup(errText, projUri, run, LogType.error);
     }
   }
 
@@ -121,11 +124,11 @@ export class Logger {
 
     const logText = (logType === LogType.error ? "ERROR: " : logType === LogType.warn ? "WARNING: " : "") + text;
     if (projUri) {
-      this.channels[projUri.path].appendLine(logText);
+      this.appendLineToChannel(projUri.path, logText);
     }
     else {
       for (const projPath in this.channels) {
-        this.channels[projPath].appendLine(logText);
+        this.appendLineToChannel(projPath, logText);
       }
     }
 
@@ -159,10 +162,7 @@ export class Logger {
         break;
     }
 
-    // if(inDiagnosticMode())
-    //   vscode.debug.activeDebugConsole.appendLine(text);
-    if (run)
-      run.appendOutput(text.replace("\n", "\r\n") + "\r\n");
+    this.appendToTestRunOutput(run, text.replace("\n", "\r\n"));
   }
 }
 

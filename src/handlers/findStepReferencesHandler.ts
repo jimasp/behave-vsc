@@ -48,7 +48,7 @@ export async function findStepReferencesHandler(textEditor?: vscode.TextEditor) 
   // (textEditor param is null when called via refreshStepReferencesView)
   const fileUri = textEditor?.document.uri;
 
-  if (fileUri?.scheme !== "file")
+  if (fileUri && fileUri?.scheme !== "file")
     return;
 
   try {
