@@ -124,11 +124,11 @@ export class Logger {
 
     const logText = (logType === LogType.error ? "ERROR: " : logType === LogType.warn ? "WARNING: " : "") + text;
     if (projUri) {
-      this.appendLineToChannel(projUri.path, logText);
+      this.appendLineToChannel(projUri.path, logText, true);
     }
     else {
       for (const projPath in this.channels) {
-        this.appendLineToChannel(projPath, logText);
+        this.appendLineToChannel(projPath, logText, true);
       }
     }
 
@@ -224,7 +224,8 @@ function inDiagnosticMode() {
   // - xRay is enabled by user, or 
   // - we're debugging an example project, or  
   // - we're running integration tests
-  if (!services?.config?.instanceSettingsLoaded
+
+  if (!services?.config?.instanceSettingsLoaded // call instanceSettingsLoaded first in chain to avoid circular dependency (stack overflow)
     || services.config.instanceSettings.xRay
     || services.config.exampleProject
     || services.config.isIntegrationTestRun) {
