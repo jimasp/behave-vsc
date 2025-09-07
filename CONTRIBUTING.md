@@ -438,41 +438,48 @@ Example: if you changed anything that affects any of step navigation/feature fil
     - check that the reference window automatically refreshes to add the step reference in the new scenario (the results count should increment)
     - check you can `F4` and `Shift`+`F4` through the step references for `textblock.feature`
     - save the file
-    - in the file explorer UI, copy/paste the `textblock.feature` file itself into the `features/grouped` folder to create a `textblock copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `textblock copy.feature` (and the results count increases by the amount of scenarios in the file)
+    - in the file explorer UI, copy/paste the `textblock.feature` file itself into the `features/grouped` folder to create a `textblock copy.feature` file, go back to the step references window, check that the reference window automatically refreshes to add the new feature file references for `textblock copy.feature` (and the results count increases by the amount of scenarios in the file and the file count increases by 1)
   - In the new file, choose any `Given we have behave installed` line, right-click and `Go to Step Definition`. now add a couple of blank lines directly above the `def step_inst(context):` line. (This will mean there are no results for that line as it has moved and the original query is for the now blank line number.)
     - right-click and `Find all Step References` on the `def step_inst(context):` line and check it finds all step references again.
     - try clicking on a reference to check it navigates correctly
-  - F12 on any `Given we have behave installed` line, then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then right-click and `Find All Step References` and again check the results are the same.
+  - F12 on any `Given we have behave installed` line to trigger `Go to Step Definition` then rename the step function `def step_inst(context):` to `def step_inst_foo(context):`. check the step references window is unchanged (shows the same results). then ALT+F12 to trigger `Find All Step References` and again check the results are the same.
   - Comment out the step function `def step_inst_foo(context):`, check there are now no results in the step references window. uncomment and check the results reappear.
-  - In the test ui, run `grouped`. open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `-i "features/grouped/table.feature$"`
-  - In the test ui, in `grouped` select `Duplicate` and `Table feature`, then under `Mixed outline` select `Blenders Success` and `Blenders Fail` and run the tests. open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (output order may vary because Project B runs in parallel):
-  - `-i "features/grouped/outline_mixed.feature" -n "^Blenders Fail -- @|^Blenders Success -- @"`
-  - `-i "features/grouped/duplicate.feature$"`
-  - `-i "features/grouped/table.feature$"`
+  - Project B, unlike project A, is set to run features in parallel and the output should confirm this:
+  - In the test ui, run project B `grouped` folder. Open the `Behave VSC: project B` output window and check that separate behave instances are started for each feature, for example: `... -i "features/grouped/outline_success.feature$" ...`
+  - In the test ui, in `grouped` select `Duplicate` and `Outline success`, then under `Mixed outline` select `Blenders Success` and `Blenders Fail` and run the tests. Open the `Behave VSC: project B` output window and check that there are thee behave commands with their `i/n` parameters set as follows (note that output order may vary because Project B runs in parallel):
+  - `... -i "features/grouped/duplicate.feature$" ...`
+  - `...-i "features/grouped/Outline success.feature$" ...`
+  - `...-i "features/grouped/outline_mixed.feature" -n "^Blenders Fail -- @|^Blenders Success -- @" ...`
 
 - THEN:
 
   - Go to the output window `Behave VSC: project A`
   - In the file explorer UI, right click `project A` workspace folder (e.g. "project A") and click `Remove folder from workspace`.
     - the original `project A` output window should close
-    - check there are no error windows pop up. check that the dropdown has output windows for `Behave VSC: simple` and `Behave VSC: project B`(but not `project A`).
+    - check there are no error windows pop up. check that the dropdown has output windows for other projects like `Behave VSC: simple` and `Behave VSC: project B` but  `project A` is no longer listed).
     - in the test UI, check that tests run as expected from `simple` and `project B`
     - check that tests show their output in the output windows `Behave VSC: project B` and `Behave VSC: simple`
   - Click vscode's "File" menu and "Add folder to workspace...", double click `project A` to add it back.
     - check that you have output windows `Behave VSC: project A`, `Behave VSC: project B` and `Behave VSC: simple` (sometimes vscode can glitch and duplicate dropdown items temporarily, but selecting an item from the dropdown should remove any duplicates)
-    - check that tests run from `simple` and `project B` and update their output windows
+    - check that tests run from `simple` and `project A` and update their output windows
 
 - AND:
 
-- First make sure you have the correct python interpreter set for the `Use custom runner prj` `.venv\Scripts\Python.exe` on windows or `.venv/bin/python` on Linux, then:
+- First make sure you have the correct python default interpreter path set in `settings.json` in the `Use custom runner prj`, i.e. `.venv\Scripts\Python.exe` on windows or `.venv/bin/python` on Linux, then:
 - In the test explorer, right-click on `Feature tests: use custom runner`
   - `Execute using profile` > `use custom runner: behave-django runner profile - wait for results`
-  - check results are as expected
+  - check test results are as expected (pass/fail/skip for all except `MyScript`) in the test explorer
 - In the test explorer, right-click on `Feature tests: use custom runner`
   - `Execute using profile` > `use custom runner: myscript - wait for results`
-  - check results are as expected
+  - check the `MyScript` feature runs as expected
 
 - LASTLY:
 
   - We need to undo the file changes created by these manual tests
-    - assuming you committed at step A, check you are in the project root, and use e.g. `git reset --hard` and `git clean -fd`
+    - assuming you committed at step A, check you are in the project root, and use e.g.
+
+    ```shell
+    cd <local behave-vsc repo root folder>
+    git reset --hard
+    git clean -fd
+    ```
