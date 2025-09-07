@@ -141,7 +141,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
 
           // sleep a little to stop multiple sequential calls when typing
           // (otherwise we would kill performance in projects with large numbers of feature/steps files)
-          await new Promise(t => setTimeout(t, 200));
+          await new Promise(t => setTimeout(t, 300));
           if (cancelToken.isCancellationRequested)
             return;
 

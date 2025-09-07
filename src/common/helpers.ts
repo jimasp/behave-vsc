@@ -160,14 +160,14 @@ export const projectContainsRelativePath = (projUri: vscode.Uri, relPath: string
 
 
 export const getParentProjectUri = (fileorFolderUri: vscode.Uri | undefined): vscode.Uri => {
-  if (fileorFolderUri?.scheme !== "file")
-    throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   if (!fileorFolderUri) // handling this here for caller convenience
     throw new Error("uri is undefined");
+  if (fileorFolderUri?.scheme !== "file")
+    throw new Error(`Unexpected scheme: ${fileorFolderUri?.scheme}`);
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(fileorFolderUri);
   const projUri = workspaceFolder ? workspaceFolder.uri : undefined;
   if (!projUri)
-    throw "No workspace folder found for file " + fileorFolderUri.fsPath;
+    throw new Error("No workspace folder found for file " + fileorFolderUri.fsPath);
   return projUri;
 }
 
