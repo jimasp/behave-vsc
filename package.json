@@ -400,7 +400,7 @@
 		"glob": "^10.3.10",
 		"mocha": "^11.7.2",
 		"mock-fs": "^5.2.0",
-		"rimraf": "^5.0.5",
+		"rimraf": "^6.0.1",
 		"sinon": "^17.0.1"
 	},
 	"dependencies": {
