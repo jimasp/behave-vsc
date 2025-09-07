@@ -68,7 +68,7 @@ export const getFeatureNameFromContent = async (content: string, uri: vscode.Uri
 }
 
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const parseFeatureContent = (ps: ProjectSettings, uri: vscode.Uri, content: string, caller: string,
   onScenarioLine: (range: vscode.Range, scenarioName: string, isOutline: boolean) => void,
   onFeatureLine: (range: vscode.Range) => void) => {

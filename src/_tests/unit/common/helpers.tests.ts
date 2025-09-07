@@ -118,7 +118,7 @@ suite("findFeatureFoldersInWorkingDir", () => {
 });
 
 suite("getOptimisedFeatureParsingPaths", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
 
   test(`should return "" for ""`, () => {
     const paths = [""];

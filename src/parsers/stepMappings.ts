@@ -145,7 +145,7 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
 
     // return longest
     const stepMatch = paramsMatches.get(longestKey);
-    return stepMatch!; // eslint-disable-line @typescript-eslint/no-non-null-assertion    
+    return stepMatch!;  
   }
 
   let textWithoutType = featureFileStep.textWithoutType;

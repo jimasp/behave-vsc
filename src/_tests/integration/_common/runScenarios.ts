@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+//
 import vscode from 'vscode';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';
 import { getTestItems, uriId } from '../../../common/helpers';
@@ -12,7 +12,7 @@ import { assertExpectedResults, assertLogExists, standardisePath } from "./asser
 import { QueueItem } from '../../../extension';
 import { logStore } from '../../runner';
 import { Scenario } from '../../../parsers/testFile';
-import path = require('path');
+import * as path from 'node:path';
 
 
 

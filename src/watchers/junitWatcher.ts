@@ -241,8 +241,8 @@ export class JunitWatcher {
         try {
           await vscode.workspace.fs.delete(f);
         }
-        catch (e: unknown) {
-          //
+        catch {
+          // ignore delete errors
         }
       }
       this.#foldersWaitingForWatcher.delete(uriId(folderUri));

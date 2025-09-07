@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import vscode from 'vscode';
 import assert from 'assert';
 import { TestWorkspaceConfig } from './testWorkspaceConfig';

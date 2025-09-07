@@ -106,7 +106,7 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // called when a user renames, adds or removes a workspace folder.
     // NOTE: the first time a new not-previously recognised workspace folder gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     let wsFolderChanged = false;
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {

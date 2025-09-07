@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
