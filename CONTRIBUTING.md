@@ -55,7 +55,7 @@
 9. Install behave 1.2.6 globally (most example projects do not have a venv):
 
     ```bash
-    pip install behave==1.2.6`
+    pip install behave==1.2.6
     "python" -m behave --version 
     ```
 

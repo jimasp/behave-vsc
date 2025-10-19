@@ -369,6 +369,39 @@ async function getPaths(ps: ProjectSettings): Promise<GetPaths | undefined> {
 
 
 async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativeBehaveConfigPaths: string[]): Promise<string[]> {
+  /**
+  * Determine the project‑relative feature folder roots to parse/watch.
+  *
+  * Flow:
+  * 1. If behave config specifies one or more project‑relative paths AND none of them
+  *    is the behave working directory root (ps.projRelativeBehaveWorkingDirPath, which
+  *    defaults to "."), we skip on‑disk discovery and return the optimised version of
+  *    those config paths.
+  *
+  * 2. Otherwise (no config paths, or one of them equals the working dir root) we discover
+  *    feature folders on disk via findFeatureFoldersInWorkingDir(ps). That helper returns
+  *    working‑dir‑relative folders that currently contain at least one *.feature file
+  *    (directly or in a descendant).
+  *
+  * 3. Each discovered folder is prefixed with the project‑relative working directory path
+  *    (path.posix.join(ps.projRelativeBehaveWorkingDirPath, folder)).
+  *
+  * 4. We merge in all behave config paths (projRelativeBehaveConfigPaths) even if they do
+  *    not yet exist or are presently empty, so that the watcher will notice future files.
+  *    This merge also happens when the root path is among the config paths.
+  *
+  * 5. After de‑duplication (Set) we call getOptimisedFeatureParsingPaths() to drop redundant
+  *    descendant paths, yielding a minimal set of non‑overlapping root search paths (e.g. keep
+  *    "features" and discard "features/api").
+  *
+  * 6. If optimisation yields no paths (no discovery and no config entries) we default to
+  *    ["features"] so that creating a features/ folder later is automatically detected.
+  *
+  * Returns: array of project‑relative folder root paths for feature discovery & watching.
+  * Notes:
+  *  - The working directory root is represented as "." (never an empty string).
+  *  - No special empty‑string handling is required here (legacy comment removed).
+   */
   const start = performance.now();
 
   // if paths specifically set in behave.ini, AND one of the relative paths is not the working dir root,
@@ -387,9 +420,8 @@ async function getProjectRelativeFeatureFolders(ps: ProjectSettings, projRelativ
   // (they don't have to exist yet as the watcher uses the project root)
   projRelFeatureFolders = [...new Set(projRelFeatureFolders.concat(projRelativeBehaveConfigPaths))];
 
-  // optimise to longest common search paths for parsing search paths
-  // note that if "" is included in relFeatureFolders, then we maintain it 
-  // as a distinct case (see _parseFeatureFiles)
+  // Optimise: remove redundant descendant paths (keep the minimal non-overlapping roots)
+  // (Legacy behaviour about preserving an empty string path is no longer applicable; root is ".".)
   const relFeaturePaths = getOptimisedFeatureParsingPaths(projRelFeatureFolders);
 
   // if no relFeaturePaths, then default to watching for features path

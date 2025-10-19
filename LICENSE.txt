@@ -19,3 +19,19 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT 
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+THIRD-PARTY SOFTWARE ACKNOWLEDGMENTS:
+
+This software includes functionality derived from or inspired by the behave behavior-driven development framework. 
+The original behave project is:
+Copyright (c) 2012-2014 Benno Rice, Richard Jones and others, and 
+Copyright (c) 2014-2023 Jens Engel and others.
+
+The behave project is distributed under the BSD 2-Clause License.
+For more information about behave, see: https://github.com/behave/behave
+
+Out of necessity, there are specific areas where this extension attempts to mirror behave's logic, including:
+- Configuration file parsing and precedence
+- Feature path resolution algorithms  
+- JUnit filename generation patterns
+- Working directory and path setup procedures

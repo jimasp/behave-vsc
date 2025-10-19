@@ -14,10 +14,10 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
   - Shows full behave output in the Behave VSC output window.
   - Shows the behave command in the output so you can generate commands to run manually.
   - Supports running parallel behave instances, if all your features are isolated (`runParallel`).
-  - Configurable behave working directory (`behaveWorkingDirectory`).
-  - Configurable environment variables (`env` or `runProfiles`).
-  - Configurable behave arguments (`args` or `runProfiles`).
-  - Configurable custom runner script, e.g. manage.py for behave-django or just your own script (`runProfiles`).
+  - Optional behave working directory (`behaveWorkingDirectory`).
+  - Optional environment variables (`env` or `runProfiles`).
+  - Optional behave arguments (`args` or `runProfiles`).
+  - Optional custom runner script, e.g. manage.py for behave-django or just your own script (`runProfiles`).
 - Two-way step navigation:
   - "Go to Step Definition" from inside a feature file (default F12).
   - "Find All Step References" from inside a step file (default Alt+F12).
@@ -30,25 +30,19 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 - This extension supports multi-root workspaces, so you can run features from more than one project in a single instance of vscode. (Each project folder must have its own distinct features/steps folders.)
 - Extensive customisation settings (e.g. `runParallel`, `env`, `runProfiles` for per-run settings, etc.)
 
----
-
-## Terminology used in this readme
-
-- `Workspace`: the root context of the development environment in the IDE. There is only one workspace per vscode instance.
-- `Workspace folder` : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
-- `Multi-root workspace`: a workspace that contains multiple workspace folders.
-- `Project`: within this readme, this is shorthand for "a workspace folder that contains feature files".
-
 ## Workspace requirements
 
 - No conflicting behave/gherkin/cucumber extension is enabled in vscode
 - [Microsoft Python extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 - [behave 1.2.6](https://behave.readthedocs.io)
 - [Python](https://www.python.org/)
-- Compatible project directory structure(s)
+- [Compatible project directory structure(s)](#compatible-project-directory-structures)
+
+---
 
 ### Compatible project directory structures
 
+- A single behave working directory per project folder (the default behave working directory is the project root).
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure, which is as follows:
   - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
   - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
@@ -73,18 +67,26 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             └── web_steps.py
     ```
 
-- The default behave working directory is the project root.
+- Your behave working directory is the project root unless otherwise specified via the extension setting `behaveWorkingDirectory`.
 - As per behave itself, *without additional configuration*, features will only be discovered if:
-  - (a) you have a `features/steps` folder in your project root, or
-  - (b) you have a `steps` folder in your project root
-- Beyond either of those simple cases, feature/step discovery is based on the extension `behaveWorkingDirectory` setting and the the behave configuration file `paths` setting.
+  - (a) you have a `features/steps` folder in your behave working directory, or
+  - (b) you have a `steps` folder in your behave working directory
+- Additional configuration is available via the optional extension setting `behaveWorkingDirectory` and the optional behave configuration file (e.g. `behave.ini`) with the `paths` setting dictating feature/step discovery as per behave. (If present, your behave configuration file must be in your behave working directory root.)
 - If you are having trouble with the extension finding your feature/step files, see [advanced project configuration](#advanced-project-configuration) for more information.
 
 ---
 
+## Terminology used in this readme
+
+- `Workspace`: the root context of the development environment in the IDE. There is only one workspace per vscode instance.
+- `Workspace folder` : a "root" (top-level) folder within the workspace. There can be more than one workspace folder, and each workspace folder can contain its own `.vscode` folder with it's own unique settings.
+- `Multi-root workspace`: a workspace that contains multiple workspace folders.
+- `Project`: within this readme, this is shorthand for "a workspace folder that contains feature files".
+
 ## Behave "paths" setting
 
 - If you have a very large project *and* your features folder is in your project root, then it is recommended to specify the `paths` setting in your corresponding project root behave configuration file to avoid the extension having to parse your entire project on startup to determine the feature folder(s). Note however that a better solution for large projects is to use a separate subfolder for behave tests and set `behaveWorkingDirectory` in the extension settings.
+- Note that behave (and the extension) only use the first path entry to determine your `steps` folder, the rest it uses for feature paths only
 
 ## Extension settings
 
@@ -118,7 +120,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 - It determines the features and steps folders by a combination of the following *optional* settings. If these are not supplied, then it uses defaults:
   - `behaveWorkingDirectory` extension setting, default is the project root,
   - `paths` in the behave configuration file, default is `features`,
-  - `importedSteps` extension setting, default is `{}` (`steps` is always included regardless of the setting).
+  - `importedSteps` extension setting, default is nothing (`{}`), note that `steps` is always included regardless of the setting.
 
 - The extension parses `*.feature` files from the feature folders. It then uses this information to build a test tree in the test explorer UI.
 
@@ -207,7 +209,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - *Where is the behave junit output stored?*
 
-  - In a temp folder that is deleted (recycled) each time the extension is started. The path is displayed on startup in the Behave VSC output window. (Note that if your test run uses runParallel, then multiple files are created for the same feature using a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the same file and mark scenarios not included in that execution as "skipped".)
+  - In a temp folder. The path is displayed on startup in the Behave VSC output window when tests are run. (Note that if your test run uses runParallel, then multiple files are created for the same feature using a separate folder for each scenario. This is a workaround to stop the same junit file being written multiple times for the same feature, which in runParallel mode would stop us from being able to know the result of the test because each parallel behave execution would rewrite the same file and mark scenarios not included in that execution as "skipped".)
   
 - *When will this extension have a release version?*
 
@@ -227,7 +229,7 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 - Make sure the `paths` setting in your behave configuration file is correct.
 
-- Have you set the correct python interpreter path in vscode?
+- Have you set the correct python interpreter path in vscode? (e.g. to point to python in your `venv/bin` folder)
 
 - Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
 
@@ -236,6 +238,8 @@ The most important extension settings to be aware of are probably `behaveWorking
 - Does refreshing the test explorer solve your issue?
 
 - Does restarting vscode solve your issue?
+
+- Have you selected the correct pyton interpreter for your project in vscode?
 
 - If your project is not a simple set up, have you read the [advanced project configuration](#advanced-project-configuration)?
 
@@ -273,7 +277,9 @@ The most important extension settings to be aware of are probably `behaveWorking
 
   - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
 
-  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can e.g. install a step library as a python package within your project folder and use the `importedSteps` setting to enable navigation for those steps.
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can e.g. install a step library as a python package anywhere *within* your project folder and use the `importedSteps` setting to enable navigation for those steps.
+
+- If BEHAVE_STAGE is used, step navigation will only show steps in the `steps` folder, not the stage `_steps` folder, but you can use `importedSteps` as a workaround.
 
 - Individual test durations are taken from behave junit xml files, not actual execution time.
 
@@ -424,7 +430,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           "list": ["--tags=@tagB"]
         },
         "promptForTags": false,
-      },
+      },   
     ]
   ```
 
@@ -441,9 +447,10 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
         - to control `scenario.skip()`
         - `before_all` using the variable to load a specific config file e.g. `configparser.read(os.environ["MY_CONFIG_PATH"])` to allow fine-grained control of the test run
         - `before_all` using the variable to load a specific subset of environment variables, e.g. `load_dotenv(os.environ["MY_DOTENV_PATH"])`
-      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable.
+      - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable
+  - If the default run profile is set on multiple profiles and those profiles do not have overlapping tags (or none specified) then you may combine tags in that way, i.e. a runProfile with `@tag1` and `@tag2` could be run at the same time via default profile.
 
-- You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable:
+- You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable. (Note that behave-django is not officially supported by this extension, i.e. the extension only executes the command, the rest is up to you):
 
     ```json
     // settings.json snippet
@@ -464,15 +471,16 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
           ]
         },
         "customRunner": {
-          "scriptFile": "manage.py",
-          "waitForJUnitFiles": true
+          "scriptFile": "manage.py", // in behaveWorkingDirectory
+          "waitForJUnitFiles": true // attempt to show results from junit files in the test UI
         }
       }
     ]
     ```
 
 - Notes on using a customRunner:
-  - You should first consider if you can do the work in an `environment.py` file, rather than in a script, as this is the standard way to set up your environment for behave. In most cases this is a better solution (though behave-django is an example of a case where a custom script is necessary).
+  - You may wish to set the default run profile (and default debug run profile) to be the customRunner profile.
+  - You should first consider if you can do the work in an `environment.py` file, rather than in a script, as this is the standard way to set up your environment for behave. In most cases this is a *better* solution.
   - If there are members of your team who are not using vscode, then does your custom script affect how behave tests work in their IDE?
   - The `scriptFile` must be a python file in the root of your behave working directory.
   - The script should be lightweight. The script will be executed for each behave instance that is created by the extension. So a slow script will give poor performance.
