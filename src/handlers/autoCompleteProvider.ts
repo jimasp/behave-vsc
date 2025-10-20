@@ -8,7 +8,8 @@ import { getStepFileSteps } from '../parsers/stepsParser';
 export const autoCompleteProvider = {
   provideCompletionItems(document: vscode.TextDocument, position: vscode.Position): vscode.CompletionItem[] | undefined {
     try {
-      const lcLine = document.lineAt(position).text.trimStart().toLowerCase();
+      const line = document.lineAt(position);
+      const lcLine = line.text.trimStart().toLowerCase();
       const step = featureFileStepRe.exec(lcLine);
       if (!step)
         return;
@@ -38,6 +39,16 @@ export const autoCompleteProvider = {
       const stepFileSteps = getStepFileSteps(wkspSettings.featuresUri);
       const items: vscode.CompletionItem[] = [];
 
+      // Calculate the range to replace: from after the step keyword to the end of line
+      const leadingWhitespace = line.text.length - line.text.trimStart().length;
+      const stepKeywordEnd = leadingWhitespace + stepType.length + 1;
+      const replaceRange = new vscode.Range(
+        position.line,
+        stepKeywordEnd,
+        position.line,
+        line.text.length
+      );
+
       for (const [key, value] of stepFileSteps) {
         const lcKey = key.toLowerCase();
         if (lcKey.startsWith(matchText1) || lcKey.startsWith(matchText2)) {
@@ -45,9 +56,9 @@ export const autoCompleteProvider = {
           itemText = value.textAsRe.replaceAll(".*", "?");
           // deal with e.g \( escapes in textAsRe
           itemText = itemText.replaceAll("\\\\", "#@slash@#").replaceAll("\\", "").replaceAll("#@slash@#", "\\");
-          itemText = itemText.replace(textWithoutType, "").trim();
           const item = new vscode.CompletionItem(itemText, vscode.CompletionItemKind.Function);
           item.detail = vscode.workspace.asRelativePath(value.uri);
+          item.range = replaceRange;
           items.push(item);
         }
       }
