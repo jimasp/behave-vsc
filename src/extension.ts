@@ -18,6 +18,7 @@ import { StepMapping, getStepFileStepForFeatureFileStep, getStepMappingsForSteps
 import { autoCompleteProvider } from './handlers/autoCompleteProvider';
 import { formatFeatureProvider } from './handlers/formatFeatureProvider';
 import { SemHighlightProvider, semLegend } from './handlers/semHighlightProvider';
+import { DefinitionProvider } from './handlers/definitionProvider';
 import { startWatchingWorkspace } from './watchers/workspaceWatcher';
 import { JunitWatcher } from './watchers/junitWatcher';
 
@@ -86,7 +87,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<TestSu
       vscode.commands.registerCommand(`behave-vsc.stepReferences.next`, nextStepReferenceHandler),
       vscode.languages.registerCompletionItemProvider('gherkin', autoCompleteProvider, ...[" "]),
       vscode.languages.registerDocumentRangeFormattingEditProvider('gherkin', formatFeatureProvider),
-      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend)
+      vscode.languages.registerDocumentSemanticTokensProvider({ language: 'gherkin' }, new SemHighlightProvider(), semLegend),
+      vscode.languages.registerDefinitionProvider({ language: 'gherkin' }, new DefinitionProvider())
     );
 
 
