@@ -8,6 +8,7 @@ export interface Configuration {
   integrationTestRun: boolean;
   readonly extensionTempFilesUri: vscode.Uri;
   readonly logger: Logger;
+  readonly diagnostics: vscode.DiagnosticCollection;
   readonly workspaceSettings: { [wkspUriPath: string]: WorkspaceSettings };
   readonly globalSettings: WindowSettings;
   reloadSettings(wkspUri: vscode.Uri, testConfig?: vscode.WorkspaceConfiguration): void;
@@ -22,6 +23,7 @@ class ExtensionConfiguration implements Configuration {
   public exampleProject = false;
   public readonly extensionTempFilesUri;
   public readonly logger: Logger;
+  public readonly diagnostics: vscode.DiagnosticCollection;
   private static _configuration?: ExtensionConfiguration;
   private _windowSettings: WindowSettings | undefined = undefined;
   private _resourceSettings: { [wkspUriPath: string]: WorkspaceSettings } = {};
@@ -29,6 +31,7 @@ class ExtensionConfiguration implements Configuration {
   private constructor() {
     ExtensionConfiguration._configuration = this;
     this.logger = new Logger();
+    this.diagnostics = vscode.languages.createDiagnosticCollection("behave-vsc");
     this.extensionTempFilesUri = vscode.Uri.joinPath(vscode.Uri.file(os.tmpdir()), "behave-vsc");
     this.exampleProject = (vscode.workspace.workspaceFolders?.find(f =>
       f.uri.path.includes("/behave-vsc/example-projects/")) !== undefined);
@@ -37,6 +40,7 @@ class ExtensionConfiguration implements Configuration {
 
   public dispose() {
     this.logger.dispose();
+    this.diagnostics.dispose();
   }
 
   static get configuration() {

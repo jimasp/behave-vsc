@@ -113,7 +113,7 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
     if (scenario) {
       const scenarioName = scenario[2].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
-      const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
+      const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + scenario[0].length));
       onScenarioLine(range, scenarioName, isOutline);
       fileScenarios++;
       continue;

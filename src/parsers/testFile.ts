@@ -13,6 +13,29 @@ export type TestData = WeakMap<vscode.TestItem, BehaveTestData>;
 export class TestFile {
   public didResolve = false;
 
+  private addDuplicateScenarioDiagnostics(featureUri: vscode.Uri, scenarioRanges: Map<string, vscode.Range[]>) {
+    const existingDiagnostics = config.diagnostics.get(featureUri) || [];
+    const newDiagnostics = [...existingDiagnostics];
+
+    for (const [scenarioName, ranges] of scenarioRanges) {
+      if (ranges.length > 1) {
+        diagLog(`Duplicate scenario detected: "${scenarioName}"`);
+
+        for (const range of ranges) {
+          const diagnostic = new vscode.Diagnostic(
+            range,
+            `Duplicate scenario name: "${scenarioName}". Each scenario in a feature file must have a unique name.`,
+            vscode.DiagnosticSeverity.Error
+          );
+          diagnostic.code = "duplicate-scenario";
+          diagnostic.source = "behave-vsc";
+          newDiagnostics.push(diagnostic);
+        }
+      }
+    }
+    config.diagnostics.set(featureUri, newDiagnostics);
+  }
+
   public async createScenarioTestItemsFromFeatureFileContent(wkspSettings: WorkspaceSettings, content: string, testData: TestData,
     controller: vscode.TestController, item: vscode.TestItem, caller: string) {
     if (!item.uri)
@@ -31,7 +54,13 @@ export class TestFile {
 
     const thisGeneration = generationCounter++;
     const ancestors: { item: vscode.TestItem, children: vscode.TestItem[] }[] = [];
+    const scenarioRanges = new Map<string, vscode.Range[]>();
     this.didResolve = true;
+
+    // Clear any existing diagnostics for this file
+    const existingDiagnostics = config.diagnostics.get(featureUri) || [];
+    const nonDuplicateDiagnostics = existingDiagnostics.filter(d => d.code !== "duplicate-scenario");
+    config.diagnostics.set(featureUri, nonDuplicateDiagnostics);
 
     const ascend = (depth: number) => {
       while (ancestors.length > depth) {
@@ -42,13 +71,9 @@ export class TestFile {
           finished.item.children.replace(finished.children);
         }
         catch (e: unknown) {
-          let err = (e as Error).toString();
+          const err = (e as Error).toString();
           if (err.includes("duplicate test item")) {
-            const n = err.lastIndexOf('/');
-            const scen = err.substring(n);
-            err = err.replace(scen, `. Duplicate scenario name: "${scen.slice(1)}".`);
-            // don't throw here, show it and carry on
-            config.logger.showError(err, wkspSettings.uri);
+            this.addDuplicateScenarioDiagnostics(featureUri, scenarioRanges);
           }
           else
             throw e;
@@ -58,6 +83,11 @@ export class TestFile {
 
     const onScenarioLine = (range: vscode.Range, scenarioName: string, isOutline: boolean) => {
       const parent = ancestors[ancestors.length - 1];
+
+      // Track scenario name and range for duplicate detection
+      const ranges = scenarioRanges.get(scenarioName) || [];
+      ranges.push(range);
+      scenarioRanges.set(scenarioName, ranges);
 
       const data = new Scenario(featureFilename, featureFileWkspRelativePath, featureName, scenarioName, thisGeneration, isOutline);
       const id = `${uriId(featureUri)}/${data.getLabel()}`;
