@@ -106,7 +106,6 @@ export function activate(context: vscode.ExtensionContext): IntegrationTestAPI |
     // called when a user renames, adds or removes a workspace folder.
     // NOTE: the first time a new not-previously recognised workspace folder gets added a new node host 
     // process will start, this host process will terminate, and activate() will be called shortly after    
-     
     let wsFolderChanged = false;
     context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(async (event) => {
       try {
@@ -334,8 +333,6 @@ function recreateRunHandlersAndProfilesAndWatchersAndReparse(testData: TestData,
         const nonProjFolderWatcher = NonProjectWatcher.create(nonProjFolder.uri, promoteHandler);
         nonProjFolderWatchers.push(nonProjFolderWatcher);
       }
-
-      console.log(testConfig);
 
       for (const projUri of projectUris) {
 

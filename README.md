@@ -8,11 +8,11 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 ## Features
 
 - Run/Debug behave tests, either from the test explorer or from inside a feature file.
-  - Runs all tests, a nested folder, or just a single feature or scenario.
-  - Runs tests with specific tags and/or specific environment variables (`runProfiles`).
+  - Run all tests, a nested folder, or just a single feature or scenario.
+  - Run tests with specific tags and/or specific environment variables (`runProfiles`).
   - Shows failed test run result inside the feature file.
   - Shows full behave output in the Behave VSC output window.
-  - Shows the behave command in the output so you can generate commands to run manually.
+  - Shows the behave command in the output window so you can run commands manually.
   - Supports running parallel behave instances, if all your features are isolated (`runParallel`).
   - Optional behave working directory (`behaveWorkingDirectory`).
   - Optional environment variables (`env` or `runProfiles`).
@@ -42,7 +42,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
 
 ### Compatible project directory structures
 
-- A single behave working directory per project folder (the default behave working directory is the project root).
+- A single behave working directory per project folder (your behave working directory is the project root unless set via the extension setting `behaveWorkingDirectory`)
 - A [behave-conformant](https://behave.readthedocs.io/en/stable/gherkin.html) directory structure, which is as follows:
   - At least one `features` folder (lowercase by default). You don't have to call it "features" (read on), but behave requires that you have a folder called `steps` (lowercase).
   - If you have an `environment.py` file, then it must be at the same level (sibling) as the `steps` folder.  
@@ -67,7 +67,7 @@ Includes two-way step navigation, Gherkin syntax highlighting, autoformatting, a
             └── web_steps.py
     ```
 
-- Your behave working directory is the project root unless otherwise specified via the extension setting `behaveWorkingDirectory`.
+- .
 - As per behave itself, *without additional configuration*, features will only be discovered if:
   - (a) you have a `features/steps` folder in your behave working directory, or
   - (b) you have a `steps` folder in your behave working directory
@@ -217,74 +217,6 @@ The most important extension settings to be aware of are probably `behaveWorking
 
 ---
 
-## Troubleshooting
-
-### If you have used a previous version of this extension (or a previous version of vscode), and a new version has created a problem
-
-- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). (Please note that choosing a specific version will stop the extension from upgrading in future, so you will need to manually upgrade to a newer version when the issue has been fixed.)
-  
-### Otherwise
-
-- Does your workspace meet the [workspace requirements](#workspace-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
-
-- Make sure the `paths` setting in your behave configuration file is correct.
-
-- Have you set the correct python interpreter path in vscode? (e.g. to point to python in your `venv/bin` folder)
-
-- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
-
-- Are there any warnings or errors in the Behave VSC output window? (Also try restarting vscode and looking at the Behave VSC output window immediately after startup.)
-
-- Does refreshing the test explorer solve your issue?
-
-- Does restarting vscode solve your issue?
-
-- Have you selected the correct pyton interpreter for your project in vscode?
-
-- If your project is not a simple set up, have you read the [advanced project configuration](#advanced-project-configuration)?
-
-- Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
-
-- Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
-
-- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release on [github](https://github.com/jimasp/behave-vsc/releases) and upgrade/downgrade as required.
-
-- If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
-
-- If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, i.e. do you have "Raised Exceptions" etc. turned off?
-
-- Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
-
-- Do you have the `runParallel` setting turned on? Try turning it off.
-
-- Check if the problem is in [Known Issues](#known-issues-and-limitations) below
-
-- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
-
-- Try temporarily disabling other extensions. Especially if they relate to behave, gherkin or cucumber.
-
-- Any extension errors should pop up in a notification window, warnings will be in the Behave VSC output window, you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
-
-- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects). It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own project.)
-
----
-
-## Known issues and limitations
-
-- If you hit a filewatcher limit in your workspace, then you will need to use the refresh button in the test explorer to see new/modified tests and update step navigation. (For a better experience, you should increase the watcher file handle limit on your operating system, or reduce the number of filewatchers e.g. by disabling extensions that watch the entire workspace folder.)
-
-- Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
-
-  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
-
-  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can e.g. install a step library as a python package anywhere *within* your project folder and use the `importedSteps` setting to enable navigation for those steps.
-
-- If BEHAVE_STAGE is used, step navigation will only show steps in the `steps` folder, not the stage `_steps` folder, but you can use `importedSteps` as a workaround.
-
-- Individual test durations are taken from behave junit xml files, not actual execution time.
-
----
-
 ## Advanced project configuration
 
 - Feature/Step discovery is based on the behave configuration file `paths` setting and/or the extension `behaveWorkingDirectory` setting. If you have a non-standard project structure, then you can use either/both of these settings to configure the extension to find your features and steps folders.
@@ -303,12 +235,12 @@ The most important extension settings to be aware of are probably `behaveWorking
       }
     ```
 
-- If your features folder is non-standard, i.e.:
+- If your features folder is non-standard, for example...
   - it is not in your behave working directory root, or
   - it is in the behave working directory root, but is not called `features` *and* does not have a sibling `steps` folder, or
   - you have multiple features folders in the root of your behave working directory,
 
-  then you can use the `paths` setting in your behave configuration file to specify your feature folder path(s):
+  ... then you can use the `paths` setting in your behave configuration file to specify your feature folder path(s):
 
   - Example A, features folder is a subfolder of the working directory called `my_folder/my_features` and does not have a sibling `steps` folder:
 
@@ -450,7 +382,7 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
       - to set the [BEHAVE_STAGE](https://behave.readthedocs.io/en/stable/new_and_noteworthy_v1.2.5.html#test-stages) environment variable
   - If the default run profile is set on multiple profiles and those profiles do not have overlapping tags (or none specified) then you may combine tags in that way, i.e. a runProfile with `@tag1` and `@tag2` could be run at the same time via default profile.
 
-- You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable. (Note that behave-django is not officially supported by this extension, i.e. the extension only executes the command, the rest is up to you):
+- You can also add a `customRunner` python script to a run profile to do whatever you like. This means that when you select a test from the tree and run it, the behave command line arguments will be passed to your runner script rather than to behave. Here is an example that uses behave-django's `manage.py` script to run behave tests with a specific tag and environment variable. (NOTE: behave-django is not officially supported by this extension, i.e. the extension only executes the command, the rest is up to you):
 
     ```json
     // settings.json snippet
@@ -504,6 +436,74 @@ Use the `runProfiles` setting to set up run profiles in the test explorer. Combi
   if __name__ == "__main__":
       __main__()
   ```
+
+---
+
+## Troubleshooting
+
+### If you have used a previous version of this extension (or a previous version of vscode), and a new version has created a problem
+
+- Please read through the [release notes](https://github.com/jimasp/behave-vsc/releases) for breaking changes. If that does not resolve your issue, then please rollback to the previous working version via the vscode uninstall dropdown and raise an [issue](https://github.com/jimasp/behave-vsc/issues). (Please note that choosing a specific version will stop the extension from upgrading in future, so you will need to manually upgrade to a newer version when the issue has been fixed.)
+  
+### Otherwise
+
+- Does your workspace meet the [workspace requirements](#workspace-requirements) and have [compatible project directory structure(s)](#compatible-project-directory-structures)?
+
+- Make sure the `paths` setting in your behave configuration file is correct.
+
+- Have you set the correct python interpreter path in vscode? (e.g. to point to python in your `venv/bin` folder)
+
+- Have you tried *manually* running the behave command that is logged in the Behave VSC output window?
+
+- Are there any warnings or errors in the Behave VSC output window? (Also try restarting vscode and looking at the Behave VSC output window immediately after startup.)
+
+- Does refreshing the test explorer solve your issue?
+
+- Does restarting vscode solve your issue?
+
+- Have you selected the correct pyton interpreter for your project in vscode?
+
+- If your project is not a simple set up, have you read the [advanced project configuration](#advanced-project-configuration)?
+
+- Did you set extension settings in your vscode user settings instead of your workspace settings? Is there something incorrect in your vscode user settings?
+
+- Do you have the latest version of the extension installed? The problem may have been fixed in a newer release. (Please note that the latest version you can install is determined by your vscode version, so you may need to update vscode first.)
+
+- Have you recently upgraded vscode, and does your python/behave environment match the one tested for this release? You can check the environment tested for each release on [github](https://github.com/jimasp/behave-vsc/releases) and upgrade/downgrade as required.
+
+- If you are getting different results running all tests vs running a test separately, then it is probably due to lack of test isolation.
+
+- If you are not seeing exceptions while debugging a test, do you have the appropriate breakpoint settings in vscode, i.e. do you have "Raised Exceptions" etc. turned off?
+
+- Do you have the correct extension [settings](#extension-settings) for your project? (See [Q&A](#qa) for information on how to see your effective settings.)
+
+- Do you have the `runParallel` setting turned on? Try turning it off.
+
+- Check if the problem is in [Known Issues](#known-issues-and-limitations) below
+
+- Check if the issue has already been reported in github [issues](https://github.com/jimasp/behave-vsc/issues?q=is%3Aissue).
+
+- Try temporarily disabling other extensions. Especially if they relate to behave, gherkin or cucumber.
+
+- Any extension errors should pop up in a notification window, warnings will be in the Behave VSC output window, you can also look at debug logs and error stacks by enabling `xRay` in the extension settings and using vscode command "Developer: Toggle Developer Tools".
+
+- The extension is only tested with a few [example projects](https://github.com/jimasp/behave-vsc/tree/main/example-projects). It's possible that something specific to your project/setup/environment is not accounted for. See [Contributing](CONTRIBUTING.md) for instructions on debugging the extension with your own project. (If you debug with your own project, you may also wish to check whether the same issue occurs with one of the example project workspaces that has a similar structure to your own project.)
+
+---
+
+## Known issues and limitations
+
+- If you hit a filewatcher limit in your workspace, then you will need to use the refresh button in the test explorer to see new/modified tests and update step navigation. (For a better experience, you should increase the watcher file handle limit on your operating system, or reduce the number of filewatchers e.g. by disabling extensions that watch the entire workspace folder.)
+
+- Step navigation limitations ("Go to Step Definition" and "Find All Step References"):
+
+  - Step matching does not always match as per behave. It uses a simple regex match via replacing `{foo}` -> `{.*}`. As such, it does *not* consider `re` regex matching like `(?P<foo>foo)`, typed parameters like `{foo:d}`, or `cfparse` cardinal parameters like `{foo:?}`.
+
+  - Step navigation only finds features and steps that are inside your project folder. If you import steps in python from outside your project folder it won't find them, however you can e.g. install a step library as a python package anywhere *within* your project folder and use the `importedSteps` setting to enable navigation for those steps.
+
+- If BEHAVE_STAGE is used, step navigation will only show steps in the `steps` folder, not the stage `_steps` folder, but you can use `importedSteps` as a workaround.
+
+- Individual test durations are taken from behave junit xml files, not actual execution time.
 
 ---
 

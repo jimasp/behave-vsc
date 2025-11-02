@@ -179,7 +179,6 @@ class FolderWatcher {
         // so now we're only interested in folder changes.
         // we also know this is not a delete event at this point, so we know we can stat.
         const stat = await vscode.workspace.fs.stat(uri);
-        console.log(stat.type);
         if (stat.type !== vscode.FileType.Directory)
           return;
 
