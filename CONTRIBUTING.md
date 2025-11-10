@@ -201,6 +201,7 @@ feature file formatting is provided by:
   - Does the issue occur with the example project workspaces, or just in your own project? What is different about your project?
   - Have you made any changes yourself? Does e.g. a fresh clone work without your changes?
   - If extension integration tests get stuck while they are running a debug behave test run, remember to also disable all breakpoints in the *host* vscode environment.
+  - Make sure to set your `python.defaultInterpreterPath` properly, it will be used by the integration tests
 - Debugging:
   - If you are stepping in to external code, then it's likely you either hit the pause button, or you need to remove all breakpoints (e.g. "caught exceptions").
   - If an exception is not bubbling, see [Exception handling](#exception-handling).
