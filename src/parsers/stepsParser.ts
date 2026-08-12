@@ -154,6 +154,8 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
 function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
   const stepType = step[2];
   let textAsRe = step[3].trim();
+  if (textAsRe.endsWith(":")) // mirror the same trailing-colon stripping applied to feature-file step text in stepMappings.ts, so a step definition whose own text ends in ":" can still match
+    textAsRe = textAsRe.slice(0, -1);
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
   const fileName = basename(fileUri);
