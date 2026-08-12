@@ -11,6 +11,7 @@ import { config } from '../configuration';
 
 
 let stepMappings: StepMapping[] = [];
+const outlinePlaceholderRe = /<[^>]+>/;
 
 export class StepMapping {
   constructor(
@@ -158,11 +159,41 @@ function _getStepFileStepMatch(featureFileStep: FeatureFileStep,
   if (paramsMatches.size === 1)
     return paramsMatches.values().next().value;
 
-  // more than one parameters match - get longest matched key      
+  // more than one parameters match - get longest matched key
   if (paramsMatches.size > 1) {
     return findLongestParamsMatch(paramsMatches);
   }
 
+  // fallback for Scenario Outline steps: a "<Placeholder>" stands in for a value that is only
+  // known once behave substitutes an Examples row, so it can't be resolved as either a literal
+  // word or a {param} wildcard by the checks above. Build a pattern FROM the feature step's own
+  // text (escaping it, then treating "<Placeholder>" as a wildcard exactly like {param} is treated
+  // on the definition side) and test it against each candidate definition's own text - this
+  // correctly matches an outline placeholder that stands where the definition expects a fixed
+  // literal word. (This does not resolve a placeholder against a definition that ALSO has a
+  // {param} at that same position with other ambiguous literal text nearby - that remains a
+  // known, accepted gap given the rarity of that combination.)
+  if (outlinePlaceholderRe.test(textWithoutType)) {
+    const allCandidates = new Map([...exactSteps, ...paramsSteps]);
+    let outlineMatch = findOutlinePlaceholderMatch(textWithoutType, featureFileStep.stepType, allCandidates);
+    if (!outlineMatch && featureFileStep.stepType !== "step")
+      outlineMatch = findOutlinePlaceholderMatch(textWithoutType, "step", allCandidates);
+    if (outlineMatch)
+      return outlineMatch;
+  }
+
   // no matching step
   return null;
+}
+
+
+function findOutlinePlaceholderMatch(textWithoutType: string, stepType: string,
+  candidates: Map<string, StepFileStep>): StepFileStep | undefined {
+  let pattern = textWithoutType.replace(/[.*+?^$()|[\]]/g, '\\$&');
+  pattern = pattern.replace(/<[^>]+>/g, parseRepWildcard);
+  const rx = new RegExp(`^${stepType}${sepr}${pattern}$`, "i");
+  for (const [, value] of candidates) {
+    if (rx.test(`${stepType}${sepr}${value.textAsRe}`))
+      return value;
+  }
 }

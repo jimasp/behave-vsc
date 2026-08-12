@@ -9,7 +9,7 @@ import { TestResult } from "./expectedResults.helpers";
 import { TestWorkspaceConfig, TestWorkspaceConfigWithWkspUri } from './testWorkspaceConfig';
 import { WkspParseCounts } from '../../parsers/fileParser';
 import { getUrisOfWkspFoldersWithFeatures, getAllTestItems, getScenarioTests, uriId, isFeatureFile, isStepsFile, getLines, urisMatch } from '../../common';
-import { featureFileStepRe } from '../../parsers/featureParser';
+import { featureFileStepRe, featureRe, scenarioRe, backgroundRe } from '../../parsers/featureParser';
 import { funcRe } from '../../parsers/stepsParser';
 
 
@@ -101,11 +101,44 @@ type FileStep = {
 
 function addStepsFromFeatureFile(uri: vscode.Uri, content: string, featureSteps: Map<FileStep, string>) {
 	const lines = getLines(content.trim());
+	// mirror featureParser.ts's parseFeatureContent state tracking, so that this independent
+	// verification scan doesn't mistake Feature-description prose or docstring content (which may
+	// start with "and"/"but") for real steps - keep in sync with any changes there
+	let inFeatureDescription = false;
+	let inDocstring = false;
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const line = lines[lineNo].trim();
-		const stExec = featureFileStepRe.exec(line);
-		if (stExec)
-			featureSteps.set({ uri, lineNo }, line);
+		if (line === '' || line.startsWith("#"))
+			continue;
+
+		if (line.startsWith('"""')) {
+			inDocstring = !inDocstring;
+			continue;
+		}
+
+		if (!inDocstring && !inFeatureDescription) {
+			const stExec = featureFileStepRe.exec(line);
+			if (stExec) {
+				featureSteps.set({ uri, lineNo }, line);
+				continue;
+			}
+		}
+
+		if (inDocstring)
+			continue;
+
+		if (scenarioRe.test(line)) {
+			inFeatureDescription = false;
+			continue;
+		}
+
+		if (backgroundRe.test(line)) {
+			inFeatureDescription = false;
+			continue;
+		}
+
+		if (featureRe.test(line))
+			inFeatureDescription = true;
 	}
 
 	return featureSteps;

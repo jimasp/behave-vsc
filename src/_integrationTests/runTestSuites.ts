@@ -98,6 +98,15 @@ async function runTestSuites() {
       launchArgs
     });
 
+    launchArgs = ["example-projects/step matching edge cases"]
+    extensionTestsPath = path.resolve(__dirname, './step matching edge cases suite/index');
+    await runTests({
+      vscodeExecutablePath,
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      launchArgs
+    });
+
     launchArgs = ["example-projects/multiroot.code-workspace"];
     extensionTestsPath = path.resolve(__dirname, './multiroot suite/index');
     await runTests({

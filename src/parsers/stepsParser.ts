@@ -22,6 +22,19 @@ export class StepFileStep {
 }
 
 
+// Python allows adjacent string literals to be implicitly concatenated (e.g. '...' "..."), which
+// leaves a stray quote pair exactly at the join between the previous segment's closing quote and
+// this segment's opening quote. Strip it there, and ONLY there - never elsewhere - so a literal's
+// own opening/closing delimiter is never touched even if its content happens to end or start with
+// the other quote character (e.g. a quoted {param} at the very end of a single-quoted literal).
+function appendMultiLineSegment(multiLine: string, segment: string): string {
+  const isQuoteChar = (c: string) => c === "'" || c === '"';
+  if (isQuoteChar(multiLine.slice(-1)) && isQuoteChar(segment.slice(0, 1)))
+    return multiLine.slice(0, -1) + segment.slice(1);
+  return multiLine + segment;
+}
+
+
 export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
   const featuresUriMatchString = uriId(featuresUri);
   let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
@@ -102,14 +115,17 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
     }
 
     if (multiLineBuilding) {
-      if (line.endsWith(")")) {
-        multiLine += line.replaceAll(`)$`, "");
-        multiLine = multiLine.replaceAll("''", "");
-        multiLine = multiLine.replaceAll('""', "");
+      // a closing ")" may be followed by a trailing comment, e.g. `)  # to be deprecated` - strip
+      // the comment before checking/appending, otherwise this line is treated as "not closed yet"
+      // and every following line (including later decorators) gets swallowed into this one step.
+      const closesMultiLineRe = /\)\s*(#.*)?$/;
+      if (closesMultiLineRe.test(line)) {
+        const lineWithoutTrailingComment = line.replace(/#.*$/, "").trimEnd();
+        multiLine = appendMultiLineSegment(multiLine, lineWithoutTrailingComment.replaceAll(`)$`, ""));
         multiLineBuilding = false;
       }
       else {
-        multiLine += line;
+        multiLine = appendMultiLineSegment(multiLine, line);
         continue;
       }
     }
@@ -144,6 +160,8 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
 function createStepFileStepAndReKey(featuresUri: vscode.Uri, fileUri: vscode.Uri, range: vscode.Range, step: RegExpExecArray) {
   const stepType = step[2];
   let textAsRe = step[3].trim();
+  if (textAsRe.endsWith(":")) // mirror the same trailing-colon stripping applied to feature-file step text in stepMappings.ts, so a step definition whose own text ends in ":" can still match
+    textAsRe = textAsRe.slice(0, -1);
   textAsRe = textAsRe.replace(/[.*+?^$()|[\]]/g, '\\$&'); // escape any regex chars except for \ { }
   textAsRe = textAsRe.replace(/{.*?}/g, parseRepWildcard);
   const fileName = basename(fileUri);
