@@ -111,6 +111,11 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
         multiLine += lineWithoutTrailingComment.replaceAll(`)$`, "");
         multiLine = multiLine.replaceAll("''", "");
         multiLine = multiLine.replaceAll('""', "");
+        // Python allows implicit concatenation between literals using DIFFERENT quote characters
+        // too (e.g. '...' "..."), leaving a stray quote pair of mixed characters embedded - strip
+        // those as well, the same way same-quote pairs are stripped above.
+        multiLine = multiLine.replaceAll(`'"`, "");
+        multiLine = multiLine.replaceAll(`"'`, "");
         multiLineBuilding = false;
       }
       else {
