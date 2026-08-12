@@ -912,3 +912,18 @@ Expected: `unresolvedCount` is now **0** (down from 67), given all 5 confirmed c
 - [ ] **Step 3: Record the result**
 
 No commit needed (the audit script and its report are scratchpad-only), but report the final `unresolvedCount` and, if non-zero, the specific remaining entries and why, as the final summary of this plan's work.
+
+---
+
+## Final results
+
+Task 8's first real-world run did **not** come back at 0 — it came back at **280**, a severe regression. Investigation traced this to Task 4 (commit `b97a286`): its mixed-quote stripping was an unanchored, whole-buffer `replaceAll`, which correctly strips a quote pair at a genuine multi-line concatenation seam but *also* strips it whenever a quoted `{param}` happens to sit at the very end of a single literal (e.g. `'...logged in "{log_group}"'`) — a shape common in real step definitions but absent from the synthetic fixture, so it passed every review and regression test while breaking 276 real steps.
+
+### Task 9 (corrective, added after Task 8): fix the over-broad stripping
+
+- **Files:** `src/parsers/stepsParser.ts`; `example-projects/step matching edge cases/features/edge_cases.feature` (new scenario); `example-projects/step matching edge cases/features/steps/quoted_param_at_end_steps.py` (new fixture reproducing the exact real-world shape); `src/_integrationTests/step matching edge cases suite/expectedResults.ts` (counts updated to 7/7/7, one more `TestResult`).
+- **Fix:** replaced all four whole-buffer `replaceAll` calls (both the pre-existing same-quote stripping and Task 4's mixed-quote stripping) with a single `appendMultiLineSegment(multiLine, segment)` helper that strips a quote pair only at the actual line-join boundary — the one character on each side of a new append — which can never touch a literal's own opening/closing delimiter regardless of what it contains.
+- **Verified:** full regression 100% green (10/10 suites, `project A`/`project B` unaffected); re-ran the real-world audit — `unresolvedCount` dropped to **4**, matching exactly: 1 genuine residual (the already-known Category 5 limitation, `<Placeholder>` used outside a Scenario Outline) plus 3 false positives from the throwaway audit script's own scanner not knowing about Task 7's fix (not a real bug). Zero unexplained entries.
+- Commit: `0713a9e`.
+
+**Bottom line:** of 10,394 real feature-file steps in `vertice-test-suites-python`, exactly **1** genuinely fails to resolve — the documented, accepted Category 5 edge case. Every other originally-confirmed bug is fixed and confirmed against real-world code, not just the synthetic fixture.
