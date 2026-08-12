@@ -180,16 +180,16 @@
 		"color": "#2B2B2B",
 		"theme": "dark"
 	},
-	"publisher": "jimasp",
+	"publisher": "ivodlouhy",
 	"private": true,
 	"license": "SEE LICENSE IN LICENSE.txt",
-	"homepage": "https://github.com/jimasp/behave-vsc/blob/main/README.md",
+	"homepage": "https://github.com/ivodlouhy/behave-vsc/blob/main/README.md",
 	"bugs": {
-		"url": "https://github.com/jimasp/behave-vsc/issues"
+		"url": "https://github.com/ivodlouhy/behave-vsc/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/jimasp/behave-vsc.git"
+		"url": "https://github.com/ivodlouhy/behave-vsc.git"
 	},
 	"engines": {
 		"vscode": "^1.82.0"
