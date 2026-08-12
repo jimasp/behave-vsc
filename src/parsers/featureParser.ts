@@ -5,12 +5,13 @@ import { diagLog } from '../logger';
 import { config } from '../configuration';
 
 
-const featureRe = /^\s*Feature:(.*)$/i;
+export const featureRe = /^\s*Feature:(.*)$/i;
 const featureMultiLineRe = /^\s*Feature:(.*)$/im;
 const commentedFeatureMultilineReStr = /^\s*#.*Feature:(.*)$/im;
-const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/i;
+export const scenarioRe = /^\s*(Scenario|Scenario Outline):(.*)$/i;
 const scenarioOutlineRe = /^\s*Scenario Outline:(.*)$/i;
 export const featureFileStepRe = /^\s*(Given |When |Then |And |But )(.*)/i;
+export const backgroundRe = /^\s*Background:/i;
 
 const featureFileSteps = new Map<string, FeatureFileStep>();
 
@@ -70,6 +71,8 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
   let fileScenarios = 0;
   let fileSteps = 0;
   let lastStepType = "given";
+  let inFeatureDescription = false;
+  let inDocstring = false;
 
   const fileUriMatchString = uriId(uri);
 
@@ -91,26 +94,40 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
-    const step = featureFileStepRe.exec(line);
-    if (step) {
-      const text = step[0].trim();
-      const matchText = step[2].trim();
+    if (line.startsWith('"""')) {
+      // toggle in/out of a docstring block - its content (which may start with "and"/"but") must
+      // never be mistaken for a step, and it cannot itself contain a scenario/feature line
+      inDocstring = !inDocstring;
+      continue;
+    }
 
-      let stepType = step[1].trim().toLowerCase();
-      if (stepType === "and" || stepType === "but")
-        stepType = lastStepType;
-      else
-        lastStepType = stepType;
+    if (!inDocstring && !inFeatureDescription) {
+      const step = featureFileStepRe.exec(line);
+      if (step) {
+        const text = step[0].trim();
+        const matchText = step[2].trim();
 
-      const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
-      const key = `${uriId(uri)}${sepr}${range.start.line}`;
-      featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, stepType));
-      fileSteps++;
+        let stepType = step[1].trim().toLowerCase();
+        if (stepType === "and" || stepType === "but")
+          stepType = lastStepType;
+        else
+          lastStepType = stepType;
+
+        const range = new vscode.Range(new vscode.Position(lineNo, indentSize), new vscode.Position(lineNo, indentSize + step[0].length));
+        const key = `${uriId(uri)}${sepr}${range.start.line}`;
+        featureFileSteps.set(key, new FeatureFileStep(key, uri, fileName, range, text, matchText, stepType));
+        fileSteps++;
+        continue;
+      }
+    }
+
+    if (inDocstring) {
       continue;
     }
 
     const scenario = scenarioRe.exec(line);
     if (scenario) {
+      inFeatureDescription = false;
       const scenarioName = scenario[2].trim();
       const isOutline = scenarioOutlineRe.exec(line) !== null;
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, scenario[0].length));
@@ -119,10 +136,16 @@ export const parseFeatureContent = (wkspSettings: WorkspaceSettings, uri: vscode
       continue;
     }
 
+    if (backgroundRe.test(line)) {
+      inFeatureDescription = false;
+      continue;
+    }
+
     const feature = featureRe.exec(line);
     if (feature) {
       const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, line.length));
       onFeatureLine(range);
+      inFeatureDescription = true;
     }
 
   }
