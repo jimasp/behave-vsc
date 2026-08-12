@@ -18,3 +18,7 @@ example-projects/**
 images/behave-vsc.gif
 **/.venv/**
 **/venv/**
+.claude/**
+.superpowers/**
+docs/**
+CLAUDE.md
