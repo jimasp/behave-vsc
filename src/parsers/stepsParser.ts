@@ -102,8 +102,13 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
     }
 
     if (multiLineBuilding) {
-      if (line.endsWith(")")) {
-        multiLine += line.replaceAll(`)$`, "");
+      // a closing ")" may be followed by a trailing comment, e.g. `)  # to be deprecated` - strip
+      // the comment before checking/appending, otherwise this line is treated as "not closed yet"
+      // and every following line (including later decorators) gets swallowed into this one step.
+      const closesMultiLineRe = /\)\s*(#.*)?$/;
+      if (closesMultiLineRe.test(line)) {
+        const lineWithoutTrailingComment = line.replace(/#.*$/, "").trimEnd();
+        multiLine += lineWithoutTrailingComment.replaceAll(`)$`, "");
         multiLine = multiLine.replaceAll("''", "");
         multiLine = multiLine.replaceAll('""', "");
         multiLineBuilding = false;
