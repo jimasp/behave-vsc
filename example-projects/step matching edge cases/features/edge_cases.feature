@@ -27,3 +27,6 @@ Feature: Step matching edge cases
       first line of the docstring
       and this line starts with "and" but is inside the docstring, not a step
       """
+
+  Scenario: multi-line decorator whose literal ends in a quoted parameter
+    Given a step whose literal ends with a quoted parameter "some-value"

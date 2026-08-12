@@ -6,9 +6,9 @@ import { TestResult, applyTestConfiguration } from "../suite-shared/expectedResu
 export function getExpectedCounts(wkspUri: vscode.Uri, config: Configuration): WkspParseCounts {
   const testCount = getExpectedResults(wkspUri, config).length;
   return {
-    tests: { nodeCount: 6, testCount: testCount },
-    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 5,
-    stepFileStepsExceptCommentedOut: 6, featureFileStepsExceptCommentedOut: 6, stepMappings: 6
+    tests: { nodeCount: 7, testCount: testCount },
+    featureFilesExceptEmptyOrCommentedOut: 1, stepFilesExceptEmptyOrCommentedOut: 6,
+    stepFileStepsExceptCommentedOut: 7, featureFileStepsExceptCommentedOut: 7, stepMappings: 7
   };
 }
 
@@ -91,6 +91,22 @@ export const getExpectedResults = (wkspUri: vscode.Uri, config: Configuration): 
       test_error: undefined,
       test_id: '.../step matching edge cases/{{featurePath}}/edge_cases.feature/docstring containing an and-prefixed line',
       test_label: 'docstring containing an and-prefixed line',
+      test_parent: '.../step matching edge cases/{{featurePath}}/edge_cases.feature',
+      test_uri: '.../step matching edge cases/{{featurePath}}/edge_cases.feature'
+    }),
+
+    new TestResult({
+      scenario_featureFileRelativePath: '{{featurePath}}/edge_cases.feature',
+      scenario_featureName: 'Step matching edge cases',
+      scenario_getLabel: 'multi-line decorator whose literal ends in a quoted parameter',
+      scenario_isOutline: false,
+      scenario_result: 'passed',
+      scenario_scenarioName: 'multi-line decorator whose literal ends in a quoted parameter',
+      test_children: undefined,
+      test_description: undefined,
+      test_error: undefined,
+      test_id: '.../step matching edge cases/{{featurePath}}/edge_cases.feature/multi-line decorator whose literal ends in a quoted parameter',
+      test_label: 'multi-line decorator whose literal ends in a quoted parameter',
       test_parent: '.../step matching edge cases/{{featurePath}}/edge_cases.feature',
       test_uri: '.../step matching edge cases/{{featurePath}}/edge_cases.feature'
     }),

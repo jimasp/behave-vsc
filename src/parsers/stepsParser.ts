@@ -22,6 +22,19 @@ export class StepFileStep {
 }
 
 
+// Python allows adjacent string literals to be implicitly concatenated (e.g. '...' "..."), which
+// leaves a stray quote pair exactly at the join between the previous segment's closing quote and
+// this segment's opening quote. Strip it there, and ONLY there - never elsewhere - so a literal's
+// own opening/closing delimiter is never touched even if its content happens to end or start with
+// the other quote character (e.g. a quoted {param} at the very end of a single-quoted literal).
+function appendMultiLineSegment(multiLine: string, segment: string): string {
+  const isQuoteChar = (c: string) => c === "'" || c === '"';
+  if (isQuoteChar(multiLine.slice(-1)) && isQuoteChar(segment.slice(0, 1)))
+    return multiLine.slice(0, -1) + segment.slice(1);
+  return multiLine + segment;
+}
+
+
 export function getStepFileSteps(featuresUri: vscode.Uri, removeFileUriPrefix = true): [string, StepFileStep][] {
   const featuresUriMatchString = uriId(featuresUri);
   let steps = [...stepFileSteps].filter(([k,]) => k.startsWith(featuresUriMatchString));
@@ -108,18 +121,11 @@ export async function parseStepsFileContent(featuresUri: vscode.Uri, content: st
       const closesMultiLineRe = /\)\s*(#.*)?$/;
       if (closesMultiLineRe.test(line)) {
         const lineWithoutTrailingComment = line.replace(/#.*$/, "").trimEnd();
-        multiLine += lineWithoutTrailingComment.replaceAll(`)$`, "");
-        multiLine = multiLine.replaceAll("''", "");
-        multiLine = multiLine.replaceAll('""', "");
-        // Python allows implicit concatenation between literals using DIFFERENT quote characters
-        // too (e.g. '...' "..."), leaving a stray quote pair of mixed characters embedded - strip
-        // those as well, the same way same-quote pairs are stripped above.
-        multiLine = multiLine.replaceAll(`'"`, "");
-        multiLine = multiLine.replaceAll(`"'`, "");
+        multiLine = appendMultiLineSegment(multiLine, lineWithoutTrailingComment.replaceAll(`)$`, ""));
         multiLineBuilding = false;
       }
       else {
-        multiLine += line;
+        multiLine = appendMultiLineSegment(multiLine, line);
         continue;
       }
     }
